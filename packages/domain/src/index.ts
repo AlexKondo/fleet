@@ -5,3 +5,7 @@ export * from "./reservation/availability";
 export * from "./readiness/assessTripReadiness";
 export * from "./readiness/assessVehicleReadiness";
 export * from "./mobility-engine/recommend";
+export * from "./mobility-engine/planMobility";
+export * from "./carpool/findCarpoolMatches";
+export * from "./state-machine/vehicleTransitions";
+export * from "./workflow/deriveReturnOutcome";

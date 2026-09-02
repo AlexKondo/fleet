@@ -1,0 +1,103 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+const RESERVATION_STATUS_LABEL: Record<string, string> = {
+  pending_approval: "Aguardando aprovação",
+  confirmed: "Aprovada",
+  cancelled: "Cancelada",
+  completed: "Concluída",
+};
+
+export default async function TripsPage() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: reservations } = await supabase
+    .from("reservations")
+    .select(
+      `id, status, start_at, end_at,
+       trip_request:trip_requests!inner(origin, destination, requester_id, justification),
+       vehicle:vehicles(plate, status)`,
+    )
+    .eq("trip_request.requester_id", user.id)
+    .order("start_at", { ascending: false });
+
+  return (
+    <main className="min-h-dvh px-6 py-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
+              Minhas Viagens
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/trips/new"
+              className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
+            >
+              + Nova viagem
+            </Link>
+            <Link
+              href="/dashboard"
+              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+            >
+              ← Painel
+            </Link>
+          </div>
+        </div>
+
+        {!reservations || reservations.length === 0 ? (
+          <p className="text-sm text-fog-400">
+            Você ainda não tem viagens. Solicite a primeira em &ldquo;+ Nova viagem&rdquo;.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {reservations.map((r) => {
+              const vehicleStatus = r.vehicle?.status;
+              const canPickup = r.status === "confirmed" && (vehicleStatus === "reserved" || vehicleStatus === "awaiting_pickup");
+              const canReturn = r.status === "confirmed" && vehicleStatus === "in_use";
+              return (
+                <li
+                  key={r.id}
+                  className="flex items-center justify-between rounded-md border border-line-800 bg-panel-900/60 p-4"
+                >
+                  <div>
+                    <p className="text-sm text-paper-50">
+                      {r.trip_request?.origin} → {r.trip_request?.destination}
+                    </p>
+                    <p className="mt-1 font-mono text-xs text-fog-400">
+                      {r.vehicle?.plate ?? "—"} · {new Date(r.start_at).toLocaleString("pt-BR")}
+                    </p>
+                    <p className="mt-1 text-xs text-fog-600">
+                      {RESERVATION_STATUS_LABEL[r.status] ?? r.status}
+                    </p>
+                  </div>
+                  {canPickup ? (
+                    <Link
+                      href={`/reservations/${r.id}/pickup`}
+                      className="rounded-sm border border-signal-blue px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
+                    >
+                      Iniciar Retirada
+                    </Link>
+                  ) : canReturn ? (
+                    <Link
+                      href={`/reservations/${r.id}/return`}
+                      className="rounded-sm border border-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
+                    >
+                      Registrar Retorno
+                    </Link>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </main>
+  );
+}

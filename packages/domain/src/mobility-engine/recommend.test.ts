@@ -134,6 +134,30 @@ describe("recommendVehicle", () => {
     expect(rejected?.reasons).toContain("range_insufficient");
   });
 
+  it("prefers a smaller electric vehicle over a cargo-capable pickup for a solo, non-cargo trip (§3: avoid unnecessary use of larger vehicles)", () => {
+    const candidates = [
+      { vehicle: vehicle({ id: "veh-cargo", categoryId: "cat-cargo" }), category: cargoCategory },
+      {
+        vehicle: vehicle({
+          id: "veh-ev",
+          categoryId: "cat-ev-compact",
+          energyType: "BEV",
+          fuelLevelPercent: null,
+          batteryLevelPercent: 80,
+          estimatedRangeKm: 120,
+        }),
+        category: compactEvCategory,
+      },
+    ];
+    const result = recommendVehicle({
+      tripRequest: trip({ passengerCount: 1, distanceKm: 40, requiresCargo: false }),
+      candidateVehicles: candidates,
+      now,
+      config: defaultReadinessConfig,
+    });
+    expect(result.recommendedVehicleId).toBe("veh-ev");
+  });
+
   it("excludes a vehicle whose category cannot seat the requested passengers", () => {
     const candidates = [
       { vehicle: vehicle({ id: "veh-cargo", categoryId: "cat-cargo" }), category: cargoCategory },

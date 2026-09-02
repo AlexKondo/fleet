@@ -9,8 +9,13 @@ em [`.workbench/king-kondo.md`](./.workbench/king-kondo.md).
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Web**: Next.js 15 (App Router) + TypeScript + Tailwind v4 — [`apps/web`](./apps/web)
 - **Domínio**: TypeScript puro, sem framework — [`packages/domain`](./packages/domain)
-  (availability/reservation, Trip-Specific Readiness, Mobility Decision Engine)
+  (availability/reservation, Trip-Specific Readiness, Carpooling, máquina de estados do
+  veículo, checklist → workflow automático, Mobility Decision Engine)
 - **Banco**: Supabase (Postgres + Auth + RLS) — [`supabase/`](./supabase)
+
+`apps/web/.env.local` está configurado para o **projeto Supabase real** por padrão. Para
+desenvolver contra um banco local descartável (mais rápido para iterar sem risco),
+troque as três variáveis pelas impressas por `supabase start` (ver abaixo).
 
 ## Setup local
 
@@ -27,6 +32,12 @@ pnpm --filter @fleet/web dev
 
 Usuários de demonstração (senha `password123`): `gestor@gwm-demo.local` (fleet_manager),
 `colaborador@gwm-demo.local` (employee), `portaria@gwm-demo.local` (security).
+
+Fluxo operacional para testar manualmente: login como colaborador → **+ Solicitar
+Viagem** → confirmar recomendação → login como gestor → aprovar em **Reservas
+Aguardando Aprovação** → login como colaborador → **Minhas Viagens** → Iniciar Retirada
+→ Registrar Retorno → login como gestor → concluir as tarefas em **Tarefas
+Operacionais**.
 
 ## Comandos
 

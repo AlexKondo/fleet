@@ -34,8 +34,138 @@ export type Database = {
   }
   public: {
     Tables: {
+      inspection_photos: {
+        Row: {
+          angle: Database["public"]["Enums"]["photo_angle"]
+          created_at: string
+          id: string
+          inspection_id: string
+          organization_id: string
+          storage_path: string
+        }
+        Insert: {
+          angle: Database["public"]["Enums"]["photo_angle"]
+          created_at?: string
+          id?: string
+          inspection_id: string
+          organization_id: string
+          storage_path: string
+        }
+        Update: {
+          angle?: Database["public"]["Enums"]["photo_angle"]
+          created_at?: string
+          id?: string
+          inspection_id?: string
+          organization_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_photos_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_photos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspections: {
+        Row: {
+          battery_level_percent: number | null
+          created_at: string
+          damage_notes: string | null
+          fuel_level_percent: number | null
+          has_new_damage: boolean
+          id: string
+          is_dirty_exterior: boolean
+          is_dirty_interior: boolean
+          missing_safety_equipment: string[]
+          odometer_km: number
+          organization_id: string
+          performed_by: string
+          performed_by_role: Database["public"]["Enums"]["inspection_role"]
+          reservation_id: string
+          type: Database["public"]["Enums"]["inspection_type"]
+          vehicle_id: string
+        }
+        Insert: {
+          battery_level_percent?: number | null
+          created_at?: string
+          damage_notes?: string | null
+          fuel_level_percent?: number | null
+          has_new_damage?: boolean
+          id?: string
+          is_dirty_exterior?: boolean
+          is_dirty_interior?: boolean
+          missing_safety_equipment?: string[]
+          odometer_km: number
+          organization_id: string
+          performed_by: string
+          performed_by_role: Database["public"]["Enums"]["inspection_role"]
+          reservation_id: string
+          type: Database["public"]["Enums"]["inspection_type"]
+          vehicle_id: string
+        }
+        Update: {
+          battery_level_percent?: number | null
+          created_at?: string
+          damage_notes?: string | null
+          fuel_level_percent?: number | null
+          has_new_damage?: boolean
+          id?: string
+          is_dirty_exterior?: boolean
+          is_dirty_interior?: boolean
+          missing_safety_equipment?: string[]
+          odometer_km?: number
+          organization_id?: string
+          performed_by?: string
+          performed_by_role?: Database["public"]["Enums"]["inspection_role"]
+          reservation_id?: string
+          type?: Database["public"]["Enums"]["inspection_type"]
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_settings: {
         Row: {
+          carpool_departure_tolerance_minutes: number
+          carpool_return_tolerance_minutes: number
           min_charge_hours_bev: number
           min_cleaning_hours: number
           min_refuel_hours_ice_or_phev: number
@@ -43,6 +173,8 @@ export type Database = {
           range_safety_buffer_percent: number
         }
         Insert: {
+          carpool_departure_tolerance_minutes?: number
+          carpool_return_tolerance_minutes?: number
           min_charge_hours_bev?: number
           min_cleaning_hours?: number
           min_refuel_hours_ice_or_phev?: number
@@ -50,6 +182,8 @@ export type Database = {
           range_safety_buffer_percent?: number
         }
         Update: {
+          carpool_departure_tolerance_minutes?: number
+          carpool_return_tolerance_minutes?: number
           min_charge_hours_bev?: number
           min_cleaning_hours?: number
           min_refuel_hours_ice_or_phev?: number
@@ -119,6 +253,8 @@ export type Database = {
       reservations: {
         Row: {
           active_status: boolean | null
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           end_at: string
           id: string
@@ -130,6 +266,8 @@ export type Database = {
         }
         Insert: {
           active_status?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           end_at: string
           id?: string
@@ -141,6 +279,8 @@ export type Database = {
         }
         Update: {
           active_status?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           end_at?: string
           id?: string
@@ -151,6 +291,13 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reservations_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservations_organization_id_fkey"
             columns: ["organization_id"]
@@ -170,6 +317,55 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_participants: {
+        Row: {
+          id: string
+          joined_at: string
+          organization_id: string
+          passenger_count: number
+          passenger_id: string
+          trip_request_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          organization_id: string
+          passenger_count?: number
+          passenger_id: string
+          trip_request_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          organization_id?: string
+          passenger_count?: number
+          passenger_id?: string
+          trip_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_participants_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_participants_passenger_id_fkey"
+            columns: ["passenger_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_participants_trip_request_id_fkey"
+            columns: ["trip_request_id"]
+            isOneToOne: false
+            referencedRelation: "trip_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -390,15 +586,156 @@ export type Database = {
           },
         ]
       }
+      workflow_tasks: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          organization_id: string
+          resolved_at: string | null
+          source_inspection_id: string | null
+          status: Database["public"]["Enums"]["workflow_task_status"]
+          type: Database["public"]["Enums"]["workflow_task_type"]
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          resolved_at?: string | null
+          source_inspection_id?: string | null
+          status?: Database["public"]["Enums"]["workflow_task_status"]
+          type: Database["public"]["Enums"]["workflow_task_type"]
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          resolved_at?: string | null
+          source_inspection_id?: string | null
+          status?: Database["public"]["Enums"]["workflow_task_status"]
+          type?: Database["public"]["Enums"]["workflow_task_type"]
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_tasks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_tasks_source_inspection_id_fkey"
+            columns: ["source_inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_tasks_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      approve_reservation: {
+        Args: { p_reservation_id: string }
+        Returns: undefined
+      }
+      block_vehicle: {
+        Args: { p_reason: string; p_vehicle_id: string }
+        Returns: undefined
+      }
+      complete_workflow_task: {
+        Args: { p_task_id: string }
+        Returns: undefined
+      }
+      create_carpool_participation: {
+        Args: {
+          p_departure_at: string
+          p_destination: string
+          p_distance_km: number
+          p_existing_trip_request_id: string
+          p_expected_return_at: string
+          p_justification: string
+          p_origin: string
+          p_passenger_count: number
+          p_requires_cargo: boolean
+        }
+        Returns: string
+      }
+      create_vehicle_reservation: {
+        Args: {
+          p_departure_at: string
+          p_destination: string
+          p_distance_km: number
+          p_expected_return_at: string
+          p_justification: string
+          p_origin: string
+          p_passenger_count: number
+          p_requires_cargo: boolean
+          p_vehicle_id: string
+        }
+        Returns: string
+      }
       current_organization_id: { Args: never; Returns: string }
+      record_pickup: {
+        Args: {
+          p_battery_level_percent: number
+          p_damage_notes: string
+          p_fuel_level_percent: number
+          p_has_damage: boolean
+          p_is_dirty_exterior: boolean
+          p_is_dirty_interior: boolean
+          p_missing_safety_equipment: string[]
+          p_odometer_km: number
+          p_reservation_id: string
+          p_role: Database["public"]["Enums"]["inspection_role"]
+        }
+        Returns: string
+      }
+      record_return: {
+        Args: {
+          p_battery_level_percent: number
+          p_damage_notes: string
+          p_fuel_level_percent: number
+          p_has_new_damage: boolean
+          p_is_dirty_exterior: boolean
+          p_is_dirty_interior: boolean
+          p_missing_safety_equipment: string[]
+          p_odometer_km: number
+          p_reservation_id: string
+          p_role: Database["public"]["Enums"]["inspection_role"]
+          p_vehicle_event: string
+          p_workflow_tasks: Database["public"]["Enums"]["workflow_task_type"][]
+        }
+        Returns: string
+      }
+      unblock_vehicle: { Args: { p_vehicle_id: string }; Returns: undefined }
     }
     Enums: {
       energy_type: "ICE" | "PHEV" | "BEV"
+      inspection_role: "traveler" | "security"
+      inspection_type: "pickup" | "return"
+      photo_angle:
+        | "front"
+        | "back"
+        | "left_side"
+        | "right_side"
+        | "wheels"
+        | "interior"
+        | "damage"
       reservation_status:
         | "pending_approval"
         | "confirmed"
@@ -421,6 +758,14 @@ export type Database = {
         | "cleaning"
         | "maintenance"
         | "blocked"
+      workflow_task_status: "open" | "in_progress" | "done" | "cancelled"
+      workflow_task_type:
+        | "repair"
+        | "safety"
+        | "preventive_maintenance"
+        | "cleaning"
+        | "fuel"
+        | "charging"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -552,6 +897,17 @@ export const Constants = {
   public: {
     Enums: {
       energy_type: ["ICE", "PHEV", "BEV"],
+      inspection_role: ["traveler", "security"],
+      inspection_type: ["pickup", "return"],
+      photo_angle: [
+        "front",
+        "back",
+        "left_side",
+        "right_side",
+        "wheels",
+        "interior",
+        "damage",
+      ],
       reservation_status: [
         "pending_approval",
         "confirmed",
@@ -576,6 +932,15 @@ export const Constants = {
         "cleaning",
         "maintenance",
         "blocked",
+      ],
+      workflow_task_status: ["open", "in_progress", "done", "cancelled"],
+      workflow_task_type: [
+        "repair",
+        "safety",
+        "preventive_maintenance",
+        "cleaning",
+        "fuel",
+        "charging",
       ],
     },
   },

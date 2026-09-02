@@ -45,6 +45,7 @@ const OPERATIONALLY_CANDIDATE_STATUSES: VehicleStatus[] = ["available", "chargin
 interface EligibleCandidate {
   vehicleId: string;
   category: VehicleCategory;
+  energyType: Vehicle["energyType"];
   /** 0 = fully READY, 1 = READY_IF_PREPARED. Lower tier always wins. */
   tier: 0 | 1;
   reasons: string[];
@@ -98,6 +99,7 @@ export function recommendVehicle(input: RecommendationInput): RecommendationResu
     eligible.push({
       vehicleId: vehicle.id,
       category,
+      energyType: vehicle.energyType,
       tier: readiness.status === "READY" ? 0 : 1,
       reasons:
         readiness.status === "READY"
@@ -118,11 +120,17 @@ export function recommendVehicle(input: RecommendationInput): RecommendationResu
     };
   }
 
-  // Right Vehicle for the Right Trip: prefer fully-ready candidates, then the smallest
-  // adequate category, avoiding unnecessary use of larger vehicles (§3).
-  eligible.sort(
-    (a, b) => a.tier - b.tier || a.category.passengerCapacity - b.category.passengerCapacity,
-  );
+  // Right Vehicle for the Right Trip (§3): prefer fully-ready candidates, then avoid
+  // unnecessary use of larger/cargo-capable vehicles when the trip doesn't need one,
+  // then prefer electric over combustion when adequate, then the smallest adequate
+  // seating capacity. Passenger capacity alone is a poor size proxy — a 3-seat cargo
+  // pickup is not "smaller" than a 4-seat compact EV for a solo trip with no cargo.
+  const rankScore = (c: EligibleCandidate): number => {
+    const unnecessaryCargo = c.category.supportsCargo && !tripRequest.requiresCargo ? 1 : 0;
+    const notElectric = c.energyType !== "BEV" ? 1 : 0;
+    return c.tier * 1000 + unnecessaryCargo * 100 + notElectric * 10 + c.category.passengerCapacity;
+  };
+  eligible.sort((a, b) => rankScore(a) - rankScore(b));
   const [winner, ...losers] = eligible as [EligibleCandidate, ...EligibleCandidate[]];
 
   for (const loser of losers) {

@@ -1,6 +1,6 @@
 import type { Vehicle } from "../entities/vehicle";
 
-const MAINTENANCE_DUE_SOON_KM = 500;
+export const MAINTENANCE_DUE_SOON_KM = 500;
 const LOW_ENERGY_THRESHOLD_PERCENT = 20;
 
 /**

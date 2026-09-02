@@ -1,9 +1,26 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { assessVehicleReadiness, type Vehicle } from "@fleet/domain";
+import { assessVehicleReadiness } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { toDomainVehicle } from "@/lib/domain/mappers";
 import { ATTENTION_LABELS, STATUS_META } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
-import { signOut } from "./actions";
+import {
+  approveReservation,
+  blockVehicle,
+  completeWorkflowTask,
+  signOut,
+  unblockVehicle,
+} from "./actions";
+
+const WORKFLOW_TASK_LABELS: Record<string, string> = {
+  repair: "Reparo",
+  safety: "Segurança",
+  preventive_maintenance: "Revisão preventiva",
+  cleaning: "Limpeza",
+  fuel: "Abastecimento",
+  charging: "Recarga",
+};
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient();
@@ -24,39 +41,20 @@ export default async function DashboardPage() {
   const { data: vehicleRows, error: vehiclesError } = await supabase
     .from("vehicles")
     .select(
-      `id, plate, energy_type, status, odometer_km, fuel_level_percent, battery_level_percent,
-       estimated_range_km, next_service_odometer_km, has_blocking_damage, missing_safety_equipment,
-       documentation_valid, is_clean_exterior, is_clean_interior,
+      `*,
        category:vehicle_categories(name, passenger_capacity, supports_cargo),
        current_location:vehicle_locations!vehicles_current_location_id_fkey(name)`,
     )
     .order("plate");
 
   const vehicles = vehicleRows ?? [];
+  const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const canManageTasks = isFleetManager || profile?.role === "maintenance_operator";
 
-  const vehiclesWithAttention = vehicles.map((row) => {
-    const domainVehicle: Vehicle = {
-      id: row.id,
-      organizationId: profile?.organization_id ?? "",
-      plate: row.plate,
-      categoryId: "",
-      energyType: row.energy_type,
-      status: row.status,
-      odometerKm: row.odometer_km,
-      fuelLevelPercent: row.fuel_level_percent,
-      batteryLevelPercent: row.battery_level_percent,
-      estimatedRangeKm: row.estimated_range_km,
-      nextServiceOdometerKm: row.next_service_odometer_km,
-      homeLocationId: "",
-      currentLocationId: "",
-      hasBlockingDamage: row.has_blocking_damage,
-      missingSafetyEquipment: row.missing_safety_equipment,
-      documentationValid: row.documentation_valid,
-      isCleanExterior: row.is_clean_exterior,
-      isCleanInterior: row.is_clean_interior,
-    };
-    return { row, attention: assessVehicleReadiness(domainVehicle) };
-  });
+  const vehiclesWithAttention = vehicles.map((row) => ({
+    row,
+    attention: assessVehicleReadiness(toDomainVehicle(row)),
+  }));
 
   const attentionCounts = vehiclesWithAttention.reduce<Record<string, number>>((acc, { attention }) => {
     for (const reason of attention) {
@@ -64,6 +62,26 @@ export default async function DashboardPage() {
     }
     return acc;
   }, {});
+
+  const { data: pendingReservations } = isFleetManager
+    ? await supabase
+        .from("reservations")
+        .select(
+          `id, start_at, end_at,
+           trip_request:trip_requests(origin, destination, passenger_count, requester:profiles(full_name)),
+           vehicle:vehicles(plate)`,
+        )
+        .eq("status", "pending_approval")
+        .order("start_at")
+    : { data: [] };
+
+  const { data: openTasks } = canManageTasks
+    ? await supabase
+        .from("workflow_tasks")
+        .select("id, type, notes, created_at, vehicle:vehicles(plate)")
+        .eq("status", "open")
+        .order("created_at")
+    : { data: [] };
 
   return (
     <main className="min-h-dvh">
@@ -77,6 +95,18 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-4">
+          <Link
+            href="/trips"
+            className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+          >
+            Minhas Viagens
+          </Link>
+          <Link
+            href="/trips/new"
+            className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
+          >
+            + Solicitar Viagem
+          </Link>
           <div className="text-right">
             <p className="text-sm text-paper-50">{profile?.full_name ?? user.email}</p>
             <p className="text-xs uppercase tracking-widest text-fog-600">{profile?.role}</p>
@@ -110,6 +140,79 @@ export default async function DashboardPage() {
         )}
       </section>
 
+      {isFleetManager ? (
+        <section className="border-b border-line-800 px-6 py-4">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+            Reservas Aguardando Aprovação
+          </h2>
+          {!pendingReservations || pendingReservations.length === 0 ? (
+            <p className="text-sm text-fog-400">Nenhuma reserva pendente.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {pendingReservations.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex items-center justify-between rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5"
+                >
+                  <div className="text-sm">
+                    <span className="font-mono text-paper-50">{r.vehicle?.plate}</span>
+                    <span className="text-fog-400">
+                      {" "}
+                      · {r.trip_request?.requester?.full_name} · {r.trip_request?.origin} →{" "}
+                      {r.trip_request?.destination} · {new Date(r.start_at).toLocaleString("pt-BR")}
+                    </span>
+                  </div>
+                  <form action={approveReservation.bind(null, r.id)}>
+                    <button
+                      type="submit"
+                      className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                    >
+                      Aprovar
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
+      {canManageTasks ? (
+        <section className="border-b border-line-800 px-6 py-4">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+            Tarefas Operacionais
+          </h2>
+          {!openTasks || openTasks.length === 0 ? (
+            <p className="text-sm text-fog-400">Nenhuma tarefa aberta.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {openTasks.map((t) => (
+                <li
+                  key={t.id}
+                  className="flex items-center justify-between rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5"
+                >
+                  <div className="text-sm">
+                    <span className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber">
+                      {WORKFLOW_TASK_LABELS[t.type] ?? t.type}
+                    </span>
+                    <span className="ml-2 font-mono text-paper-50">{t.vehicle?.plate}</span>
+                    {t.notes ? <span className="ml-2 text-fog-400">{t.notes}</span> : null}
+                  </div>
+                  <form action={completeWorkflowTask.bind(null, t.id)}>
+                    <button
+                      type="submit"
+                      className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-teal hover:text-signal-teal"
+                    >
+                      Concluir
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
       <section className="px-6 py-4">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
           Painel de Veículos
@@ -135,6 +238,7 @@ export default async function DashboardPage() {
                   <th className="px-4 py-3 font-medium">Odômetro</th>
                   <th className="px-4 py-3 font-medium">Localização Atual</th>
                   <th className="px-4 py-3 font-medium">Atenção</th>
+                  {isFleetManager ? <th className="px-4 py-3 font-medium">Ações</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -176,6 +280,31 @@ export default async function DashboardPage() {
                           </div>
                         )}
                       </td>
+                      {isFleetManager ? (
+                        <td className="px-4 py-3">
+                          {row.status === "blocked" ? (
+                            <form action={unblockVehicle.bind(null, row.id)}>
+                              <button
+                                type="submit"
+                                className="rounded-sm border border-signal-teal px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                              >
+                                Desbloquear
+                              </button>
+                            </form>
+                          ) : row.status === "in_use" || row.status === "returning" ? (
+                            <span className="text-xs text-fog-600">—</span>
+                          ) : (
+                            <form action={blockVehicle.bind(null, row.id, "Bloqueado manualmente pelo gestor")}>
+                              <button
+                                type="submit"
+                                className="rounded-sm border border-signal-red px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
+                              >
+                                Bloquear
+                              </button>
+                            </form>
+                          )}
+                        </td>
+                      ) : null}
                     </tr>
                   );
                 })}
