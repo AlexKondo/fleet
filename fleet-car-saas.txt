@@ -1,0 +1,290 @@
+GWM Intelligent Fleet & Corporate Mobility Platform
+Plataforma Inteligente de Gestão da Frota Corporativa
+1. Visão do Produto
+Desenvolver uma plataforma web + aplicativo mobile para gestão inteligente dos veículos da frota corporativa da GWM.
+A solução substituirá o modelo atual, no qual o OA é utilizado basicamente para solicitação e aprovação, por uma plataforma capaz de gerenciar todo o ciclo operacional:
+Necessidade de viagem → Disponibilidade → Recomendação → Carona → Reserva → Aprovação → Retirada → Checklist → Viagem → Retorno → Checklist → Disponibilidade → Manutenção/Abastecimento/Recarga/Limpeza.
+A plataforma deverá ser independente de outros projetos e priorizar inteligência de software, sem necessidade de investimento inicial em telemetria, sensores ou hardware adicional.
+2. Solicitação Inteligente de Viagem
+O usuário informa:
+Data/hora de saída;
+Data/hora prevista de retorno;
+Origem;
+Destino;
+Justificativa;
+Número de passageiros;
+Necessidade de transporte de carga;
+Características relevantes da viagem.
+A plataforma verifica automaticamente disponibilidade, condição dos veículos, reservas existentes e necessidades da viagem.
+O usuário poderá visualizar catálogo dos veículos disponíveis com fotos e principais características.
+3. Intelligent Vehicle Recommendation
+O usuário não precisa necessariamente escolher o veículo.
+O Vehicle Recommendation Engine recomenda o veículo mais adequado considerando:
+Número de passageiros;
+Necessidade de carga;
+Tipo/capacidade do veículo;
+Distância da viagem;
+Origem/destino;
+Disponibilidade;
+Combustível;
+Bateria;
+Autonomia;
+Restrições de circulação;
+Condição operacional;
+Reservas futuras.
+Exemplo:
+Viagem com carga → recomendar Poer P30.
+Viagem curta, uma pessoa e sem carga → priorizar veículo menor/elétrico adequado, evitando utilização desnecessária de veículos maiores.
+Princípio:
+Right Vehicle for the Right Trip.
+4. Corporate Carpooling Intelligence
+Antes de disponibilizar outro veículo, a plataforma verifica se já existe uma viagem compatível.
+Exemplo:
+Iracemápolis → São Paulo
+Saída solicitada: 08:00
+Retorno: 18:00
+A plataforma identifica:
+Haval H6 já reservado para São Paulo
+Saída: 07:45
+Retorno: 17:30
+Ocupação: 2/5 pessoas
+A plataforma recomenda ao novo usuário solicitar carona, desde que aceite os horários da viagem existente.
+O matching deverá considerar destino, proximidade geográfica, horário e lugares disponíveis.
+Objetivo: aumentar ocupação dos veículos e reduzir número de carros utilizados simultaneamente.
+5. Reservation & Approval Workflow
+Após recomendação/seleção:
+Request → Approval → Reservation Confirmed.
+A plataforma impede double booking e mantém calendário em tempo real de cada veículo.
+O Fleet Manager poderá:
+Aprovar/administrar reservas;
+Substituir veículos;
+Bloquear períodos;
+Cancelar disponibilidade;
+Transferir reservas;
+Bloquear veículo para manutenção;
+Agendar lavagem;
+Agendar recarga;
+Administrar indisponibilidades.
+Se o veículo reservado ficar indisponível, a plataforma deverá procurar automaticamente outro veículo compatível.
+6. Vehicle Availability & Status
+Cada veículo possuirá status operacional atualizado:
+Available
+Reserved
+Awaiting Pickup
+In Use
+Returning
+Inspection
+Charging
+Cleaning
+Maintenance
+Blocked
+Estar fisicamente na fábrica não significa necessariamente estar disponível.
+A plataforma deverá determinar se o veículo está realmente Ready for Trip.
+7. Trip-Specific Readiness
+A disponibilidade deverá considerar a viagem específica.
+Exemplo:
+Um ORA 03 com 10% de bateria e autonomia estimada de 20 km pode estar fisicamente disponível, porém não está apto para uma viagem de 150 km.
+A plataforma deverá responder:
+“Este veículo está apto para ESTA viagem?”
+Considerando:
+Distância prevista;
+Autonomia;
+Margem de segurança;
+Combustível;
+Bateria;
+Manutenção;
+Avarias;
+Pneus;
+Equipamentos;
+Limpeza;
+Reservas;
+Tempo disponível antes da saída.
+8. Energy & Range Intelligence
+A plataforma deverá tratar:
+ICE: combustível + autonomia.
+PHEV: combustível + bateria + autonomia elétrica/híbrida.
+BEV (ORA 03 / ORA 05): bateria + autonomia elétrica.
+Nos checklists deverão ser registrados combustível e/ou nível de bateria.
+A plataforma calcula se existe autonomia suficiente para a viagem, incluindo Range Safety Buffer configurável.
+Se não houver:
+Opção A — existe tempo para recarga:
+Bloquear o veículo para carregamento.
+Opção B — não existe tempo suficiente:
+Substituir automaticamente por outro veículo adequado.
+9. Digital Check-out & Check-in
+Na retirada, o usuário realiza checklist digital pelo aplicativo.
+A Segurança/Portaria também realiza checklist independente.
+Principais verificações:
+Condição externa;
+Avarias;
+Vidros;
+Faróis/lanternas;
+Pneus/rodas;
+Limpeza externa;
+Limpeza interna;
+Macaco;
+Chave de roda;
+Triângulo;
+Outros equipamentos obrigatórios;
+Quilometragem;
+Combustível;
+Bateria, quando aplicável.
+No retorno, usuário e segurança repetem o processo.
+Isso cria evidência de:
+Before Trip × After Trip.
+10. Standardized Photo Inspection
+O aplicativo orientará fotos padronizadas do veículo.
+A câmera poderá possuir uma moldura/silhueta de enquadramento indicando a posição correta.
+Exemplos:
+Frente;
+Traseira;
+Lateral esquerda;
+Lateral direita;
+Rodas;
+Interior;
+Fotos específicas de avarias.
+Quando uma nova avaria for informada, fotos específicas poderão ser obrigatórias.
+Futuramente, visão computacional poderá comparar automaticamente imagens de antes/depois e sugerir possíveis novas avarias.
+11. Checklist → Automatic Workflow
+O checklist não será apenas registro.
+Uma anomalia deverá gerar automaticamente uma ação.
+Exemplos:
+Avaria → Repair/Maintenance Workflow
+Veículo sujo → Cleaning Workflow
+Combustível baixo → Fuel Workflow
+Bateria baixa → Charging Workflow
+Revisão próxima → Preventive Maintenance Workflow
+Equipamento obrigatório ausente → Safety/Maintenance Workflow
+Dependendo da criticidade, a plataforma poderá manter o veículo disponível ou bloqueá-lo automaticamente.
+12. Predictive Maintenance
+Com base no km registrado nos check-ins e no histórico de utilização, a plataforma poderá prever quando determinado veículo atingirá sua próxima revisão.
+Exemplo:
+Km atual: 18.900 km
+Revisão: 20.000 km
+Média histórica: 110 km/dia
+A plataforma estima quando chegará aos 20.000 km e procura uma janela disponível para manutenção.
+O Fleet Manager recebe recomendação para agendamento e poderá bloquear automaticamente aquele período.
+13. Intelligent Cleaning & Charging Scheduling
+Se o veículo retornar sujo, a plataforma verifica suas próximas reservas e procura uma janela para lavagem.
+Da mesma forma, para BEVs/PHEVs, poderá procurar períodos disponíveis para recarga.
+Exemplo:
+Vehicle available: 18:00–07:30
+Battery: 15%
+Next trip: 08:00
+→ recomendar carregamento durante a noite.
+O mesmo conceito poderá futuramente otimizar vários veículos disputando carregadores disponíveis.
+14. Current Vehicle Location
+No check-in, o último usuário deverá informar onde estacionou o veículo.
+Exemplos:
+Portaria P1;
+Assembly Shop – área externa;
+Restaurante – carregadores;
+Paint Shop;
+Administração;
+Outro local.
+Cada veículo terá:
+Home Location = localização padrão.
+Current Location = localização real registrada no último check-in.
+Assim, o próximo usuário saberá exatamente onde retirar o veículo.
+Exemplo:
+ORA 03
+Current Location: Assembly Shop – Charger 03
+Status: Charging
+Battery: 72%
+15. São Paulo Traffic Restriction Intelligence
+Com base no veículo, placa, combustível, data, horário, origem e destino, a plataforma deverá alertar sobre eventuais restrições de circulação aplicáveis à viagem, como rodízio em São Paulo.
+Essa informação também poderá participar da recomendação do veículo.
+16. Vehicle Readiness
+Cada veículo deverá possuir uma visão consolidada de prontidão:
+Vehicle Readiness
+considerando:
+Maintenance;
+Fuel;
+Battery;
+Cleaning;
+Tires;
+Safety Equipment;
+Damage;
+Documentation;
+Availability.
+Mais importante que isso será o:
+Trip-Specific Readiness
+A plataforma determina se aquele veículo está pronto para aquela viagem específica.
+17. Mobility Decision Engine
+Este será um dos principais componentes inteligentes da plataforma.
+Para cada necessidade de deslocamento, o sistema deverá avaliar:
+1. Já existe viagem compatível para carona?
+↓ Não
+2. Qual veículo melhor atende à necessidade?
+↓
+3. Está disponível?
+↓
+4. Está operacionalmente Ready?
+↓
+5. Possui combustível/bateria/autonomia suficiente?
+↓
+6. Existe alguma restrição para a viagem?
+↓
+7. Caso exista pendência, há tempo para abastecer, carregar, limpar ou realizar manutenção?
+↓
+8. Se não, existe veículo substituto?
+↓
+Best Mobility Recommendation
+A ideia central é:
+O usuário informa sua necessidade de deslocamento. A plataforma procura a melhor maneira de atendê-la.
+18. Fleet Manager Dashboard
+O gestor deverá ter visão completa da operação:
+Veículos disponíveis;
+Veículos em uso;
+Reservas futuras;
+Veículos atrasados;
+Veículos em manutenção;
+Veículos em lavagem;
+Veículos carregando;
+Bateria/combustível;
+Próximas revisões;
+Avarias;
+Pendências;
+Localização atual;
+Taxa de utilização;
+Quilometragem;
+Caronas realizadas;
+Ocupação dos veículos;
+Histórico por veículo.
+19. Fleet Intelligence
+Com o histórico acumulado, a plataforma poderá identificar:
+Veículos subutilizados;
+Horários de pico;
+Demanda simultânea;
+Km por veículo;
+Km por viagem;
+Destinos mais frequentes;
+Taxa de ocupação;
+Potencial de carpooling;
+Necessidade real de frota;
+Veículos com maior incidência de problemas;
+Previsão de manutenção;
+Oportunidades de redução de custos.
+Exemplo futuro:
+“A frota possui 32 veículos, mas a demanda histórica máxima indica necessidade simultânea de apenas 24.”
+Princípio do MVP
+O MVP deverá priorizar inteligência de software sem CAPEX adicional.
+Não será necessário instalar:
+Rastreadores;
+OBD;
+Sensores;
+Telemetria;
+Hardware adicional nos veículos.
+Os dados serão obtidos através da operação normal:
+Reservas + Check-in/out + Usuários + Segurança + Fotos + Km + Combustível + Bateria + Histórico.
+A arquitetura poderá ficar preparada para integração futura com telemetria/APIs dos veículos, mas isso não será dependência do MVP.
+Visão Final
+A plataforma não deverá ser apenas um:
+“Vehicle Booking System”.
+Ela deverá funcionar como uma:
+GWM Intelligent Fleet & Corporate Mobility Platform
+capaz de entender:
+Quem precisa viajar → Para onde → Quando → Com quantas pessoas → Com qual necessidade → Se já existe uma viagem compatível → Qual veículo é mais adequado → Se esse veículo está realmente pronto → O que precisa acontecer antes da próxima viagem.
+Princípio central
+Right Vehicle. Right Trip. Right Time. Ready to Go.
+A plataforma deverá maximizar a disponibilidade e utilização da frota, melhorar a experiência dos usuários e gestores, aumentar controle e segurança e reduzir desperdícios — utilizando principalmente inteligência de software e os dados gerados pela própria operação.
