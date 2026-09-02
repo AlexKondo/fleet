@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Database } from "@fleet/supabase-client";
-import { SAFETY_EQUIPMENT_OPTIONS } from "@/lib/domain/checklist";
+import { PHOTO_ANGLE_LABELS, SAFETY_EQUIPMENT_OPTIONS, type PhotoAngle } from "@/lib/domain/checklist";
+import { PhotoCaptureSection } from "../PhotoCapture";
 import { submitPickup } from "./actions";
 
 type EnergyType = Database["public"]["Enums"]["energy_type"];
@@ -16,8 +18,10 @@ export function PickupForm({
   energyType: EnergyType;
   currentOdometer: number;
 }) {
+  const router = useRouter();
   const [hasDamage, setHasDamage] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failedPhotoAngles, setFailedPhotoAngles] = useState<PhotoAngle[] | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const showFuel = energyType === "ICE" || energyType === "PHEV";
@@ -25,23 +29,43 @@ export function PickupForm({
 
   function handleSubmit(formData: FormData) {
     setError(null);
+    setFailedPhotoAngles(null);
     const missing = SAFETY_EQUIPMENT_OPTIONS.filter(
       (opt) => formData.get(`equip_${opt.value}`) === "on",
     ).map((opt) => opt.value);
 
     startTransition(async () => {
-      const result = await submitPickup({
-        reservationId,
-        odometerKm: Number(formData.get("odometerKm")),
-        fuelLevelPercent: showFuel ? Number(formData.get("fuelLevelPercent")) : null,
-        batteryLevelPercent: showBattery ? Number(formData.get("batteryLevelPercent")) : null,
-        hasDamage,
-        damageNotes: hasDamage ? String(formData.get("damageNotes") ?? "") : null,
-        missingSafetyEquipment: missing,
-        isDirtyExterior: formData.get("isDirtyExterior") === "on",
-        isDirtyInterior: formData.get("isDirtyInterior") === "on",
-      });
-      if (!result.success) setError(result.error ?? "unknown_error");
+      // formData carries both the typed fields read below and the photo_<angle> file
+      // inputs from PhotoCaptureSection — the server action pulls the photos back out
+      // of it after the pickup itself is recorded.
+      const result = await submitPickup(
+        {
+          reservationId,
+          odometerKm: Number(formData.get("odometerKm")),
+          fuelLevelPercent: showFuel ? Number(formData.get("fuelLevelPercent")) : null,
+          batteryLevelPercent: showBattery ? Number(formData.get("batteryLevelPercent")) : null,
+          hasDamage,
+          damageNotes: hasDamage ? String(formData.get("damageNotes") ?? "") : null,
+          missingSafetyEquipment: missing,
+          isDirtyExterior: formData.get("isDirtyExterior") === "on",
+          isDirtyInterior: formData.get("isDirtyInterior") === "on",
+        },
+        formData,
+      );
+
+      if (!result.success) {
+        setError(result.error ?? "unknown_error");
+        return;
+      }
+
+      if (result.failedPhotoAngles && result.failedPhotoAngles.length > 0) {
+        // The checklist is already saved — hold here so the user actually sees which
+        // angles didn't make it, instead of redirecting straight past the warning.
+        setFailedPhotoAngles(result.failedPhotoAngles);
+        return;
+      }
+
+      router.push("/trips");
     });
   }
 
@@ -133,19 +157,41 @@ export function PickupForm({
         Sujeira interna
       </label>
 
+      <PhotoCaptureSection showDamage={hasDamage} />
+
       {error ? (
         <p role="alert" className="text-sm text-signal-red">
           Não foi possível registrar a retirada ({error}).
         </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="mt-2 rounded-sm bg-signal-blue px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
-      >
-        {isPending ? "Registrando…" : "Concluir Retirada"}
-      </button>
+      {failedPhotoAngles ? (
+        <div role="alert" className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 p-3">
+          <p className="text-sm text-signal-amber">
+            Retirada registrada, mas {failedPhotoAngles.length === 1 ? "a foto" : "as fotos"} de{" "}
+            {failedPhotoAngles.map((angle) => PHOTO_ANGLE_LABELS[angle]).join(", ")}{" "}
+            não {failedPhotoAngles.length === 1 ? "foi enviada" : "foram enviadas"}. Você pode
+            adicioná-las depois.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/trips")}
+            className="mt-2 rounded-sm border border-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
+          >
+            Ir para Minhas Viagens
+          </button>
+        </div>
+      ) : null}
+
+      {failedPhotoAngles ? null : (
+        <button
+          type="submit"
+          disabled={isPending}
+          className="mt-2 rounded-sm bg-signal-blue px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {isPending ? "Registrando…" : "Concluir Retirada"}
+        </button>
+      )}
     </form>
   );
 }

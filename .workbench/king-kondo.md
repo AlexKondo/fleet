@@ -10,154 +10,121 @@ Fonte: `fleet-car-saas.txt` (raiz do repo) + `.claude/skills/gauntlet/SKILL.md` 
 Princípio central: **Right Vehicle. Right Trip. Right Time. Ready to Go.**
 
 ## Decisions
-- MVP = Core operacional completo (ver Decisions da rodada anterior). Confirmado em
-  2026-09-02: aplicar migrations no Supabase real e continuar o ciclo operacional
-  completo (request → aprovação → retirada → viagem → retorno → workflow).
-- Ambiente: **projeto Supabase remoto real** (`rhbiwkxilelitugbwind.supabase.co`) é o
-  ambiente de referência — `apps/web/.env.local` aponta para lá. Supabase local
-  (`supabase start`) continua disponível para desenvolvimento rápido/seguro; ver README.
-- Multi-tenant, RLS, design "console de despacho" — inalterados da rodada anterior.
+Ver rodadas anteriores. Nesta rodada: usuário pediu para "terminar tudo" usando
+`using-superpowers` + `frontend-design` + `king-kondo` para **paralelizar** o trabalho
+restante. Isolamento por git worktree não estava disponível neste ambiente (harness
+detectou "not a git repository" — cache de estado anterior ao `git init` desta sessão);
+os 5 builders rodaram na mesma árvore de trabalho, com contratos de ownership de arquivo
+explícitos por agente para evitar colisão — funcionou sem nenhum conflito real.
 
 ## Architecture Contract
-Inalterado (ver seção anterior). Migrations agora em 4 arquivos:
+Inalterado. Migrations agora em 5 arquivos (0001-0005), todas aplicadas e verificadas em
+**local e remoto**. Nova migration:
 ```
-0001_init_schema.sql        → schema base + RLS (W1/W2)
-0002_operational_cycle.sql  → trip_participants, inspections, inspection_photos,
-                               workflow_tasks, storage bucket vehicle-photos (W5/W6)
-0003_trip_request_flow.sql  → policy de insert em reservations p/ o próprio requester +
-                               RPCs create_vehicle_reservation / create_carpool_participation
-0004_operational_actions.sql → RPCs approve_reservation, record_pickup, record_return,
-                               complete_workflow_task, block_vehicle, unblock_vehicle
+0005_fleet_manager_advanced_actions.sql → RPCs swap_reservation_vehicle,
+                                           transfer_reservation (§5)
 ```
-Todas as 4 aplicadas e verificadas em **local e remoto**.
 
-## Workstreams
-- [x] W1 Product Contract & Domain Model
-- [x] W2 Availability/Reservation Core (+ policy de insert do próprio requester, §5)
-- [x] W3 Trip-Specific Readiness + Vehicle Readiness geral
-- [x] W4 Mobility Decision Engine — **agora com Carpooling Matching (§4)** via
-      `findCarpoolMatches` + `planMobility` (carpool é sempre avaliado antes de alocar
-      veículo, por §17)
-- [x] W5 Check-in/Check-out — checklist de retirada e retorno reais (RPCs
-      `record_pickup`/`record_return`), com autorização própria (traveler ou
-      security/fleet_manager). **Falta**: upload real de fotos (bucket+RLS existem,
-      UI de captura não foi construída — ver Remaining Work).
-- [x] W6 Checklist → Workflow automático (§11) — `deriveReturnOutcome` no domínio +
-      `workflow_tasks` no banco + painel do Fleet Manager para concluir tarefas.
-      Reavaliação de status ao concluir tarefa corrigida para considerar TODAS as
-      tarefas abertas do veículo, não só as do mesmo tipo (bug real, ver Evidence).
-- [~] W7 Web Fleet Manager — dashboard + solicitação de viagem + aprovação + bloqueio/
-      desbloqueio de veículo + conclusão de tarefas, tudo real e testado via UI.
-      **Falta**: trocar veículo de uma reserva, transferir reserva, agendar
-      limpeza/recarga proativamente (só reage a tarefas já criadas).
-- [ ] W9 Analytics/Fleet Intelligence (§19) — não iniciado.
-- [ ] Predictive Maintenance (§12, estimativa de km/dia) — não iniciado (só threshold
-      simples de "revisão próxima").
-- [ ] São Paulo Traffic Restriction (§15) — não iniciado.
-- [ ] App mobile/PWA otimizada para campo — não iniciado (web responsivo básico, não
-      testado em viewport mobile nem com câmera).
-
-## Active Builders / Critics
-Toda esta rodada foi construída diretamente pelo Orchestrator (eu), sem fan-out para
-subagentes — o volume de contratos inter-dependentes (schema ↔ domínio ↔ RPCs ↔ UI)
-tornava a paralelização arriscada sem quebrar em fatias menores primeiro. Nenhum Blind
-Critic independente rodou ainda sobre este código — é o próximo passo recomendado antes
-de qualquer release gate real.
+## Workstreams — status final desta fase
+- [x] W1-W7 (rodadas anteriores) — core operacional completo
+- [x] Carona (§4), aprovação, check-in/out, workflow automático — rodada anterior
+- [x] **Manutenção Preditiva (§12)** — `predictNextService` no domínio (8 testes) +
+      seção "Manutenção Preditiva" na página `/analytics` (conectada nesta rodada — o
+      builder original entregou a função mas não a conectou a nenhuma UI; achado pelo
+      Blind Critic e corrigido)
+- [x] **Restrição de Rodízio SP (§15)** — `checkTrafficRestriction` no domínio (5 testes)
+      + integrado ao `planMobility` como aviso (não bloqueio) + banner na UI de
+      solicitação de viagem
+- [x] **Teste automatizado de isolamento cross-tenant** — `supabase/tests/cross-tenant-rls.mjs`,
+      18/18 verificações passando (2 rodadas, antes e depois da migration 0005), zero
+      vazamentos encontrados
+- [x] **Upload de fotos no checklist (§10)** — 7 ângulos padronizados, upload real
+      verificado (arquivo no Storage + linha em `inspection_photos`), opcional (não
+      bloqueia o checklist)
+- [x] **Ações avançadas do Fleet Manager (§5)** — trocar veículo e transferir reserva,
+      testados de verdade pela UI (não só typecheck)
+- [x] **Analytics / Fleet Intelligence (§19)** — km por veículo/viagem, destinos
+      frequentes, taxa de carpooling, veículos subutilizados, manutenção preditiva
 
 ## Passed Gates
-- `pnpm test` (domain): **66/66 GREEN** (8 arquivos, incluindo carpooling, state
-  machine, workflow routing).
+- `pnpm test` (domain): **81/81 GREEN** (10 arquivos).
 - `pnpm typecheck`: limpo nos 3 pacotes.
-- Migrations 0001-0004 aplicadas sem erro em **local (Docker) e remoto**.
-- Fluxo E2E completo via Playwright, através da UI real, contra o Supabase local, 0 erros
-  de console em cada etapa:
-  1. Colaborador solicita viagem → engine recomenda veículo (ou carona) com explicação.
-  2. Fleet Manager aprova a reserva pendente no dashboard.
-  3. Colaborador faz checklist de retirada → veículo vai para `in_use`.
-  4. Colaborador faz checklist de retorno com avaria simulada → veículo vai
-     corretamente para `maintenance`, tarefas `repair`+`cleaning` criadas.
-  5. Fleet Manager conclui a tarefa de reparo → veículo **permanece** `cleaning`
-     (não libera com pendência de limpeza) → conclui limpeza → veículo volta a
-     `available`.
-- Repetido também contra o **Supabase remoto real** (login + dashboard, 0 erros).
-- RLS/autorização testada com chamadas reais (não só teoria): colaborador tentando
-  aprovar a própria reserva é rejeitado pelo próprio mecanismo de `FOR UPDATE` do
-  Postgres (a policy de UPDATE em `vehicles` não cobre `employee`); fleet manager
-  aprova normalmente.
+- Migration 0005 aplicada sem erro em local e remoto, de primeira (SQL bem escrito
+  mesmo sem o autor poder testá-la ao vivo).
+- Teste de isolamento cross-tenant: **18/18**, rodado duas vezes (idempotente), zero
+  vazamentos, tanto para dados quanto para a fronteira de papéis (employee vs
+  fleet_manager).
+- Code review (`/code-review high`) sobre todo o diff da rodada, com verificação
+  independente de cada achado antes de eu confiar nele — ver Evidence.
+- E2E real via Playwright contra Supabase local, cobrindo TUDO desta rodada: Analytics
+  carrega sem erro, trocar veículo funciona (verificado no banco), transferir reserva
+  funciona (verificado no banco), upload de foto sobe pro Storage de verdade (HTTP 200
+  confirmado no objeto), fluxo de solicitação→aprovação→retirada→retorno continua
+  funcionando (regressão), zero erros de console em qualquer etapa.
 
-## Evidence — bugs reais encontrados e corrigidos nesta rodada
-1. **Ranking do Mobility Decision Engine (P1, viola exemplo explícito do §3)**: o
-   critério de "menor veículo" usava só `passengerCapacity`, o que fazia o motor
-   recomendar a picape de carga (Poer P30, capacidade 3) em vez do EV compacto
-   (capacidade 4) para uma viagem solo sem carga — exatamente o contra-exemplo que a
-   spec cita. Encontrado rodando o fluxo real via Playwright, não só nos testes
-   unitários (que usavam categorias com capacidades diferentes das do seed real).
-   Corrigido: o ranking agora penaliza veículos cargo-capable quando a viagem não
-   precisa de carga e prefere elétrico sobre combustão, com teste de regressão.
-2. **`record_return` gravava `is_dirty_exterior`/`is_dirty_interior`** em colunas que na
-   verdade se chamam `is_clean_exterior`/`is_clean_interior` (polaridade invertida) —
-   erro de SQL só detectado ao rodar a RPC de verdade (`column does not exist`).
-3. **`complete_workflow_task` liberava o veículo prematuramente**: ao concluir uma
-   tarefa (ex.: reparo), só olhava tarefas do MESMO tipo, ignorando que ainda podia
-   haver limpeza pendente — o veículo voltaria para `available` sujo. Corrigido para
-   recalcular o status a partir de TODAS as tarefas abertas do veículo. Encontrado e
-   verificado com um teste manual específico (completar reparo primeiro, confirmar que
-   o veículo fica em `cleaning`, só then completar limpeza).
-4. **Ambiente de teste apontando para o projeto remoto sem eu perceber**: depois de
-   trocar `apps/web/.env.local` para validar a conexão remota, não voltei para local —
-   isso causou uma cascata confusa de "dados fantasma" nos meus próprios testes E2E
-   (uma reserva de um teste virando candidata de carona do teste seguinte). Não é um
-   bug do produto, mas poluiu o banco remoto real do usuário; limpo (ver abaixo).
-5. `tsrange` vs `tstzrange` e tokens de `auth.users` NULL — já registrados na rodada
-   anterior.
+## Evidence — achados do Blind Critic (todos corrigidos)
+1. **Bug real (P1)**: `planMobility` adicionava a razão `"traffic_restriction_active"`
+   só no array `reasons` de nível superior, mas a UI renderiza `plan.vehicle.reasons`
+   (array aninhado, nunca tocado) — o aviso de rodízio nunca aparecia na lista de
+   motivos (só o banner separado funcionava). Corrigido: `vehicle` agora carrega uma
+   cópia com o `reasons` estendido. Teste de regressão adicionado.
+2. **Gap de robustez (P2)**: upload de foto não validava tipo MIME nem tamanho do
+   arquivo (bucket também sem limite configurado) — `accept="image/*"` no `<input>` é só
+   dica de UI, não validação real. Corrigido no helper compartilhado (10MB máx,
+   `image/*` obrigatório, revalidado no server).
+3. **Performance (P2)**: upload das 7 fotos rodava sequencialmente (`for...await`) em
+   vez de paralelo — até 7x mais lento numa conexão ruim em campo. Corrigido com
+   `Promise.allSettled`.
+4. **Feature incompleta (P2)**: `predictNextService` (Manutenção Preditiva) foi
+   implementada e testada no domínio, mas nunca conectada a nenhuma tela — o Fleet
+   Manager não tinha como ver a previsão. Corrigido: nova seção em `/analytics`.
+5. **Duplicação (P3)**: `PHOTO_ANGLE_LABELS` duplicava à mão os mesmos 7 rótulos já
+   definidos em `STANDARD_PHOTO_ANGLES`/`DAMAGE_PHOTO_ANGLE`. Corrigido: agora derivado
+   das mesmas fontes.
+6. **Duplicação (P3)**: a função `uploadInspectionPhotos` estava copiada
+   integralmente entre `pickup/actions.ts` e `return/actions.ts`. Extraída para
+   `apps/web/lib/domain/uploadInspectionPhotos.ts` (resolve #2 e #3 ao mesmo tempo).
 
-## Cleanup realizado
-- Banco remoto: dados de teste (reservas fantasma "Campinas"/GWM5E12, participante de
-  carona) removidos — `truncate` de todas as tabelas de domínio + usuários demo
-  recriados + seed original reaplicado. Estado do remoto agora idêntico ao seed limpo.
-- Banco local: resetado para o seed limpo após os testes.
-- Scripts de teste temporários (Playwright, scripts com senha do Postgres em texto
-  plano) apagados do scratchpad da sessão — nunca commitados ao repo.
+Todos os achados foram verificados por um agente independente antes de eu aplicar a
+correção (nenhum foi corrigido só por confiança no relatório do critic).
 
 ## Assumptions
-Mantidas da rodada anterior, mais:
+Mantidas das rodadas anteriores, mais:
 ```
 ASSUMPTION
-Destino de carpooling usa comparação exata de string (§4), sem geocoding/proximidade.
-Why: geocoding real está fora do MVP (nenhuma dependência de API externa paga ainda).
-Risk if wrong: médio — "São Paulo" vs "São Paulo - Zona Sul" não casam hoje. Documentar
-para o usuário; resolver quando houver integração de geocoding.
+Restrição de rodízio SP tratada como aviso (soft warning), não bloqueio duro — o
+veículo restrito ainda pode ser recomendado, mas nunca silenciosamente. Ver comentário
+em planMobility.ts para o raciocínio completo.
+Why: a spec diz "poderá participar da recomendação", não "deve excluir"; pode haver
+permissão de exceção ou decisão de negócio para circular mesmo assim.
+Risk if wrong: baixo — fácil de virar exclusão dura depois se o usuário preferir.
 ```
 ```
 ASSUMPTION
-Fotos de inspeção (§10): bucket `vehicle-photos` e RLS existem no schema, mas não há UI
-de captura/upload ainda. O checklist funciona sem foto (texto/checkbox apenas).
-Why: priorizei fechar o ciclo operacional completo (status/workflow) antes da evidência
-fotográfica, que é aditiva e não bloqueia o restante do fluxo.
-Risk if wrong: baixo tecnicamente (schema já suporta), mas é uma lacuna real de produto
-frente ao §9/§10 — não devo alegar "checklist completo" sem essa ressalva.
+Regras de rodízio SP são um "melhor esforço" do modelo público conhecido (dígito final
+da placa, seg-sex, 7h-10h e 17h-20h, BEV isento), marcado explicitamente no código como
+"deve ser verificado contra a regra oficial vigente antes de confiar em produção" —
+por instrução direta da spec ("não invente regras regulatórias atuais").
+Risk if wrong: médio — é só um aviso (ver acima), mas um aviso errado é pior que
+nenhum aviso se o usuário passar a confiar cegamente nele.
 ```
 
 ## Risks
-- Nenhum Blind Critic independente revisou este código ainda (só self-verification +
-  E2E real). Recomendo isso como próximo passo antes de qualquer release gate.
-- RLS cross-tenant ainda não tem teste automatizado com um 2º tenant fake (P1 pendente
-  desde a rodada anterior).
-- Fleet Manager não tem "trocar veículo"/"transferir reserva" — se uma reserva
-  aprovada precisar mudar de veículo, hoje só dá para bloquear e recriar manualmente.
+- Nenhum teste de concorrência real (dois swaps simultâneos) rodou contra
+  `swap_reservation_vehicle` — a proteção contra deadlock (lock em ordem por id) foi
+  escrita com cuidado mas não exercida sob concorrência de verdade.
+- Regras de rodízio SP não são validadas contra fonte oficial (ver Assumption acima).
+- Tabela de rodízio e config de manutenção preditiva não são configuráveis por
+  organização ainda (usam sempre o default do pacote de domínio).
 
 ## Human Gates
-- Nenhum pendente no momento além dos já conhecidos (projeto Supabase real: feito;
-  push do scaffold: feito). Próximos pushes materiais serão informados antes de enviar,
-  como já combinado.
+Nenhum pendente além dos já conhecidos.
 
-## Remaining Work (ordem sugerida)
-1. Blind Critic (Domain/Mobility + Security) sobre o código desta rodada.
-2. Teste cross-tenant de RLS automatizado.
-3. UI de captura/upload de fotos no checklist (§10), usando o bucket já criado.
-4. Ações adicionais do Fleet Manager: trocar veículo, transferir reserva, agendar
-   limpeza/recarga proativamente (§5/§13).
-5. Predictive Maintenance real (§12) e São Paulo Traffic Restriction (§15).
-6. Fleet Intelligence / analytics (§19).
-7. PWA/mobile: testar e otimizar os fluxos de checklist para uso em campo (uma mão,
-   câmera, recuperação de rede).
+## Remaining Work
+1. Teste de concorrência real em `swap_reservation_vehicle`.
+2. Configurabilidade por organização das regras de rodízio e da janela de manutenção
+   preditiva (hoje hardcoded como default do domínio).
+3. App mobile/PWA otimizado para campo (câmera, uma mão, rede instável) — a captura de
+   foto já existe na web, mas não foi testada em viewport mobile real.
+4. Validar a tabela de rodízio de SP contra a fonte oficial (CET-SP) antes de qualquer
+   uso em produção real.

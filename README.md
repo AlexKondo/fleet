@@ -46,3 +46,40 @@ pnpm test        # testes do domínio (vitest)
 pnpm typecheck    # typecheck de todos os pacotes
 pnpm dev          # apps/web em modo desenvolvimento
 ```
+
+## Teste de isolamento multi-tenant (RLS)
+
+[`supabase/tests/cross-tenant-rls.mjs`](./supabase/tests/cross-tenant-rls.mjs) é um teste
+end-to-end real (não uma leitura das políticas) que prova, via chamadas HTTP reais à API do
+Supabase com tokens de usuário reais, que as políticas RLS de
+[`0001_init_schema.sql`](./supabase/migrations/0001_init_schema.sql),
+[`0002_operational_cycle.sql`](./supabase/migrations/0002_operational_cycle.sql) e
+[`0003_trip_request_flow.sql`](./supabase/migrations/0003_trip_request_flow.sql) realmente
+isolam os tenants. Ele cria uma segunda organização descartável ("Test Tenant B") com seu
+próprio usuário `employee`, faz login real como esse usuário e como
+`colaborador@gwm-demo.local`/`gestor@gwm-demo.local` da organização seedada, e então tenta
+ativamente:
+
+- ler veículos/reservas/perfis de outra organização (deve vir vazio, não erro);
+- inserir/atualizar dados marcados com o `organization_id` de outra organização (deve ser
+  rejeitado ou não ter efeito algum — verificado lendo o estado real do banco, não só o
+  status HTTP);
+- executar uma ação exclusiva de `fleet_manager` (aprovar reserva, alterar status de
+  veículo) logado como `employee` (deve ser rejeitado), com um controle positivo confirmando
+  que o mesmo fluxo funciona para quem tem permissão.
+
+O script limpa tudo o que cria (organização, usuário, veículos e reservas de teste) ao final,
+inclusive em caso de falha, então é seguro rodar repetidamente contra um banco compartilhado.
+
+Pré-requisito: instância local do Supabase já rodando (`pnpm exec supabase start`), sem
+resetar o banco. Para rodar:
+
+```bash
+node supabase/tests/cross-tenant-rls.mjs
+```
+
+O script usa por padrão a URL/anon key/service role key do ambiente local padrão do
+Supabase CLI e o container Docker `supabase_db_fleet` (para o bootstrap/limpeza do usuário de
+teste em `auth.users`, que não é exposto via REST). Todos são configuráveis por variável de
+ambiente (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DB_CONTAINER`)
+caso seu projeto local use nomes/portas diferentes.

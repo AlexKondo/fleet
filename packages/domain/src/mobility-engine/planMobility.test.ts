@@ -110,4 +110,49 @@ describe("planMobility (§17 — Mobility Decision Engine)", () => {
     expect(result.type).toBe("none");
     expect(result.reasons.length).toBeGreaterThan(0);
   });
+
+  describe("São Paulo traffic restriction (§15) — surfaced as a warning, not a hard exclusion", () => {
+    // Monday 2026-09-07, 08:00 São Paulo local time (UTC-3) = 11:00Z — inside the
+    // rodízio morning window, and "1" is one of Monday's restricted last digits.
+    const restrictedDepartureAt = "2026-09-07T11:00:00Z";
+
+    it("still recommends a rodízio-restricted ICE vehicle but flags the restriction", () => {
+      const result = planMobility({
+        tripRequest: trip({ departureAt: restrictedDepartureAt, destination: "São Paulo" }),
+        carpoolCandidates: [],
+        carpoolConfig: defaultCarpoolMatchConfig,
+        vehicleCandidates: [
+          { vehicle: vehicle({ plate: "AAA0A01", energyType: "ICE" }), category: sedanCategory },
+        ],
+        now,
+        readinessConfig: defaultReadinessConfig,
+      });
+
+      expect(result.type).toBe("vehicle");
+      expect(result.vehicle?.recommendedVehicleId).toBe("veh-sedan");
+      expect(result.trafficRestriction?.restricted).toBe(true);
+      expect(result.reasons).toContain("traffic_restriction_active");
+      // The web UI's vehicle-recommendation branch renders `plan.vehicle.reasons`, not
+      // `plan.reasons` — the restriction must reach that nested array too, or the
+      // warning never actually renders in the reasons bullet list (regression check).
+      expect(result.vehicle?.reasons).toContain("traffic_restriction_active");
+    });
+
+    it("does not flag a BEV recommended for the same restricted trip (rodízio-exempt)", () => {
+      const result = planMobility({
+        tripRequest: trip({ departureAt: restrictedDepartureAt, destination: "São Paulo" }),
+        carpoolCandidates: [],
+        carpoolConfig: defaultCarpoolMatchConfig,
+        vehicleCandidates: [
+          { vehicle: vehicle({ plate: "AAA0A01", energyType: "BEV" }), category: sedanCategory },
+        ],
+        now,
+        readinessConfig: defaultReadinessConfig,
+      });
+
+      expect(result.type).toBe("vehicle");
+      expect(result.trafficRestriction).toBeUndefined();
+      expect(result.reasons).not.toContain("traffic_restriction_active");
+    });
+  });
 });

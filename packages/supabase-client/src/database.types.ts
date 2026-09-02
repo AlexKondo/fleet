@@ -722,6 +722,14 @@ export type Database = {
         }
         Returns: string
       }
+      swap_reservation_vehicle: {
+        Args: { p_new_vehicle_id: string; p_reservation_id: string }
+        Returns: undefined
+      }
+      transfer_reservation: {
+        Args: { p_new_requester_id: string; p_reservation_id: string }
+        Returns: undefined
+      }
       unblock_vehicle: { Args: { p_vehicle_id: string }; Returns: undefined }
     }
     Enums: {

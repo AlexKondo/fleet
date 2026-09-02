@@ -1,7 +1,8 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { uploadInspectionPhotos } from "@/lib/domain/uploadInspectionPhotos";
 
 export interface PickupFormInput {
   reservationId: string;
@@ -15,9 +16,24 @@ export interface PickupFormInput {
   isDirtyInterior: boolean;
 }
 
+export interface SubmitPickupResult {
+  success: boolean;
+  error?: string;
+  /** Angles whose photo the user provided but which failed to upload/save. */
+  failedPhotoAngles?: PhotoAngle[];
+}
+
+/**
+ * Uploads whichever standardized angles the user actually captured (fleet-car-saas.txt
+ * §10) to the private `vehicle-photos` bucket and records each one in
+ * `inspection_photos`. Photos are optional at submit time — a spotty connection during a
+ * pickup/return shouldn't block the checklist itself — so this never throws; it reports
+ * which angles (if any) failed back to the caller instead.
+ */
 export async function submitPickup(
   input: PickupFormInput,
-): Promise<{ success: boolean; error?: string }> {
+  photos: FormData,
+): Promise<SubmitPickupResult> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -26,14 +42,14 @@ export async function submitPickup(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, organization_id")
     .eq("id", user.id)
     .single();
 
   // Supabase's generated RPC arg types don't mark these as nullable even though the
   // Postgres function parameters happily accept NULL (no NOT NULL constraint on args) —
   // the casts below are for the generated types only, not a runtime concern.
-  const { error } = await supabase.rpc("record_pickup", {
+  const { data: inspectionId, error } = await supabase.rpc("record_pickup", {
     p_reservation_id: input.reservationId,
     p_odometer_km: input.odometerKm,
     p_fuel_level_percent: input.fuelLevelPercent as number,
@@ -47,5 +63,23 @@ export async function submitPickup(
   });
 
   if (error) return { success: false, error: error.message };
-  redirect("/trips");
+  if (!inspectionId) return { success: false, error: "inspection_not_created" };
+
+  // The checklist itself is already recorded at this point — everything below is best
+  // effort evidence. We deliberately don't redirect from here (unlike the rest of this
+  // app's actions) so the caller can inspect failedPhotoAngles and show them to the user
+  // before navigating away; the client component performs the redirect once it has.
+  if (!profile?.organization_id) return { success: true };
+
+  const failedPhotoAngles = await uploadInspectionPhotos(
+    supabase,
+    profile.organization_id,
+    inspectionId,
+    photos,
+  );
+
+  return {
+    success: true,
+    failedPhotoAngles: failedPhotoAngles.length > 0 ? failedPhotoAngles : undefined,
+  };
 }

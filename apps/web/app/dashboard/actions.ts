@@ -51,3 +51,40 @@ export async function unblockVehicle(vehicleId: string): Promise<void> {
     supabase.rpc("unblock_vehicle", { p_vehicle_id: vehicleId }),
   );
 }
+
+/**
+ * §5 "Substituir veículos": move an existing reservation to a different vehicle. Bound
+ * with the reservation id (`swapVehicle.bind(null, r.id)`); the target vehicle id comes
+ * from the `<select name="vehicleId">` in the submitted form, same shape Next.js uses
+ * for every bound server action with a form payload.
+ */
+export async function swapVehicle(reservationId: string, formData: FormData): Promise<void> {
+  const newVehicleId = formData.get("vehicleId");
+  if (typeof newVehicleId !== "string" || newVehicleId.length === 0) {
+    throw new Error("Select a target vehicle");
+  }
+  return runFleetAction((supabase) =>
+    supabase.rpc("swap_reservation_vehicle", {
+      p_reservation_id: reservationId,
+      p_new_vehicle_id: newVehicleId,
+    }),
+  );
+}
+
+/**
+ * §5 "Transferir reservas": reassign a reservation's requester. Bound with the
+ * reservation id; the target profile id comes from the `<select name="requesterId">` in
+ * the submitted form.
+ */
+export async function transferReservation(reservationId: string, formData: FormData): Promise<void> {
+  const newRequesterId = formData.get("requesterId");
+  if (typeof newRequesterId !== "string" || newRequesterId.length === 0) {
+    throw new Error("Select a target user");
+  }
+  return runFleetAction((supabase) =>
+    supabase.rpc("transfer_reservation", {
+      p_reservation_id: reservationId,
+      p_new_requester_id: newRequesterId,
+    }),
+  );
+}

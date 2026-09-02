@@ -6,6 +6,7 @@ import {
   type CarpoolCandidate,
   type CandidateVehicle,
   type PreparationAction,
+  type TrafficRestrictionResult,
 } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toDomainCategory, toDomainVehicle } from "@/lib/domain/mappers";
@@ -37,6 +38,8 @@ export interface PlanTripResult {
     categoryName: string;
     reasons: string[];
     requiredPreparation?: PreparationAction[];
+    /** §15 — set only when the recommended vehicle is affected by a circulation restriction. */
+    trafficRestriction?: TrafficRestrictionResult;
   };
   error?: string;
 }
@@ -190,6 +193,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
         categoryName: candidate?.category.name ?? "",
         reasons: plan.vehicle.reasons,
         requiredPreparation: plan.vehicle.requiredPreparation,
+        trafficRestriction: plan.trafficRestriction,
       },
     };
   }

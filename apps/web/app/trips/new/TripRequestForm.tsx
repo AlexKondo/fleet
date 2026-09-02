@@ -11,6 +11,7 @@ const REASON_LABELS: Record<string, string> = {
   cleaning_required: "Veículo será limpo antes da viagem.",
   no_candidates_available: "Nenhum veículo cadastrado está disponível no momento.",
   no_eligible_vehicle_for_trip_requirements: "Nenhum veículo elegível atende a esta viagem agora.",
+  traffic_restriction_active: "Restrição de circulação aplicável a esta viagem (rodízio em São Paulo).",
 };
 
 function reasonLabel(reason: string): string {
@@ -223,6 +224,18 @@ export function TripRequestForm() {
               <p className="text-xs text-signal-amber">
                 O veículo passará por preparação antes da retirada.
               </p>
+            ) : null}
+            {plan.vehicle.trafficRestriction?.restricted ? (
+              <div className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 p-4">
+                <p className="text-xs uppercase tracking-widest text-signal-amber">
+                  Restrição de circulação
+                </p>
+                <p className="mt-1 text-sm text-fog-400">
+                  Este veículo está sujeito ao rodízio de veículos em São Paulo no horário
+                  desta viagem. Verifique a possibilidade de multa ou considere outro veículo
+                  ou horário.
+                </p>
+              </div>
             ) : null}
             <button
               onClick={handleConfirm}

@@ -1,8 +1,9 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { deriveReturnOutcome, MAINTENANCE_DUE_SOON_KM, type EnergyType } from "@fleet/domain";
+import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { uploadInspectionPhotos } from "@/lib/domain/uploadInspectionPhotos";
 
 export interface ReturnFormInput {
   reservationId: string;
@@ -16,9 +17,17 @@ export interface ReturnFormInput {
   isDirtyInterior: boolean;
 }
 
+export interface SubmitReturnResult {
+  success: boolean;
+  error?: string;
+  /** Angles whose photo the user provided but which failed to upload/save. */
+  failedPhotoAngles?: PhotoAngle[];
+}
+
 export async function submitReturn(
   input: ReturnFormInput,
-): Promise<{ success: boolean; error?: string }> {
+  photos: FormData,
+): Promise<SubmitReturnResult> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -26,7 +35,7 @@ export async function submitReturn(
   if (!user) return { success: false, error: "not_authenticated" };
 
   const [{ data: profile }, { data: reservation }] = await Promise.all([
-    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase.from("profiles").select("role, organization_id").eq("id", user.id).single(),
     supabase
       .from("reservations")
       .select("vehicle:vehicles(energy_type, next_service_odometer_km)")
@@ -54,7 +63,7 @@ export async function submitReturn(
 
   // See the equivalent comment in reservations/[id]/pickup/actions.ts: the generated RPC
   // arg types omit `| null` even though these Postgres parameters accept NULL.
-  const { error } = await supabase.rpc("record_return", {
+  const { data: inspectionId, error } = await supabase.rpc("record_return", {
     p_reservation_id: input.reservationId,
     p_odometer_km: input.odometerKm,
     p_fuel_level_percent: input.fuelLevelPercent as number,
@@ -70,5 +79,23 @@ export async function submitReturn(
   });
 
   if (error) return { success: false, error: error.message };
-  redirect("/trips");
+  if (!inspectionId) return { success: false, error: "inspection_not_created" };
+
+  // The checklist itself is already recorded at this point — everything below is best
+  // effort evidence. We deliberately don't redirect from here (unlike the rest of this
+  // app's actions) so the caller can inspect failedPhotoAngles and show them to the user
+  // before navigating away; the client component performs the redirect once it has.
+  if (!profile?.organization_id) return { success: true };
+
+  const failedPhotoAngles = await uploadInspectionPhotos(
+    supabase,
+    profile.organization_id,
+    inspectionId,
+    photos,
+  );
+
+  return {
+    success: true,
+    failedPhotoAngles: failedPhotoAngles.length > 0 ? failedPhotoAngles : undefined,
+  };
 }
