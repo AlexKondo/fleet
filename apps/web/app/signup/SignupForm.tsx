@@ -1,12 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { PasswordInput } from "../PasswordInput";
 import { signUp, type SignUpState } from "./actions";
 
 const initialState: SignUpState = { error: null };
 
 export function SignupForm() {
   const [state, formAction, pending] = useActionState(signUp, initialState);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-4">
@@ -50,20 +54,28 @@ export function SignupForm() {
         />
       </label>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-          Senha
-        </span>
-        <input
-          type="password"
-          name="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-          placeholder="Mínimo 8 caracteres"
-          className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2.5 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
-        />
-      </label>
+      <PasswordInput
+        name="password"
+        label="Senha"
+        autoComplete="new-password"
+        required
+        minLength={8}
+        placeholder="Mínimo 8 caracteres"
+        onValueChange={setPassword}
+      />
+
+      <PasswordInput
+        name="confirmPassword"
+        label="Confirmar senha"
+        autoComplete="new-password"
+        required
+        minLength={8}
+        placeholder="Digite a senha novamente"
+        onValueChange={setConfirmPassword}
+      />
+      {mismatch ? (
+        <p className="-mt-2 text-xs text-signal-red">As senhas não coincidem.</p>
+      ) : null}
 
       {state.error ? (
         <p role="alert" className="text-sm text-signal-red">
@@ -73,7 +85,7 @@ export function SignupForm() {
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || mismatch}
         className="mt-2 rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-amber disabled:opacity-50"
       >
         {pending ? "Criando…" : "Criar organização"}

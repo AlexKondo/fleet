@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { PasswordInput } from "../PasswordInput";
 import { signIn, type SignInState } from "./actions";
 
 const initialState: SignInState = { error: null };
@@ -23,19 +24,13 @@ export function LoginForm() {
           className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2.5 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
         />
       </label>
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-          Senha
-        </span>
-        <input
-          type="password"
-          name="password"
-          required
-          autoComplete="current-password"
-          placeholder="••••••••••••"
-          className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2.5 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
-        />
-      </label>
+      <PasswordInput
+        name="password"
+        label="Senha"
+        autoComplete="current-password"
+        required
+        placeholder="••••••••••••"
+      />
 
       {state.error ? (
         <p role="alert" className="text-sm text-signal-red">

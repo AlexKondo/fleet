@@ -14,18 +14,25 @@ export async function signOut() {
 /**
  * Fire-and-revalidate wrapper for the RPC-backed fleet manager actions below. These are
  * invoked directly as `<form action={...}>` (no client component / useActionState), so
- * they intentionally return void rather than a result — a failed RPC call (e.g. an
- * unauthorized role, per the RLS checks inside each function) surfaces as Next's default
- * server-action error handling rather than inline UI feedback. Acceptable for this
- * internal admin surface; revisit if/when these gain a client-side error display.
+ * there's no state slot to carry a typed error back to for inline display. A failed RPC
+ * call is a normal, expected outcome here (an unauthorized role per the RLS checks
+ * inside each function, a reservation someone else already approved, a vehicle someone
+ * else already claimed) — never something that should crash the whole dashboard to
+ * Next.js's generic error page. It's logged server-side (the raw message may be a
+ * Postgres internal detail not fit for display) and the user is redirected back with a
+ * generic `?fleetActionError=1` flag so the dashboard can show that *something* didn't
+ * apply, without silently no-oping on a click that looked like it worked.
  */
 async function runFleetAction(
   fn: (supabase: TypedSupabaseClient) => PromiseLike<{ error: { message: string } | null }>,
 ): Promise<void> {
   const supabase = await createSupabaseServerClient();
   const { error } = await fn(supabase);
-  if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
+  if (error) {
+    console.error("Fleet action failed:", error.message);
+    redirect("/dashboard?fleetActionError=1");
+  }
 }
 
 export async function approveReservation(reservationId: string): Promise<void> {
@@ -61,7 +68,7 @@ export async function unblockVehicle(vehicleId: string): Promise<void> {
 export async function swapVehicle(reservationId: string, formData: FormData): Promise<void> {
   const newVehicleId = formData.get("vehicleId");
   if (typeof newVehicleId !== "string" || newVehicleId.length === 0) {
-    throw new Error("Select a target vehicle");
+    redirect("/dashboard?fleetActionError=1");
   }
   return runFleetAction((supabase) =>
     supabase.rpc("swap_reservation_vehicle", {
@@ -79,7 +86,7 @@ export async function swapVehicle(reservationId: string, formData: FormData): Pr
 export async function transferReservation(reservationId: string, formData: FormData): Promise<void> {
   const newRequesterId = formData.get("requesterId");
   if (typeof newRequesterId !== "string" || newRequesterId.length === 0) {
-    throw new Error("Select a target user");
+    redirect("/dashboard?fleetActionError=1");
   }
   return runFleetAction((supabase) =>
     supabase.rpc("transfer_reservation", {

@@ -25,7 +25,12 @@ const WORKFLOW_TASK_LABELS: Record<string, string> = {
   charging: "Recarga",
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ fleetActionError?: string }>;
+}) {
+  const { fleetActionError } = await searchParams;
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -139,6 +144,14 @@ export default async function DashboardPage() {
               Configurações
             </Link>
           ) : null}
+          {isFleetManager ? (
+            <Link
+              href="/fleet"
+              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+            >
+              Frota
+            </Link>
+          ) : null}
           <Link
             href="/trips/new"
             className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
@@ -160,6 +173,16 @@ export default async function DashboardPage() {
           </form>
         </div>
       </header>
+
+      {fleetActionError ? (
+        <div
+          role="alert"
+          className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
+        >
+          Não foi possível concluir a ação. Ela pode já ter sido feita por outra pessoa, ou
+          você não tem mais permissão para isso — atualize a página e tente novamente.
+        </div>
+      ) : null}
 
       <section className="border-b border-line-800 px-6 py-4">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
@@ -379,7 +402,14 @@ export default async function DashboardPage() {
           </p>
         ) : vehicles.length === 0 ? (
           <p className="text-sm text-fog-400">
-            Nenhum veículo cadastrado ainda. Adicione o primeiro veículo para começar a operar a frota.
+            Nenhum veículo cadastrado ainda.{" "}
+            {isFleetManager ? (
+              <Link href="/fleet" className="text-signal-amber hover:underline">
+                Adicione o primeiro veículo em Frota
+              </Link>
+            ) : (
+              "Peça ao gestor da frota para adicionar o primeiro veículo."
+            )}
           </p>
         ) : (
           <div className="overflow-x-auto rounded-md border border-line-800">
