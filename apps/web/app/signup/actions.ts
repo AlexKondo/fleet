@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { MissingEnvVarError } from "@/lib/supabase/env";
+import { isMissingEnvVarError } from "@/lib/supabase/env";
 import { signUpOrganization, type SignUpOrganizationError } from "@/lib/domain/signUpOrganization";
 
 export interface SignUpState {
@@ -49,7 +49,7 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     }
   } catch (err) {
     console.error("signUp: unexpected error creating account", err);
-    if (err instanceof MissingEnvVarError) {
+    if (isMissingEnvVarError(err)) {
       return {
         error:
           "O servidor está com uma configuração incompleta e não pode criar contas agora " +
@@ -73,6 +73,19 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     signedIn = !signInError;
   } catch (err) {
     console.error("signUp: unexpected error signing in after account creation", err);
+    // Distinct from ERROR_MESSAGES.signin_after_signup_failed below: that message tells
+    // the user to "just log in normally," which is correct advice for a one-off sign-in
+    // hiccup but actively wrong here — if the env var is genuinely missing, login will
+    // fail identically every time, and sending the user to retry a broken action forever
+    // hides the fact that only an administrator can fix this.
+    if (isMissingEnvVarError(err)) {
+      return {
+        error:
+          "Sua conta foi criada, mas o servidor está com uma configuração incompleta e não " +
+          "pode entrar automaticamente (variável de ambiente ausente). Avise o administrador " +
+          "do sistema — tentar fazer login não vai funcionar até isso ser corrigido.",
+      };
+    }
   }
 
   if (!signedIn) {

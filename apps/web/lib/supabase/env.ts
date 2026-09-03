@@ -16,6 +16,19 @@ export class MissingEnvVarError extends Error {
 }
 
 /**
+ * Prefer this over a bare `err instanceof MissingEnvVarError` at call sites that decide
+ * user-facing messaging. `admin.ts` imports the class via `"./env"` and callers like
+ * `signup/actions.ts` via `"@/lib/supabase/env"` — the same resolved file today, but a
+ * `name` fallback costs nothing and keeps that check working even if a future bundling
+ * change (e.g. a route split introducing a dynamic import) ever produced two module
+ * instances of this file, which would otherwise make `instanceof` silently fail and
+ * mask the exact config error this class exists to surface.
+ */
+export function isMissingEnvVarError(err: unknown): err is MissingEnvVarError {
+  return err instanceof MissingEnvVarError || (err instanceof Error && err.name === "MissingEnvVarError");
+}
+
+/**
  * Both Server Components and Middleware create their own Supabase client from these two
  * vars. On a fresh deploy target (e.g. a new Vercel project) they're easy to forget —
  * .env.local is gitignored on purpose and never travels with the repo — and an
