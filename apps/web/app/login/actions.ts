@@ -21,15 +21,15 @@ export async function signIn(_prevState: SignInState, formData: FormData): Promi
   // when its own env vars are absent — a config problem no end user caused and can't fix
   // by retrying, but it must never surface as Next.js's generic crash page. Same failure
   // mode as signUpOrganization's admin client; see signup/actions.ts.
-  let error: { message: string } | null;
+  let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   try {
-    const supabase = await createSupabaseServerClient();
-    ({ error } = await supabase.auth.signInWithPassword({ email, password }));
+    supabase = await createSupabaseServerClient();
   } catch (err) {
     console.error("signIn: unexpected error", err);
     return { error: isMissingEnvVarError(err) ? MISSING_ENV_VAR_MESSAGE : "Não foi possível entrar agora. Tente novamente em instantes." };
   }
 
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     return { error: "E-mail ou senha incorretos." };
   }
