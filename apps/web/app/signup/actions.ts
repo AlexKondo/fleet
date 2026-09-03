@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { MissingEnvVarError } from "@/lib/supabase/env";
 import { signUpOrganization, type SignUpOrganizationError } from "@/lib/domain/signUpOrganization";
 
 export interface SignUpState {
@@ -48,6 +49,14 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     }
   } catch (err) {
     console.error("signUp: unexpected error creating account", err);
+    if (err instanceof MissingEnvVarError) {
+      return {
+        error:
+          "O servidor está com uma configuração incompleta e não pode criar contas agora " +
+          "(variável de ambiente ausente). Avise o administrador do sistema — tentar de " +
+          "novo não vai resolver.",
+      };
+    }
     return { error: "Não foi possível criar sua conta agora. Tente novamente em instantes." };
   }
 
