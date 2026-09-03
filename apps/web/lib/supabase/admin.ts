@@ -4,12 +4,19 @@ import type { Database } from "@fleet/supabase-client";
 import { MissingEnvVarError } from "./env";
 
 /**
- * Service-role Supabase client — bypasses RLS entirely. Used ONLY for organization
- * signup (lib/domain/signUpOrganization.ts), the one operation that legitimately has no
- * tenant context yet to scope a normal RLS-respecting client to (there is no
- * organization row for the new user to belong to until this flow creates one). Never
- * import this into a client component; the `server-only` import above makes that a
- * build error if it happens by mistake.
+ * Service-role Supabase client — bypasses RLS entirely. Used only for auth.users
+ * lifecycle operations that a normal RLS-respecting client cannot perform at all
+ * (creating/deleting a login, reading another member's email): organization signup
+ * (lib/domain/signUpOrganization.ts), which has no tenant context yet to scope to since
+ * no organization row exists until that flow creates one, and team member management
+ * (app/settings/users/actions.ts), which manages *other* users' auth.users rows —
+ * something no anon/authenticated-role client can ever do under RLS, no matter the
+ * caller's profile role. Because it bypasses RLS, every caller MUST resolve the acting
+ * user's own organization_id and role from a normal RLS-respecting client first and
+ * scope every query by that value explicitly — never trust a client-supplied
+ * organization_id or user id without checking it belongs to the caller's own tenant.
+ * Never import this into a client component; the `server-only` import above makes that
+ * a build error if it happens by mistake.
  */
 export function createSupabaseAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

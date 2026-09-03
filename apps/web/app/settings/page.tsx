@@ -48,12 +48,22 @@ export default async function SettingsPage() {
             {profile.organization?.name ?? "—"}
           </p>
         </div>
-        <Link
-          href="/dashboard"
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-        >
-          ← Painel
-        </Link>
+        <div className="flex items-center gap-4">
+          {profile.role === "administrator" ? (
+            <Link
+              href="/settings/users"
+              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+            >
+              Equipe
+            </Link>
+          ) : null}
+          <Link
+            href="/dashboard"
+            className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+          >
+            ← Painel
+          </Link>
+        </div>
       </header>
 
       <section className="px-6 py-6">

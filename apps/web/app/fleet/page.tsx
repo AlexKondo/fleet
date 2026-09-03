@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { STATUS_META } from "../dashboard/statusMeta";
 import { LocationForm } from "./LocationForm";
+import { LocationRow } from "./LocationRow";
 import { CategoryForm } from "./CategoryForm";
+import { CategoryRow } from "./CategoryRow";
 import { VehicleForm } from "./VehicleForm";
+import { VehicleRow } from "./VehicleRow";
 
 /**
  * Fleet setup: add vehicles, categories, and locations. Until this page existed, a
@@ -40,7 +42,7 @@ export default async function FleetPage() {
     supabase
       .from("vehicles")
       .select(
-        "id, plate, energy_type, status, odometer_km, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
+        "id, plate, category_id, energy_type, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
       )
       .order("plate"),
   ]);
@@ -81,12 +83,7 @@ export default async function FleetPage() {
         {locations && locations.length > 0 ? (
           <ul className="mb-4 flex flex-wrap gap-2">
             {locations.map((l) => (
-              <li
-                key={l.id}
-                className="rounded-sm border border-line-800 bg-panel-900/60 px-3 py-1.5 text-sm text-paper-50"
-              >
-                {l.name}
-              </li>
+              <LocationRow key={l.id} location={l} />
             ))}
           </ul>
         ) : (
@@ -102,15 +99,7 @@ export default async function FleetPage() {
         {categories && categories.length > 0 ? (
           <ul className="mb-4 flex flex-wrap gap-2">
             {categories.map((c) => (
-              <li
-                key={c.id}
-                className="rounded-sm border border-line-800 bg-panel-900/60 px-3 py-1.5 text-sm text-paper-50"
-              >
-                {c.name}{" "}
-                <span className="text-fog-600">
-                  · {c.passenger_capacity} passageiros{c.supports_cargo ? " · carga" : ""}
-                </span>
-              </li>
+              <CategoryRow key={c.id} category={c} />
             ))}
           </ul>
         ) : (
@@ -126,7 +115,7 @@ export default async function FleetPage() {
 
         {vehicles && vehicles.length > 0 ? (
           <div className="mb-6 overflow-x-auto rounded-md border border-line-800">
-            <table className="w-full min-w-[640px] border-collapse text-sm">
+            <table className="w-full min-w-[760px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
                   <th className="px-4 py-3 font-medium">Placa</th>
@@ -134,28 +123,32 @@ export default async function FleetPage() {
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Odômetro</th>
                   <th className="px-4 py-3 font-medium">Localização</th>
+                  <th className="px-4 py-3 font-medium">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {vehicles.map((v) => {
-                  const meta = STATUS_META[v.status];
-                  return (
-                    <tr key={v.id} className="border-b border-line-800 last:border-0">
-                      <td className="px-4 py-3 font-mono tabular-nums text-paper-50">{v.plate}</td>
-                      <td className="px-4 py-3 text-fog-400">{v.category?.name ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-                          <span className={meta.text}>{meta.label}</span>
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-mono tabular-nums text-fog-400">
-                        {v.odometer_km.toLocaleString("pt-BR")} km
-                      </td>
-                      <td className="px-4 py-3 text-fog-400">{v.current_location?.name ?? "—"}</td>
-                    </tr>
-                  );
-                })}
+                {vehicles.map((v) => (
+                  <VehicleRow
+                    key={v.id}
+                    vehicle={{
+                      id: v.id,
+                      plate: v.plate,
+                      category_id: v.category_id,
+                      energy_type: v.energy_type,
+                      odometer_km: v.odometer_km,
+                      next_service_odometer_km: v.next_service_odometer_km,
+                      estimated_range_km: v.estimated_range_km,
+                      fuel_level_percent: v.fuel_level_percent,
+                      battery_level_percent: v.battery_level_percent,
+                      home_location_id: v.home_location_id,
+                    }}
+                    status={v.status}
+                    categoryName={v.category?.name ?? "—"}
+                    locationName={v.current_location?.name ?? "—"}
+                    categories={categories ?? []}
+                    locations={locations ?? []}
+                  />
+                ))}
               </tbody>
             </table>
           </div>

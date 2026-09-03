@@ -6,9 +6,12 @@ import { toDomainVehicle } from "@/lib/domain/mappers";
 import { ATTENTION_LABELS, STATUS_META } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
 import { NotificationBell } from "./NotificationBell";
+import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import {
   approveReservation,
   blockVehicle,
+  cancelReservation,
+  cancelWorkflowTask,
   completeWorkflowTask,
   signOut,
   swapVehicle,
@@ -57,6 +60,7 @@ export default async function DashboardPage({
 
   const vehicles = vehicleRows ?? [];
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const isAdministrator = profile?.role === "administrator";
   const canManageTasks = isFleetManager || profile?.role === "maintenance_operator";
 
   const vehiclesWithAttention = vehicles.map((row) => ({
@@ -152,6 +156,14 @@ export default async function DashboardPage({
               Frota
             </Link>
           ) : null}
+          {isAdministrator ? (
+            <Link
+              href="/settings/users"
+              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+            >
+              Equipe
+            </Link>
+          ) : null}
           <Link
             href="/trips/new"
             className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
@@ -224,14 +236,24 @@ export default async function DashboardPage({
                       {r.trip_request?.destination} · {new Date(r.start_at).toLocaleString("pt-BR")}
                     </span>
                   </div>
-                  <form action={approveReservation.bind(null, r.id)}>
-                    <button
-                      type="submit"
-                      className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
-                    >
-                      Aprovar
-                    </button>
-                  </form>
+                  <div className="flex items-center gap-2">
+                    <form action={approveReservation.bind(null, r.id)}>
+                      <button
+                        type="submit"
+                        className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                      >
+                        Aprovar
+                      </button>
+                    </form>
+                    <form action={cancelReservation.bind(null, r.id, "Rejeitada pelo gestor de frota")}>
+                      <button
+                        type="submit"
+                        className="rounded-sm border border-signal-red px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
+                      >
+                        Rejeitar
+                      </button>
+                    </form>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -248,7 +270,7 @@ export default async function DashboardPage({
             <p className="text-sm text-fog-400">Nenhuma reserva ativa no momento.</p>
           ) : (
             <div className="overflow-x-auto rounded-md border border-line-800">
-              <table className="w-full min-w-[1080px] border-collapse text-sm">
+              <table className="w-full min-w-[1200px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
                     <th className="px-4 py-3 font-medium">Veículo</th>
@@ -258,6 +280,7 @@ export default async function DashboardPage({
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 font-medium">Trocar Veículo</th>
                     <th className="px-4 py-3 font-medium">Transferir</th>
+                    <th className="px-4 py-3 font-medium">Cancelar</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -345,6 +368,16 @@ export default async function DashboardPage({
                             </form>
                           )}
                         </td>
+                        <td className="px-4 py-3">
+                          <form action={cancelReservation.bind(null, r.id, "Cancelada pelo gestor de frota")}>
+                            <ConfirmSubmitButton
+                              confirmMessage={`Cancelar a reserva de ${r.trip_request?.requester?.full_name ?? "este solicitante"}?`}
+                              className="rounded-sm border border-signal-red px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
+                            >
+                              Cancelar
+                            </ConfirmSubmitButton>
+                          </form>
+                        </td>
                       </tr>
                     );
                   })}
@@ -376,14 +409,24 @@ export default async function DashboardPage({
                     <span className="ml-2 font-mono text-paper-50">{t.vehicle?.plate}</span>
                     {t.notes ? <span className="ml-2 text-fog-400">{t.notes}</span> : null}
                   </div>
-                  <form action={completeWorkflowTask.bind(null, t.id)}>
-                    <button
-                      type="submit"
-                      className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-teal hover:text-signal-teal"
-                    >
-                      Concluir
-                    </button>
-                  </form>
+                  <div className="flex items-center gap-2">
+                    <form action={completeWorkflowTask.bind(null, t.id)}>
+                      <button
+                        type="submit"
+                        className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-teal hover:text-signal-teal"
+                      >
+                        Concluir
+                      </button>
+                    </form>
+                    <form action={cancelWorkflowTask.bind(null, t.id)}>
+                      <ConfirmSubmitButton
+                        confirmMessage="Cancelar esta tarefa sem marcá-la como concluída?"
+                        className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
+                      >
+                        Cancelar
+                      </ConfirmSubmitButton>
+                    </form>
+                  </div>
                 </li>
               ))}
             </ul>

@@ -47,6 +47,13 @@ export async function completeWorkflowTask(taskId: string): Promise<void> {
   );
 }
 
+/** Dismiss a task that turned out unnecessary, without marking it falsely 'done' (0011_cancel_workflow_task.sql). */
+export async function cancelWorkflowTask(taskId: string): Promise<void> {
+  return runFleetAction((supabase) =>
+    supabase.rpc("cancel_workflow_task", { p_task_id: taskId }),
+  );
+}
+
 export async function blockVehicle(vehicleId: string, reason: string): Promise<void> {
   return runFleetAction((supabase) =>
     supabase.rpc("block_vehicle", { p_vehicle_id: vehicleId, p_reason: reason }),
@@ -56,6 +63,18 @@ export async function blockVehicle(vehicleId: string, reason: string): Promise<v
 export async function unblockVehicle(vehicleId: string): Promise<void> {
   return runFleetAction((supabase) =>
     supabase.rpc("unblock_vehicle", { p_vehicle_id: vehicleId }),
+  );
+}
+
+/**
+ * Reject a pending reservation or cancel a confirmed-but-not-yet-picked-up one
+ * (0010_cancel_reservation.sql). Same bound-with-a-fixed-reason shape as the
+ * blockVehicle button above (`.bind(null, r.id, "...")`) — no reason input in this UI,
+ * matching that precedent's level of simplicity.
+ */
+export async function cancelReservation(reservationId: string, reason: string): Promise<void> {
+  return runFleetAction((supabase) =>
+    supabase.rpc("cancel_reservation", { p_reservation_id: reservationId, p_reason: reason }),
   );
 }
 

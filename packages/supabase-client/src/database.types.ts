@@ -306,6 +306,9 @@ export type Database = {
           active_status: boolean | null
           approved_at: string | null
           approved_by: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           end_at: string
           id: string
@@ -319,6 +322,9 @@ export type Database = {
           active_status?: boolean | null
           approved_at?: string | null
           approved_by?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           end_at: string
           id?: string
@@ -332,6 +338,9 @@ export type Database = {
           active_status?: boolean | null
           approved_at?: string | null
           approved_by?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           end_at?: string
           id?: string
@@ -345,6 +354,13 @@ export type Database = {
           {
             foreignKeyName: "reservations_approved_by_fkey"
             columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_cancelled_by_fkey"
+            columns: ["cancelled_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -706,6 +722,26 @@ export type Database = {
       }
       block_vehicle: {
         Args: { p_reason: string; p_vehicle_id: string }
+        Returns: undefined
+      }
+      cancel_reservation: {
+        Args: { p_reason?: string; p_reservation_id: string }
+        Returns: undefined
+      }
+      cancel_workflow_task: {
+        Args: { p_task_id: string }
+        Returns: undefined
+      }
+      lock_and_require_multiple_administrators: {
+        Args: { p_organization_id: string }
+        Returns: undefined
+      }
+      update_member_role: {
+        Args: {
+          p_new_role: Database["public"]["Enums"]["user_role"]
+          p_organization_id: string
+          p_user_id: string
+        }
         Returns: undefined
       }
       complete_workflow_task: {
