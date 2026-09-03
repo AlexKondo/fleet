@@ -13,10 +13,14 @@ export function ReturnForm({
   reservationId,
   energyType,
   currentOdometer,
+  locations,
+  homeLocationId,
 }: {
   reservationId: string;
   energyType: EnergyType;
   currentOdometer: number;
+  locations: { id: string; name: string }[];
+  homeLocationId: string | null;
 }) {
   const router = useRouter();
   const [hasNewDamage, setHasNewDamage] = useState(false);
@@ -46,6 +50,7 @@ export function ReturnForm({
           batteryLevelPercent: showBattery ? Number(formData.get("batteryLevelPercent")) : null,
           hasNewDamage,
           damageNotes: hasNewDamage ? String(formData.get("damageNotes") ?? "") : null,
+          currentLocationId: String(formData.get("currentLocationId") ?? ""),
           missingSafetyEquipment: missing,
           isDirtyExterior: formData.get("isDirtyExterior") === "on",
           isDirtyInterior: formData.get("isDirtyInterior") === "on",
@@ -84,6 +89,27 @@ export function ReturnForm({
           className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
         />
         <span className="text-xs text-fog-600">Odômetro na retirada: {currentOdometer.toLocaleString("pt-BR")} km</span>
+      </label>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
+          Onde você estacionou o veículo?
+        </span>
+        <select
+          name="currentLocationId"
+          required
+          defaultValue={homeLocationId ?? ""}
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+        >
+          <option value="" disabled>
+            Selecione um local
+          </option>
+          {locations.map((location) => (
+            <option key={location.id} value={location.id}>
+              {location.name}
+            </option>
+          ))}
+        </select>
       </label>
 
       <div className="grid grid-cols-2 gap-4">

@@ -1,10 +1,23 @@
 import type { CarpoolMatchConfig, ReadinessConfig } from "@fleet/domain";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 
+export interface OrgConfig {
+  readiness: ReadinessConfig;
+  carpool: CarpoolMatchConfig;
+  /** §12 Predictive Maintenance — window (days) before the estimated service date at which
+   * a vehicle is flagged "due soon". Organization-configurable via /settings; falls back to
+   * the same default as `defaultMaintenancePredictionConfig` in @fleet/domain. */
+  maintenanceDueSoonDays: number;
+  /** §15 São Paulo Traffic Restriction Intelligence — whether the trip-planning flow should
+   * surface a circulation-restriction warning at all. Organization-configurable via
+   * /settings. */
+  trafficRestrictionEnabled: boolean;
+}
+
 export async function loadOrgConfig(
   supabase: TypedSupabaseClient,
   organizationId: string,
-): Promise<{ readiness: ReadinessConfig; carpool: CarpoolMatchConfig }> {
+): Promise<OrgConfig> {
   const { data } = await supabase
     .from("organization_settings")
     .select("*")
@@ -22,5 +35,7 @@ export async function loadOrgConfig(
       departureToleranceMinutes: data?.carpool_departure_tolerance_minutes ?? 30,
       returnToleranceMinutes: data?.carpool_return_tolerance_minutes ?? 30,
     },
+    maintenanceDueSoonDays: data?.maintenance_due_soon_days ?? 14,
+    trafficRestrictionEnabled: data?.traffic_restriction_enabled ?? true,
   };
 }

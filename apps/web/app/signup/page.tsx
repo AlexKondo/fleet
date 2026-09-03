@@ -1,25 +1,25 @@
 import Link from "next/link";
-import { LoginForm } from "./LoginForm";
+import { SignupForm } from "./SignupForm";
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4">
+    <main className="flex min-h-dvh items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <p className="font-display text-4xl font-extrabold uppercase tracking-tight text-paper-50">
             Fleet<span className="text-signal-amber">.</span>
           </p>
           <p className="mt-1 text-xs uppercase tracking-[0.2em] text-fog-400">
-            Right Vehicle. Right Trip. Ready to Go.
+            Comece a operar sua frota
           </p>
         </div>
         <div className="rounded-md border border-line-800 bg-panel-900/60 p-6">
-          <LoginForm />
+          <SignupForm />
         </div>
         <p className="mt-4 text-center text-sm text-fog-400">
-          Sua empresa ainda não usa o Fleet?{" "}
-          <Link href="/signup" className="text-signal-amber hover:underline">
-            Criar organização
+          Já tem uma conta?{" "}
+          <Link href="/login" className="text-signal-amber hover:underline">
+            Entrar
           </Link>
         </p>
       </div>

@@ -12,6 +12,8 @@ export interface ReturnFormInput {
   batteryLevelPercent: number | null;
   hasNewDamage: boolean;
   damageNotes: string | null;
+  /** §14 Current Vehicle Location — where the traveler parked it, required on every return. */
+  currentLocationId: string;
   missingSafetyEquipment: string[];
   isDirtyExterior: boolean;
   isDirtyInterior: boolean;
@@ -76,6 +78,7 @@ export async function submitReturn(
     p_role: profile?.role === "security" ? "security" : "traveler",
     p_vehicle_event: outcome.vehicleEvent,
     p_workflow_tasks: outcome.workflowTasks,
+    p_current_location_id: input.currentLocationId,
   });
 
   if (error) return { success: false, error: error.message };

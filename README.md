@@ -31,7 +31,14 @@ pnpm --filter @fleet/web dev
 ```
 
 Usuários de demonstração (senha `password123`): `gestor@gwm-demo.local` (fleet_manager),
-`colaborador@gwm-demo.local` (employee), `portaria@gwm-demo.local` (security).
+`colaborador@gwm-demo.local` (employee), `portaria@gwm-demo.local` (security). Para uma
+organização nova, use **Criar organização** na tela de login (`/signup`) — cria a
+organização, as configurações padrão, uma localização inicial e o primeiro usuário como
+`administrator`.
+
+É uma PWA (Progressive Web App): instalável a partir do próprio navegador do celular
+("Adicionar à tela de início"), sem app nativo — a captura de foto nos checklists usa a
+câmera do aparelho via `<input type="file" capture>` do navegador.
 
 Fluxo operacional para testar manualmente: login como colaborador → **+ Solicitar
 Viagem** → confirmar recomendação → login como gestor → aprovar em **Reservas

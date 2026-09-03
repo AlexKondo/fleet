@@ -9,122 +9,152 @@ Readiness sobre um simples "Vehicle Booking System".
 Fonte: `fleet-car-saas.txt` (raiz do repo) + `.claude/skills/gauntlet/SKILL.md` seção 2.
 Princípio central: **Right Vehicle. Right Trip. Right Time. Ready to Go.**
 
-## Decisions
-Ver rodadas anteriores. Nesta rodada: usuário pediu para "terminar tudo" usando
-`using-superpowers` + `frontend-design` + `king-kondo` para **paralelizar** o trabalho
-restante. Isolamento por git worktree não estava disponível neste ambiente (harness
-detectou "not a git repository" — cache de estado anterior ao `git init` desta sessão);
-os 5 builders rodaram na mesma árvore de trabalho, com contratos de ownership de arquivo
-explícitos por agente para evitar colisão — funcionou sem nenhum conflito real.
+## Decisions — rodada mais recente
+- Usuário testou o app e não conseguiu se cadastrar (só existiam contas seed) — gap real
+  encontrado pelo próprio uso, não por mim. Construí um fluxo de signup self-service
+  (nova organização + primeiro usuário administrator).
+- "App mobile" confirmado pelo usuário = navegador do celular (responsivo/PWA), **não**
+  app nativo Android/iOS. Captura de foto já usa `<input capture>` do navegador — sem
+  necessidade de API nativa.
+- Notificações: só dentro do app (sininho), sem provedor de e-mail externo — decisão do
+  usuário para evitar custo/aprovação de serviço pago.
+- King-Kondo usado de novo para paralelizar: 3 agentes simultâneos (localização no
+  check-in, configurabilidade por organização, notificações in-app), com ownership de
+  arquivo explícito — zero colisões reais entre os 3.
 
 ## Architecture Contract
-Inalterado. Migrations agora em 5 arquivos (0001-0005), todas aplicadas e verificadas em
-**local e remoto**. Nova migration:
+Migrations agora em 9 arquivos (0001-0009), todas aplicadas e verificadas em **local e
+remoto**:
 ```
-0005_fleet_manager_advanced_actions.sql → RPCs swap_reservation_vehicle,
-                                           transfer_reservation (§5)
+0006_vehicle_location_tracking.sql      → §14, current_location_id atualizado no retorno
+0007_organization_settings_extensions.sql → maintenance_due_soon_days, traffic_restriction_enabled
+0008_notifications.sql                   → tabela notifications + 4 RPCs estendidas
+0009_fixes.sql                           → remove overload fantasma de record_return
+```
+Novos arquivos relevantes:
+```
+apps/web/app/signup/**              → cadastro self-service (organização + admin)
+apps/web/lib/supabase/admin.ts      → cliente service-role, só para bootstrap de tenant
+apps/web/lib/domain/signUpOrganization.ts
+apps/web/app/settings/**            → configurações da organização (antes só via SQL)
+apps/web/app/dashboard/NotificationBell.tsx + notificationActions.ts
+apps/web/lib/supabase/client.ts     → cliente browser-side (novo)
+apps/web/public/manifest.json + icon-*.png + apple-touch-icon.png → PWA
 ```
 
-## Workstreams — status final desta fase
-- [x] W1-W7 (rodadas anteriores) — core operacional completo
-- [x] Carona (§4), aprovação, check-in/out, workflow automático — rodada anterior
-- [x] **Manutenção Preditiva (§12)** — `predictNextService` no domínio (8 testes) +
-      seção "Manutenção Preditiva" na página `/analytics` (conectada nesta rodada — o
-      builder original entregou a função mas não a conectou a nenhuma UI; achado pelo
-      Blind Critic e corrigido)
-- [x] **Restrição de Rodízio SP (§15)** — `checkTrafficRestriction` no domínio (5 testes)
-      + integrado ao `planMobility` como aviso (não bloqueio) + banner na UI de
-      solicitação de viagem
-- [x] **Teste automatizado de isolamento cross-tenant** — `supabase/tests/cross-tenant-rls.mjs`,
-      18/18 verificações passando (2 rodadas, antes e depois da migration 0005), zero
-      vazamentos encontrados
-- [x] **Upload de fotos no checklist (§10)** — 7 ângulos padronizados, upload real
-      verificado (arquivo no Storage + linha em `inspection_photos`), opcional (não
-      bloqueia o checklist)
-- [x] **Ações avançadas do Fleet Manager (§5)** — trocar veículo e transferir reserva,
-      testados de verdade pela UI (não só typecheck)
-- [x] **Analytics / Fleet Intelligence (§19)** — km por veículo/viagem, destinos
-      frequentes, taxa de carpooling, veículos subutilizados, manutenção preditiva
+## Workstreams — status final desta rodada
+- [x] **Cadastro self-service (gap crítico encontrado pelo usuário)** — organização +
+      usuário administrator + localização padrão, tudo atômico com rollback em caso de
+      falha parcial. Testado de ponta a ponta (nova org isolada, zero veículos, exatamente
+      como deveria).
+- [x] **Localização atual do veículo (§14)** — `record_return` agora recebe e valida
+      `current_location_id`, testado contra o banco.
+- [x] **Configurabilidade por organização** — página `/settings` real (antes só existia
+      no schema, sem UI nenhuma), com todos os parâmetros de readiness/carpool/
+      manutenção preditiva/rodízio. Testado: salvar funciona, valor fora do intervalo é
+      rejeitado no servidor mesmo bypassando a validação do navegador.
+- [x] **Notificações in-app (§ implícito)** — sino no header, badge de não lidas, 4 RPCs
+      existentes estendidas para notificar (nova reserva, aprovação, tarefas criadas,
+      veículo bloqueado). Testado com notificação real aparecendo no dropdown.
+- [x] **PWA / "app mobile"** — manifest.json + ícones + theme-color, instalável via
+      navegador. Testado em viewport de iPhone real (Playwright + device profile):
+      dashboard, solicitação de viagem e checklist de fotos renderizam corretamente,
+      zero erros de console.
+- [x] **Teste de concorrência no "trocar veículo"** — duas chamadas simultâneas à mesma
+      reserva: uma teve sucesso limpo, a outra falhou com erro de negócio (não corrupção).
+      Estado final do banco consistente. Risco da rodada anterior resolvido com evidência.
 
 ## Passed Gates
-- `pnpm test` (domain): **81/81 GREEN** (10 arquivos).
+- `pnpm test` (domain): **81/81 GREEN**.
 - `pnpm typecheck`: limpo nos 3 pacotes.
-- Migration 0005 aplicada sem erro em local e remoto, de primeira (SQL bem escrito
-  mesmo sem o autor poder testá-la ao vivo).
-- Teste de isolamento cross-tenant: **18/18**, rodado duas vezes (idempotente), zero
-  vazamentos, tanto para dados quanto para a fronteira de papéis (employee vs
-  fleet_manager).
-- Code review (`/code-review high`) sobre todo o diff da rodada, com verificação
-  independente de cada achado antes de eu confiar nele — ver Evidence.
-- E2E real via Playwright contra Supabase local, cobrindo TUDO desta rodada: Analytics
-  carrega sem erro, trocar veículo funciona (verificado no banco), transferir reserva
-  funciona (verificado no banco), upload de foto sobe pro Storage de verdade (HTTP 200
-  confirmado no objeto), fluxo de solicitação→aprovação→retirada→retorno continua
-  funcionando (regressão), zero erros de console em qualquer etapa.
+- Migrations 0006-0009 aplicadas sem erro em local e remoto.
+- Cross-tenant RLS test (18/18) re-executado com o schema completo (notificações,
+  localizações, configurações) — ainda zero vazamentos.
+- Code review (`/code-review high`) rodado **duas vezes** nesta sessão sobre o código
+  novo, com verificação independente de cada achado antes de confiar — ver Evidence.
+- E2E real via Playwright: cadastro de organização nova, sino de notificação com
+  conteúdo real, configurações salvando e validando no servidor, checklist de retorno
+  atualizando a localização do veículo no banco, tudo verificado contra local e
+  novamente contra o Supabase remoto real.
 
-## Evidence — achados do Blind Critic (todos corrigidos)
-1. **Bug real (P1)**: `planMobility` adicionava a razão `"traffic_restriction_active"`
-   só no array `reasons` de nível superior, mas a UI renderiza `plan.vehicle.reasons`
-   (array aninhado, nunca tocado) — o aviso de rodízio nunca aparecia na lista de
-   motivos (só o banner separado funcionava). Corrigido: `vehicle` agora carrega uma
-   cópia com o `reasons` estendido. Teste de regressão adicionado.
-2. **Gap de robustez (P2)**: upload de foto não validava tipo MIME nem tamanho do
-   arquivo (bucket também sem limite configurado) — `accept="image/*"` no `<input>` é só
-   dica de UI, não validação real. Corrigido no helper compartilhado (10MB máx,
-   `image/*` obrigatório, revalidado no server).
-3. **Performance (P2)**: upload das 7 fotos rodava sequencialmente (`for...await`) em
-   vez de paralelo — até 7x mais lento numa conexão ruim em campo. Corrigido com
-   `Promise.allSettled`.
-4. **Feature incompleta (P2)**: `predictNextService` (Manutenção Preditiva) foi
-   implementada e testada no domínio, mas nunca conectada a nenhuma tela — o Fleet
-   Manager não tinha como ver a previsão. Corrigido: nova seção em `/analytics`.
-5. **Duplicação (P3)**: `PHOTO_ANGLE_LABELS` duplicava à mão os mesmos 7 rótulos já
-   definidos em `STANDARD_PHOTO_ANGLES`/`DAMAGE_PHOTO_ANGLE`. Corrigido: agora derivado
-   das mesmas fontes.
-6. **Duplicação (P3)**: a função `uploadInspectionPhotos` estava copiada
-   integralmente entre `pickup/actions.ts` e `return/actions.ts`. Extraída para
-   `apps/web/lib/domain/uploadInspectionPhotos.ts` (resolve #2 e #3 ao mesmo tempo).
-
-Todos os achados foram verificados por um agente independente antes de eu aplicar a
-correção (nenhum foi corrigido só por confiança no relatório do critic).
+## Evidence — achados do 2º Blind Critic desta sessão (todos verificados; 4 corrigidos, 1 aceito como risco documentado, 1 limpo)
+1. **Bug real (P0)**: `create or replace function record_return(...)` com um parâmetro a
+   mais criou uma SEGUNDA função no Postgres (overload por assinatura) em vez de
+   substituir a original — a versão antiga (sem validação de localização, sem
+   notificação) continuava ativa e concedida a `authenticated`. Corrigido com
+   `drop function` explícito na 0009. Verificado no banco: só resta 1 `record_return`
+   com 13 argumentos.
+2. **Bug real (P1)**: organização nova (via signup) não tinha nenhuma `vehicle_location`,
+   e o checklist de retorno exige uma — uma empresa nova jamais conseguiria completar um
+   retorno de veículo. Corrigido: signup cria uma localização "Sede" por padrão.
+   Verificado: nova org criada com `vehicle_locations = [{"name":"Sede"}]`.
+3. **Bug real (P2)**: `/manifest.json` era bloqueado pelo middleware de autenticação
+   para visitantes não logados (não estava na lista de rotas públicas nem excluído do
+   matcher), quebrando a instalabilidade do PWA antes do login. Corrigido: adicionado à
+   exclusão do matcher. Verificado: HTTP 200 sem sessão.
+4. **Bug real (P2)**: `range_safety_buffer_percent` só validava não-negativo, não o
+   limite superior — um valor acima de 100% zera/inverte a autonomia utilizável em
+   `assessTripReadiness`, travando recomendação de veículo para a organização inteira.
+   Corrigido: validação de intervalo em todos os campos numéricos de `/settings`.
+   Verificado: bypass do `max` do HTML5 via JS, servidor rejeitou mesmo assim, valor no
+   banco continuou em 20.
+5. **Risco aceito, documentado, não corrigido (P2, segurança)**: a policy de INSERT em
+   `notifications` só verifica `organization_id`, não `user_id` — qualquer membro
+   autenticado pode inserir uma notificação com título/corpo arbitrário endereçada a
+   qualquer colega da mesma organização (mesmo padrão já aceito para `workflow_tasks`
+   desde a rodada anterior). Não corrigido agora porque a correção "certa" exigiria
+   tornar `create_vehicle_reservation`/`approve_reservation`/`block_vehicle` SECURITY
+   DEFINER, removendo a proteção implícita via RLS que hoje bloqueia `employee` de
+   aprovar a própria reserva (verificada e testada nesta mesma sessão) — troca
+   arriscada demais para fazer sob pressão de tempo sem uma rodada de testes dedicada.
+6. Dependência `sharp` adicionada só para gerar os ícones do PWA, nunca importada no
+   código do app — removida depois de gerar os PNGs.
 
 ## Assumptions
 Mantidas das rodadas anteriores, mais:
 ```
 ASSUMPTION
-Restrição de rodízio SP tratada como aviso (soft warning), não bloqueio duro — o
-veículo restrito ainda pode ser recomendado, mas nunca silenciosamente. Ver comentário
-em planMobility.ts para o raciocínio completo.
-Why: a spec diz "poderá participar da recomendação", não "deve excluir"; pode haver
-permissão de exceção ou decisão de negócio para circular mesmo assim.
-Risk if wrong: baixo — fácil de virar exclusão dura depois se o usuário preferir.
+Primeiro usuário de uma organização nova (via /signup) sempre recebe o papel
+'administrator', com acesso equivalente a fleet_manager em toda a RLS existente.
+Why: alguém precisa ter controle total para convidar/gerenciar o resto do time; não há
+fluxo de convite ainda, então o fundador não pode começar com um papel limitado.
+Risk if wrong: baixo — é o comportamento esperado para "criar minha empresa no Fleet".
 ```
 ```
 ASSUMPTION
-Regras de rodízio SP são um "melhor esforço" do modelo público conhecido (dígito final
-da placa, seg-sex, 7h-10h e 17h-20h, BEV isento), marcado explicitamente no código como
-"deve ser verificado contra a regra oficial vigente antes de confiar em produção" —
-por instrução direta da spec ("não invente regras regulatórias atuais").
-Risk if wrong: médio — é só um aviso (ver acima), mas um aviso errado é pior que
-nenhum aviso se o usuário passar a confiar cegamente nele.
+E-mail de confirmação é ignorado no signup (auth.admin.createUser com email_confirm:
+true) — usuário entra direto, sem clicar em link de confirmação.
+Why: não há provedor de e-mail configurado neste ambiente (nem local nem remoto), e
+exigir confirmação sem conseguir entregar o e-mail deixaria todo cadastro travado.
+Risk if wrong: médio — qualquer pessoa pode se cadastrar com um e-mail que não é dela.
+Aceitável para uma ferramenta corporativa interna por agora; revisar se o produto for
+exposto publicamente sem controle de quem pode criar organizações.
 ```
 
 ## Risks
-- Nenhum teste de concorrência real (dois swaps simultâneos) rodou contra
-  `swap_reservation_vehicle` — a proteção contra deadlock (lock em ordem por id) foi
-  escrita com cuidado mas não exercida sob concorrência de verdade.
-- Regras de rodízio SP não são validadas contra fonte oficial (ver Assumption acima).
-- Tabela de rodízio e config de manutenção preditiva não são configuráveis por
-  organização ainda (usam sempre o default do pacote de domínio).
+- Notificações: qualquer membro pode spoofar notificação para colega da mesma
+  organização (ver Evidence #5) — aceito, documentado, não corrigido.
+- Signup não valida se o e-mail realmente pertence a quem está criando a conta (ver
+  Assumption acima).
+- Regras de rodízio de SP ainda não validadas contra fonte oficial (herdado da rodada
+  anterior).
+- Sem UI para gerenciar `vehicle_locations` além da criada automaticamente no signup —
+  uma organização não consegue adicionar novos locais pela interface ainda.
+- Sem UI para uma organização existente adicionar veículos/categorias — só existe via
+  SQL direto (seed) hoje. Uma organização criada via `/signup` fica sem frota até
+  alguém popular isso manualmente no banco.
 
 ## Human Gates
 Nenhum pendente além dos já conhecidos.
 
 ## Remaining Work
-1. Teste de concorrência real em `swap_reservation_vehicle`.
-2. Configurabilidade por organização das regras de rodízio e da janela de manutenção
-   preditiva (hoje hardcoded como default do domínio).
-3. App mobile/PWA otimizado para campo (câmera, uma mão, rede instável) — a captura de
-   foto já existe na web, mas não foi testada em viewport mobile real.
-4. Validar a tabela de rodízio de SP contra a fonte oficial (CET-SP) antes de qualquer
-   uso em produção real.
+1. UI de gestão de frota (adicionar veículo, categoria, localização) — hoje só existe
+   via seed/SQL direto; uma organização nova via signup não tem como popular sua própria
+   frota pela interface.
+2. Fluxo de convite de novos usuários para uma organização existente (hoje só o
+   `/signup` cria usuários, sempre como fundador de uma organização nova).
+3. Fechar o risco de spoofing de notificação (Evidence #5) — provavelmente exige revisar
+   o modelo de segurança das 4 RPCs afetadas com mais cuidado do que uma correção rápida
+   permite.
+4. Validar a tabela de rodízio de SP contra a fonte oficial (CET-SP).
+5. Confirmação de e-mail real no signup, se o produto vier a ser exposto publicamente.

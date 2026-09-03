@@ -15,12 +15,20 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
     .select(
       `id, status,
        trip_request:trip_requests(origin, destination),
-       vehicle:vehicles(id, plate, energy_type, status, odometer_km)`,
+       vehicle:vehicles(id, plate, energy_type, status, odometer_km, home_location_id)`,
     )
     .eq("id", id)
     .single();
 
   if (!reservation || !reservation.vehicle) notFound();
+
+  // §14 Current Vehicle Location: the return checklist is where the traveler reports
+  // where they parked, so the location picker is scoped to this org's vehicle_locations
+  // the same way the Fleet Manager dashboard's "Localização Atual" column is.
+  const { data: locations } = await supabase
+    .from("vehicle_locations")
+    .select("id, name")
+    .order("name");
 
   return (
     <main className="min-h-dvh px-6 py-8">
@@ -37,6 +45,8 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
             reservationId={reservation.id}
             energyType={reservation.vehicle.energy_type}
             currentOdometer={reservation.vehicle.odometer_km}
+            locations={locations ?? []}
+            homeLocationId={reservation.vehicle.home_location_id}
           />
         </div>
       </div>

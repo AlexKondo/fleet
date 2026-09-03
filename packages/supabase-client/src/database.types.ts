@@ -162,33 +162,84 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          organization_id: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_settings: {
         Row: {
           carpool_departure_tolerance_minutes: number
           carpool_return_tolerance_minutes: number
+          maintenance_due_soon_days: number
           min_charge_hours_bev: number
           min_cleaning_hours: number
           min_refuel_hours_ice_or_phev: number
           organization_id: string
           range_safety_buffer_percent: number
+          traffic_restriction_enabled: boolean
         }
         Insert: {
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
+          maintenance_due_soon_days?: number
           min_charge_hours_bev?: number
           min_cleaning_hours?: number
           min_refuel_hours_ice_or_phev?: number
           organization_id: string
           range_safety_buffer_percent?: number
+          traffic_restriction_enabled?: boolean
         }
         Update: {
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
+          maintenance_due_soon_days?: number
           min_charge_hours_bev?: number
           min_cleaning_hours?: number
           min_refuel_hours_ice_or_phev?: number
           organization_id?: string
           range_safety_buffer_percent?: number
+          traffic_restriction_enabled?: boolean
         }
         Relationships: [
           {
@@ -708,6 +759,7 @@ export type Database = {
       record_return: {
         Args: {
           p_battery_level_percent: number
+          p_current_location_id?: string
           p_damage_notes: string
           p_fuel_level_percent: number
           p_has_new_damage: boolean

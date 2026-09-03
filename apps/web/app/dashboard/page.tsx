@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toDomainVehicle } from "@/lib/domain/mappers";
 import { ATTENTION_LABELS, STATUS_META } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
+import { NotificationBell } from "./NotificationBell";
 import {
   approveReservation,
   blockVehicle,
@@ -130,12 +131,21 @@ export default async function DashboardPage() {
               Analytics
             </Link>
           ) : null}
+          {isFleetManager ? (
+            <Link
+              href="/settings"
+              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+            >
+              Configurações
+            </Link>
+          ) : null}
           <Link
             href="/trips/new"
             className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
           >
             + Solicitar Viagem
           </Link>
+          <NotificationBell />
           <div className="text-right">
             <p className="text-sm text-paper-50">{profile?.full_name ?? user.email}</p>
             <p className="text-xs uppercase tracking-widest text-fog-600">{profile?.role}</p>

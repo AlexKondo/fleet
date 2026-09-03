@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { defaultMaintenancePredictionConfig, predictNextService } from "@fleet/domain";
+import { predictNextService } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { loadOrgConfig } from "@/lib/domain/orgConfig";
 import { StatBar } from "./StatBar";
 
 /**
@@ -28,14 +29,19 @@ export default async function AnalyticsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, organization:organizations(name)")
+    .select("full_name, role, organization_id, organization:organizations(name)")
     .eq("id", user.id)
     .single();
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
-  if (!isFleetManager) {
+  if (!profile || !isFleetManager) {
     redirect("/dashboard");
   }
+
+  // §12 Predictive Maintenance's "due soon" window is organization-configurable
+  // (organization_settings.maintenance_due_soon_days, edited from /settings) — replaces the
+  // domain package's hardcoded defaultMaintenancePredictionConfig below.
+  const orgConfig = await loadOrgConfig(supabase, profile.organization_id);
 
   const [
     { data: vehicles, error: vehiclesError },
@@ -89,7 +95,7 @@ export default async function AnalyticsPage() {
         v.next_service_odometer_km,
         odometerHistoryByVehicle.get(v.id) ?? [],
         now,
-        defaultMaintenancePredictionConfig,
+        { dueSoonDays: orgConfig.maintenanceDueSoonDays },
       ),
     }))
     .filter((v) => v.prediction.dueSoon || v.prediction.estimatedServiceDate !== null)

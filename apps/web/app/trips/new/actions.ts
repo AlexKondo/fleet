@@ -136,12 +136,30 @@ async function buildPlanInputs(input: TripFormInput) {
   return { user, profile, now, config, vehicleCandidates, carpoolCandidates };
 }
 
+/**
+ * §15: when this organization has turned the São Paulo traffic-restriction check off
+ * (organization_settings.traffic_restriction_enabled = false, edited from /settings),
+ * planTrip must not surface a restriction warning at all — even though `planMobility`
+ * (packages/domain, not modified here) always evaluates `checkTrafficRestriction`
+ * internally against `defaultTrafficRestrictionConfig` and has no per-call "skip" switch.
+ * We strip both the dedicated `trafficRestriction` field and the
+ * "traffic_restriction_active" reason string here, at the call site, once the plan comes
+ * back — rather than passing a `trafficRestrictionConfig` that can never match (e.g. an
+ * empty `restrictedZoneCities`/`rules` list), which would still leak the field's
+ * *presence* as `{ restricted: false, reasons: [...] }` and is a less direct way to say
+ * "this organization turned the check off" than simply never showing it.
+ */
+function filterTrafficRestrictionReasons(reasons: string[], enabled: boolean): string[] {
+  return enabled ? reasons : reasons.filter((r) => r !== "traffic_restriction_active");
+}
+
 export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   const built = await buildPlanInputs(input);
   if ("error" in built) {
     return { type: "none", reasons: [], error: built.error };
   }
   const { now, config, vehicleCandidates, carpoolCandidates } = built;
+  const trafficRestrictionEnabled = config.trafficRestrictionEnabled;
 
   const tripRequest = {
     id: "draft",
@@ -186,19 +204,19 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
     );
     return {
       type: "vehicle",
-      reasons: plan.reasons,
+      reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
       vehicle: {
         vehicleId: plan.vehicle.recommendedVehicleId,
         plate: candidate?.vehicle.plate ?? "",
         categoryName: candidate?.category.name ?? "",
-        reasons: plan.vehicle.reasons,
+        reasons: filterTrafficRestrictionReasons(plan.vehicle.reasons, trafficRestrictionEnabled),
         requiredPreparation: plan.vehicle.requiredPreparation,
-        trafficRestriction: plan.trafficRestriction,
+        trafficRestriction: trafficRestrictionEnabled ? plan.trafficRestriction : undefined,
       },
     };
   }
 
-  return { type: "none", reasons: plan.reasons };
+  return { type: "none", reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled) };
 }
 
 export async function confirmTrip(
