@@ -10,9 +10,20 @@ Fonte: `fleet-car-saas.txt` (raiz do repo) + `.claude/skills/gauntlet/SKILL.md` 
 Princípio central: **Right Vehicle. Right Trip. Right Time. Ready to Go.**
 
 ## Decisions — rodada mais recente
-- Usuário testou o app e não conseguiu se cadastrar (só existiam contas seed) — gap real
-  encontrado pelo próprio uso, não por mim. Construí um fluxo de signup self-service
-  (nova organização + primeiro usuário administrator).
+- Usuário testou o signup de verdade no Vercel (org "GWM Motors") e caiu num crash
+  genérico — gap real encontrado pelo próprio uso, não por mim. Causa raiz: throw não
+  capturado quando `SUPABASE_SERVICE_ROLE_KEY` está ausente/mal configurada no Vercel.
+  Corrigido no código (degrada para mensagem amigável); usuário ainda precisa configurar
+  a variável no painel do Vercel — passo manual que só ele pode fazer.
+- Mesmo teste do usuário expôs que uma organização nova não tinha nenhuma forma de
+  adicionar veículo pela interface (só via SQL direto) — maior gap funcional restante.
+  Construída a página `/fleet` (fleet manager) para cadastrar localizações, categorias e
+  veículos. Testado de ponta a ponta: signup → `/fleet` → adicionar tudo → veículo
+  aparece no painel → é recomendado numa solicitação de viagem real.
+- Usuário pediu confirmação de senha (só existia 1 campo) + ícone de olho para
+  mostrar/ocultar senha, em login e signup — risco real de lockout por erro de
+  digitação sem forma de conferir. Componente `PasswordInput` compartilhado entre os
+  dois formulários.
 - "App mobile" confirmado pelo usuário = navegador do celular (responsivo/PWA), **não**
   app nativo Android/iOS. Captura de foto já usa `<input capture>` do navegador — sem
   necessidade de API nativa.
@@ -40,9 +51,29 @@ apps/web/app/settings/**            → configurações da organização (antes 
 apps/web/app/dashboard/NotificationBell.tsx + notificationActions.ts
 apps/web/lib/supabase/client.ts     → cliente browser-side (novo)
 apps/web/public/manifest.json + icon-*.png + apple-touch-icon.png → PWA
+apps/web/app/fleet/**               → UI de gestão de frota (localização/categoria/
+                                       veículo), único caminho antes era SQL direto
+apps/web/app/PasswordInput.tsx      → input de senha com toggle mostrar/ocultar,
+                                       compartilhado entre /login e /signup
 ```
 
 ## Workstreams — status final desta rodada
+- [x] **Correção do crash de signup em produção (gap crítico encontrado pelo usuário)** —
+      `SUPABASE_SERVICE_ROLE_KEY` ausente/mal configurada fazia `signUpOrganization`
+      lançar um throw não capturado, virando a página de erro genérica do Next.js.
+      Corrigido com try/catch (mensagem amigável); erros de criação de conta e de
+      login pós-criação agora são reportados separadamente (uma falha depois da conta
+      já criada nunca mais diz "não foi possível criar sua conta").
+- [x] **UI de gestão de frota (fecha o maior gap restante da rodada anterior)** —
+      página `/fleet` (fleet manager/administrator) para cadastrar localizações,
+      categorias e veículos sem precisar de SQL direto. `organization_id` sempre
+      derivado no servidor a partir do perfil autenticado, nunca do formulário;
+      `category_id`/`location_id` validados contra a organização antes do insert
+      (FK simples não é suficiente — bypassa RLS). Testado de ponta a ponta e com
+      tentativas deliberadas de bypass (ver Evidence).
+- [x] **Confirmação de senha + mostrar/ocultar** — `PasswordInput` compartilhado entre
+      `/login` e `/signup`; signup exige dois campos coincidentes (client e server-side),
+      botão de submit desabilitado enquanto não coincidem.
 - [x] **Cadastro self-service (gap crítico encontrado pelo usuário)** — organização +
       usuário administrator + localização padrão, tudo atômico com rollback em caso de
       falha parcial. Testado de ponta a ponta (nova org isolada, zero veículos, exatamente
@@ -67,15 +98,22 @@ apps/web/public/manifest.json + icon-*.png + apple-touch-icon.png → PWA
 ## Passed Gates
 - `pnpm test` (domain): **81/81 GREEN**.
 - `pnpm typecheck`: limpo nos 3 pacotes.
-- Migrations 0006-0009 aplicadas sem erro em local e remoto.
+- Migrations 0006-0009 aplicadas sem erro em local e remoto. Esta rodada não criou
+  migration nova — `/fleet` usa só as policies RLS já existentes desde a 0001.
 - Cross-tenant RLS test (18/18) re-executado com o schema completo (notificações,
-  localizações, configurações) — ainda zero vazamentos.
-- Code review (`/code-review high`) rodado **duas vezes** nesta sessão sobre o código
-  novo, com verificação independente de cada achado antes de confiar — ver Evidence.
+  localizações, configurações, frota) — ainda zero vazamentos.
+- Code review (`/code-review high`) rodado **três vezes** ao longo da sessão sobre o
+  código novo, com verificação independente de cada achado antes de confiar — ver
+  Evidence.
 - E2E real via Playwright: cadastro de organização nova, sino de notificação com
   conteúdo real, configurações salvando e validando no servidor, checklist de retorno
-  atualizando a localização do veículo no banco, tudo verificado contra local e
-  novamente contra o Supabase remoto real.
+  atualizando a localização do veículo no banco, e nesta rodada o fluxo completo
+  signup → `/fleet` (localização + categoria + veículo) → painel → solicitação de
+  viagem real recomendando o veículo recém-criado — tudo verificado contra local e
+  novamente contra o Supabase remoto real. Também testadas deliberadamente duas
+  tentativas de bypass (nível de combustível 150% contornando o `max` do HTML5;
+  `category_id` de UUID forjado injetado via JS) — ambas rejeitadas pelo servidor com
+  mensagem amigável, nenhum veículo criado.
 
 ## Evidence — achados do 2º Blind Critic desta sessão (todos verificados; 4 corrigidos, 1 aceito como risco documentado, 1 limpo)
 1. **Bug real (P0)**: `create or replace function record_return(...)` com um parâmetro a
@@ -110,6 +148,55 @@ apps/web/public/manifest.json + icon-*.png + apple-touch-icon.png → PWA
 6. Dependência `sharp` adicionada só para gerar os ícones do PWA, nunca importada no
    código do app — removida depois de gerar os PNGs.
 
+## Evidence — achados do 3º Blind Critic desta sessão (4 agentes em paralelo — 2 confirmaram achados que eu já tinha levantado sozinho, 1 achado novo confirmado, 1 refutado com evidência)
+1. **Bug real (P1, self-encontrado antes do review)**: `signUpOrganization` usa o
+   cliente service-role, que lança throw (não retorna erro tipado) quando sua própria
+   env var está mal configurada — exatamente o crash que o usuário viu em produção.
+   Corrigido com try/catch dedicado; verificado reproduzindo o erro localmente sem a
+   env var e confirmando o texto idêntico ao relatado.
+2. **Bug real (P2, self-encontrado, confirmado pelo review)**: `runFleetAction` no
+   dashboard engolia qualquer erro de RPC sem feedback nenhum — um clique rejeitado
+   (aprovação em corrida, veículo já reclamado) parecia funcionar mas não fazia nada.
+   Corrigido: redireciona para `/dashboard?fleetActionError=1`, que renderiza um banner
+   visível; mensagem genérica de propósito (o erro bruto do Postgres não é adequado
+   para exibição).
+3. **Bug real (P2, encontrado pelo review, confirmado independentemente)**: nível de
+   combustível/bateria em `createVehicle` não tinha validação de servidor — só o
+   `min`/`max` do HTML5 no navegador. Um formulário adulterado (ou POST direto) com
+   valor fora de 0-100 chegava até a constraint CHECK do Postgres e vazava a mensagem
+   de erro bruta do banco para o gestor de frota. Corrigido: validação espelhando a
+   constraint, com mensagem amigável. Verificado via Playwright removendo o atributo
+   `max` por JS antes de submeter (simulando bypass real) — servidor rejeitou.
+4. **Bug real (P2, encontrado pelo review)**: `signUp`'s catch original envolvia tanto
+   a criação da conta quanto o login pós-criação no mesmo bloco — uma falha
+   inesperada *depois* que organização/usuário/perfil já existiam (ex.: erro
+   transitório no `signInWithPassword`) reportava "não foi possível criar sua conta",
+   quando na verdade a conta existia e o usuário só precisava logar manualmente.
+   Corrigido: dois try/catch separados, cada um com sua mensagem correta.
+5. **Bug real (P3, encontrado pelo review)**: `VehicleForm` resetava o formulário
+   nativo (`form.reset()`) após sucesso, mas `energyType` é estado React controlado —
+   ficava "preso" no último valor selecionado (ex.: BEV), mantendo o campo de bateria
+   visível mesmo com o resto do formulário limpo. Corrigido: `setEnergyType("ICE")`
+   junto do reset.
+6. **Hipótese refutada com evidência (não é bug)**: cogitou-se que o try/catch do
+   signup pudesse rotular incorretamente uma falha de rede transitória no
+   `signInWithPassword` como "erro de conta". Investigação do código-fonte real do
+   `@supabase/auth-js` instalado mostrou que falhas de rede já são convertidas em
+   `AuthError` tipado internamente pelo SDK (nunca chegam como throw), e o único outro
+   caminho de throw (listener de `onAuthStateChange`) já é protegido por um try/catch
+   no `setAll` de cookies deste projeto. Nenhuma correção necessária para este caso —
+   mas o fix #4 acima (separar os dois try/catch) permanece correto por si só, como
+   defesa em profundidade.
+7. **Bug real (P1, self-encontrado antes do review, o mais sério desta rodada)**:
+   `category_id`/`location_id` em `createVehicle` são FKs simples (0001) sem checagem
+   de organização — FK no Postgres ignora RLS, então um formulário adulterado podia
+   gravar num veículo da própria organização uma referência a categoria/localização
+   de *outra* organização. Corrigido: validação explícita contra `organization_id`
+   antes do insert, mesmo padrão já usado em 0006/0008 para `current_location_id`.
+   Verificado via Playwright injetando um `category_id` forjado por JS — servidor
+   rejeitou, nenhum veículo criado. Padrão fácil de esquecer se um novo insert direto
+   for adicionado no futuro sem repetir esta checagem.
+
 ## Assumptions
 Mantidas das rodadas anteriores, mais:
 ```
@@ -133,28 +220,32 @@ exposto publicamente sem controle de quem pode criar organizações.
 
 ## Risks
 - Notificações: qualquer membro pode spoofar notificação para colega da mesma
-  organização (ver Evidence #5) — aceito, documentado, não corrigido.
+  organização (ver Evidence da rodada anterior) — aceito, documentado, não corrigido.
 - Signup não valida se o e-mail realmente pertence a quem está criando a conta (ver
   Assumption acima).
-- Regras de rodízio de SP ainda não validadas contra fonte oficial (herdado da rodada
-  anterior).
-- Sem UI para gerenciar `vehicle_locations` além da criada automaticamente no signup —
-  uma organização não consegue adicionar novos locais pela interface ainda.
-- Sem UI para uma organização existente adicionar veículos/categorias — só existe via
-  SQL direto (seed) hoje. Uma organização criada via `/signup` fica sem frota até
-  alguém popular isso manualmente no banco.
+- Regras de rodízio de SP ainda não validadas contra fonte oficial (herdado de rodadas
+  anteriores).
+- **Passo manual pendente do usuário**: `SUPABASE_SERVICE_ROLE_KEY` precisa ser
+  adicionada nas variáveis de ambiente do projeto Vercel (tipo "Config", igual às
+  outras duas) e o deploy refeito — sem isso, o crash de signup em produção volta a
+  acontecer mesmo com a correção de código, porque a causa raiz é a variável ausente
+  no Vercel, não no código.
+- Ações de fleet manager no painel (`runFleetAction`) agora mostram um banner genérico
+  em caso de falha, mas ainda sem `useActionState`/mensagem específica por ação —
+  suficiente para não parecer que o clique não fez nada, mas não diz *por que* falhou.
 
 ## Human Gates
 Nenhum pendente além dos já conhecidos.
 
 ## Remaining Work
-1. UI de gestão de frota (adicionar veículo, categoria, localização) — hoje só existe
-   via seed/SQL direto; uma organização nova via signup não tem como popular sua própria
-   frota pela interface.
-2. Fluxo de convite de novos usuários para uma organização existente (hoje só o
+1. Fluxo de convite de novos usuários para uma organização existente (hoje só o
    `/signup` cria usuários, sempre como fundador de uma organização nova).
-3. Fechar o risco de spoofing de notificação (Evidence #5) — provavelmente exige revisar
-   o modelo de segurança das 4 RPCs afetadas com mais cuidado do que uma correção rápida
-   permite.
-4. Validar a tabela de rodízio de SP contra a fonte oficial (CET-SP).
-5. Confirmação de e-mail real no signup, se o produto vier a ser exposto publicamente.
+2. Fechar o risco de spoofing de notificação — provavelmente exige revisar o modelo de
+   segurança das 4 RPCs afetadas com mais cuidado do que uma correção rápida permite.
+3. Validar a tabela de rodízio de SP contra a fonte oficial (CET-SP).
+4. Confirmação de e-mail real no signup, se o produto vier a ser exposto publicamente.
+5. Extrair o helper `requireFleetManager`/checagem de papel — hoje duplicado em
+   `dashboard/page.tsx`, `analytics/page.tsx`, `settings/page.tsx`, `settings/actions.ts`
+   e agora `fleet/page.tsx`/`fleet/actions.ts`. Puramente manutenibilidade, não é bug.
+6. Ações de fleet manager no painel (aprovar, bloquear, trocar veículo) ainda não têm
+   mensagem de erro específica por ação — só o banner genérico (ver Risks).

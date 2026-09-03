@@ -34,7 +34,9 @@ Usuários de demonstração (senha `password123`): `gestor@gwm-demo.local` (flee
 `colaborador@gwm-demo.local` (employee), `portaria@gwm-demo.local` (security). Para uma
 organização nova, use **Criar organização** na tela de login (`/signup`) — cria a
 organização, as configurações padrão, uma localização inicial e o primeiro usuário como
-`administrator`.
+`administrator`. A organização nasce sem veículos: use **Frota** (`/fleet`, visível para
+`fleet_manager`/`administrator`) para cadastrar localizações, categorias e o primeiro
+veículo antes de solicitar viagens.
 
 É uma PWA (Progressive Web App): instalável a partir do próprio navegador do celular
 ("Adicionar à tela de início"), sem app nativo — a captura de foto nos checklists usa a
