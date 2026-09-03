@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getUserEmail } from "@/lib/email/recipients";
+import { renderEmail } from "@/lib/email/renderEmail";
+import { sendEmail } from "@/lib/email/sendEmail";
+import { getAppUrl } from "@/lib/getAppUrl";
 
 export async function signOut() {
   const supabase = await createSupabaseServerClient();
@@ -35,10 +39,50 @@ async function runFleetAction(
   }
 }
 
+/**
+ * Best-effort email to the reservation's requester, mirroring whichever in-app
+ * notification the calling RPC already inserted (0008/0010_*.sql) — same audience, same
+ * event, just a second delivery channel. `build` receives the destination text so the
+ * caller can phrase its own heading/body; never throws, never blocks the caller's
+ * already-successful RPC result.
+ */
+async function notifyRequesterByEmail(
+  supabase: TypedSupabaseClient,
+  reservationId: string,
+  build: (destination: string) => { heading: string; bodyLines: string[] },
+): Promise<void> {
+  const { data: reservation } = await supabase
+    .from("reservations")
+    .select("trip_request:trip_requests(requester_id, destination)")
+    .eq("id", reservationId)
+    .single();
+  const requesterId = reservation?.trip_request?.requester_id;
+  if (!requesterId) return;
+
+  const email = await getUserEmail(requesterId);
+  if (!email) return;
+
+  const { heading, bodyLines } = build(reservation?.trip_request?.destination ?? "seu destino");
+  const { html, text } = renderEmail({
+    heading,
+    bodyLines,
+    ctaLabel: "Ver Minhas Viagens",
+    ctaUrl: `${getAppUrl()}/trips`,
+  });
+  await sendEmail({ to: email, subject: heading, html, text });
+}
+
 export async function approveReservation(reservationId: string): Promise<void> {
-  return runFleetAction((supabase) =>
+  await runFleetAction((supabase) =>
     supabase.rpc("approve_reservation", { p_reservation_id: reservationId }),
   );
+  const supabase = await createSupabaseServerClient();
+  await notifyRequesterByEmail(supabase, reservationId, (destination) => ({
+    heading: "Reserva aprovada",
+    bodyLines: [
+      `Sua reserva para <strong>${destination}</strong> foi aprovada e o veículo está confirmado.`,
+    ],
+  }));
 }
 
 export async function completeWorkflowTask(taskId: string): Promise<void> {
@@ -73,9 +117,16 @@ export async function unblockVehicle(vehicleId: string): Promise<void> {
  * matching that precedent's level of simplicity.
  */
 export async function cancelReservation(reservationId: string, reason: string): Promise<void> {
-  return runFleetAction((supabase) =>
+  await runFleetAction((supabase) =>
     supabase.rpc("cancel_reservation", { p_reservation_id: reservationId, p_reason: reason }),
   );
+  const supabase = await createSupabaseServerClient();
+  await notifyRequesterByEmail(supabase, reservationId, (destination) => ({
+    heading: "Reserva cancelada",
+    bodyLines: [
+      `Sua reserva para <strong>${destination}</strong> foi cancelada${reason ? `: ${reason}` : "."}`,
+    ],
+  }));
 }
 
 /**

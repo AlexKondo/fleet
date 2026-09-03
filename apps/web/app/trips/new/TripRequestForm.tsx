@@ -50,14 +50,17 @@ export function TripRequestForm() {
     });
   }
 
-  function handleConfirm() {
+  function handleConfirm(targetId?: string) {
     if (!formInput || !plan) return;
-    const targetId =
-      plan.type === "carpool" ? plan.carpool?.reservationId : plan.vehicle?.vehicleId;
-    if (!targetId || plan.type === "none") return;
+    const resolvedTargetId = targetId ?? (plan.type === "vehicle" ? plan.vehicle?.vehicleId : undefined);
+    if (!resolvedTargetId || plan.type === "none") return;
 
     startConfirming(async () => {
-      const result = await confirmTrip({ ...formInput, choice: plan.type as "carpool" | "vehicle", targetId });
+      const result = await confirmTrip({
+        ...formInput,
+        choice: plan.type as "carpool" | "vehicle",
+        targetId: resolvedTargetId,
+      });
       if (!result.success) {
         setConfirmError(result.error ?? "unknown_error");
       }
@@ -186,27 +189,46 @@ export function TripRequestForm() {
           </p>
         ) : plan.error ? (
           <p className="text-sm text-signal-red">Não foi possível calcular a recomendação agora.</p>
-        ) : plan.type === "carpool" && plan.carpool ? (
+        ) : plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0 ? (
           <div className="flex flex-col gap-4">
-            <div className="rounded-sm border border-signal-teal/40 bg-signal-teal/10 p-4">
-              <p className="text-xs uppercase tracking-widest text-signal-teal">Carona disponível</p>
-              <p className="mt-1 font-mono text-lg text-paper-50">{plan.carpool.vehiclePlate}</p>
-              <p className="mt-1 text-sm text-fog-400">
-                Você pode viajar aceitando os horários já reservados desta viagem.
+            <p className="text-xs uppercase tracking-widest text-signal-teal">
+              {plan.carpoolOptions.length > 1
+                ? `${plan.carpoolOptions.length} caronas compatíveis`
+                : "Carona disponível"}
+            </p>
+            {plan.carpoolOptions.length > 1 ? (
+              <p className="text-xs text-fog-600">
+                O destino é comparado de forma aproximada (sem acentuação/maiúsculas e
+                lugares mais específicos contam como o mesmo destino) — confira cada opção
+                antes de aceitar.
               </p>
-            </div>
+            ) : null}
+            <ul className="flex flex-col gap-3">
+              {plan.carpoolOptions.map((option) => (
+                <li
+                  key={option.reservationId}
+                  className="rounded-sm border border-signal-teal/40 bg-signal-teal/10 p-4"
+                >
+                  <p className="font-mono text-lg text-paper-50">{option.vehiclePlate}</p>
+                  <p className="mt-1 text-sm text-fog-400">
+                    Saída {new Date(option.departureAt).toLocaleString("pt-BR")} · Retorno{" "}
+                    {new Date(option.expectedReturnAt).toLocaleString("pt-BR")}
+                  </p>
+                  <button
+                    onClick={() => handleConfirm(option.reservationId)}
+                    disabled={isConfirming}
+                    className="mt-3 rounded-sm bg-signal-teal px-4 py-2 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    {isConfirming ? "Confirmando…" : "Aceitar esta carona"}
+                  </button>
+                </li>
+              ))}
+            </ul>
             <ul className="flex flex-col gap-1 text-sm text-fog-400">
               {plan.reasons.map((r) => (
                 <li key={r}>• {reasonLabel(r)}</li>
               ))}
             </ul>
-            <button
-              onClick={handleConfirm}
-              disabled={isConfirming}
-              className="rounded-sm bg-signal-teal px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {isConfirming ? "Confirmando…" : "Aceitar carona"}
-            </button>
           </div>
         ) : plan.type === "vehicle" && plan.vehicle ? (
           <div className="flex flex-col gap-4">
@@ -238,7 +260,7 @@ export function TripRequestForm() {
               </div>
             ) : null}
             <button
-              onClick={handleConfirm}
+              onClick={() => handleConfirm()}
               disabled={isConfirming}
               className="rounded-sm bg-signal-blue px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
             >

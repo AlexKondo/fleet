@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { PasswordInput } from "../PasswordInput";
 import { signIn, type SignInState } from "./actions";
 
@@ -31,6 +32,12 @@ export function LoginForm() {
         required
         placeholder="••••••••••••"
       />
+      <Link
+        href="/forgot-password"
+        className="self-end text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+      >
+        Esqueci minha senha
+      </Link>
 
       {state.error ? (
         <p role="alert" className="text-sm text-signal-red">

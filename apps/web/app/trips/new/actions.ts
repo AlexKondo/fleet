@@ -11,6 +11,10 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toDomainCategory, toDomainVehicle } from "@/lib/domain/mappers";
 import { loadOrgConfig } from "@/lib/domain/orgConfig";
+import { getFleetManagerEmails } from "@/lib/email/recipients";
+import { renderEmail } from "@/lib/email/renderEmail";
+import { sendEmail } from "@/lib/email/sendEmail";
+import { getAppUrl } from "@/lib/getAppUrl";
 
 export interface TripFormInput {
   departureAt: string;
@@ -26,12 +30,13 @@ export interface TripFormInput {
 export interface PlanTripResult {
   type: "carpool" | "vehicle" | "none";
   reasons: string[];
-  carpool?: {
+  /** Every compatible existing trip, not just the closest — see planMobility.carpoolOptions. */
+  carpoolOptions?: {
     reservationId: string;
     vehiclePlate: string;
     departureAt: string;
     expectedReturnAt: string;
-  };
+  }[];
   vehicle?: {
     vehicleId: string;
     plate: string;
@@ -184,17 +189,19 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
     readinessConfig: config.readiness,
   });
 
-  if (plan.type === "carpool" && plan.carpool) {
-    const candidate = carpoolCandidates.find((c) => c.reservationId === plan.carpool!.reservationId);
+  if (plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0) {
     return {
       type: "carpool",
       reasons: plan.reasons,
-      carpool: {
-        reservationId: plan.carpool.reservationId,
-        vehiclePlate: candidate?.vehiclePlate ?? "",
-        departureAt: candidate?.existingTrip.departureAt ?? "",
-        expectedReturnAt: candidate?.existingTrip.expectedReturnAt ?? "",
-      },
+      carpoolOptions: plan.carpoolOptions.map((option) => {
+        const candidate = carpoolCandidates.find((c) => c.reservationId === option.reservationId);
+        return {
+          reservationId: option.reservationId,
+          vehiclePlate: candidate?.vehiclePlate ?? "",
+          departureAt: candidate?.existingTrip.departureAt ?? "",
+          expectedReturnAt: candidate?.existingTrip.expectedReturnAt ?? "",
+        };
+      }),
     };
   }
 
@@ -257,7 +264,7 @@ export async function confirmTrip(
 
   const supabase = await createSupabaseServerClient();
 
-  if (plan.type === "carpool" && plan.carpool?.reservationId === input.targetId) {
+  if (plan.type === "carpool" && plan.carpoolOptions?.some((c) => c.reservationId === input.targetId)) {
     const { error } = await supabase.rpc("create_carpool_participation", {
       p_departure_at: input.departureAt,
       p_expected_return_at: input.expectedReturnAt,
@@ -288,6 +295,25 @@ export async function confirmTrip(
       p_vehicle_id: input.targetId,
     });
     if (error) return { success: false, error: error.message };
+
+    // Mirrors create_vehicle_reservation's own in-app notification
+    // (0008_notifications.sql) — email every fleet manager/administrator that a
+    // reservation is waiting on their approval. Best-effort: sendEmail never throws,
+    // so a delivery failure here never blocks the reservation that was already created.
+    const managerEmails = await getFleetManagerEmails(supabase, built.profile.organization_id);
+    if (managerEmails.length > 0) {
+      const { html, text } = renderEmail({
+        heading: "Nova reserva aguardando aprovação",
+        bodyLines: [
+          `Uma nova viagem para <strong>${input.destination}</strong> aguarda aprovação.`,
+          `Origem: ${input.origin} · Saída: ${new Date(input.departureAt).toLocaleString("pt-BR")}`,
+        ],
+        ctaLabel: "Abrir Painel",
+        ctaUrl: `${getAppUrl()}/dashboard`,
+      });
+      await sendEmail({ to: managerEmails, subject: "Nova reserva aguardando aprovação", html, text });
+    }
+
     redirect("/trips");
   }
 

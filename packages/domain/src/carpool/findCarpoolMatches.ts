@@ -34,11 +34,44 @@ function minutesBetween(a: string, b: string): number {
 }
 
 /**
+ * Case/accent/whitespace-insensitive normalization for destination comparison. Exported
+ * so callers (e.g. a UI that wants to explain *why* something didn't match) can reuse the
+ * exact same normalization the matcher itself uses.
+ */
+const COMBINING_DIACRITICAL_MARKS = /[̀-ͯ]/g;
+
+export function normalizeDestination(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(COMBINING_DIACRITICAL_MARKS, "")
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * Two destinations are treated as the same place if they're equal after normalization, or
+ * one contains the other (e.g. "São Paulo" vs. "São Paulo - Filial Centro"). This is still
+ * a text heuristic, not geocoding — "Av. Paulista" and "Avenida Paulista, 1000" won't
+ * match — but it closes the false-negative gap a pure `===` had for the same place typed
+ * with different accents, casing, or an added suffix.
+ */
+function destinationsMatch(a: string, b: string): boolean {
+  const normalizedA = normalizeDestination(a);
+  const normalizedB = normalizeDestination(b);
+  return (
+    normalizedA === normalizedB ||
+    normalizedA.includes(normalizedB) ||
+    normalizedB.includes(normalizedA)
+  );
+}
+
+/**
  * "Antes de disponibilizar outro veículo, a plataforma verifica se já existe uma viagem
- * compatível." (fleet-car-saas.txt §4). Destination matching is exact-string for this v1
- * — geographic proximity needs geocoding and is out of MVP scope (see workbench
- * Assumptions). Never force a match that violates a hard constraint (capacity, cargo,
- * schedule tolerance).
+ * compatível." (fleet-car-saas.txt §4). Destination matching is normalized-text for this
+ * v1 (see `destinationsMatch`) — true geographic proximity needs geocoding and is out of
+ * MVP scope (see workbench Assumptions). Never force a match that violates a hard
+ * constraint (capacity, cargo, schedule tolerance): those stay exact, only the free-text
+ * destination comparison is loosened.
  */
 export function findCarpoolMatches(
   request: TripRequest,
@@ -49,7 +82,7 @@ export function findCarpoolMatches(
     const blockingReasons: string[] = [];
     const positiveReasons: string[] = [];
 
-    if (candidate.existingTrip.destination !== request.destination) {
+    if (!destinationsMatch(candidate.existingTrip.destination, request.destination)) {
       blockingReasons.push("destination_mismatch");
     } else {
       positiveReasons.push("destination_match");

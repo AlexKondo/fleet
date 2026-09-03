@@ -4,6 +4,10 @@ import { deriveReturnOutcome, MAINTENANCE_DUE_SOON_KM, type EnergyType } from "@
 import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { uploadInspectionPhotos } from "@/lib/domain/uploadInspectionPhotos";
+import { getFleetManagerEmails } from "@/lib/email/recipients";
+import { renderEmail } from "@/lib/email/renderEmail";
+import { sendEmail } from "@/lib/email/sendEmail";
+import { getAppUrl } from "@/lib/getAppUrl";
 
 export interface ReturnFormInput {
   reservationId: string;
@@ -89,6 +93,23 @@ export async function submitReturn(
   // app's actions) so the caller can inspect failedPhotoAngles and show them to the user
   // before navigating away; the client component performs the redirect once it has.
   if (!profile?.organization_id) return { success: true };
+
+  // Mirrors record_return's own in-app notification (0008_notifications.sql): one email
+  // per return that created tasks, not one per task, to the org's fleet managers/
+  // administrators. `outcome.workflowTasks` is the exact same list the RPC call above
+  // was given (p_workflow_tasks), so there's no need to re-derive or re-query it.
+  if (outcome.workflowTasks.length > 0) {
+    const managerEmails = await getFleetManagerEmails(supabase, profile.organization_id);
+    if (managerEmails.length > 0) {
+      const { html, text } = renderEmail({
+        heading: "Novas tarefas operacionais",
+        bodyLines: ["Uma devolução de veículo gerou novas tarefas operacionais."],
+        ctaLabel: "Abrir Painel",
+        ctaUrl: `${getAppUrl()}/dashboard`,
+      });
+      await sendEmail({ to: managerEmails, subject: "Novas tarefas operacionais", html, text });
+    }
+  }
 
   const failedPhotoAngles = await uploadInspectionPhotos(
     supabase,

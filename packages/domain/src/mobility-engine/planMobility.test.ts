@@ -78,8 +78,43 @@ describe("planMobility (§17 — Mobility Decision Engine)", () => {
     });
 
     expect(result.type).toBe("carpool");
-    expect(result.carpool?.reservationId).toBe("res-1");
+    expect(result.carpoolOptions).toHaveLength(1);
+    expect(result.carpoolOptions?.[0]?.reservationId).toBe("res-1");
     expect(result.vehicle).toBeUndefined();
+  });
+
+  it("lists every compatible carpool, not just the closest one", () => {
+    const carpoolCandidates: CarpoolCandidate[] = [
+      {
+        reservationId: "res-close",
+        vehicleId: "veh-suv",
+        existingTrip: trip({ id: "t-close", departureAt: "2026-09-10T07:50:00Z" }),
+        vehicleCapacity: 5,
+        vehicleSupportsCargo: false,
+        currentOccupancy: 2,
+      },
+      {
+        reservationId: "res-far",
+        vehicleId: "veh-van",
+        existingTrip: trip({ id: "t-far", departureAt: "2026-09-10T08:15:00Z" }),
+        vehicleCapacity: 8,
+        vehicleSupportsCargo: false,
+        currentOccupancy: 1,
+      },
+    ];
+
+    const result = planMobility({
+      tripRequest: trip(),
+      carpoolCandidates,
+      carpoolConfig: defaultCarpoolMatchConfig,
+      vehicleCandidates: [{ vehicle: vehicle(), category: sedanCategory }],
+      now,
+      readinessConfig: defaultReadinessConfig,
+    });
+
+    expect(result.type).toBe("carpool");
+    expect(result.carpoolOptions).toHaveLength(2);
+    expect(result.carpoolOptions?.map((c) => c.reservationId)).toEqual(["res-close", "res-far"]);
   });
 
   it("falls back to vehicle recommendation when no carpool is compatible", () => {
@@ -94,7 +129,7 @@ describe("planMobility (§17 — Mobility Decision Engine)", () => {
 
     expect(result.type).toBe("vehicle");
     expect(result.vehicle?.recommendedVehicleId).toBe("veh-sedan");
-    expect(result.carpool).toBeUndefined();
+    expect(result.carpoolOptions).toBeUndefined();
   });
 
   it("returns none with an explanation when nothing works", () => {

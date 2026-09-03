@@ -27,7 +27,16 @@ export interface PlanMobilityInput {
 
 export interface MobilityPlan {
   type: "carpool" | "vehicle" | "none";
-  carpool?: CarpoolMatchResult;
+  /**
+   * Every compatible existing trip, ranked closest-departure-first (findCarpoolMatches
+   * already sorts them) — not just the single best one. Destination matching is
+   * normalized/substring-tolerant (see findCarpoolMatches.destinationsMatch), so more
+   * than one option is a realistic case (e.g. two trips to "São Paulo" and "São Paulo -
+   * Filial Centro" the same afternoon); the caller shows this as a list and lets the
+   * human — who actually knows whether two loosely-matched destinations are the same
+   * place — pick one, rather than the engine silently auto-selecting.
+   */
+  carpoolOptions?: CarpoolMatchResult[];
   vehicle?: RecommendationResult;
   reasons: string[];
   /**
@@ -51,9 +60,9 @@ export function planMobility(input: PlanMobilityInput): MobilityPlan {
     input.carpoolCandidates,
     input.carpoolConfig,
   );
-  const bestCarpool = carpoolResults.find((r) => r.compatible);
-  if (bestCarpool) {
-    return { type: "carpool", carpool: bestCarpool, reasons: ["compatible_trip_found"] };
+  const compatibleCarpools = carpoolResults.filter((r) => r.compatible);
+  if (compatibleCarpools.length > 0) {
+    return { type: "carpool", carpoolOptions: compatibleCarpools, reasons: ["compatible_trip_found"] };
   }
 
   const recommendation = recommendVehicle({

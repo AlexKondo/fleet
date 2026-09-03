@@ -32,8 +32,15 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     data: { user },
   } = await supabase.auth.getUser();
 
+  // /reset-password is reachable pre-session on purpose — auth/callback is what actually
+  // establishes the session (from the recovery email's code), and the page itself
+  // redirects to /forgot-password if it's ever hit without one (reset-password/page.tsx).
   const isPublicRoute =
-    request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup");
+    request.nextUrl.pathname.startsWith("/login") ||
+    request.nextUrl.pathname.startsWith("/signup") ||
+    request.nextUrl.pathname.startsWith("/forgot-password") ||
+    request.nextUrl.pathname.startsWith("/reset-password") ||
+    request.nextUrl.pathname.startsWith("/auth/callback");
 
   if (!user && !isPublicRoute) {
     const loginUrl = new URL("/login", request.url);

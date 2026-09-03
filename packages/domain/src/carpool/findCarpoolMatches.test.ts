@@ -102,6 +102,36 @@ describe("findCarpoolMatches (§4 — Corporate Carpooling Intelligence)", () =>
     expect(results[0]?.reasons).toContain("return_time_incompatible");
   });
 
+  it("matches destinations that differ only by accent and case", () => {
+    const results = findCarpoolMatches(
+      request({ destination: "SAO PAULO" }),
+      [candidate({ existingTrip: request({ id: "t2", destination: "São Paulo" }) })],
+      defaultCarpoolMatchConfig,
+    );
+    expect(results[0]?.compatible).toBe(true);
+    expect(results[0]?.reasons).toContain("destination_match");
+  });
+
+  it("matches when one destination is a more specific version of the other", () => {
+    const results = findCarpoolMatches(
+      request({ destination: "São Paulo" }),
+      [candidate({ existingTrip: request({ id: "t2", destination: "São Paulo - Filial Centro" }) })],
+      defaultCarpoolMatchConfig,
+    );
+    expect(results[0]?.compatible).toBe(true);
+    expect(results[0]?.reasons).toContain("destination_match");
+  });
+
+  it("still rejects genuinely different destinations after normalization", () => {
+    const results = findCarpoolMatches(
+      request({ destination: "São Paulo" }),
+      [candidate({ existingTrip: request({ id: "t2", destination: "Limeira" }) })],
+      defaultCarpoolMatchConfig,
+    );
+    expect(results[0]?.compatible).toBe(false);
+    expect(results[0]?.reasons).toContain("destination_mismatch");
+  });
+
   it("ranks compatible matches before incompatible ones, closest departure first", () => {
     const results = findCarpoolMatches(
       request(),

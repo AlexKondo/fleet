@@ -8,10 +8,12 @@ import { MissingEnvVarError } from "./env";
  * lifecycle operations that a normal RLS-respecting client cannot perform at all
  * (creating/deleting a login, reading another member's email): organization signup
  * (lib/domain/signUpOrganization.ts), which has no tenant context yet to scope to since
- * no organization row exists until that flow creates one, and team member management
- * (app/settings/users/actions.ts), which manages *other* users' auth.users rows —
- * something no anon/authenticated-role client can ever do under RLS, no matter the
- * caller's profile role. Because it bypasses RLS, every caller MUST resolve the acting
+ * no organization row exists until that flow creates one; team member management
+ * (app/settings/users/actions.ts), which manages *other* users' auth.users rows; and
+ * resolving recipient email addresses for outbound notification email
+ * (lib/email/recipients.ts) — profiles has no email column, so reading anyone's email but
+ * your own requires this client no matter what the caller's own role is. Because it
+ * bypasses RLS, every caller MUST resolve the acting
  * user's own organization_id and role from a normal RLS-respecting client first and
  * scope every query by that value explicitly — never trust a client-supplied
  * organization_id or user id without checking it belongs to the caller's own tenant.
