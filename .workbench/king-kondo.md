@@ -9,12 +9,25 @@ Readiness sobre um simples "Vehicle Booking System".
 Fonte: `fleet-car-saas.txt` (raiz do repo) + `.claude/skills/gauntlet/SKILL.md` seção 2.
 Princípio central: **Right Vehicle. Right Trip. Right Time. Ready to Go.**
 
-## Decisions — rodada mais recente
-- Usuário testou o signup de verdade no Vercel (org "GWM Motors") e caiu num crash
-  genérico — gap real encontrado pelo próprio uso, não por mim. Causa raiz: throw não
-  capturado quando `SUPABASE_SERVICE_ROLE_KEY` está ausente/mal configurada no Vercel.
-  Corrigido no código (degrada para mensagem amigável); usuário ainda precisa configurar
-  a variável no painel do Vercel — passo manual que só ele pode fazer.
+## Decisions — rodada mais recente (4ª rodada: debugging sistemático do crash persistente)
+- Usuário testou o signup de novo no Vercel e viu a mensagem de fallback amigável (não
+  mais o crash genérico) — prova de que a correção de código da rodada anterior
+  funcionou, mas revelou que a causa raiz real (env var ausente no Vercel) ainda não foi
+  resolvida. Usado `/systematic-debugging`: reproduzi o fluxo completo de
+  `signUpOrganization` (org → settings → localização → `auth.admin.createUser` → perfil)
+  diretamente contra o banco remoto real com a service-role key do `.env` — todos os
+  passos funcionaram perfeitamente, o que descarta schema desatualizado ou chave
+  inválida e isola a causa no único throw de `createSupabaseAdminClient()`: a env var
+  continua ausente/não reaplicada no Vercel.
+- Sem acesso ao painel/CLI do Vercel, não dá para confirmar 100% — em vez de adivinhar,
+  tornei o erro autodiagnosticável: `MissingEnvVarError` (classe dedicada) distingue
+  "servidor mal configurado" de falha transitória, tanto no signup quanto (achado pelo
+  review) no login e no middleware, que antes travava *toda* rota com
+  `MIDDLEWARE_INVOCATION_FAILED` sem chance de mostrar nada. Adicionado `app/error.tsx`
+  como rede de segurança geral para qualquer outra falha não tratada especificamente.
+- 3 rodadas de `/code-review high` sobre os commits desta sessão de debugging (uma por
+  commit) — a 2ª pegou uma regressão real que eu mesmo introduzi (ver Evidence #8), a 3ª
+  veio limpa ("no blocking correctness bugs found"), confirmando que era hora de parar.
 - Mesmo teste do usuário expôs que uma organização nova não tinha nenhuma forma de
   adicionar veículo pela interface (só via SQL direto) — maior gap funcional restante.
   Construída a página `/fleet` (fleet manager) para cadastrar localizações, categorias e
@@ -197,6 +210,57 @@ apps/web/app/PasswordInput.tsx      → input de senha com toggle mostrar/oculta
    rejeitou, nenhum veículo criado. Padrão fácil de esquecer se um novo insert direto
    for adicionado no futuro sem repetir esta checagem.
 
+## Evidence — 4ª rodada (debugging do crash persistente + 3 rounds de review em cadeia)
+1. **Diagnóstico (não é bug de código, é config)**: reprodução direta contra o Supabase
+   remoto real (service-role key do `.env`, replicando `signUpOrganization` passo a
+   passo) confirmou que banco/schema/chave estão corretos — a causa mais provável do
+   crash que o usuário ainda vê é `SUPABASE_SERVICE_ROLE_KEY` continuar ausente (ou não
+   reaplicada após redeploy) no projeto Vercel. Não corrigível pelo código; ver Risks.
+2. **Bug real (P2, self-encontrado)**: `login/actions.ts` não tinha nenhum try/catch —
+   a mesma classe de erro que travava o signup também travaria qualquer tentativa de
+   login com a mesma configuração ausente. Corrigido com o mesmo padrão do signup.
+3. **Bug real (P2, self-encontrado)**: o 2º try/catch do signup (login automático
+   pós-criação) não distinguia `MissingEnvVarError` — dizia "faça login normalmente"
+   para um erro que faria qualquer tentativa de login falhar do mesmo jeito para sempre.
+   Corrigido com mensagem específica ("sua conta foi criada, mas...").
+4. **Bug real (P2, self-encontrado)**: middleware travava com `MIDDLEWARE_INVOCATION_FAILED`
+   opaco em *toda* rota quando as env vars públicas estavam ausentes — nem sequer
+   chegava a uma página capaz de mostrar mensagem nenhuma. Corrigido: middleware deixa a
+   requisição passar (sem refresh de sessão) nesse caso específico, delegando para o novo
+   `app/error.tsx`.
+5. **Achado do review, confirmado por 2 agentes independentes**: os mesmos 7-8 outros
+   arquivos de `actions.ts` (dashboard, fleet, settings, notifications, trips, pickup,
+   return) continuam sem tratamento específico de `MissingEnvVarError` — hoje caem no
+   `app/error.tsx` genérico em vez de uma mensagem específica. Decisão consciente de não
+   estender agora: login/signup são os dois pontos de entrada pré-autenticação onde a
+   mensagem específica importa mais; os demais já ganharam uma rede de segurança (antes
+   não tinham nenhuma). Ver Remaining Work.
+6. **Achado do review, refutado com evidência já existente desta sessão**: um agente
+   apontou que separar o try/catch de `createSupabaseServerClient()` do de
+   `signInWithPassword()` em `login/actions.ts` deixaria uma exceção inesperada do 2º
+   escapar sem tratamento. A investigação anterior desta mesma sessão (Evidence #6 da
+   3ª rodada) já tinha lido o código-fonte real do `@supabase/auth-js` e mostrado que
+   isso não acontece nesta stack — mas juntei os dois em um único try mesmo assim, por
+   ser mais simples (não mais seguro) e encerrar a discussão.
+7. **Bug real de segurança (P1, encontrado pelo review na 2ª rodada, o mais sério desta
+   sessão de debugging)**: a mudança do middleware para "deixar passar" quando faltam
+   env vars introduziu um bypass de autenticação real — `trips/new/page.tsx` era a
+   ÚNICA página protegida do app que não fazia sua própria checagem de auth (todas as
+   outras 7+ fazem `createSupabaseServerClient()` + `redirect("/login")` se `!user`,
+   independente do middleware). Antes desta rodada, a mesma configuração ausente
+   travava *tudo* (ruim, mas não expunha nada); depois do fail-open, um visitante
+   anônimo conseguiria ver o formulário de solicitação de viagem. Corrigido: adicionada
+   a mesma checagem de auth que todas as outras páginas já têm. Verificado via
+   Playwright: visitante anônimo é redirecionado para `/login`; usuário autenticado
+   continua funcionando normalmente.
+8. **Padrão confirmado, decisão consciente de não abstrair**: o review (2 rodadas
+   separadas) apontou que o par "try/catch + `isMissingEnvVarError`" está duplicado em
+   4 lugares (login, 2× signup, middleware) sem um helper compartilhado. Avaliado e
+   descartado por ora: cada site tem uma estratégia de recuperação genuinamente
+   diferente (retornar erro tipado vs. deixar passar a requisição) e mensagem própria
+   ao contexto — um wrapper genérico ficaria mais complexo do que as poucas linhas
+   repetidas que existem hoje. Revisar se um 5º call site repetir o padrão.
+
 ## Assumptions
 Mantidas das rodadas anteriores, mais:
 ```
@@ -225,14 +289,21 @@ exposto publicamente sem controle de quem pode criar organizações.
   Assumption acima).
 - Regras de rodízio de SP ainda não validadas contra fonte oficial (herdado de rodadas
   anteriores).
-- **Passo manual pendente do usuário**: `SUPABASE_SERVICE_ROLE_KEY` precisa ser
-  adicionada nas variáveis de ambiente do projeto Vercel (tipo "Config", igual às
-  outras duas) e o deploy refeito — sem isso, o crash de signup em produção volta a
-  acontecer mesmo com a correção de código, porque a causa raiz é a variável ausente
-  no Vercel, não no código.
+- **Passo manual pendente do usuário, ainda não resolvido após 2 rodadas**:
+  `SUPABASE_SERVICE_ROLE_KEY` precisa estar nas variáveis de ambiente do projeto Vercel
+  (tipo "Config", igual às outras duas) **e o projeto precisa ser redeployado depois**
+  — sem isso, o cadastro continua impossível em produção, agora com uma mensagem que diz
+  exatamente isso ("avise o administrador do sistema — variável de ambiente ausente")
+  em vez do crash genérico anterior. Não corrigível pelo código; só o usuário tem acesso
+  ao painel do Vercel para confirmar/corrigir.
 - Ações de fleet manager no painel (`runFleetAction`) agora mostram um banner genérico
   em caso de falha, mas ainda sem `useActionState`/mensagem específica por ação —
   suficiente para não parecer que o clique não fez nada, mas não diz *por que* falhou.
+- 7-8 arquivos de `actions.ts` (dashboard, fleet, settings, notifications, trips,
+  pickup, return) ainda não têm tratamento específico de `MissingEnvVarError` — caem no
+  `app/error.tsx` genérico em vez de uma mensagem "avise o administrador" específica.
+  Rede de segurança já existe (antes não existia nenhuma); mensagem específica é
+  melhoria, não correção de bug. Ver Evidence #5 da 4ª rodada.
 
 ## Human Gates
 Nenhum pendente além dos já conhecidos.
@@ -249,3 +320,7 @@ Nenhum pendente além dos já conhecidos.
    e agora `fleet/page.tsx`/`fleet/actions.ts`. Puramente manutenibilidade, não é bug.
 6. Ações de fleet manager no painel (aprovar, bloquear, trocar veículo) ainda não têm
    mensagem de erro específica por ação — só o banner genérico (ver Risks).
+7. Estender o tratamento específico de `MissingEnvVarError` (mensagem "avise o
+   administrador" em vez do `app/error.tsx` genérico) aos 7-8 `actions.ts` restantes,
+   se/quando isso importar na prática — ver Evidence #5 e #8 da 4ª rodada sobre por que
+   não foi feito agora.
