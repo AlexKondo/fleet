@@ -3,9 +3,29 @@
 ## Mission
 Close the gap between the repo's implementation and the newly-added canonical spec
 (docs/instruction.md + docs/GWM_Fleet_Controlled_Engineering_Set_v1.1.zip), per the
-6 concrete gaps identified in a prior review turn. Scope is these 6 items, not the
-full spec (Communication Hub's automatic reassignment, a separate mobile app, Fleet
-Intelligence analytics, etc. are explicitly out of scope for this pass).
+6 concrete gaps identified in a prior review turn, PLUS (explicit user follow-up
+request) automatic vehicle reassignment on delay-impact (BR-019/BR-020/J-13) — the one
+item originally deferred as manual-only. Still out of scope: a separate mobile app,
+Fleet Intelligence analytics, a dedicated audit-log browsing UI.
+
+### G — Automatic vehicle reassignment on delay (BR-019/BR-020/J-13)
+Status: implemented, pending its own blind-critic round before deploy.
+Files: supabase/migrations/0018_automatic_reassignment.sql (post_reservation_message
+now returns which reservations it marked impacted; new service-role-only
+auto_reassign_reservation_vehicle, deliberately NOT a thin wrapper around
+swap_reservation_vehicle since that one relies on RLS for tenant scoping and RLS is
+bypassed under service_role — this one re-derives organization_id explicitly on every
+lookup instead), apps/web/lib/domain/autoReassignment.ts (new — calls the existing
+recommendVehicle domain engine to pick a replacement, restricted to vehicles that are
+genuinely 'available' now with no required preparation, since nothing is watching to
+finish prep for an unattended swap), apps/web/app/reservations/[id]/actions.ts (wires
+it in after post_reservation_message).
+Decision: the automated swap runs via the service-role client, not the reporting
+user's own session — the person reporting a delay is very often the affected driver
+themself, who has no general right to reassign a DIFFERENT reservation's vehicle
+(that's Fleet Manager-scoped in ACTORS_AND_PERMISSIONS.md); the reassignment is the
+system executing a documented rule (SYSTEM_AUTOMATION actor), not the reporter's own
+privilege.
 
 ## Product Contract
 docs/instruction.md + the extracted engineering-set docs (zip has been deleted after

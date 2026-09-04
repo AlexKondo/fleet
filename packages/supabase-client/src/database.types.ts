@@ -873,7 +873,15 @@ export type Database = {
           p_new_expected_return_at?: string
           p_reservation_id: string
         }
-        Returns: string
+        Returns: Json
+      }
+      auto_reassign_reservation_vehicle: {
+        Args: {
+          p_new_vehicle_id: string
+          p_organization_id: string
+          p_reservation_id: string
+        }
+        Returns: undefined
       }
       log_audit_event: {
         Args: {
