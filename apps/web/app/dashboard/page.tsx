@@ -102,7 +102,7 @@ export default async function DashboardPage({
     ? await supabase
         .from("reservations")
         .select(
-          `id, start_at, end_at, status,
+          `id, start_at, end_at, status, impacted_at,
            vehicle:vehicles(id, plate),
            trip_request:trip_requests(origin, destination, requester_id, requester:profiles(full_name))`,
         )
@@ -309,6 +309,15 @@ export default async function DashboardPage({
                           <span className={r.status === "confirmed" ? "text-signal-blue" : "text-signal-amber"}>
                             {r.status === "confirmed" ? "Confirmada" : "Pendente"}
                           </span>
+                          {r.impacted_at ? (
+                            <span className="ml-2 text-xs text-signal-yellow">⚠ Impactada</span>
+                          ) : null}
+                          <Link
+                            href={`/reservations/${r.id}`}
+                            className="ml-2 text-xs text-fog-400 hover:text-signal-amber hover:underline"
+                          >
+                            Mensagens
+                          </Link>
                         </td>
                         <td className="px-4 py-3">
                           {vehicleOptions.length === 0 ? (

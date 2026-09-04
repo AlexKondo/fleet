@@ -39,11 +39,12 @@ async function requireAdministrator() {
   };
 }
 
+
 export async function inviteUser(
   _prevState: UserActionState,
   formData: FormData,
 ): Promise<UserActionState> {
-  const { organizationId } = await requireAdministrator();
+  const { organizationId, actingUserId } = await requireAdministrator();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
   const fullName = String(formData.get("fullName") ?? "").trim();
@@ -86,6 +87,15 @@ export async function inviteUser(
     return { status: "error", error: "Não foi possível concluir o cadastro do usuário. Tente novamente." };
   }
 
+  await admin.rpc("log_audit_event", {
+    p_organization_id: organizationId,
+    p_actor_id: actingUserId as string,
+    p_action: "user_invited",
+    p_entity_type: "profile",
+    p_entity_id: authData.user.id,
+    p_after: { role },
+  });
+
   revalidatePath("/settings/users");
   return { status: "success" };
 }
@@ -94,7 +104,7 @@ export async function updateUserRole(
   _prevState: UserActionState,
   formData: FormData,
 ): Promise<UserActionState> {
-  const { organizationId } = await requireAdministrator();
+  const { organizationId, actingUserId } = await requireAdministrator();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
   const userId = String(formData.get("userId") ?? "");
@@ -124,6 +134,77 @@ export async function updateUserRole(
         : error.message;
     return { status: "error", error: message };
   }
+
+  await admin.rpc("log_audit_event", {
+    p_organization_id: organizationId,
+    p_actor_id: actingUserId as string,
+    p_action: "user_role_changed",
+    p_entity_type: "profile",
+    p_entity_id: userId,
+    p_after: { role },
+  });
+
+  revalidatePath("/settings/users");
+  return { status: "success" };
+}
+
+/**
+ * BR-004/GT-011: driver authorization + CNH validity, enforced server-side at checkout by
+ * record_pickup (0014_driver_authorization.sql) — this is the admin surface that sets the
+ * data that guard reads. Uses the admin client because profiles has no client-side UPDATE
+ * RLS policy at all (see updateUserRole's comment on why role changes go through an RPC
+ * instead) — manually re-scoped to the acting fleet_manager/administrator's own
+ * organization since the admin client bypasses RLS entirely.
+ */
+export async function updateDriverAuthorization(
+  _prevState: UserActionState,
+  formData: FormData,
+): Promise<UserActionState> {
+  const { organizationId, actingUserId } = await requireAdministrator();
+  if (!organizationId) return { status: "error", error: "not_authorized" };
+
+  const userId = String(formData.get("userId") ?? "");
+  if (!userId) return { status: "error", error: "Usuário inválido." };
+
+  const driverAuthorized = formData.get("driverAuthorized") === "on";
+  const licenseNumber = String(formData.get("licenseNumber") ?? "").trim() || null;
+  const licenseCategory = String(formData.get("licenseCategory") ?? "").trim() || null;
+  const licenseExpirationRaw = String(formData.get("licenseExpiration") ?? "").trim();
+  const licenseExpiration = licenseExpirationRaw || null;
+
+  const admin = createSupabaseAdminClient();
+
+  const { data: targetProfile } = await admin
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!targetProfile || targetProfile.organization_id !== organizationId) {
+    return { status: "error", error: "Usuário não encontrado." };
+  }
+
+  const { error } = await admin
+    .from("profiles")
+    .update({
+      driver_authorized: driverAuthorized,
+      drivers_license_number: licenseNumber,
+      drivers_license_category: licenseCategory,
+      drivers_license_expiration: licenseExpiration,
+    })
+    .eq("id", userId);
+  if (error) return { status: "error", error: "Não foi possível salvar a habilitação agora." };
+
+  await admin.rpc("log_audit_event", {
+    p_organization_id: organizationId,
+    p_actor_id: actingUserId as string,
+    p_action: "driver_authorization_changed",
+    p_entity_type: "profile",
+    p_entity_id: userId,
+    p_after: {
+      driver_authorized: driverAuthorized,
+      drivers_license_expiration: licenseExpiration,
+    },
+  });
 
   revalidatePath("/settings/users");
   return { status: "success" };
@@ -194,6 +275,15 @@ export async function removeUser(
         "altere a função dele para revogar o acesso em vez de excluir.",
     };
   }
+
+  await admin.rpc("log_audit_event", {
+    p_organization_id: organizationId,
+    p_actor_id: actingUserId as string,
+    p_action: "user_removed",
+    p_entity_type: "profile",
+    p_entity_id: userId,
+    p_before: { role: targetProfile.role },
+  });
 
   revalidatePath("/settings/users");
   return { status: "success" };

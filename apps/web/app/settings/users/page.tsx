@@ -31,7 +31,9 @@ export default async function UsersPage() {
 
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, full_name, role")
+    .select(
+      "id, full_name, role, driver_authorized, drivers_license_number, drivers_license_category, drivers_license_expiration",
+    )
     .eq("organization_id", profile.organization_id)
     .order("full_name");
 
@@ -79,12 +81,13 @@ export default async function UsersPage() {
         </h2>
 
         <div className="mb-6 overflow-x-auto rounded-md border border-line-800">
-          <table className="w-full min-w-[560px] border-collapse text-sm">
+          <table className="w-full min-w-[860px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
                 <th className="px-4 py-3 font-medium">Nome</th>
                 <th className="px-4 py-3 font-medium">E-mail</th>
                 <th className="px-4 py-3 font-medium">Função</th>
+                <th className="px-4 py-3 font-medium">CNH</th>
                 <th className="px-4 py-3 font-medium">Ações</th>
               </tr>
             </thead>
@@ -92,7 +95,16 @@ export default async function UsersPage() {
               {members.map((m) => (
                 <UserRow
                   key={m.id}
-                  member={{ id: m.id, full_name: m.full_name, email: m.email, role: m.role }}
+                  member={{
+                    id: m.id,
+                    full_name: m.full_name,
+                    email: m.email,
+                    role: m.role,
+                    driver_authorized: m.driver_authorized,
+                    drivers_license_number: m.drivers_license_number,
+                    drivers_license_category: m.drivers_license_category,
+                    drivers_license_expiration: m.drivers_license_expiration,
+                  }}
                   isSelf={m.id === user.id}
                 />
               ))}

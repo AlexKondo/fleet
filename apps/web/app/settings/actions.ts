@@ -47,6 +47,11 @@ export async function saveOrganizationSettings(
   const carpoolReturnToleranceMinutes = Number(formData.get("carpoolReturnToleranceMinutes"));
   const maintenanceDueSoonDays = Number(formData.get("maintenanceDueSoonDays"));
   const trafficRestrictionEnabled = formData.get("trafficRestrictionEnabled") === "on";
+  const bookingMode = String(formData.get("bookingMode") ?? "");
+  const BOOKING_MODES = ["ai_recommended", "user_choice", "hybrid"] as const;
+  if (!BOOKING_MODES.includes(bookingMode as (typeof BOOKING_MODES)[number])) {
+    return { status: "error", error: "invalid_values" };
+  }
 
   // Bounded, not just non-negative: the client's <input max> is a UI hint only, not
   // enforcement. rangeSafetyBufferPercent in particular must stay within [0, 100] —
@@ -80,12 +85,35 @@ export async function saveOrganizationSettings(
       carpool_return_tolerance_minutes: carpoolReturnToleranceMinutes,
       maintenance_due_soon_days: maintenanceDueSoonDays,
       traffic_restriction_enabled: trafficRestrictionEnabled,
+      booking_mode: bookingMode as "ai_recommended" | "user_choice" | "hybrid",
     })
     .eq("organization_id", profile.organization_id);
 
   if (error) {
     return { status: "error", error: error.message };
   }
+
+  // AUDIT_TRAIL.md lists "configuration change" as a mandatory audited action. The
+  // regular (non-admin) client is enough here — log_audit_event is granted to
+  // `authenticated` and auth.uid()/organization_id are already available in this session.
+  await supabase.rpc("log_audit_event", {
+    p_organization_id: profile.organization_id,
+    p_actor_id: user.id,
+    p_action: "organization_settings_updated",
+    p_entity_type: "organization_settings",
+    p_entity_id: profile.organization_id,
+    p_after: {
+      range_safety_buffer_percent: rangeSafetyBufferPercent,
+      min_charge_hours_bev: minChargeHoursBev,
+      min_refuel_hours_ice_or_phev: minRefuelHoursIceOrPhev,
+      min_cleaning_hours: minCleaningHours,
+      carpool_departure_tolerance_minutes: carpoolDepartureToleranceMinutes,
+      carpool_return_tolerance_minutes: carpoolReturnToleranceMinutes,
+      maintenance_due_soon_days: maintenanceDueSoonDays,
+      traffic_restriction_enabled: trafficRestrictionEnabled,
+      booking_mode: bookingMode,
+    },
+  });
 
   revalidatePath("/settings");
   return { status: "success" };

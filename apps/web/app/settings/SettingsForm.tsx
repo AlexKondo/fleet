@@ -12,7 +12,26 @@ export interface SettingsFormValues {
   carpoolReturnToleranceMinutes: number;
   maintenanceDueSoonDays: number;
   trafficRestrictionEnabled: boolean;
+  bookingMode: "ai_recommended" | "user_choice" | "hybrid";
 }
+
+const BOOKING_MODE_OPTIONS: { value: SettingsFormValues["bookingMode"]; label: string; hint: string }[] = [
+  {
+    value: "ai_recommended",
+    label: "Recomendação automática",
+    hint: "O sistema escolhe o melhor veículo; o solicitante não escolhe manualmente.",
+  },
+  {
+    value: "hybrid",
+    label: "Híbrido",
+    hint: "O sistema recomenda um veículo, mas o solicitante pode escolher outra opção elegível.",
+  },
+  {
+    value: "user_choice",
+    label: "Escolha do usuário",
+    hint: "O solicitante escolhe entre todos os veículos elegíveis para a viagem.",
+  },
+];
 
 const initialState: SettingsActionState = { status: "idle" };
 
@@ -146,6 +165,37 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
           />
         </label>
       </div>
+
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
+          Modo de Reserva de Veículo
+        </h2>
+        <p className="mt-1 text-xs text-fog-600">
+          Como o Mobility Decision Engine apresenta a escolha de veículo ao solicitante
+          (BR-005).
+        </p>
+      </div>
+
+      <fieldset className="flex flex-col gap-2">
+        {BOOKING_MODE_OPTIONS.map((opt) => (
+          <label
+            key={opt.value}
+            className="flex items-start gap-2 rounded-sm border border-line-800 bg-panel-800 px-3 py-2"
+          >
+            <input
+              type="radio"
+              name="bookingMode"
+              value={opt.value}
+              defaultChecked={initialValues.bookingMode === opt.value}
+              className="mt-0.5 h-4 w-4"
+            />
+            <span className="flex flex-col">
+              <span className="text-sm text-paper-50">{opt.label}</span>
+              <span className="text-xs text-fog-600">{opt.hint}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
 
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">

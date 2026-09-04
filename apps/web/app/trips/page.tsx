@@ -26,7 +26,7 @@ export default async function TripsPage({
   const { data: reservations } = await supabase
     .from("reservations")
     .select(
-      `id, status, start_at, end_at,
+      `id, status, start_at, end_at, impacted_at,
        trip_request:trip_requests!inner(origin, destination, requester_id, justification),
        vehicle:vehicles(plate, status)`,
     )
@@ -134,9 +134,18 @@ export default async function TripsPage({
                     </p>
                     <p className="mt-1 text-xs text-fog-600">
                       {RESERVATION_STATUS_LABEL[r.status] ?? r.status}
+                      {r.impacted_at ? (
+                        <span className="ml-2 text-signal-yellow">· Impactada por atraso</span>
+                      ) : null}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Link
+                      href={`/reservations/${r.id}`}
+                      className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-amber hover:text-signal-amber"
+                    >
+                      Mensagens
+                    </Link>
                     {canPickup ? (
                       <Link
                         href={`/reservations/${r.id}/pickup`}

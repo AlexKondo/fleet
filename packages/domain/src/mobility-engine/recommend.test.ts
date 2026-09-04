@@ -172,6 +172,34 @@ describe("recommendVehicle", () => {
     expect(result.rejectedAlternatives[0]?.reasons).toContain("capacity_insufficient");
   });
 
+  it("exposes every eligible vehicle ranked best-first, not just the winner (BR-005 USER_CHOICE/HYBRID booking modes)", () => {
+    const candidates = [
+      { vehicle: vehicle({ id: "veh-cargo", categoryId: "cat-cargo" }), category: cargoCategory },
+      { vehicle: vehicle({ id: "veh-sedan", categoryId: "cat-sedan" }), category: sedanCategory },
+    ];
+    const result = recommendVehicle({
+      tripRequest: trip({ passengerCount: 1, requiresCargo: false }),
+      candidateVehicles: candidates,
+      now,
+      config: defaultReadinessConfig,
+    });
+    expect(result.recommendedVehicleId).toBe("veh-sedan");
+    expect(result.rankedEligible.map((r) => r.vehicleId)).toEqual(["veh-sedan", "veh-cargo"]);
+  });
+
+  it("returns an empty rankedEligible list (not an error) when no candidates are eligible", () => {
+    const candidates = [
+      { vehicle: vehicle({ id: "veh-cargo", categoryId: "cat-cargo" }), category: cargoCategory },
+    ];
+    const result = recommendVehicle({
+      tripRequest: trip({ passengerCount: 4 }),
+      candidateVehicles: candidates,
+      now,
+      config: defaultReadinessConfig,
+    });
+    expect(result.rankedEligible).toEqual([]);
+  });
+
   it("returns null with an explanation when no candidates are eligible", () => {
     const result = recommendVehicle({
       tripRequest: trip(),

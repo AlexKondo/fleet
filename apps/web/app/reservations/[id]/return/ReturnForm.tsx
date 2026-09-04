@@ -26,6 +26,7 @@ export function ReturnForm({
   const [hasNewDamage, setHasNewDamage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [failedPhotoAngles, setFailedPhotoAngles] = useState<PhotoAngle[] | null>(null);
+  const [damageEvidenceMissing, setDamageEvidenceMissing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const showFuel = energyType === "ICE" || energyType === "PHEV";
@@ -34,6 +35,18 @@ export function ReturnForm({
   function handleSubmit(formData: FormData) {
     setError(null);
     setFailedPhotoAngles(null);
+    setDamageEvidenceMissing(false);
+
+    // BR-013/ADR-004: external damage requires photo evidence — block before even hitting
+    // the server when the obvious case (no file picked at all) is checkable client-side.
+    if (hasNewDamage) {
+      const damagePhoto = formData.get("photo_damage");
+      if (!(damagePhoto instanceof File) || damagePhoto.size === 0) {
+        setDamageEvidenceMissing(true);
+        return;
+      }
+    }
+
     const missing = SAFETY_EQUIPMENT_OPTIONS.filter(
       (opt) => formData.get(`equip_${opt.value}`) === "on",
     ).map((opt) => opt.value);
@@ -60,6 +73,13 @@ export function ReturnForm({
 
       if (!result.success) {
         setError(result.error ?? "unknown_error");
+        return;
+      }
+
+      if (result.damageEvidenceMissing) {
+        // Checklist is saved, but BR-013/ADR-004 means this isn't optional like the other
+        // angles — keep the user here (no "go to trips" escape) until it uploads.
+        setDamageEvidenceMissing(true);
         return;
       }
 
@@ -192,7 +212,13 @@ export function ReturnForm({
         </p>
       ) : null}
 
-      {failedPhotoAngles ? (
+      {damageEvidenceMissing ? (
+        <p role="alert" className="text-sm text-signal-red">
+          A foto da avaria é obrigatória — capture-a acima e envie novamente.
+        </p>
+      ) : null}
+
+      {!damageEvidenceMissing && failedPhotoAngles ? (
         <div role="alert" className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 p-3">
           <p className="text-sm text-signal-amber">
             Retorno registrado, mas {failedPhotoAngles.length === 1 ? "a foto" : "as fotos"} de{" "}
@@ -210,7 +236,7 @@ export function ReturnForm({
         </div>
       ) : null}
 
-      {failedPhotoAngles ? null : (
+      {!damageEvidenceMissing && failedPhotoAngles ? null : (
         <button
           type="submit"
           disabled={isPending}

@@ -260,12 +260,42 @@ export function TripRequestForm() {
               </div>
             ) : null}
             <button
-              onClick={() => handleConfirm()}
+              onClick={() => handleConfirm(plan.vehicle!.vehicleId)}
               disabled={isConfirming}
               className="rounded-sm bg-signal-blue px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {isConfirming ? "Confirmando…" : "Solicitar reserva"}
             </button>
+
+            {plan.vehicle.alternatives.length > 0 ? (
+              <div className="flex flex-col gap-3 border-t border-line-800 pt-4">
+                <p className="text-xs uppercase tracking-widest text-fog-400">
+                  {plan.bookingMode === "user_choice"
+                    ? "Outros veículos elegíveis"
+                    : "Prefere outro veículo elegível?"}
+                </p>
+                <ul className="flex flex-col gap-2">
+                  {plan.vehicle.alternatives.map((alt) => (
+                    <li
+                      key={alt.vehicleId}
+                      className="flex items-center justify-between gap-3 rounded-sm border border-line-800 bg-panel-800 px-3 py-2.5"
+                    >
+                      <div>
+                        <p className="font-mono text-sm text-paper-50">{alt.plate}</p>
+                        <p className="text-xs text-fog-600">{alt.categoryName}</p>
+                      </div>
+                      <button
+                        onClick={() => handleConfirm(alt.vehicleId)}
+                        disabled={isConfirming}
+                        className="shrink-0 rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-blue hover:text-signal-blue disabled:opacity-50"
+                      >
+                        Escolher
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="flex flex-col gap-2">

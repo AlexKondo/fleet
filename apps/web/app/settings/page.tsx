@@ -77,6 +77,7 @@ export default async function SettingsPage() {
             carpoolReturnToleranceMinutes: settings?.carpool_return_tolerance_minutes ?? 30,
             maintenanceDueSoonDays: settings?.maintenance_due_soon_days ?? 14,
             trafficRestrictionEnabled: settings?.traffic_restriction_enabled ?? true,
+            bookingMode: settings?.booking_mode ?? "ai_recommended",
           }}
         />
       </section>

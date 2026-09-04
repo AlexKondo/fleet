@@ -34,6 +34,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: Database["public"]["Enums"]["user_role"] | null
+          after: Json | null
+          before: Json | null
+          correlation_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          organization_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: Database["public"]["Enums"]["user_role"] | null
+          after?: Json | null
+          before?: Json | null
+          correlation_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          organization_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: Database["public"]["Enums"]["user_role"] | null
+          after?: Json | null
+          before?: Json | null
+          correlation_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inspection_photos: {
         Row: {
           angle: Database["public"]["Enums"]["photo_angle"]
@@ -209,6 +266,7 @@ export type Database = {
       }
       organization_settings: {
         Row: {
+          booking_mode: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes: number
           carpool_return_tolerance_minutes: number
           maintenance_due_soon_days: number
@@ -220,6 +278,7 @@ export type Database = {
           traffic_restriction_enabled: boolean
         }
         Insert: {
+          booking_mode?: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
           maintenance_due_soon_days?: number
@@ -231,6 +290,7 @@ export type Database = {
           traffic_restriction_enabled?: boolean
         }
         Update: {
+          booking_mode?: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
           maintenance_due_soon_days?: number
@@ -272,6 +332,10 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          driver_authorized: boolean
+          drivers_license_category: string | null
+          drivers_license_expiration: string | null
+          drivers_license_number: string | null
           full_name: string
           id: string
           organization_id: string
@@ -279,6 +343,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          driver_authorized?: boolean
+          drivers_license_category?: string | null
+          drivers_license_expiration?: string | null
+          drivers_license_number?: string | null
           full_name: string
           id: string
           organization_id: string
@@ -286,6 +354,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          driver_authorized?: boolean
+          drivers_license_category?: string | null
+          drivers_license_expiration?: string | null
+          drivers_license_number?: string | null
           full_name?: string
           id?: string
           organization_id?: string
@@ -312,6 +384,8 @@ export type Database = {
           created_at: string
           end_at: string
           id: string
+          impacted_at: string | null
+          impacted_reason: string | null
           organization_id: string
           start_at: string
           status: Database["public"]["Enums"]["reservation_status"]
@@ -328,6 +402,8 @@ export type Database = {
           created_at?: string
           end_at: string
           id?: string
+          impacted_at?: string | null
+          impacted_reason?: string | null
           organization_id: string
           start_at: string
           status?: Database["public"]["Enums"]["reservation_status"]
@@ -344,6 +420,8 @@ export type Database = {
           created_at?: string
           end_at?: string
           id?: string
+          impacted_at?: string | null
+          impacted_reason?: string | null
           organization_id?: string
           start_at?: string
           status?: Database["public"]["Enums"]["reservation_status"]
@@ -384,6 +462,58 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservation_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          message_type: Database["public"]["Enums"]["message_type"]
+          organization_id: string
+          reservation_id: string
+          sender_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
+          organization_id: string
+          reservation_id: string
+          sender_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
+          organization_id?: string
+          reservation_id?: string
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_messages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_messages_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -736,6 +866,27 @@ export type Database = {
         Args: { p_organization_id: string }
         Returns: undefined
       }
+      post_reservation_message: {
+        Args: {
+          p_body: string
+          p_message_type: Database["public"]["Enums"]["message_type"]
+          p_new_expected_return_at?: string
+          p_reservation_id: string
+        }
+        Returns: string
+      }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_after?: Json
+          p_before?: Json
+          p_entity_id: string
+          p_entity_type: string
+          p_organization_id: string
+        }
+        Returns: undefined
+      }
       update_member_role: {
         Args: {
           p_new_role: Database["public"]["Enums"]["user_role"]
@@ -821,8 +972,16 @@ export type Database = {
       unblock_vehicle: { Args: { p_vehicle_id: string }; Returns: undefined }
     }
     Enums: {
+      booking_mode: "ai_recommended" | "user_choice" | "hybrid"
       energy_type: "ICE" | "PHEV" | "BEV"
       inspection_role: "traveler" | "security"
+      message_type:
+        | "text"
+        | "delay"
+        | "vehicle_issue"
+        | "return_time_change"
+        | "vehicle_not_found"
+        | "system_alert"
       inspection_type: "pickup" | "return"
       photo_angle:
         | "front"
@@ -992,8 +1151,17 @@ export const Constants = {
   },
   public: {
     Enums: {
+      booking_mode: ["ai_recommended", "user_choice", "hybrid"],
       energy_type: ["ICE", "PHEV", "BEV"],
       inspection_role: ["traveler", "security"],
+      message_type: [
+        "text",
+        "delay",
+        "vehicle_issue",
+        "return_time_change",
+        "vehicle_not_found",
+        "system_alert",
+      ],
       inspection_type: ["pickup", "return"],
       photo_angle: [
         "front",

@@ -45,7 +45,15 @@ export interface PlanTripResult {
     requiredPreparation?: PreparationAction[];
     /** §15 — set only when the recommended vehicle is affected by a circulation restriction. */
     trafficRestriction?: TrafficRestrictionResult;
+    /**
+     * BR-005/PB-003 — every OTHER eligible vehicle besides the recommended one, populated
+     * only when organization_settings.booking_mode is 'user_choice' or 'hybrid' (empty
+     * array for 'ai_recommended', which keeps the exact prior single-recommendation
+     * behavior). Lets the requester pick a different eligible vehicle instead.
+     */
+    alternatives: { vehicleId: string; plate: string; categoryName: string; reasons: string[] }[];
   };
+  bookingMode: "ai_recommended" | "user_choice" | "hybrid";
   error?: string;
 }
 
@@ -161,7 +169,7 @@ function filterTrafficRestrictionReasons(reasons: string[], enabled: boolean): s
 export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   const built = await buildPlanInputs(input);
   if ("error" in built) {
-    return { type: "none", reasons: [], error: built.error };
+    return { type: "none", reasons: [], bookingMode: "ai_recommended", error: built.error };
   }
   const { now, config, vehicleCandidates, carpoolCandidates } = built;
   const trafficRestrictionEnabled = config.trafficRestrictionEnabled;
@@ -193,6 +201,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
     return {
       type: "carpool",
       reasons: plan.reasons,
+      bookingMode: config.bookingMode,
       carpoolOptions: plan.carpoolOptions.map((option) => {
         const candidate = carpoolCandidates.find((c) => c.reservationId === option.reservationId);
         return {
@@ -209,9 +218,24 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
     const candidate = vehicleCandidates.find(
       (c) => c.vehicle.id === plan.vehicle!.recommendedVehicleId,
     );
+    const showAlternatives = config.bookingMode !== "ai_recommended";
+    const alternatives = showAlternatives
+      ? plan.vehicle.rankedEligible
+          .filter((r) => r.vehicleId !== plan.vehicle!.recommendedVehicleId)
+          .map((r) => {
+            const altCandidate = vehicleCandidates.find((c) => c.vehicle.id === r.vehicleId);
+            return {
+              vehicleId: r.vehicleId,
+              plate: altCandidate?.vehicle.plate ?? "",
+              categoryName: altCandidate?.category.name ?? "",
+              reasons: filterTrafficRestrictionReasons(r.reasons, trafficRestrictionEnabled),
+            };
+          })
+      : [];
     return {
       type: "vehicle",
       reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
+      bookingMode: config.bookingMode,
       vehicle: {
         vehicleId: plan.vehicle.recommendedVehicleId,
         plate: candidate?.vehicle.plate ?? "",
@@ -219,11 +243,16 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
         reasons: filterTrafficRestrictionReasons(plan.vehicle.reasons, trafficRestrictionEnabled),
         requiredPreparation: plan.vehicle.requiredPreparation,
         trafficRestriction: trafficRestrictionEnabled ? plan.trafficRestriction : undefined,
+        alternatives,
       },
     };
   }
 
-  return { type: "none", reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled) };
+  return {
+    type: "none",
+    reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
+    bookingMode: config.bookingMode,
+  };
 }
 
 export async function confirmTrip(
@@ -282,7 +311,19 @@ export async function confirmTrip(
     redirect("/trips");
   }
 
-  if (plan.type === "vehicle" && plan.vehicle?.recommendedVehicleId === input.targetId) {
+  // BR-005: in ai_recommended mode (the default), only the engine's own top pick may be
+  // confirmed — same as before this booking-mode feature existed. In user_choice/hybrid,
+  // any vehicle from the engine's own re-derived eligible pool is acceptable — re-derived
+  // server-side from `plan`, never trusting the client's targetId on its own, so a
+  // tampered request still can't book an ineligible vehicle.
+  const isAcceptableVehicleTarget =
+    plan.type === "vehicle" &&
+    plan.vehicle &&
+    (plan.vehicle.recommendedVehicleId === input.targetId ||
+      (config.bookingMode !== "ai_recommended" &&
+        plan.vehicle.rankedEligible.some((r) => r.vehicleId === input.targetId)));
+
+  if (isAcceptableVehicleTarget) {
     const { error } = await supabase.rpc("create_vehicle_reservation", {
       p_departure_at: input.departureAt,
       p_expected_return_at: input.expectedReturnAt,

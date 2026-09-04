@@ -28,11 +28,25 @@ export interface RejectedAlternative {
   reasons: string[];
 }
 
+export interface RankedEligibleVehicle {
+  vehicleId: string;
+  reasons: string[];
+  requiredPreparation?: PreparationAction[];
+}
+
 export interface RecommendationResult {
   recommendedVehicleId: string | null;
   reasons: string[];
   rejectedAlternatives: RejectedAlternative[];
   requiredPreparation?: PreparationAction[];
+  /**
+   * Every eligible vehicle (including the winner), ranked best-first — the same ordering
+   * `recommendedVehicleId` was picked from. BR-005/PB-003: AI_RECOMMENDED mode only ever
+   * uses `recommendedVehicleId`, but USER_CHOICE/HYBRID need the full ranked pool so a
+   * human can browse and pick a different eligible vehicle instead of the engine's top
+   * pick — see apps/web/app/trips/new/actions.ts's use of organization_settings.booking_mode.
+   */
+  rankedEligible: RankedEligibleVehicle[];
 }
 
 /**
@@ -67,6 +81,7 @@ export function recommendVehicle(input: RecommendationInput): RecommendationResu
       recommendedVehicleId: null,
       reasons: ["no_candidates_available"],
       rejectedAlternatives: [],
+      rankedEligible: [],
     };
   }
 
@@ -117,6 +132,7 @@ export function recommendVehicle(input: RecommendationInput): RecommendationResu
       recommendedVehicleId: null,
       reasons: ["no_eligible_vehicle_for_trip_requirements"],
       rejectedAlternatives: rejected,
+      rankedEligible: [],
     };
   }
 
@@ -145,5 +161,10 @@ export function recommendVehicle(input: RecommendationInput): RecommendationResu
     reasons: winner.reasons,
     rejectedAlternatives: rejected,
     requiredPreparation: winner.requiredPreparation,
+    rankedEligible: eligible.map((c) => ({
+      vehicleId: c.vehicleId,
+      reasons: c.reasons,
+      requiredPreparation: c.requiredPreparation,
+    })),
   };
 }

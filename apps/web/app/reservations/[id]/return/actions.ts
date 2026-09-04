@@ -28,6 +28,8 @@ export interface SubmitReturnResult {
   error?: string;
   /** Angles whose photo the user provided but which failed to upload/save. */
   failedPhotoAngles?: PhotoAngle[];
+  /** BR-013/ADR-004 — see the identical field on SubmitPickupResult in ../pickup/actions.ts. */
+  damageEvidenceMissing?: boolean;
 }
 
 export async function submitReturn(
@@ -118,8 +120,16 @@ export async function submitReturn(
     photos,
   );
 
+  const damagePhotoFile = photos.get("photo_damage");
+  const damageEvidenceMissing =
+    input.hasNewDamage &&
+    (!(damagePhotoFile instanceof File) ||
+      damagePhotoFile.size === 0 ||
+      failedPhotoAngles.includes("damage"));
+
   return {
     success: true,
     failedPhotoAngles: failedPhotoAngles.length > 0 ? failedPhotoAngles : undefined,
+    damageEvidenceMissing: damageEvidenceMissing || undefined,
   };
 }

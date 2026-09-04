@@ -21,6 +21,14 @@ export interface SubmitPickupResult {
   error?: string;
   /** Angles whose photo the user provided but which failed to upload/save. */
   failedPhotoAngles?: PhotoAngle[];
+  /**
+   * BR-013/ADR-004 — external damage requires photo evidence, unlike every other angle
+   * which is best-effort. True when hasDamage was reported but no "damage" angle photo
+   * made it into storage (missing or failed upload). Unlike failedPhotoAngles, the caller
+   * must not treat this as skippable — the checklist itself is already recorded (see
+   * comment below), but the UI must keep the user on this screen until it's resolved.
+   */
+  damageEvidenceMissing?: boolean;
 }
 
 /**
@@ -62,7 +70,14 @@ export async function submitPickup(
     p_role: profile?.role === "security" ? "security" : "traveler",
   });
 
-  if (error) return { success: false, error: error.message };
+  if (error) {
+    const message = error.message.includes("DRIVER_NOT_AUTHORIZED")
+      ? "Motorista sem autorização para dirigir. Fale com o gestor de frota."
+      : error.message.includes("LICENSE_EXPIRED")
+        ? "A CNH do motorista está vencida. Atualize-a com o gestor de frota antes de retirar o veículo."
+        : error.message;
+    return { success: false, error: message };
+  }
   if (!inspectionId) return { success: false, error: "inspection_not_created" };
 
   // The checklist itself is already recorded at this point — everything below is best
@@ -78,8 +93,16 @@ export async function submitPickup(
     photos,
   );
 
+  const damagePhotoFile = photos.get("photo_damage");
+  const damageEvidenceMissing =
+    input.hasDamage &&
+    (!(damagePhotoFile instanceof File) ||
+      damagePhotoFile.size === 0 ||
+      failedPhotoAngles.includes("damage"));
+
   return {
     success: true,
     failedPhotoAngles: failedPhotoAngles.length > 0 ? failedPhotoAngles : undefined,
+    damageEvidenceMissing: damageEvidenceMissing || undefined,
   };
 }

@@ -1,5 +1,7 @@
 import type { CarpoolMatchConfig, ReadinessConfig } from "@fleet/domain";
-import type { TypedSupabaseClient } from "@fleet/supabase-client";
+import type { Database, TypedSupabaseClient } from "@fleet/supabase-client";
+
+export type BookingMode = Database["public"]["Enums"]["booking_mode"];
 
 export interface OrgConfig {
   readiness: ReadinessConfig;
@@ -12,6 +14,11 @@ export interface OrgConfig {
    * surface a circulation-restriction warning at all. Organization-configurable via
    * /settings. */
   trafficRestrictionEnabled: boolean;
+  /** BR-005/PB-003/ADR-006 — how the trip-planning flow presents vehicle choice:
+   * 'ai_recommended' auto-picks one vehicle (default, matches all prior behavior),
+   * 'user_choice'/'hybrid' also surface every other eligible vehicle so the requester can
+   * pick a different one. Organization-configurable via /settings. */
+  bookingMode: BookingMode;
 }
 
 export async function loadOrgConfig(
@@ -37,5 +44,6 @@ export async function loadOrgConfig(
     },
     maintenanceDueSoonDays: data?.maintenance_due_soon_days ?? 14,
     trafficRestrictionEnabled: data?.traffic_restriction_enabled ?? true,
+    bookingMode: data?.booking_mode ?? "ai_recommended",
   };
 }

@@ -2,26 +2,39 @@
 
 /*
  * Design thesis: a fleet dispatch console, not a generic SaaS dashboard.
- * Dark by deliberate choice (gatehouse/portaria and night-shift usage), status
- * color-coding is domain content (mirrors VehicleStatus 1:1), not decoration.
- * Data-dense rows read like an airport departure board: tabular monospace
- * numerals for plates, odometer, battery/fuel and timestamps.
+ * Dark by deliberate choice (gatehouse/portaria and night-shift usage). The
+ * previous pass leaned on a cool navy-black + soft amber that reads as generic
+ * dark-mode SaaS. This palette is warm graphite instead of blue-black — asphalt
+ * and steel under sodium yard lighting — with a hazard-orange accent reserved
+ * for brand/actions only. Status color-coding is domain content (mirrors
+ * VehicleStatus 1:1, one hue per operational meaning, never doubled up with the
+ * brand accent), not decoration. Data-dense rows read like an airport departure
+ * board: tabular monospace numerals for plates, odometer, battery/fuel, times.
  */
 @theme {
-  --color-ink-950: #0b1220;
-  --color-panel-900: #121b2e;
-  --color-panel-800: #182339;
-  --color-line-800: #263352;
-  --color-line-700: #324268;
-  --color-fog-400: #9fafc7;
-  --color-fog-600: #6b7a97;
-  --color-paper-50: #edf1f7;
+  --color-ink-950: #15130f;
+  --color-panel-900: #1e1b15;
+  --color-panel-800: #28241c;
+  --color-line-800: #3a342a;
+  --color-line-700: #4d4636;
+  --color-fog-400: #b4aa96;
+  --color-fog-600: #7a7362;
+  --color-paper-50: #f3eee2;
 
-  --color-signal-amber: #f5a623;
-  --color-signal-teal: #2fd3c6;
-  --color-signal-blue: #5b8def;
-  --color-signal-violet: #9b8cff;
-  --color-signal-red: #ef5350;
+  /* Brand / primary action — hazard orange. Never reused as a status color. */
+  --color-signal-amber: #ff6a2c;
+  /* available */
+  --color-signal-green: #3fae68;
+  /* charging (electric) */
+  --color-signal-teal: #2fc4d6;
+  /* reserved / awaiting pickup / in use */
+  --color-signal-blue: #4a90c4;
+  /* returning */
+  --color-signal-violet: #9683d6;
+  /* inspection / cleaning (routine, out of service) */
+  --color-signal-yellow: #e0b23e;
+  /* maintenance / blocked */
+  --color-signal-red: #d0342c;
 
   --font-display: "var(--font-big-shoulders)", sans-serif;
   --font-body: "var(--font-ibm-plex-sans)", sans-serif;

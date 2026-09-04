@@ -19,3 +19,6 @@ supabase/.temp/
 # os / editor
 .DS_Store
 Thumbs.db
+
+# claude code — personal, not team policy
+.claude/settings.local.json
