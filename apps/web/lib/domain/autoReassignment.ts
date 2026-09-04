@@ -35,9 +35,14 @@ async function loadAvailableVehicleCandidates(
  * (see 0018_automatic_reassignment.sql for why the decision is made here, in the domain
  * package's own recommendVehicle, rather than duplicated in SQL). Called from
  * postReservationMessage after post_reservation_message returns which reservations it
- * just marked impacted. Best-effort per reservation: a failure to reassign one (no
- * eligible alternative, lost a race for the vehicle) never throws — it's left impacted
- * for a fleet_manager to resolve manually, exactly as before this feature existed.
+ * just marked impacted.
+ *
+ * Every impacted reservation gets exactly one follow-up notification either way — a
+ * silent "left impacted with no explanation" outcome isn't acceptable to the affected
+ * requester: either the vehicle actually changed (told which plate), or it didn't and
+ * they need to know their trip is now at risk and a human has to sort it out. Only the
+ * one case where the reservation/requester can't even be resolved (deleted mid-flight,
+ * effectively impossible in practice) has no one to notify.
  */
 export async function attemptAutomaticReassignment(
   supabase: TypedSupabaseClient,
@@ -62,55 +67,68 @@ export async function attemptAutomaticReassignment(
       .maybeSingle();
     if (!reservation?.trip_request) continue;
 
+    const requesterId = reservation.trip_request.requester_id;
+    let reassignedPlate: string | null = null;
+
     const candidates = await loadAvailableVehicleCandidates(supabase, organizationId);
     const alternatives = candidates.filter((c) => c.vehicle.id !== reservation.vehicle_id);
-    if (alternatives.length === 0) continue;
 
-    const tripRequest: TripRequest = {
-      id: reservation.trip_request.id,
-      organizationId,
-      requesterId: reservation.trip_request.requester_id,
-      departureAt: reservation.trip_request.departure_at,
-      expectedReturnAt: reservation.trip_request.expected_return_at,
-      origin: reservation.trip_request.origin,
-      destination: reservation.trip_request.destination,
-      distanceKm: Number(reservation.trip_request.distance_km),
-      passengerCount: reservation.trip_request.passenger_count,
-      requiresCargo: reservation.trip_request.requires_cargo,
-      justification: reservation.trip_request.justification,
-    };
+    if (alternatives.length > 0) {
+      const tripRequest: TripRequest = {
+        id: reservation.trip_request.id,
+        organizationId,
+        requesterId,
+        departureAt: reservation.trip_request.departure_at,
+        expectedReturnAt: reservation.trip_request.expected_return_at,
+        origin: reservation.trip_request.origin,
+        destination: reservation.trip_request.destination,
+        distanceKm: Number(reservation.trip_request.distance_km),
+        passengerCount: reservation.trip_request.passenger_count,
+        requiresCargo: reservation.trip_request.requires_cargo,
+        justification: reservation.trip_request.justification,
+      };
 
-    const recommendation = recommendVehicle({
-      tripRequest,
-      candidateVehicles: alternatives,
-      now,
-      config: config.readiness,
-    });
+      const recommendation = recommendVehicle({
+        tripRequest,
+        candidateVehicles: alternatives,
+        now,
+        config: config.readiness,
+      });
 
-    // requiredPreparation present means the winner is only READY_IF_PREPARED (tier 1) —
-    // not eligible for an unattended swap, same reasoning as the candidate pool filter
-    // above.
-    if (
-      !recommendation.recommendedVehicleId ||
-      (recommendation.requiredPreparation && recommendation.requiredPreparation.length > 0)
-    ) {
-      continue;
+      // requiredPreparation present means the winner is only READY_IF_PREPARED (tier 1)
+      // — not eligible for an unattended swap, same reasoning as the candidate pool
+      // filter above.
+      const isFullyReady =
+        recommendation.recommendedVehicleId &&
+        !(recommendation.requiredPreparation && recommendation.requiredPreparation.length > 0);
+
+      if (isFullyReady) {
+        const newVehicleId = recommendation.recommendedVehicleId as string;
+        const { error: swapError } = await admin.rpc("auto_reassign_reservation_vehicle", {
+          p_organization_id: organizationId,
+          p_reservation_id: reservationId,
+          p_new_vehicle_id: newVehicleId,
+        });
+        if (!swapError) {
+          reassignedPlate = alternatives.find((c) => c.vehicle.id === newVehicleId)?.vehicle.plate ?? "";
+        }
+      }
     }
 
-    const newVehicleId = recommendation.recommendedVehicleId;
-    const { error: swapError } = await admin.rpc("auto_reassign_reservation_vehicle", {
-      p_organization_id: organizationId,
-      p_reservation_id: reservationId,
-      p_new_vehicle_id: newVehicleId,
-    });
-    if (swapError) continue;
-
-    const newPlate = alternatives.find((c) => c.vehicle.id === newVehicleId)?.vehicle.plate ?? "";
-    await supabase.from("notifications").insert({
-      organization_id: organizationId,
-      user_id: reservation.trip_request.requester_id,
-      title: "Veículo reatribuído automaticamente",
-      body: `Devido a um atraso na reserva anterior, sua viagem foi movida automaticamente para o veículo ${newPlate}.`,
-    });
+    if (reassignedPlate !== null) {
+      await supabase.from("notifications").insert({
+        organization_id: organizationId,
+        user_id: requesterId,
+        title: "Veículo reatribuído automaticamente",
+        body: `Devido a um atraso na reserva anterior, sua viagem foi movida automaticamente para o veículo ${reassignedPlate}.`,
+      });
+    } else {
+      await supabase.from("notifications").insert({
+        organization_id: organizationId,
+        user_id: requesterId,
+        title: "Seu pedido de veículo não pôde ser atendido",
+        body: "Um atraso na reserva anterior deste veículo afeta o horário da sua viagem, e não encontramos outro veículo disponível agora. O gestor de frota já foi avisado para resolver manualmente.",
+      });
+    }
   }
 }

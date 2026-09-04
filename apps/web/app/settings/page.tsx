@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { AppShell } from "../AppShell";
 import { SettingsForm } from "./SettingsForm";
 
 /**
@@ -22,11 +22,12 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, organization_id, organization:organizations(name)")
+    .select("full_name, role, organization_id, organization:organizations(name)")
     .eq("id", user.id)
     .single();
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const isAdministrator = profile?.role === "administrator";
   if (!profile || !isFleetManager) {
     redirect("/dashboard");
   }
@@ -38,32 +39,18 @@ export default async function SettingsPage() {
     .single();
 
   return (
-    <main className="min-h-dvh">
-      <header className="flex items-center justify-between border-b border-line-800 px-6 py-4">
-        <div>
-          <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-signal-amber">.</span> Configurações
-          </p>
-          <p className="text-xs uppercase tracking-widest text-fog-600">
-            {profile.organization?.name ?? "—"}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          {profile.role === "administrator" ? (
-            <Link
-              href="/settings/users"
-              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-            >
-              Equipe
-            </Link>
-          ) : null}
-          <Link
-            href="/dashboard"
-            className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-          >
-            ← Painel
-          </Link>
-        </div>
+    <AppShell
+      active="settings"
+      orgName={profile.organization?.name ?? "—"}
+      userName={profile.full_name ?? user.email ?? "—"}
+      role={profile.role}
+      isFleetManager={isFleetManager}
+      isAdministrator={isAdministrator}
+    >
+      <header className="border-b border-line-800 px-6 py-4">
+        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
+          Configurações
+        </p>
       </header>
 
       <section className="px-6 py-6">
@@ -81,6 +68,6 @@ export default async function SettingsPage() {
           }}
         />
       </section>
-    </main>
+    </AppShell>
   );
 }

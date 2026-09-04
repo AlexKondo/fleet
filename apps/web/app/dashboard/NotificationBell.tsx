@@ -35,7 +35,7 @@ function formatRelativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
-export function NotificationBell() {
+export function NotificationBell({ align = "right" }: { align?: "left" | "right" }) {
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
@@ -145,7 +145,9 @@ export function NotificationBell() {
         <div
           role="region"
           aria-label="Notificações"
-          className="absolute right-0 top-[calc(100%+8px)] z-50 flex w-80 flex-col rounded-md border border-line-800 bg-panel-900 shadow-lg shadow-black/40"
+          className={`absolute top-[calc(100%+8px)] z-50 flex w-80 flex-col rounded-md border border-line-800 bg-panel-900 shadow-lg shadow-black/40 ${
+            align === "left" ? "left-0" : "right-0"
+          }`}
         >
           <div className="flex items-center justify-between border-b border-line-800 px-4 py-2.5">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-fog-400">Notificações</h3>

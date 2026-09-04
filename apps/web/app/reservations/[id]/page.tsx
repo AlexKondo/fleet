@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { AppShell } from "../../AppShell";
 import { STATUS_META } from "../../dashboard/statusMeta";
 import { MessageThread, type ReservationMessage } from "./MessageThread";
 
@@ -21,7 +22,7 @@ export default async function ReservationDetailPage({ params }: { params: Promis
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("full_name, role, organization:organizations(name)")
     .eq("id", user.id)
     .single();
 
@@ -57,9 +58,19 @@ export default async function ReservationDetailPage({ params }: { params: Promis
   }));
 
   const statusMeta = reservation.vehicle ? STATUS_META[reservation.vehicle.status] : null;
+  const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const isAdministrator = profile?.role === "administrator";
 
   return (
-    <main className="mx-auto min-h-dvh max-w-3xl px-4 py-6">
+    <AppShell
+      active="trips"
+      orgName={profile?.organization?.name ?? "—"}
+      userName={profile?.full_name ?? user.email ?? "—"}
+      role={profile?.role ?? "employee"}
+      isFleetManager={isFleetManager}
+      isAdministrator={isAdministrator}
+    >
+      <div className="mx-auto max-w-3xl px-4 py-6">
       <Link href="/trips" className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber">
         ← Minhas Viagens
       </Link>
@@ -111,6 +122,7 @@ export default async function ReservationDetailPage({ params }: { params: Promis
         </h2>
         <MessageThread reservationId={id} messages={messages} />
       </section>
-    </main>
+      </div>
+    </AppShell>
   );
 }

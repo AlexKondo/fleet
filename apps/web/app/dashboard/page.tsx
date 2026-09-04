@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import { assessVehicleReadiness } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toDomainVehicle } from "@/lib/domain/mappers";
+import { AppShell } from "../AppShell";
 import { ATTENTION_LABELS, STATUS_META } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
-import { NotificationBell } from "./NotificationBell";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import {
   approveReservation,
@@ -13,7 +13,6 @@ import {
   cancelReservation,
   cancelWorkflowTask,
   completeWorkflowTask,
-  signOut,
   swapVehicle,
   transferReservation,
   unblockVehicle,
@@ -115,75 +114,18 @@ export default async function DashboardPage({
     : { data: [] };
 
   return (
-    <main className="min-h-dvh">
-      <header className="flex items-center justify-between border-b border-line-800 px-6 py-4">
-        <div>
-          <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-signal-amber">.</span>
-          </p>
-          <p className="text-xs uppercase tracking-widest text-fog-600">
-            {profile?.organization?.name ?? "—"}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/trips"
-            className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-          >
-            Minhas Viagens
-          </Link>
-          {isFleetManager ? (
-            <Link
-              href="/analytics"
-              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-            >
-              Analytics
-            </Link>
-          ) : null}
-          {isFleetManager ? (
-            <Link
-              href="/settings"
-              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-            >
-              Configurações
-            </Link>
-          ) : null}
-          {isFleetManager ? (
-            <Link
-              href="/fleet"
-              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-            >
-              Frota
-            </Link>
-          ) : null}
-          {isAdministrator ? (
-            <Link
-              href="/settings/users"
-              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-            >
-              Equipe
-            </Link>
-          ) : null}
-          <Link
-            href="/trips/new"
-            className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
-          >
-            + Solicitar Viagem
-          </Link>
-          <NotificationBell />
-          <div className="text-right">
-            <p className="text-sm text-paper-50">{profile?.full_name ?? user.email}</p>
-            <p className="text-xs uppercase tracking-widest text-fog-600">{profile?.role}</p>
-          </div>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="rounded-sm border border-line-800 px-3 py-1.5 text-xs uppercase tracking-widest text-fog-400 hover:border-signal-amber hover:text-signal-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-amber"
-            >
-              Sair
-            </button>
-          </form>
-        </div>
+    <AppShell
+      active="dashboard"
+      orgName={profile?.organization?.name ?? "—"}
+      userName={profile?.full_name ?? user.email ?? "—"}
+      role={profile?.role ?? "employee"}
+      isFleetManager={isFleetManager}
+      isAdministrator={isAdministrator}
+    >
+      <header className="border-b border-line-800 px-6 py-4">
+        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
+          Painel
+        </p>
       </header>
 
       {fleetActionError ? (
@@ -464,92 +406,87 @@ export default async function DashboardPage({
             )}
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-md border border-line-800">
-            <table className="w-full min-w-[860px] border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
-                  <th className="px-4 py-3 font-medium">Placa</th>
-                  <th className="px-4 py-3 font-medium">Categoria</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Energia</th>
-                  <th className="px-4 py-3 font-medium">Odômetro</th>
-                  <th className="px-4 py-3 font-medium">Localização Atual</th>
-                  <th className="px-4 py-3 font-medium">Atenção</th>
-                  {isFleetManager ? <th className="px-4 py-3 font-medium">Ações</th> : null}
-                </tr>
-              </thead>
-              <tbody>
-                {vehiclesWithAttention.map(({ row, attention }) => {
-                  const meta = STATUS_META[row.status];
-                  return (
-                    <tr key={row.id} className="border-b border-line-800 last:border-0 hover:bg-panel-900/60">
-                      <td className="px-4 py-3 font-mono tabular-nums text-paper-50">{row.plate}</td>
-                      <td className="px-4 py-3 text-fog-400">{row.category?.name ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-                          <span className={meta.text}>{meta.label}</span>
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <EnergyGauge
-                          percent={row.energy_type === "BEV" ? row.battery_level_percent : row.fuel_level_percent}
-                          kind={row.energy_type === "BEV" ? "battery" : "fuel"}
-                        />
-                      </td>
-                      <td className="px-4 py-3 font-mono tabular-nums text-fog-400">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {vehiclesWithAttention.map(({ row, attention }) => {
+              const meta = STATUS_META[row.status];
+              return (
+                <li
+                  key={row.id}
+                  className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-mono text-lg text-paper-50">{row.plate}</p>
+                      <p className="text-xs text-fog-400">{row.category?.name ?? "—"}</p>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1.5">
+                      <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
+                      <span className={`text-xs uppercase tracking-widest ${meta.text}`}>{meta.label}</span>
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-line-800 pt-3 text-xs">
+                    <div>
+                      <p className="uppercase tracking-widest text-fog-600">Energia</p>
+                      <EnergyGauge
+                        percent={row.energy_type === "BEV" ? row.battery_level_percent : row.fuel_level_percent}
+                        kind={row.energy_type === "BEV" ? "battery" : "fuel"}
+                      />
+                    </div>
+                    <div>
+                      <p className="uppercase tracking-widest text-fog-600">Odômetro</p>
+                      <p className="mt-1 font-mono tabular-nums text-fog-400">
                         {row.odometer_km.toLocaleString("pt-BR")} km
-                      </td>
-                      <td className="px-4 py-3 text-fog-400">{row.current_location?.name ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        {attention.length === 0 ? (
-                          <span className="text-fog-600">—</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-1">
-                            {attention.map((reason) => (
-                              <span
-                                key={reason}
-                                className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber"
-                              >
-                                {ATTENTION_LABELS[reason] ?? reason}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                      {isFleetManager ? (
-                        <td className="px-4 py-3">
-                          {row.status === "blocked" ? (
-                            <form action={unblockVehicle.bind(null, row.id)}>
-                              <button
-                                type="submit"
-                                className="rounded-sm border border-signal-teal px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
-                              >
-                                Desbloquear
-                              </button>
-                            </form>
-                          ) : row.status === "in_use" || row.status === "returning" ? (
-                            <span className="text-xs text-fog-600">—</span>
-                          ) : (
-                            <form action={blockVehicle.bind(null, row.id, "Bloqueado manualmente pelo gestor")}>
-                              <button
-                                type="submit"
-                                className="rounded-sm border border-signal-red px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
-                              >
-                                Bloquear
-                              </button>
-                            </form>
-                          )}
-                        </td>
-                      ) : null}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="uppercase tracking-widest text-fog-600">Localização atual</p>
+                      <p className="mt-1 text-fog-400">{row.current_location?.name ?? "—"}</p>
+                    </div>
+                  </div>
+
+                  {attention.length > 0 ? (
+                    <div className="flex flex-wrap gap-1 border-t border-line-800 pt-3">
+                      {attention.map((reason) => (
+                        <span
+                          key={reason}
+                          className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber"
+                        >
+                          {ATTENTION_LABELS[reason] ?? reason}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {isFleetManager && row.status !== "in_use" && row.status !== "returning" ? (
+                    <div className="border-t border-line-800 pt-3">
+                      {row.status === "blocked" ? (
+                        <form action={unblockVehicle.bind(null, row.id)}>
+                          <button
+                            type="submit"
+                            className="w-full rounded-sm border border-signal-teal px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                          >
+                            Desbloquear
+                          </button>
+                        </form>
+                      ) : (
+                        <form action={blockVehicle.bind(null, row.id, "Bloqueado manualmente pelo gestor")}>
+                          <button
+                            type="submit"
+                            className="w-full rounded-sm border border-signal-red px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
+                          >
+                            Bloquear
+                          </button>
+                        </form>
+                      )}
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </section>
-    </main>
+    </AppShell>
   );
 }

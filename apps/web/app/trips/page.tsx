@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { AppShell } from "../AppShell";
 import { cancelMyReservation, leaveCarpool } from "./actions";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 
@@ -22,6 +23,12 @@ export default async function TripsPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, role, organization:organizations(name)")
+    .eq("id", user.id)
+    .single();
 
   const { data: reservations } = await supabase
     .from("reservations")
@@ -68,8 +75,19 @@ export default async function TripsPage({
         Boolean(c.reservation),
     );
 
+  const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const isAdministrator = profile?.role === "administrator";
+
   return (
-    <main className="min-h-dvh px-6 py-8">
+    <AppShell
+      active="trips"
+      orgName={profile?.organization?.name ?? "—"}
+      userName={profile?.full_name ?? user.email ?? "—"}
+      role={profile?.role ?? "employee"}
+      isFleetManager={isFleetManager}
+      isAdministrator={isAdministrator}
+    >
+      <div className="px-6 py-8">
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -77,20 +95,12 @@ export default async function TripsPage({
               Minhas Viagens
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/trips/new"
-              className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
-            >
-              + Nova viagem
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-            >
-              ← Painel
-            </Link>
-          </div>
+          <Link
+            href="/trips/new"
+            className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
+          >
+            + Nova viagem
+          </Link>
         </div>
 
         {tripActionError ? (
@@ -222,6 +232,7 @@ export default async function TripsPage({
           </div>
         ) : null}
       </div>
-    </main>
+      </div>
+    </AppShell>
   );
 }

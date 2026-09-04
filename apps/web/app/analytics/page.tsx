@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { predictNextService } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadOrgConfig } from "@/lib/domain/orgConfig";
+import { AppShell } from "../AppShell";
 import { StatBar } from "./StatBar";
 
 /**
@@ -34,6 +34,7 @@ export default async function AnalyticsPage() {
     .single();
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const isAdministrator = profile?.role === "administrator";
   if (!profile || !isFleetManager) {
     redirect("/dashboard");
   }
@@ -175,22 +176,18 @@ export default async function AnalyticsPage() {
     totalTripRequests > 0 ? Math.round((totalParticipants / totalTripRequests) * 100) : 0;
 
   return (
-    <main className="min-h-dvh">
-      <header className="flex items-center justify-between border-b border-line-800 px-6 py-4">
-        <div>
-          <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-signal-amber">.</span> Intelligence
-          </p>
-          <p className="text-xs uppercase tracking-widest text-fog-600">
-            {profile?.organization?.name ?? "—"}
-          </p>
-        </div>
-        <Link
-          href="/dashboard"
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-        >
-          ← Painel
-        </Link>
+    <AppShell
+      active="analytics"
+      orgName={profile?.organization?.name ?? "—"}
+      userName={profile?.full_name ?? user.email ?? "—"}
+      role={profile?.role ?? "employee"}
+      isFleetManager={isFleetManager}
+      isAdministrator={isAdministrator}
+    >
+      <header className="border-b border-line-800 px-6 py-4">
+        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
+          Analytics
+        </p>
       </header>
 
       {vehiclesError ? (
@@ -402,6 +399,6 @@ export default async function AnalyticsPage() {
           </section>
         </>
       )}
-    </main>
+    </AppShell>
   );
 }
