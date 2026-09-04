@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AppShell } from "../AppShell";
-import { AddToggle } from "./AddToggle";
+import { AddCategorySection } from "./AddCategorySection";
+import { AddLocationSection } from "./AddLocationSection";
+import { AddVehicleSection } from "./AddVehicleSection";
 import { FleetTabs } from "./FleetTabs";
-import { LocationForm } from "./LocationForm";
 import { LocationRow } from "./LocationRow";
-import { CategoryForm } from "./CategoryForm";
 import { CategoryRow } from "./CategoryRow";
-import { VehicleForm } from "./VehicleForm";
 import { VehicleRow } from "./VehicleRow";
 
 /**
@@ -115,16 +114,7 @@ export default async function FleetPage() {
                       que o primeiro veículo for adicionado abaixo.
                     </p>
                   )}
-                  <AddToggle
-                    label="Veículo"
-                    render={(onSaved) => (
-                      <VehicleForm
-                        categories={categories ?? []}
-                        locations={locations ?? []}
-                        onSaved={onSaved}
-                      />
-                    )}
-                  />
+                  <AddVehicleSection categories={categories ?? []} locations={locations ?? []} />
                 </div>
               ),
             },
@@ -143,7 +133,7 @@ export default async function FleetPage() {
                   ) : (
                     <p className="text-sm text-fog-400">Nenhuma categoria cadastrada ainda.</p>
                   )}
-                  <AddToggle label="Categoria" render={(onSaved) => <CategoryForm onSaved={onSaved} />} />
+                  <AddCategorySection />
                 </div>
               ),
             },
@@ -162,7 +152,7 @@ export default async function FleetPage() {
                   ) : (
                     <p className="text-sm text-fog-400">Nenhuma localização cadastrada ainda.</p>
                   )}
-                  <AddToggle label="Localização" render={(onSaved) => <LocationForm onSaved={onSaved} />} />
+                  <AddLocationSection />
                 </div>
               ),
             },

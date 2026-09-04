@@ -1,21 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { CategoryForm } from "./CategoryForm";
 
-/**
- * Generic "+ Adicionar X" reveal: the create form starts hidden and only appears once the
- * user asks for it, instead of always sitting open at the bottom of the list (which is
- * why "where do I add a vehicle?" was a real question — the form looked like leftover
- * page content, not an action). `render` gets an `onSaved` callback to auto-collapse back
- * to the button after a successful submit.
- */
-export function AddToggle({
-  label,
-  render,
-}: {
-  label: string;
-  render: (onSaved: () => void) => React.ReactNode;
-}) {
+/** See AddVehicleSection.tsx for why this is its own client component, not a shared
+ * render-prop toggle. */
+export function AddCategorySection() {
   const [open, setOpen] = useState(false);
 
   if (!open) {
@@ -25,7 +15,7 @@ export function AddToggle({
         onClick={() => setOpen(true)}
         className="rounded-sm border border-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
       >
-        + Adicionar {label}
+        + Adicionar Categoria
       </button>
     );
   }
@@ -34,7 +24,7 @@ export function AddToggle({
     <div className="rounded-sm border border-line-800 bg-panel-800/60 p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Adicionar {label}
+          Adicionar Categoria
         </span>
         <button
           type="button"
@@ -44,7 +34,7 @@ export function AddToggle({
           Fechar
         </button>
       </div>
-      {render(() => setOpen(false))}
+      <CategoryForm onSaved={() => setOpen(false)} />
     </div>
   );
 }
