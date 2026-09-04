@@ -8,9 +8,11 @@ const initialState: FleetActionState = { status: "idle" };
 export function VehicleForm({
   categories,
   locations,
+  onSaved,
 }: {
   categories: { id: string; name: string }[];
   locations: { id: string; name: string }[];
+  onSaved?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(createVehicle, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -20,7 +22,9 @@ export function VehicleForm({
     if (state.status === "success") {
       formRef.current?.reset();
       setEnergyType("ICE");
+      onSaved?.();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   const showFuel = energyType === "ICE" || energyType === "PHEV";
@@ -29,8 +33,8 @@ export function VehicleForm({
   if (categories.length === 0 || locations.length === 0) {
     return (
       <p className="text-sm text-fog-400">
-        Cadastre pelo menos uma categoria e uma localização acima antes de adicionar um
-        veículo.
+        Cadastre pelo menos uma categoria e uma localização nas abas &quot;Categorias&quot;
+        e &quot;Localizações&quot; antes de adicionar um veículo.
       </p>
     );
   }

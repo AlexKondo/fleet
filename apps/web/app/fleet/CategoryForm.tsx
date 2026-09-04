@@ -5,12 +5,16 @@ import { createCategory, type FleetActionState } from "./actions";
 
 const initialState: FleetActionState = { status: "idle" };
 
-export function CategoryForm() {
+export function CategoryForm({ onSaved }: { onSaved?: () => void }) {
   const [state, formAction, pending] = useActionState(createCategory, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.status === "success") formRef.current?.reset();
+    if (state.status === "success") {
+      formRef.current?.reset();
+      onSaved?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   return (

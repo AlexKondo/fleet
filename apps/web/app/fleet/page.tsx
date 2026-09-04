@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AppShell } from "../AppShell";
+import { AddToggle } from "./AddToggle";
+import { FleetTabs } from "./FleetTabs";
 import { LocationForm } from "./LocationForm";
 import { LocationRow } from "./LocationRow";
 import { CategoryForm } from "./CategoryForm";
@@ -73,76 +75,99 @@ export default async function FleetPage() {
         </div>
       ) : null}
 
-      <section className="border-b border-line-800 px-6 py-4">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Localizações
-        </h2>
-        {locations && locations.length > 0 ? (
-          <ul className="mb-4 flex flex-wrap gap-2">
-            {locations.map((l) => (
-              <LocationRow key={l.id} location={l} />
-            ))}
-          </ul>
-        ) : (
-          <p className="mb-4 text-sm text-fog-400">Nenhuma localização cadastrada ainda.</p>
-        )}
-        <LocationForm />
-      </section>
-
-      <section className="border-b border-line-800 px-6 py-4">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Categorias de Veículo
-        </h2>
-        {categories && categories.length > 0 ? (
-          <ul className="mb-4 flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <CategoryRow key={c.id} category={c} />
-            ))}
-          </ul>
-        ) : (
-          <p className="mb-4 text-sm text-fog-400">Nenhuma categoria cadastrada ainda.</p>
-        )}
-        <CategoryForm />
-      </section>
-
-      <section className="px-6 py-4">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Veículos
-        </h2>
-
-        {vehicles && vehicles.length > 0 ? (
-          <ul className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {vehicles.map((v) => (
-              <VehicleRow
-                key={v.id}
-                vehicle={{
-                  id: v.id,
-                  plate: v.plate,
-                  category_id: v.category_id,
-                  energy_type: v.energy_type,
-                  odometer_km: v.odometer_km,
-                  next_service_odometer_km: v.next_service_odometer_km,
-                  estimated_range_km: v.estimated_range_km,
-                  fuel_level_percent: v.fuel_level_percent,
-                  battery_level_percent: v.battery_level_percent,
-                  home_location_id: v.home_location_id,
-                }}
-                status={v.status}
-                categoryName={v.category?.name ?? "—"}
-                locationName={v.current_location?.name ?? "—"}
-                categories={categories ?? []}
-                locations={locations ?? []}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p className="mb-6 text-sm text-fog-400">
-            Nenhum veículo cadastrado ainda — a frota aparece no Painel assim que o
-            primeiro veículo for adicionado abaixo.
-          </p>
-        )}
-
-        <VehicleForm categories={categories ?? []} locations={locations ?? []} />
+      <section className="px-6 py-6">
+        <FleetTabs
+          tabs={[
+            {
+              key: "vehicles",
+              label: "Veículos",
+              count: vehicles?.length ?? 0,
+              content: (
+                <div className="flex flex-col gap-4">
+                  {vehicles && vehicles.length > 0 ? (
+                    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {vehicles.map((v) => (
+                        <VehicleRow
+                          key={v.id}
+                          vehicle={{
+                            id: v.id,
+                            plate: v.plate,
+                            category_id: v.category_id,
+                            energy_type: v.energy_type,
+                            odometer_km: v.odometer_km,
+                            next_service_odometer_km: v.next_service_odometer_km,
+                            estimated_range_km: v.estimated_range_km,
+                            fuel_level_percent: v.fuel_level_percent,
+                            battery_level_percent: v.battery_level_percent,
+                            home_location_id: v.home_location_id,
+                          }}
+                          status={v.status}
+                          categoryName={v.category?.name ?? "—"}
+                          locationName={v.current_location?.name ?? "—"}
+                          categories={categories ?? []}
+                          locations={locations ?? []}
+                        />
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-fog-400">
+                      Nenhum veículo cadastrado ainda — a frota aparece no Painel assim
+                      que o primeiro veículo for adicionado abaixo.
+                    </p>
+                  )}
+                  <AddToggle
+                    label="Veículo"
+                    render={(onSaved) => (
+                      <VehicleForm
+                        categories={categories ?? []}
+                        locations={locations ?? []}
+                        onSaved={onSaved}
+                      />
+                    )}
+                  />
+                </div>
+              ),
+            },
+            {
+              key: "categories",
+              label: "Categorias",
+              count: categories?.length ?? 0,
+              content: (
+                <div className="flex flex-col gap-4">
+                  {categories && categories.length > 0 ? (
+                    <ul className="flex flex-wrap gap-2">
+                      {categories.map((c) => (
+                        <CategoryRow key={c.id} category={c} />
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-fog-400">Nenhuma categoria cadastrada ainda.</p>
+                  )}
+                  <AddToggle label="Categoria" render={(onSaved) => <CategoryForm onSaved={onSaved} />} />
+                </div>
+              ),
+            },
+            {
+              key: "locations",
+              label: "Localizações",
+              count: locations?.length ?? 0,
+              content: (
+                <div className="flex flex-col gap-4">
+                  {locations && locations.length > 0 ? (
+                    <ul className="flex flex-wrap gap-2">
+                      {locations.map((l) => (
+                        <LocationRow key={l.id} location={l} />
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-fog-400">Nenhuma localização cadastrada ainda.</p>
+                  )}
+                  <AddToggle label="Localização" render={(onSaved) => <LocationForm onSaved={onSaved} />} />
+                </div>
+              ),
+            },
+          ]}
+        />
       </section>
     </AppShell>
   );
