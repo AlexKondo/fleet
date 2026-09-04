@@ -6,20 +6,20 @@ import { ROLE_OPTIONS } from "./ROLE_LABELS";
 
 const initialState: UserActionState = { status: "idle" };
 
-export function InviteUserForm() {
+export function InviteUserForm({ onSaved }: { onSaved?: () => void }) {
   const [state, formAction, pending] = useActionState(inviteUser, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.status === "success") formRef.current?.reset();
+    if (state.status === "success") {
+      formRef.current?.reset();
+      onSaved?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   return (
-    <form
-      ref={formRef}
-      action={formAction}
-      className="flex flex-col gap-4 rounded-md border border-line-800 bg-panel-900/60 p-4"
-    >
+    <form ref={formRef} action={formAction} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Nome</span>
@@ -92,7 +92,7 @@ export function InviteUserForm() {
         disabled={pending}
         className="self-start rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {pending ? "Criando…" : "+ Adicionar Usuário"}
+        {pending ? "Criando…" : "Criar Usuário"}
       </button>
     </form>
   );

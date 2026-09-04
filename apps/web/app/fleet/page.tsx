@@ -125,7 +125,7 @@ export default async function FleetPage() {
               content: (
                 <div className="flex flex-col gap-4">
                   {categories && categories.length > 0 ? (
-                    <ul className="flex flex-wrap gap-2">
+                    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                       {categories.map((c) => (
                         <CategoryRow key={c.id} category={c} />
                       ))}
@@ -144,7 +144,7 @@ export default async function FleetPage() {
               content: (
                 <div className="flex flex-col gap-4">
                   {locations && locations.length > 0 ? (
-                    <ul className="flex flex-wrap gap-2">
+                    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                       {locations.map((l) => (
                         <LocationRow key={l.id} location={l} />
                       ))}

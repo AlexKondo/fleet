@@ -17,8 +17,8 @@ export function LocationRow({ location }: { location: { id: string; name: string
 
   if (editing) {
     return (
-      <li className="flex flex-wrap items-center gap-2 rounded-sm border border-signal-amber/60 bg-panel-900/60 px-3 py-1.5">
-        <form action={updateAction} className="flex items-center gap-2">
+      <li className="flex flex-col gap-3 rounded-md border border-signal-amber/60 bg-panel-900/60 p-4">
+        <form action={updateAction} className="flex flex-col gap-2">
           <input type="hidden" name="id" value={location.id} />
           <input
             type="text"
@@ -26,25 +26,27 @@ export function LocationRow({ location }: { location: { id: string; name: string
             required
             defaultValue={location.name}
             autoFocus
-            className="w-32 rounded-sm border border-line-800 bg-panel-800 px-2 py-1 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
           />
-          <button
-            type="submit"
-            disabled={updatePending}
-            className="text-xs font-semibold uppercase tracking-widest text-signal-amber hover:underline disabled:opacity-50"
-          >
-            {updatePending ? "Salvando…" : "Salvar"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={updatePending}
+              className="text-xs font-semibold uppercase tracking-widest text-signal-amber hover:underline disabled:opacity-50"
+            >
+              {updatePending ? "Salvando…" : "Salvar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="text-xs uppercase tracking-widest text-fog-400 hover:text-paper-50"
+            >
+              Cancelar
+            </button>
+          </div>
         </form>
-        <button
-          type="button"
-          onClick={() => setEditing(false)}
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-paper-50"
-        >
-          Cancelar
-        </button>
         {updateState.status === "error" ? (
-          <p role="alert" className="w-full text-xs text-signal-red">
+          <p role="alert" className="text-xs text-signal-red">
             {updateState.error}
           </p>
         ) : null}
@@ -53,27 +55,29 @@ export function LocationRow({ location }: { location: { id: string; name: string
   }
 
   return (
-    <li className="flex flex-wrap items-center gap-2 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-1.5 text-sm text-paper-50">
-      <span>{location.name}</span>
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
-      >
-        Editar
-      </button>
-      <form action={deleteAction}>
-        <input type="hidden" name="id" value={location.id} />
-        <ConfirmSubmitButton
-          confirmMessage={`Excluir a localização "${location.name}"?`}
-          disabled={deletePending}
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
+    <li className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4">
+      <p className="text-sm text-paper-50">{location.name}</p>
+      <div className="flex items-center gap-3 border-t border-line-800 pt-3">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
         >
-          {deletePending ? "Excluindo…" : "Excluir"}
-        </ConfirmSubmitButton>
-      </form>
+          Editar
+        </button>
+        <form action={deleteAction}>
+          <input type="hidden" name="id" value={location.id} />
+          <ConfirmSubmitButton
+            confirmMessage={`Excluir a localização "${location.name}"?`}
+            disabled={deletePending}
+            className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
+          >
+            {deletePending ? "Excluindo…" : "Excluir"}
+          </ConfirmSubmitButton>
+        </form>
+      </div>
       {deleteState.status === "error" ? (
-        <p role="alert" className="w-full text-xs text-signal-red">
+        <p role="alert" className="text-xs text-signal-red">
           {deleteState.error}
         </p>
       ) : null}

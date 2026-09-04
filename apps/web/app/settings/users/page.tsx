@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AppShell } from "../../AppShell";
-import { InviteUserForm } from "./InviteUserForm";
+import { InviteUserModal } from "./InviteUserModal";
 import { UserRow } from "./UserRow";
 import { ROLE_LABELS } from "./ROLE_LABELS";
 
@@ -56,10 +56,11 @@ export default async function UsersPage() {
       isFleetManager
       isAdministrator
     >
-      <header className="border-b border-line-800 px-6 py-4">
+      <header className="flex items-center justify-between border-b border-line-800 px-6 py-4">
         <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
           Equipe
         </p>
+        <InviteUserModal />
       </header>
 
       {profilesError ? (
@@ -71,7 +72,7 @@ export default async function UsersPage() {
         </div>
       ) : null}
 
-      <section className="border-b border-line-800 px-6 py-4">
+      <section className="px-6 py-4">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
           Membros ({members.length})
         </h2>
@@ -95,16 +96,9 @@ export default async function UsersPage() {
           ))}
         </ul>
 
-        <p className="mb-4 text-xs text-fog-600">
+        <p className="text-xs text-fog-600">
           Funções: {Object.entries(ROLE_LABELS).map(([, label]) => label).join(" · ")}.
         </p>
-      </section>
-
-      <section className="px-6 py-4">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Adicionar Usuário
-        </h2>
-        <InviteUserForm />
       </section>
     </AppShell>
   );
