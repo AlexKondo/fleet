@@ -134,6 +134,7 @@ export default async function DashboardPage({
       ) : null}
 
       <section className="border-b border-line-800 px-6 py-4">
+        <div className="mb-1.5 h-1.5 w-10 rounded-sm hazard-stripe" aria-hidden="true" />
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
           Precisa de Atenção
         </h2>
@@ -170,7 +171,10 @@ export default async function DashboardPage({
                     <span className="text-fog-400">
                       {" "}
                       · {r.trip_request?.requester?.full_name} · {r.trip_request?.origin} →{" "}
-                      {r.trip_request?.destination} · {new Date(r.start_at).toLocaleString("pt-BR")}
+                      {r.trip_request?.destination} ·{" "}
+                      <span className="font-mono tabular-nums">
+                        {new Date(r.start_at).toLocaleString("pt-BR")}
+                      </span>
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -445,8 +449,9 @@ export default async function DashboardPage({
                       {attention.map((reason) => (
                         <span
                           key={reason}
-                          className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber"
+                          className="relative overflow-hidden rounded-sm border border-signal-amber/40 border-t-transparent bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber"
                         >
+                          <span className="hazard-stripe absolute inset-x-0 top-0 h-[3px]" aria-hidden="true" />
                           {ATTENTION_LABELS[reason] ?? reason}
                         </span>
                       ))}

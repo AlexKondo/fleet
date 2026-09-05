@@ -135,7 +135,7 @@ export default async function TripsPage({
                     <p className="text-sm text-paper-50">
                       {r.trip_request?.origin} → {r.trip_request?.destination}
                     </p>
-                    <p className="mt-1 font-mono text-xs text-fog-400">
+                    <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
                       {r.vehicle?.plate ?? "—"} · {new Date(r.start_at).toLocaleString("pt-BR")}
                     </p>
                     <p className="mt-1 text-xs text-fog-600">
@@ -204,7 +204,7 @@ export default async function TripsPage({
                       <p className="text-sm text-paper-50">
                         {r.trip_request?.origin} → {r.trip_request?.destination}
                       </p>
-                      <p className="mt-1 font-mono text-xs text-fog-400">
+                      <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
                         {r.vehicle?.plate ?? "—"} · {new Date(r.start_at).toLocaleString("pt-BR")}
                       </p>
                       <p className="mt-1 text-xs text-fog-600">

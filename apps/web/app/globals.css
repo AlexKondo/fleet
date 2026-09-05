@@ -47,6 +47,21 @@ body {
   font-family: var(--font-body);
 }
 
+/*
+ * Hazard-stripe accent — the one visual device reserved for "this needs real
+ * attention" (Pit Lane direction). Diagonal amber/ink hazard tape. Use
+ * sparingly: never as decoration on neutral or purely informational content.
+ */
+.hazard-stripe {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-signal-amber) 0px,
+    var(--color-signal-amber) 6px,
+    var(--color-ink-950) 6px,
+    var(--color-ink-950) 12px
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
