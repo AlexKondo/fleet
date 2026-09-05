@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOut } from "./dashboard/actions";
+import { InactivityLogout } from "./InactivityLogout";
 import { NotificationBell } from "./dashboard/NotificationBell";
 import { ROLE_LABELS } from "./settings/users/ROLE_LABELS";
 import {
@@ -57,6 +58,7 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
+      <InactivityLogout />
       <aside className="flex shrink-0 flex-col border-b border-line-800 bg-panel-900/40 px-4 py-4 md:w-60 md:border-b-0 md:border-r md:py-5">
         <div className="flex items-center justify-between md:mb-6 md:block">
           <div className="px-1">
