@@ -48,7 +48,7 @@ export default async function TripsPage({
   // second query and joined here in application code.
   const { data: participations } = await supabase
     .from("trip_participants")
-    .select("id, trip_request_id, joined_at")
+    .select("id, trip_request_id, joined_at, status")
     .eq("passenger_id", user.id)
     .order("joined_at", { ascending: false });
 
@@ -68,10 +68,11 @@ export default async function TripsPage({
   const carpools = (participations ?? [])
     .map((p) => ({
       participantId: p.id,
+      status: p.status,
       reservation: (carpoolReservations ?? []).find((r) => r.trip_request_id === p.trip_request_id),
     }))
     .filter(
-      (c): c is { participantId: string; reservation: NonNullable<typeof c.reservation> } =>
+      (c): c is { participantId: string; status: string; reservation: NonNullable<typeof c.reservation> } =>
         Boolean(c.reservation),
     );
 
@@ -194,7 +195,7 @@ export default async function TripsPage({
               Caronas
             </h2>
             <ul className="flex flex-col gap-3">
-              {carpools.map(({ participantId, reservation: r }) => {
+              {carpools.map(({ participantId, status, reservation: r }) => {
                 const vehicleStatus = r.vehicle?.status;
                 const canLeave =
                   r.status === "pending_approval" ||
@@ -213,6 +214,9 @@ export default async function TripsPage({
                       </p>
                       <p className="mt-1 text-xs text-fog-600">
                         {RESERVATION_STATUS_LABEL[r.status] ?? r.status}
+                        {status === "pending" ? (
+                          <span className="ml-2 text-signal-blue">· Aguardando aceite do motorista</span>
+                        ) : null}
                       </p>
                     </div>
                     {canLeave ? (

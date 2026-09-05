@@ -269,6 +269,7 @@ export type Database = {
           booking_mode: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes: number
           carpool_return_tolerance_minutes: number
+          early_pickup_grace_minutes: number
           maintenance_due_soon_days: number
           min_charge_hours_bev: number
           min_cleaning_hours: number
@@ -281,6 +282,7 @@ export type Database = {
           booking_mode?: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
+          early_pickup_grace_minutes?: number
           maintenance_due_soon_days?: number
           min_charge_hours_bev?: number
           min_cleaning_hours?: number
@@ -293,6 +295,7 @@ export type Database = {
           booking_mode?: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
+          early_pickup_grace_minutes?: number
           maintenance_due_soon_days?: number
           min_charge_hours_bev?: number
           min_cleaning_hours?: number
@@ -369,6 +372,58 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservation_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          message_type: Database["public"]["Enums"]["message_type"]
+          organization_id: string
+          reservation_id: string
+          sender_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
+          organization_id: string
+          reservation_id: string
+          sender_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
+          organization_id?: string
+          reservation_id?: string
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_messages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_messages_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -466,58 +521,6 @@ export type Database = {
           },
         ]
       }
-      reservation_messages: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          message_type: Database["public"]["Enums"]["message_type"]
-          organization_id: string
-          reservation_id: string
-          sender_id: string | null
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          message_type?: Database["public"]["Enums"]["message_type"]
-          organization_id: string
-          reservation_id: string
-          sender_id?: string | null
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          message_type?: Database["public"]["Enums"]["message_type"]
-          organization_id?: string
-          reservation_id?: string
-          sender_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reservation_messages_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reservation_messages_reservation_id_fkey"
-            columns: ["reservation_id"]
-            isOneToOne: false
-            referencedRelation: "reservations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reservation_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       trip_participants: {
         Row: {
           id: string
@@ -525,6 +528,7 @@ export type Database = {
           organization_id: string
           passenger_count: number
           passenger_id: string
+          status: string
           trip_request_id: string
         }
         Insert: {
@@ -533,6 +537,7 @@ export type Database = {
           organization_id: string
           passenger_count?: number
           passenger_id: string
+          status?: string
           trip_request_id: string
         }
         Update: {
@@ -541,6 +546,7 @@ export type Database = {
           organization_id?: string
           passenger_count?: number
           passenger_id?: string
+          status?: string
           trip_request_id?: string
         }
         Relationships: [
@@ -850,31 +856,6 @@ export type Database = {
         Args: { p_reservation_id: string }
         Returns: undefined
       }
-      block_vehicle: {
-        Args: { p_reason: string; p_vehicle_id: string }
-        Returns: undefined
-      }
-      cancel_reservation: {
-        Args: { p_reason?: string; p_reservation_id: string }
-        Returns: undefined
-      }
-      cancel_workflow_task: {
-        Args: { p_task_id: string }
-        Returns: undefined
-      }
-      lock_and_require_multiple_administrators: {
-        Args: { p_organization_id: string }
-        Returns: undefined
-      }
-      post_reservation_message: {
-        Args: {
-          p_body: string
-          p_message_type: Database["public"]["Enums"]["message_type"]
-          p_new_expected_return_at?: string
-          p_reservation_id: string
-        }
-        Returns: Json
-      }
       auto_reassign_reservation_vehicle: {
         Args: {
           p_new_vehicle_id: string
@@ -883,26 +864,15 @@ export type Database = {
         }
         Returns: undefined
       }
-      log_audit_event: {
-        Args: {
-          p_action: string
-          p_actor_id: string
-          p_after?: Json
-          p_before?: Json
-          p_entity_id: string
-          p_entity_type: string
-          p_organization_id: string
-        }
+      block_vehicle: {
+        Args: { p_reason: string; p_vehicle_id: string }
         Returns: undefined
       }
-      update_member_role: {
-        Args: {
-          p_new_role: Database["public"]["Enums"]["user_role"]
-          p_organization_id: string
-          p_user_id: string
-        }
+      cancel_reservation: {
+        Args: { p_reason?: string; p_reservation_id: string }
         Returns: undefined
       }
+      cancel_workflow_task: { Args: { p_task_id: string }; Returns: undefined }
       complete_workflow_task: {
         Args: { p_task_id: string }
         Returns: undefined
@@ -936,6 +906,31 @@ export type Database = {
         Returns: string
       }
       current_organization_id: { Args: never; Returns: string }
+      lock_and_require_multiple_administrators: {
+        Args: { p_organization_id: string }
+        Returns: undefined
+      }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_after?: Json
+          p_before?: Json
+          p_entity_id: string
+          p_entity_type: string
+          p_organization_id: string
+        }
+        Returns: undefined
+      }
+      post_reservation_message: {
+        Args: {
+          p_body: string
+          p_message_type: Database["public"]["Enums"]["message_type"]
+          p_new_expected_return_at?: string
+          p_reservation_id: string
+        }
+        Returns: Json
+      }
       record_pickup: {
         Args: {
           p_battery_level_percent: number
@@ -969,6 +964,10 @@ export type Database = {
         }
         Returns: string
       }
+      respond_to_carpool_request: {
+        Args: { p_accept: boolean; p_participant_id: string }
+        Returns: undefined
+      }
       swap_reservation_vehicle: {
         Args: { p_new_vehicle_id: string; p_reservation_id: string }
         Returns: undefined
@@ -978,11 +977,20 @@ export type Database = {
         Returns: undefined
       }
       unblock_vehicle: { Args: { p_vehicle_id: string }; Returns: undefined }
+      update_member_role: {
+        Args: {
+          p_new_role: Database["public"]["Enums"]["user_role"]
+          p_organization_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       booking_mode: "ai_recommended" | "user_choice" | "hybrid"
       energy_type: "ICE" | "PHEV" | "BEV"
       inspection_role: "traveler" | "security"
+      inspection_type: "pickup" | "return"
       message_type:
         | "text"
         | "delay"
@@ -990,7 +998,6 @@ export type Database = {
         | "return_time_change"
         | "vehicle_not_found"
         | "system_alert"
-      inspection_type: "pickup" | "return"
       photo_angle:
         | "front"
         | "back"
@@ -1162,6 +1169,7 @@ export const Constants = {
       booking_mode: ["ai_recommended", "user_choice", "hybrid"],
       energy_type: ["ICE", "PHEV", "BEV"],
       inspection_role: ["traveler", "security"],
+      inspection_type: ["pickup", "return"],
       message_type: [
         "text",
         "delay",
@@ -1170,7 +1178,6 @@ export const Constants = {
         "vehicle_not_found",
         "system_alert",
       ],
-      inspection_type: ["pickup", "return"],
       photo_angle: [
         "front",
         "back",

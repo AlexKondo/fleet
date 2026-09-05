@@ -108,12 +108,16 @@ async function buildPlanInputs(input: TripFormInput) {
     .map((r) => r.trip_request?.id)
     .filter((id): id is string => Boolean(id));
 
+  // Only 'accepted' participants occupy a seat — a 'pending' request hasn't been
+  // approved by the host driver yet (0020_carpool_host_acceptance.sql) and must not
+  // block other carpool matches from being found or double-count against capacity.
   const { data: participantRows } =
     tripRequestIds.length > 0
       ? await supabase
           .from("trip_participants")
           .select("trip_request_id, passenger_count")
           .in("trip_request_id", tripRequestIds)
+          .eq("status", "accepted")
       : { data: [] };
 
   const occupancyByTrip = new Map<string, number>();
@@ -335,7 +339,14 @@ export async function confirmTrip(
       p_justification: input.justification,
       p_vehicle_id: input.targetId,
     });
-    if (error) return { success: false, error: error.message };
+    if (error) {
+      // 23P01 = exclusion_violation — the reservations table's EXCLUDE constraint
+      // (0001_init_schema.sql) fired because another reservation now overlaps this
+      // vehicle/time window (e.g. a concurrent request won the race). A stable error code
+      // lets the UI show an actionable "someone else just booked this" message instead of
+      // a raw Postgres constraint-violation string.
+      return { success: false, error: error.code === "23P01" ? "RESERVATION_CONFLICT" : error.message };
+    }
 
     // Mirrors create_vehicle_reservation's own in-app notification
     // (0008_notifications.sql) — email every fleet manager/administrator that a

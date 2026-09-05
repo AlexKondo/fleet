@@ -4,6 +4,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AppShell } from "../../AppShell";
 import { STATUS_META } from "../../dashboard/statusMeta";
 import { MessageThread, type ReservationMessage } from "./MessageThread";
+import { respondToCarpoolRequest } from "./actions";
+import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
 
 /**
  * Reservation Detail (SCREEN_CATALOG.md) + Communication Hub for this reservation
@@ -31,7 +33,7 @@ export default async function ReservationDetailPage({ params }: { params: Promis
     .select(
       `id, status, start_at, end_at, impacted_at, impacted_reason,
        vehicle:vehicles(plate, status, category:vehicle_categories(name)),
-       trip_request:trip_requests(origin, destination, requester_id, justification, requester:profiles(full_name))`,
+       trip_request:trip_requests(id, origin, destination, requester_id, justification, requester:profiles(full_name))`,
     )
     .eq("id", id)
     .single();
@@ -42,6 +44,20 @@ export default async function ReservationDetailPage({ params }: { params: Promis
     profile?.role === "fleet_manager" || profile?.role === "administrator" || profile?.role === "security";
   const isOwnReservation = reservation.trip_request.requester_id === user.id;
   if (!isPrivileged && !isOwnReservation) redirect("/trips");
+
+  // ISSUE-016 remediation: only the reservation's own host driver sees/responds to
+  // pending carpool join requests on their trip — never fleet managers/security via this
+  // screen, since accepting a passenger is the host's own call, not a fleet-ops one
+  // (fleet managers can still be granted the RPC itself for support cases, see
+  // 0020_carpool_host_acceptance.sql, but this UI doesn't surface it for them).
+  const { data: pendingCarpoolRequests } = isOwnReservation
+    ? await supabase
+        .from("trip_participants")
+        .select("id, passenger_count, joined_at, passenger:profiles(full_name)")
+        .eq("trip_request_id", reservation.trip_request.id)
+        .eq("status", "pending")
+        .order("joined_at", { ascending: true })
+    : { data: [] };
 
   const { data: messageRows } = await supabase
     .from("reservation_messages")
@@ -115,6 +131,47 @@ export default async function ReservationDetailPage({ params }: { params: Promis
           </div>
         ) : null}
       </header>
+
+      {isOwnReservation && pendingCarpoolRequests && pendingCarpoolRequests.length > 0 ? (
+        <section className="mt-4 rounded-md border border-signal-blue/40 bg-signal-blue/10 p-6">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-signal-blue">
+            Pedidos de Carona
+          </h2>
+          <ul className="flex flex-col gap-3">
+            {pendingCarpoolRequests.map((request) => (
+              <li
+                key={request.id}
+                className="flex items-center justify-between gap-4 rounded-sm border border-line-800 bg-panel-900/60 p-3"
+              >
+                <p className="text-sm text-paper-50">
+                  {request.passenger?.full_name ?? "—"}
+                  <span className="ml-2 text-xs text-fog-600">
+                    {request.passenger_count} passageiro{request.passenger_count > 1 ? "s" : ""}
+                  </span>
+                </p>
+                <div className="flex shrink-0 items-center gap-2">
+                  <form action={respondToCarpoolRequest.bind(null, id, request.id, true)}>
+                    <button
+                      type="submit"
+                      className="rounded-sm border border-signal-teal px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                    >
+                      Aceitar
+                    </button>
+                  </form>
+                  <form action={respondToCarpoolRequest.bind(null, id, request.id, false)}>
+                    <ConfirmSubmitButton
+                      confirmMessage="Recusar este pedido de carona?"
+                      className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
+                    >
+                      Recusar
+                    </ConfirmSubmitButton>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-6">
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-fog-400">

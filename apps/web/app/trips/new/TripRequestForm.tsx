@@ -312,7 +312,9 @@ export function TripRequestForm() {
 
         {confirmError ? (
           <p role="alert" className="mt-4 text-sm text-signal-red">
-            Não foi possível confirmar a reserva ({confirmError}). Tente buscar novamente.
+            {confirmError === "RESERVATION_CONFLICT"
+              ? "Esse veículo acabou de ser reservado por outra pessoa nesse mesmo horário. Busque novamente para ver as opções atualizadas."
+              : `Não foi possível confirmar a reserva (${confirmError}). Tente buscar novamente.`}
           </p>
         ) : null}
       </div>

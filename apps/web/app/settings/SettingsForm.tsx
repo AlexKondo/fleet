@@ -13,6 +13,7 @@ export interface SettingsFormValues {
   maintenanceDueSoonDays: number;
   trafficRestrictionEnabled: boolean;
   bookingMode: "ai_recommended" | "user_choice" | "hybrid";
+  earlyPickupGraceMinutes: number;
 }
 
 const BOOKING_MODE_OPTIONS: { value: SettingsFormValues["bookingMode"]; label: string; hint: string }[] = [
@@ -231,6 +232,30 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
           Alertar sobre rodízio de veículos em São Paulo
         </label>
       </div>
+
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
+          Retirada Antecipada
+        </h2>
+        <p className="mt-1 text-xs text-fog-600">
+          Quanto tempo antes do horário agendado da reserva um veículo pode ser retirado.
+        </p>
+      </div>
+
+      <label className="flex w-fit flex-col gap-1.5">
+        <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
+          Tolerância de retirada antecipada (minutos)
+        </span>
+        <input
+          type="number"
+          name="earlyPickupGraceMinutes"
+          required
+          min={0}
+          step={1}
+          defaultValue={initialValues.earlyPickupGraceMinutes}
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+        />
+      </label>
 
       {state.status === "error" ? (
         <p role="alert" className="text-sm text-signal-red">

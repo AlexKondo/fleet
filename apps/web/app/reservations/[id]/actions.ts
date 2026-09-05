@@ -80,3 +80,29 @@ export async function postReservationMessage(
   revalidatePath(`/reservations/${reservationId}`);
   return { status: "success" };
 }
+
+/**
+ * ISSUE-016 remediation: the host driver accepts or rejects a pending carpool join
+ * request on their own reservation (respond_to_carpool_request,
+ * 0020_carpool_host_acceptance.sql — security definer, re-checks host ownership and
+ * vehicle capacity server-side regardless of what this form was rendered with). Plain
+ * fire-and-revalidate shape (no useActionState) — same reasoning as
+ * dashboard/actions.ts's runFleetAction: this is bound directly to a form with no state
+ * slot, and a failure here (request already resolved by a race, capacity now full) is a
+ * normal outcome, not something that should crash the page.
+ */
+export async function respondToCarpoolRequest(
+  reservationId: string,
+  participantId: string,
+  accept: boolean,
+): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("respond_to_carpool_request", {
+    p_participant_id: participantId,
+    p_accept: accept,
+  });
+  revalidatePath(`/reservations/${reservationId}`);
+  if (error) {
+    console.error("respondToCarpoolRequest failed:", error.message);
+  }
+}

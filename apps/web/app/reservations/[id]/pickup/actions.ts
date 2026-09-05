@@ -75,7 +75,9 @@ export async function submitPickup(
       ? "Motorista sem autorização para dirigir. Fale com o gestor de frota."
       : error.message.includes("LICENSE_EXPIRED")
         ? "A CNH do motorista está vencida. Atualize-a com o gestor de frota antes de retirar o veículo."
-        : error.message;
+        : error.message.includes("EARLY_PICKUP_NOT_ALLOWED")
+          ? "Ainda não é possível retirar este veículo — a reserva ainda não começou."
+          : error.message;
     return { success: false, error: message };
   }
   if (!inspectionId) return { success: false, error: "inspection_not_created" };

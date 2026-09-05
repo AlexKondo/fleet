@@ -47,6 +47,7 @@ export async function saveOrganizationSettings(
   const carpoolReturnToleranceMinutes = Number(formData.get("carpoolReturnToleranceMinutes"));
   const maintenanceDueSoonDays = Number(formData.get("maintenanceDueSoonDays"));
   const trafficRestrictionEnabled = formData.get("trafficRestrictionEnabled") === "on";
+  const earlyPickupGraceMinutes = Number(formData.get("earlyPickupGraceMinutes"));
   const bookingMode = String(formData.get("bookingMode") ?? "");
   const BOOKING_MODES = ["ai_recommended", "user_choice", "hybrid"] as const;
   if (!BOOKING_MODES.includes(bookingMode as (typeof BOOKING_MODES)[number])) {
@@ -66,6 +67,7 @@ export async function saveOrganizationSettings(
     [carpoolDepartureToleranceMinutes, 0, 1440],
     [carpoolReturnToleranceMinutes, 0, 1440],
     [maintenanceDueSoonDays, 0, 365],
+    [earlyPickupGraceMinutes, 0, 1440],
   ];
   const allValid = boundedFields.every(
     ([value, min, max]) => !Number.isNaN(value) && value >= min && value <= max,
@@ -86,6 +88,7 @@ export async function saveOrganizationSettings(
       maintenance_due_soon_days: maintenanceDueSoonDays,
       traffic_restriction_enabled: trafficRestrictionEnabled,
       booking_mode: bookingMode as "ai_recommended" | "user_choice" | "hybrid",
+      early_pickup_grace_minutes: earlyPickupGraceMinutes,
     })
     .eq("organization_id", profile.organization_id);
 
@@ -112,6 +115,7 @@ export async function saveOrganizationSettings(
       maintenance_due_soon_days: maintenanceDueSoonDays,
       traffic_restriction_enabled: trafficRestrictionEnabled,
       booking_mode: bookingMode,
+      early_pickup_grace_minutes: earlyPickupGraceMinutes,
     },
   });
 

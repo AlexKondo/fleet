@@ -65,6 +65,7 @@ export default async function SettingsPage() {
             maintenanceDueSoonDays: settings?.maintenance_due_soon_days ?? 14,
             trafficRestrictionEnabled: settings?.traffic_restriction_enabled ?? true,
             bookingMode: settings?.booking_mode ?? "ai_recommended",
+            earlyPickupGraceMinutes: settings?.early_pickup_grace_minutes ?? 15,
           }}
         />
       </section>
