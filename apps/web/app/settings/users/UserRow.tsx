@@ -36,42 +36,23 @@ export function UserRow({
   );
 
   return (
-    <li className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm text-paper-50">{member.full_name}</p>
-          <p className="truncate text-xs text-fog-400">{member.email}</p>
-        </div>
+    <tr className="border-b border-line-800 align-top last:border-0">
+      <td className="min-w-0 px-4 py-3">
+        <p className="truncate text-sm text-paper-50">{member.full_name}</p>
+        <p className="truncate text-xs text-fog-400">{member.email}</p>
         {isSelf ? (
-          <span className="shrink-0 text-xs uppercase tracking-widest text-fog-600">Você</span>
-        ) : (
-          <form action={removeAction} className="shrink-0">
-            <input type="hidden" name="userId" value={member.id} />
-            <ConfirmSubmitButton
-              confirmMessage={`Remover ${member.full_name}? A pessoa perderá o acesso imediatamente.`}
-              disabled={removePending}
-              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
-            >
-              {removePending ? "Removendo…" : "Remover"}
-            </ConfirmSubmitButton>
-          </form>
-        )}
-      </div>
-      {removeState.status === "error" ? (
-        <p role="alert" className="text-xs text-signal-red">
-          {removeState.error}
-        </p>
-      ) : null}
+          <span className="text-xs uppercase tracking-widest text-fog-600">Você</span>
+        ) : null}
+      </td>
 
-      <div className="border-t border-line-800 pt-3">
-        <p className="mb-1.5 text-xs uppercase tracking-widest text-fog-600">Função</p>
+      <td className="px-4 py-3">
         <form action={roleAction} className="flex items-center gap-2">
           <input type="hidden" name="userId" value={member.id} />
           <select
             name="role"
             defaultValue={member.role}
             disabled={isSelf}
-            className="w-full rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber disabled:opacity-50"
+            className="w-40 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber disabled:opacity-50"
           >
             {ROLE_OPTIONS.map((r) => (
               <option key={r.value} value={r.value}>
@@ -94,10 +75,9 @@ export function UserRow({
             {roleState.error}
           </p>
         ) : null}
-      </div>
+      </td>
 
-      <div className="border-t border-line-800 pt-3">
-        <p className="mb-1.5 text-xs uppercase tracking-widest text-fog-600">CNH</p>
+      <td className="px-4 py-3">
         <form action={driverAction} className="flex flex-col gap-1.5">
           <input type="hidden" name="userId" value={member.id} />
           <label className="flex items-center gap-1.5 text-xs text-fog-400">
@@ -109,7 +89,7 @@ export function UserRow({
             />
             Autorizado a dirigir
           </label>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <input
               type="text"
               name="licenseNumber"
@@ -144,7 +124,27 @@ export function UserRow({
             {driverState.error}
           </p>
         ) : null}
-      </div>
-    </li>
+      </td>
+
+      <td className="px-4 py-3 text-right">
+        {!isSelf ? (
+          <form action={removeAction}>
+            <input type="hidden" name="userId" value={member.id} />
+            <ConfirmSubmitButton
+              confirmMessage={`Remover ${member.full_name}? A pessoa perderá o acesso imediatamente.`}
+              disabled={removePending}
+              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
+            >
+              {removePending ? "Removendo…" : "Remover"}
+            </ConfirmSubmitButton>
+          </form>
+        ) : null}
+        {removeState.status === "error" ? (
+          <p role="alert" className="mt-1 text-xs text-signal-red">
+            {removeState.error}
+          </p>
+        ) : null}
+      </td>
+    </tr>
   );
 }
