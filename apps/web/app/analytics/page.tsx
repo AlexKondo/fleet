@@ -183,12 +183,8 @@ export default async function AnalyticsPage() {
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
+      title="Analytics"
     >
-      <header className="border-b border-line-800 px-6 py-4">
-        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-          Analytics
-        </p>
-      </header>
 
       {vehiclesError ? (
         <p className="px-6 py-4 text-sm text-signal-red">

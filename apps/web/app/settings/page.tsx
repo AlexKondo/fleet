@@ -46,12 +46,8 @@ export default async function SettingsPage() {
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
+      title="Configurações"
     >
-      <header className="border-b border-line-800 px-6 py-4">
-        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-          Configurações
-        </p>
-      </header>
 
       <section className="px-6 py-6">
         <SettingsForm

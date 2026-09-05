@@ -121,13 +121,8 @@ export default async function DashboardPage({
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
+      title="Painel"
     >
-      <header className="border-b border-line-800 px-6 py-4">
-        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-          Painel
-        </p>
-      </header>
-
       {fleetActionError ? (
         <div
           role="alert"

@@ -58,12 +58,8 @@ export default async function FleetPage() {
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
+      title="Frota"
     >
-      <header className="border-b border-line-800 px-6 py-4">
-        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-          Frota
-        </p>
-      </header>
 
       {loadError ? (
         <div

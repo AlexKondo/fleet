@@ -85,6 +85,7 @@ export default async function ReservationDetailPage({ params }: { params: Promis
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
+      title="Viagem"
     >
       <div className="mx-auto max-w-3xl px-4 py-6">
       <Link href="/trips" className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber">

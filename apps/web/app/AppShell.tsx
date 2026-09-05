@@ -28,6 +28,8 @@ export function AppShell({
   role,
   isFleetManager,
   isAdministrator,
+  title,
+  headerActions,
   children,
 }: {
   active: NavKey;
@@ -36,6 +38,12 @@ export function AppShell({
   role: string;
   isFleetManager: boolean;
   isAdministrator: boolean;
+  /** Page title, rendered in the shared top header alongside the corner controls
+   * (notifications/user/sign-out) — pages no longer draw their own header. */
+  title: string;
+  /** Page-specific header controls (e.g. "+ Adicionar Usuário"), rendered to the left
+   * of the shared corner controls, inside the same bordered header bar. */
+  headerActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
@@ -95,23 +103,6 @@ export function AppShell({
             })}
         </nav>
 
-        <div className="mt-4 hidden items-center justify-between border-t border-line-800 pt-4 md:flex">
-          <NotificationBell align="left" />
-          <form action={signOut}>
-            <button
-              type="submit"
-              aria-label="Sair"
-              className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-signal-red hover:text-signal-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-red"
-            >
-              <LogoutIcon className="h-4 w-4" />
-            </button>
-          </form>
-        </div>
-        <div className="mt-3 hidden truncate px-1 md:block">
-          <p className="truncate text-sm text-paper-50">{userName}</p>
-          <p className="text-xs uppercase tracking-widest text-fog-600">{ROLE_LABELS[role] ?? role}</p>
-        </div>
-
         <div className="mt-3 flex items-center justify-between md:hidden">
           <Link
             href="/trips/new"
@@ -130,7 +121,35 @@ export function AppShell({
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1">{children}</main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-y border-line-800 px-6 py-4">
+          <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
+            {title}
+          </p>
+          <div className="flex items-center gap-4">
+            {headerActions}
+            <div className="hidden items-center gap-4 md:flex">
+              <NotificationBell align="right" />
+              <div className="hidden text-right lg:block">
+                <p className="truncate text-sm text-paper-50">{userName}</p>
+                <p className="text-xs uppercase tracking-widest text-fog-600">
+                  {ROLE_LABELS[role] ?? role}
+                </p>
+              </div>
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  aria-label="Sair"
+                  className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-signal-red hover:text-signal-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-red"
+                >
+                  <LogoutIcon className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+          </div>
+        </header>
+        <main className="min-w-0 flex-1">{children}</main>
+      </div>
     </div>
   );
 }

@@ -87,23 +87,18 @@ export default async function TripsPage({
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
+      title="Minhas Viagens"
+      headerActions={
+        <Link
+          href="/trips/new"
+          className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
+        >
+          + Nova viagem
+        </Link>
+      }
     >
       <div className="px-6 py-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-              Minhas Viagens
-            </p>
-          </div>
-          <Link
-            href="/trips/new"
-            className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
-          >
-            + Nova viagem
-          </Link>
-        </div>
-
         {tripActionError ? (
           <div
             role="alert"

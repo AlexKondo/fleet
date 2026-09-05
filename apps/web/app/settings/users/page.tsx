@@ -55,13 +55,9 @@ export default async function UsersPage() {
       role={profile.role}
       isFleetManager
       isAdministrator
+      title="Equipe"
+      headerActions={<InviteUserModal />}
     >
-      <header className="flex items-center justify-between border-b border-line-800 px-6 py-4">
-        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-          Equipe
-        </p>
-        <InviteUserModal />
-      </header>
 
       {profilesError ? (
         <div
