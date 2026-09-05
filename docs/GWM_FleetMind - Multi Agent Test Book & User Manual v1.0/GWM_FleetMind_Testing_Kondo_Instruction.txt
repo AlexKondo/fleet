@@ -1,0 +1,19 @@
+Kondo,
+
+Use `GWM_FleetMind_Multi_Agent_Test_Book_v1.0.docx` as the governing scenario book for multi-agent validation of the current platform.
+
+Create specialized test agents according to the roles in the book and execute the scenario families against the latest build. Test product behavior across UI, API, persistence, state machines, audit/events and notifications where applicable.
+
+Do not only test happy paths. Execute negative, boundary, concurrency, permission, timing, energy/range, carpool, inspection, workflow and hypothesis-based exploratory scenarios.
+
+Any failure must create a reproducible defect with scenario ID, expected behavior, actual behavior, severity, evidence, affected module and regression test.
+
+After corrections, rerun affected scenario families plus the Remediation Tests RT-001..RT-022 and original Golden Tests GT-001..GT-015 where applicable.
+
+Return:
+- TEST_EXECUTION_REPORT.md
+- DEFECT_REGISTER.md
+- TEST_TRACEABILITY_MATRIX.md
+- RELEASE_GATE_RESULT.md
+
+Do not declare the MVP ready while any Critical/High integrity, security, concurrency, timestamp, authorization or state-machine defect remains open.

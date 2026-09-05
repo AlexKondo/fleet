@@ -1,0 +1,26 @@
+Kondo,
+
+Apply the attached `GWM Fleet MVP Remediation Pack v1.0` to the current MVP.
+
+The Orchestrator must first read the original Product & Engineering Blueprint and Controlled Engineering Set, then start with:
+
+`docs/00_READ_FIRST_REMEDIATION.md`
+
+and
+
+`docs/MASTER_REMEDIATION_EXECUTION_INSTRUCTIONS.md`
+
+Correct all documented issues by root cause, not by isolated screen patches. Execute the remediation autonomously using the defined dependency waves and internal gates.
+
+Do not request approval issue-by-issue. Stop only for a genuine Decision Needed, Change Request outside the approved remediation delta, architecture blocker, or external dependency blocker.
+
+Before declaring completion, all remediation regression tests RT-001 through RT-022 and all original Golden Tests GT-001 through GT-015 must pass.
+
+At the end, return:
+- `MVP_REMEDIATION_COMPLETION_REPORT.md`
+- `MVP_REMEDIATION_TRACEABILITY_MATRIX.md`
+- `OPEN_ITEMS.md`
+- test evidence summary
+- migration/configuration notes.
+
+Do not change approved product behavior outside this Remediation Pack.
