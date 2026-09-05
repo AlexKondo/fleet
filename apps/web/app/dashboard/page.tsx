@@ -353,6 +353,9 @@ export default async function DashboardPage({
                   className="flex items-center justify-between rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5"
                 >
                   <div className="text-sm">
+                    <span className="mr-1.5 font-mono text-signal-amber" aria-hidden="true">
+                      ›
+                    </span>
                     <span className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber">
                       {WORKFLOW_TASK_LABELS[t.type] ?? t.type}
                     </span>

@@ -204,6 +204,9 @@ export default async function AnalyticsPage() {
               <ul className="flex flex-wrap gap-x-6 gap-y-2">
                 {underutilized.map((v) => (
                   <li key={v.id} className="flex items-center gap-2 text-sm">
+                    <span className="font-mono text-signal-amber" aria-hidden="true">
+                      ›
+                    </span>
                     <span className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 font-mono text-xs text-signal-amber">
                       {v.plate}
                     </span>
@@ -231,6 +234,14 @@ export default async function AnalyticsPage() {
                     className="flex items-center justify-between rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5 text-sm"
                   >
                     <div className="flex items-center gap-2">
+                      <span
+                        className={`font-mono ${
+                          prediction.daysUntilService === 0 ? "text-signal-red" : "text-signal-amber"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        ›
+                      </span>
                       <span
                         className={`rounded-sm border px-1.5 py-0.5 font-mono text-xs ${
                           prediction.daysUntilService === 0
