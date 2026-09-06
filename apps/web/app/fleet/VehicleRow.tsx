@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { deleteVehicle, type FleetActionState } from "./actions";
 import { STATUS_META } from "../dashboard/statusMeta";
@@ -70,6 +71,12 @@ export function VehicleRow({
       </div>
 
       <div className="flex items-center gap-3 border-t border-line-800 pt-3">
+        <Link
+          href={`/fleet/vehicles/${vehicle.id}`}
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+        >
+          Ver Agenda
+        </Link>
         <button
           type="button"
           onClick={() => setEditing((v) => !v)}
