@@ -44,11 +44,26 @@ export default async function FleetPage() {
     supabase
       .from("vehicles")
       .select(
-        "id, plate, category_id, energy_type, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
+        "id, plate, name, color, photo_storage_path, category_id, energy_type, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
       )
       .order("plate"),
   ]);
   const loadError = locationsError || categoriesError || vehiclesError;
+
+  // vehicle-photos is a private bucket (0002_operational_cycle.sql) — cards need a
+  // short-lived signed URL per photo rather than a public one.
+  const photoPaths = (vehicles ?? [])
+    .map((v) => v.photo_storage_path)
+    .filter((p): p is string => Boolean(p));
+  const { data: signedPhotoUrls } =
+    photoPaths.length > 0
+      ? await supabase.storage.from("vehicle-photos").createSignedUrls(photoPaths, 60 * 60)
+      : { data: [] as { path: string | null; signedUrl: string }[] };
+  const photoUrlByPath = new Map(
+    (signedPhotoUrls ?? [])
+      .filter((s) => s.path && s.signedUrl)
+      .map((s) => [s.path as string, s.signedUrl]),
+  );
 
   return (
     <AppShell
@@ -87,6 +102,9 @@ export default async function FleetPage() {
                           vehicle={{
                             id: v.id,
                             plate: v.plate,
+                            name: v.name,
+                            color: v.color,
+                            photoUrl: v.photo_storage_path ? (photoUrlByPath.get(v.photo_storage_path) ?? null) : null,
                             category_id: v.category_id,
                             energy_type: v.energy_type,
                             odometer_km: v.odometer_km,

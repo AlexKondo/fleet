@@ -29,9 +29,19 @@ export function VehicleRow({
 
   return (
     <li className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4">
+      {vehicle.photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={vehicle.photoUrl}
+          alt={`Foto de ${vehicle.name ?? vehicle.plate}`}
+          className="h-32 w-full rounded-sm border border-line-800 object-cover"
+        />
+      ) : null}
+
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-mono text-lg text-paper-50">{vehicle.plate}</p>
+          <p className="text-lg text-paper-50">{vehicle.name ?? vehicle.plate}</p>
+          <p className="font-mono text-sm text-fog-400">{vehicle.plate}</p>
           <p className="text-xs text-fog-400">{categoryName}</p>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1.5">
@@ -51,6 +61,12 @@ export function VehicleRow({
           <p className="uppercase tracking-widest text-fog-600">Localização</p>
           <p className="mt-1 text-fog-400">{locationName}</p>
         </div>
+        {vehicle.color ? (
+          <div>
+            <p className="uppercase tracking-widest text-fog-600">Cor</p>
+            <p className="mt-1 text-fog-400">{vehicle.color}</p>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-3 border-t border-line-800 pt-3">

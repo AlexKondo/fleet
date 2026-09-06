@@ -2,10 +2,44 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { TypedSupabaseClient } from "@fleet/supabase-client";
 
 export interface FleetActionState {
   status: "idle" | "success" | "error";
   error?: string;
+}
+
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Uploads the vehicle's own reference photo to the same private `vehicle-photos` bucket
+ * the pickup/return checklists use (0002_operational_cycle.sql) — its RLS policy only
+ * checks that the first path segment equals the uploader's organization_id, so a
+ * `<org_id>/vehicles/<vehicle_id>.<ext>` path needs no new bucket or policy. `upsert:
+ * true` lets re-uploading replace the previous photo at the same path.
+ */
+async function uploadVehiclePhoto(
+  supabase: TypedSupabaseClient,
+  organizationId: string,
+  vehicleId: string,
+  file: File,
+): Promise<{ path: string } | { error: string }> {
+  if (!file.type.startsWith("image/")) {
+    return { error: "A foto deve ser uma imagem." };
+  }
+  if (file.size > MAX_PHOTO_BYTES) {
+    return { error: "A foto deve ter no máximo 10MB." };
+  }
+  const extensionMatch = /\.([a-zA-Z0-9]+)$/.exec(file.name);
+  const extension = extensionMatch ? extensionMatch[1] : "jpg";
+  const storagePath = `${organizationId}/vehicles/${vehicleId}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from("vehicle-photos")
+    .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
+  if (error) return { error: "Não foi possível enviar a foto agora." };
+
+  return { path: storagePath };
 }
 
 async function requireFleetManager() {
@@ -202,6 +236,9 @@ export async function createVehicle(
   const locationId = String(formData.get("locationId") ?? "");
   const fuelLevelRaw = formData.get("fuelLevelPercent");
   const batteryLevelRaw = formData.get("batteryLevelPercent");
+  const name = String(formData.get("name") ?? "").trim() || null;
+  const color = String(formData.get("color") ?? "").trim() || null;
+  const photo = formData.get("photo");
 
   if (!plate || !categoryId || !locationId) {
     return { status: "error", error: "Preencha placa, categoria e localização." };
@@ -247,25 +284,41 @@ export async function createVehicle(
     return { status: "error", error: "Categoria ou localização inválida." };
   }
 
-  const { error } = await supabase.from("vehicles").insert({
-    organization_id: organizationId,
-    plate,
-    category_id: categoryId,
-    energy_type: energyType as "ICE" | "PHEV" | "BEV",
-    status: "available",
-    odometer_km: odometerKm,
-    next_service_odometer_km: nextServiceOdometerKm,
-    estimated_range_km: estimatedRangeKm,
-    fuel_level_percent: fuelLevelPercent,
-    battery_level_percent: batteryLevelPercent,
-    home_location_id: locationId,
-    current_location_id: locationId,
-  });
-  if (error) {
-    const friendlyError = error.message.includes("duplicate") || error.message.includes("unique")
+  const { data: inserted, error } = await supabase
+    .from("vehicles")
+    .insert({
+      organization_id: organizationId,
+      plate,
+      category_id: categoryId,
+      energy_type: energyType as "ICE" | "PHEV" | "BEV",
+      status: "available",
+      odometer_km: odometerKm,
+      next_service_odometer_km: nextServiceOdometerKm,
+      estimated_range_km: estimatedRangeKm,
+      fuel_level_percent: fuelLevelPercent,
+      battery_level_percent: batteryLevelPercent,
+      home_location_id: locationId,
+      current_location_id: locationId,
+      name,
+      color,
+    })
+    .select("id")
+    .single();
+  if (error || !inserted) {
+    const friendlyError = error?.message.includes("duplicate") || error?.message.includes("unique")
       ? "Já existe um veículo com essa placa nesta organização."
-      : error.message;
+      : (error?.message ?? "Não foi possível criar o veículo.");
     return { status: "error", error: friendlyError };
+  }
+
+  // The photo path is keyed by vehicle id, so it can only be uploaded after the insert
+  // returns one — a failure here shouldn't undo an otherwise-successful vehicle creation,
+  // it just leaves the photo unset (the fleet manager can add it via Editar).
+  if (photo instanceof File && photo.size > 0) {
+    const uploadResult = await uploadVehiclePhoto(supabase, organizationId, inserted.id, photo);
+    if ("path" in uploadResult) {
+      await supabase.from("vehicles").update({ photo_storage_path: uploadResult.path }).eq("id", inserted.id);
+    }
   }
 
   revalidatePath("/fleet");
@@ -305,6 +358,9 @@ export async function updateVehicle(
   const homeLocationId = String(formData.get("locationId") ?? "");
   const fuelLevelRaw = formData.get("fuelLevelPercent");
   const batteryLevelRaw = formData.get("batteryLevelPercent");
+  const name = String(formData.get("name") ?? "").trim() || null;
+  const color = String(formData.get("color") ?? "").trim() || null;
+  const photo = formData.get("photo");
 
   if (!plate || !categoryId || !homeLocationId) {
     return { status: "error", error: "Preencha placa, categoria e localização." };
@@ -342,6 +398,15 @@ export async function updateVehicle(
     return { status: "error", error: "Categoria ou localização inválida." };
   }
 
+  // Uploaded before the row update so a failed upload can report an error without
+  // silently discarding the rest of the (already-validated) form on write.
+  let photoStoragePath: string | undefined;
+  if (photo instanceof File && photo.size > 0) {
+    const uploadResult = await uploadVehiclePhoto(supabase, organizationId, id, photo);
+    if ("error" in uploadResult) return { status: "error", error: uploadResult.error };
+    photoStoragePath = uploadResult.path;
+  }
+
   const { error } = await supabase
     .from("vehicles")
     .update({
@@ -354,6 +419,9 @@ export async function updateVehicle(
       fuel_level_percent: fuelLevelPercent,
       battery_level_percent: batteryLevelPercent,
       home_location_id: homeLocationId,
+      name,
+      color,
+      ...(photoStoragePath ? { photo_storage_path: photoStoragePath } : {}),
     })
     .eq("id", id)
     .eq("organization_id", organizationId);

@@ -8,6 +8,9 @@ const initialState: FleetActionState = { status: "idle" };
 export interface EditableVehicle {
   id: string;
   plate: string;
+  name: string | null;
+  color: string | null;
+  photoUrl: string | null;
   category_id: string;
   energy_type: "ICE" | "PHEV" | "BEV";
   odometer_km: number;
@@ -56,6 +59,48 @@ export function EditVehicleForm({
             required
             defaultValue={vehicle.plate}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm uppercase text-paper-50 outline-none focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Nome</span>
+          <input
+            type="text"
+            name="name"
+            placeholder="Opcional, ex.: Haval H6 Prata"
+            defaultValue={vehicle.name ?? ""}
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Cor</span>
+          <input
+            type="text"
+            name="color"
+            placeholder="Opcional, ex.: Prata"
+            defaultValue={vehicle.color ?? ""}
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
+            {vehicle.photoUrl ? "Trocar foto" : "Foto"}
+          </span>
+          {vehicle.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={vehicle.photoUrl}
+              alt={`Foto de ${vehicle.plate}`}
+              className="h-16 w-24 rounded-sm border border-line-800 object-cover"
+            />
+          ) : null}
+          <input
+            type="file"
+            name="photo"
+            accept="image/*"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-xs text-fog-400 outline-none file:mr-2 file:rounded-sm file:border-0 file:bg-line-800 file:px-2 file:py-1 file:text-xs file:text-paper-50 focus-visible:border-signal-amber"
           />
         </label>
 

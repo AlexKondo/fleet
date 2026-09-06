@@ -707,9 +707,12 @@ export type Database = {
           is_clean_exterior: boolean
           is_clean_interior: boolean
           missing_safety_equipment: string[]
+          name: string | null
           next_service_odometer_km: number | null
           odometer_km: number
           organization_id: string
+          photo_storage_path: string | null
+          color: string | null
           plate: string
           status: Database["public"]["Enums"]["vehicle_status"]
           updated_at: string
@@ -729,9 +732,12 @@ export type Database = {
           is_clean_exterior?: boolean
           is_clean_interior?: boolean
           missing_safety_equipment?: string[]
+          name?: string | null
           next_service_odometer_km?: number | null
           odometer_km?: number
           organization_id: string
+          photo_storage_path?: string | null
+          color?: string | null
           plate: string
           status?: Database["public"]["Enums"]["vehicle_status"]
           updated_at?: string
@@ -751,9 +757,12 @@ export type Database = {
           is_clean_exterior?: boolean
           is_clean_interior?: boolean
           missing_safety_equipment?: string[]
+          name?: string | null
           next_service_odometer_km?: number | null
           odometer_km?: number
           organization_id?: string
+          photo_storage_path?: string | null
+          color?: string | null
           plate?: string
           status?: Database["public"]["Enums"]["vehicle_status"]
           updated_at?: string

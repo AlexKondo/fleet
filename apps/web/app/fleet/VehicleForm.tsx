@@ -54,6 +54,36 @@ export function VehicleForm({
         </label>
 
         <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Nome</span>
+          <input
+            type="text"
+            name="name"
+            placeholder="Opcional, ex.: Haval H6 Prata"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Cor</span>
+          <input
+            type="text"
+            name="color"
+            placeholder="Opcional, ex.: Prata"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Foto</span>
+          <input
+            type="file"
+            name="photo"
+            accept="image/*"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-xs text-fog-400 outline-none file:mr-2 file:rounded-sm file:border-0 file:bg-line-800 file:px-2 file:py-1 file:text-xs file:text-paper-50 focus-visible:border-signal-amber"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
             Categoria
           </span>
