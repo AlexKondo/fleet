@@ -42,20 +42,24 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, organization_id, organization:organizations(name)")
-    .eq("id", user.id)
-    .single();
-
-  const { data: vehicleRows, error: vehiclesError } = await supabase
-    .from("vehicles")
-    .select(
-      `*,
-       category:vehicle_categories(name, passenger_capacity, supports_cargo),
-       current_location:vehicle_locations!vehicles_current_location_id_fkey(name)`,
-    )
-    .order("plate");
+  // profile and vehicles don't depend on each other — fetching them sequentially was
+  // paying for two full network round-trips back-to-back on every dashboard load for no
+  // reason (this page routinely made 6 sequential Supabase calls in total).
+  const [{ data: profile }, { data: vehicleRows, error: vehiclesError }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role, organization_id, organization:organizations(name)")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("vehicles")
+      .select(
+        `*,
+         category:vehicle_categories(name, passenger_capacity, supports_cargo),
+         current_location:vehicle_locations!vehicles_current_location_id_fkey(name)`,
+      )
+      .order("plate"),
+  ]);
 
   const vehicles = vehicleRows ?? [];
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
@@ -67,51 +71,63 @@ export default async function DashboardPage({
     attention: assessVehicleReadiness(toDomainVehicle(row)),
   }));
 
-  const attentionCounts = vehiclesWithAttention.reduce<Record<string, number>>((acc, { attention }) => {
-    for (const reason of attention) {
-      acc[reason] = (acc[reason] ?? 0) + 1;
-    }
-    return acc;
-  }, {});
+  // Grouped by reason -> which specific vehicles, not just a bare count — a fleet manager
+  // seeing "1 Energia baixa" still had to scan every card below to find which one; each
+  // plate here links straight to its card instead.
+  const vehiclesByAttentionReason = vehiclesWithAttention.reduce<Record<string, { id: string; plate: string }[]>>(
+    (acc, { row, attention }) => {
+      for (const reason of attention) {
+        (acc[reason] ??= []).push({ id: row.id, plate: row.plate });
+      }
+      return acc;
+    },
+    {},
+  );
 
-  const { data: pendingReservations } = isFleetManager
-    ? await supabase
-        .from("reservations")
-        .select(
-          `id, start_at, end_at,
-           trip_request:trip_requests(origin, destination, passenger_count, requester:profiles(full_name)),
-           vehicle:vehicles(plate, status)`,
-        )
-        .eq("status", "pending_approval")
-        .order("start_at")
-    : { data: [] };
-
-  const { data: openTasks } = canManageTasks
-    ? await supabase
-        .from("workflow_tasks")
-        .select("id, type, notes, created_at, vehicle:vehicles(plate)")
-        .eq("status", "open")
-        .order("created_at")
-    : { data: [] };
-
-  // Backing data for the swap-vehicle / transfer-reservation actions below (§5
-  // "Substituir veículos" / "Transferir reservas"): every reservation still active
-  // enough to be worth reassigning, plus the org's member list to transfer onto.
-  const { data: activeReservations } = isFleetManager
-    ? await supabase
-        .from("reservations")
-        .select(
-          `id, start_at, end_at, status, impacted_at,
-           vehicle:vehicles(id, plate),
-           trip_request:trip_requests(origin, destination, requester_id, requester:profiles(full_name))`,
-        )
-        .in("status", ["pending_approval", "confirmed"])
-        .order("start_at")
-    : { data: [] };
-
-  const { data: orgProfiles } = isFleetManager
-    ? await supabase.from("profiles").select("id, full_name").order("full_name")
-    : { data: [] };
+  // These four are independent of each other (and of the two queries above) — same
+  // parallelization reasoning.
+  const [
+    { data: pendingReservations },
+    { data: openTasks },
+    { data: activeReservations },
+    { data: orgProfiles },
+  ] = await Promise.all([
+    isFleetManager
+      ? supabase
+          .from("reservations")
+          .select(
+            `id, start_at, end_at,
+             trip_request:trip_requests(origin, destination, passenger_count, requester:profiles(full_name)),
+             vehicle:vehicles(plate, status)`,
+          )
+          .eq("status", "pending_approval")
+          .order("start_at")
+      : Promise.resolve({ data: [] as never[] }),
+    canManageTasks
+      ? supabase
+          .from("workflow_tasks")
+          .select("id, type, notes, created_at, vehicle:vehicles(plate)")
+          .eq("status", "open")
+          .order("created_at")
+      : Promise.resolve({ data: [] as never[] }),
+    // Backing data for the swap-vehicle / transfer-reservation actions below (§5
+    // "Substituir veículos" / "Transferir reservas"): every reservation still active
+    // enough to be worth reassigning, plus the org's member list to transfer onto.
+    isFleetManager
+      ? supabase
+          .from("reservations")
+          .select(
+            `id, start_at, end_at, status, impacted_at,
+             vehicle:vehicles(id, plate),
+             trip_request:trip_requests(origin, destination, requester_id, requester:profiles(full_name))`,
+          )
+          .in("status", ["pending_approval", "confirmed"])
+          .order("start_at")
+      : Promise.resolve({ data: [] as never[] }),
+    isFleetManager
+      ? supabase.from("profiles").select("id, full_name").order("full_name")
+      : Promise.resolve({ data: [] as never[] }),
+  ]);
 
   return (
     <AppShell
@@ -138,14 +154,22 @@ export default async function DashboardPage({
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
           Precisa de Atenção
         </h2>
-        {Object.keys(attentionCounts).length === 0 ? (
+        {Object.keys(vehiclesByAttentionReason).length === 0 ? (
           <p className="text-sm text-fog-400">Nenhuma pendência — frota operacionalmente pronta.</p>
         ) : (
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
-            {Object.entries(attentionCounts).map(([reason, count]) => (
-              <li key={reason} className="flex items-center gap-2 text-sm">
-                <span className="font-mono text-signal-amber">{count}</span>
-                <span className="text-fog-400">{ATTENTION_LABELS[reason] ?? reason}</span>
+          <ul className="flex flex-col gap-2">
+            {Object.entries(vehiclesByAttentionReason).map(([reason, vehiclesForReason]) => (
+              <li key={reason} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                <span className="font-mono text-signal-amber">{vehiclesForReason.length}</span>
+                <span className="text-fog-400">{ATTENTION_LABELS[reason] ?? reason}:</span>
+                {vehiclesForReason.map((v, i) => (
+                  <span key={v.id} className="font-mono text-xs text-fog-400">
+                    <a href={`#vehicle-${v.id}`} className="text-signal-amber underline-offset-2 hover:underline">
+                      {v.plate}
+                    </a>
+                    {i < vehiclesForReason.length - 1 ? "," : ""}
+                  </span>
+                ))}
               </li>
             ))}
           </ul>
@@ -439,7 +463,8 @@ export default async function DashboardPage({
               return (
                 <li
                   key={row.id}
-                  className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4"
+                  id={`vehicle-${row.id}`}
+                  className="flex scroll-mt-4 flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4 target:border-signal-amber"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
