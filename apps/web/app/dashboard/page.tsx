@@ -80,7 +80,7 @@ export default async function DashboardPage({
         .select(
           `id, start_at, end_at,
            trip_request:trip_requests(origin, destination, passenger_count, requester:profiles(full_name)),
-           vehicle:vehicles(plate)`,
+           vehicle:vehicles(plate, status)`,
         )
         .eq("status", "pending_approval")
         .order("start_at")
@@ -161,42 +161,67 @@ export default async function DashboardPage({
             <p className="text-sm text-fog-400">Nenhuma reserva pendente.</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {pendingReservations.map((r) => (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5"
-                >
-                  <div className="text-sm">
-                    <span className="font-mono text-paper-50">{r.vehicle?.plate}</span>
-                    <span className="text-fog-400">
-                      {" "}
-                      · {r.trip_request?.requester?.full_name} · {r.trip_request?.origin} →{" "}
-                      {r.trip_request?.destination} ·{" "}
-                      <span className="font-mono tabular-nums">
-                        {new Date(r.start_at).toLocaleString("pt-BR")}
+              {pendingReservations.map((r) => {
+                // approve_reservation (0015_audit_trail.sql) requires the vehicle's
+                // current status to be 'available' — it's a single shared field, not a
+                // per-time-slot calendar, so a vehicle already committed to another
+                // confirmed/in-progress trip can't be approved into a second one yet even
+                // though this reservation's own window doesn't actually overlap. Showing
+                // "Aprovar" as if it would work here just to have it fail with a generic
+                // error is worse than saying so up front.
+                const vehicleAvailable = r.vehicle?.status === "available";
+                return (
+                  <li
+                    key={r.id}
+                    className="flex items-center justify-between gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5"
+                  >
+                    <div className="text-sm">
+                      <span className="font-mono text-paper-50">{r.vehicle?.plate}</span>
+                      <span className="text-fog-400">
+                        {" "}
+                        · {r.trip_request?.requester?.full_name} · {r.trip_request?.origin} →{" "}
+                        {r.trip_request?.destination} ·{" "}
+                        <span className="font-mono tabular-nums">
+                          {new Date(r.start_at).toLocaleString("pt-BR")}
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <form action={approveReservation.bind(null, r.id)}>
-                      <button
-                        type="submit"
-                        className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
-                      >
-                        Aprovar
-                      </button>
-                    </form>
-                    <form action={cancelReservation.bind(null, r.id, "Rejeitada pelo gestor de frota")}>
-                      <button
-                        type="submit"
-                        className="rounded-sm border border-signal-red px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
-                      >
-                        Rejeitar
-                      </button>
-                    </form>
-                  </div>
-                </li>
-              ))}
+                      {!vehicleAvailable ? (
+                        <p className="mt-1 text-xs text-signal-yellow">
+                          Veículo ocupado em outra viagem — só pode ser aprovada quando ele
+                          voltar a ficar disponível (ou troque o veículo abaixo).
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {vehicleAvailable ? (
+                        <form action={approveReservation.bind(null, r.id)}>
+                          <button
+                            type="submit"
+                            className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                          >
+                            Aprovar
+                          </button>
+                        </form>
+                      ) : (
+                        <span
+                          title="Veículo ocupado em outra viagem"
+                          className="rounded-sm border border-line-700 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-600"
+                        >
+                          Aprovar
+                        </span>
+                      )}
+                      <form action={cancelReservation.bind(null, r.id, "Rejeitada pelo gestor de frota")}>
+                        <button
+                          type="submit"
+                          className="rounded-sm border border-signal-red px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
+                        >
+                          Rejeitar
+                        </button>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
