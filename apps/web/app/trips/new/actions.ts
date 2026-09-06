@@ -87,13 +87,6 @@ async function buildPlanInputs(input: TripFormInput) {
     .select("*, category:vehicle_categories(*)")
     .in("status", ["available", "charging", "cleaning"]);
 
-  const vehicleCandidates: CandidateVehicle[] = (vehicleRows ?? [])
-    .filter((row) => row.category)
-    .map((row) => ({
-      vehicle: toDomainVehicle(row),
-      category: toDomainCategory(row.category!),
-    }));
-
   const { data: activeReservations } = await supabase
     .from("reservations")
     .select(
@@ -103,6 +96,27 @@ async function buildPlanInputs(input: TripFormInput) {
     )
     .in("status", ["pending_approval", "confirmed"])
     .gt("end_at", now);
+
+  // A vehicle only gets vehicles.status = 'reserved' once its reservation is actually
+  // *approved* (approve_reservation, 0015_audit_trail.sql) — a merely pending_approval
+  // reservation leaves status untouched, so without this the candidate query above would
+  // still offer that same vehicle to a second, unrelated trip request. Both requests would
+  // then look fully booked-and-confirmed right up until a fleet manager tries to approve
+  // the second one, only to find the vehicle already claimed. record_pickup/record_return
+  // (0004/0006_*.sql) only ever track one reservation "owning" a vehicle's status at a
+  // time, so — regardless of whether the two requested time windows actually overlap —
+  // a vehicle with any active reservation can't safely be hand out to another one until
+  // its current lifecycle (approve → pickup → return) finishes.
+  const vehicleIdsWithActiveReservation = new Set(
+    (activeReservations ?? []).map((r) => r.vehicle_id),
+  );
+
+  const vehicleCandidates: CandidateVehicle[] = (vehicleRows ?? [])
+    .filter((row) => row.category && !vehicleIdsWithActiveReservation.has(row.id))
+    .map((row) => ({
+      vehicle: toDomainVehicle(row),
+      category: toDomainCategory(row.category!),
+    }));
 
   const tripRequestIds = (activeReservations ?? [])
     .map((r) => r.trip_request?.id)
