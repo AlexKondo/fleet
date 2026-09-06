@@ -27,7 +27,10 @@ async function loadAvailableVehicleCandidates(
 
   return (vehicleRows ?? [])
     .filter((row) => row.category)
-    .map((row) => ({ vehicle: toDomainVehicle(row), category: toDomainCategory(row.category!) }));
+    .map((row) => ({
+      vehicle: toDomainVehicle(row, row.category!.energy_type),
+      category: toDomainCategory(row.category!),
+    }));
 }
 
 /**

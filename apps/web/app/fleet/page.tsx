@@ -40,15 +40,23 @@ export default async function FleetPage() {
     { data: vehicles, error: vehiclesError },
   ] = await Promise.all([
     supabase.from("vehicle_locations").select("id, name").order("name"),
-    supabase.from("vehicle_categories").select("id, name, passenger_capacity, supports_cargo").order("name"),
+    supabase.from("vehicle_categories").select("id, name, passenger_capacity, supports_cargo, energy_type").order("name"),
     supabase
       .from("vehicles")
       .select(
-        "id, plate, name, color, photo_storage_path, category_id, energy_type, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
+        "id, plate, name, color, photo_storage_path, category_id, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
       )
       .order("plate"),
   ]);
   const loadError = locationsError || categoriesError || vehiclesError;
+
+  // VehicleForm/EditVehicleForm read `energyType` (camelCase) to decide which fuel/
+  // battery field to show for the currently-selected category.
+  const categoriesForVehicleForms = (categories ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    energyType: c.energy_type,
+  }));
 
   // vehicle-photos is a private bucket (0002_operational_cycle.sql) — cards need a
   // short-lived signed URL per photo rather than a public one.
@@ -106,7 +114,6 @@ export default async function FleetPage() {
                             color: v.color,
                             photoUrl: v.photo_storage_path ? (photoUrlByPath.get(v.photo_storage_path) ?? null) : null,
                             category_id: v.category_id,
-                            energy_type: v.energy_type,
                             odometer_km: v.odometer_km,
                             next_service_odometer_km: v.next_service_odometer_km,
                             estimated_range_km: v.estimated_range_km,
@@ -117,7 +124,7 @@ export default async function FleetPage() {
                           status={v.status}
                           categoryName={v.category?.name ?? "—"}
                           locationName={v.current_location?.name ?? "—"}
-                          categories={categories ?? []}
+                          categories={categoriesForVehicleForms}
                           locations={locations ?? []}
                         />
                       ))}
@@ -128,7 +135,7 @@ export default async function FleetPage() {
                       que o primeiro veículo for adicionado abaixo.
                     </p>
                   )}
-                  <AddVehicleSection categories={categories ?? []} locations={locations ?? []} />
+                  <AddVehicleSection categories={categoriesForVehicleForms} locations={locations ?? []} />
                 </div>
               ),
             },

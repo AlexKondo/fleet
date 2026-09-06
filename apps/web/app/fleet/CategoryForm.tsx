@@ -47,6 +47,20 @@ export function CategoryForm({ onSaved }: { onSaved?: () => void }) {
         <input type="checkbox" name="supportsCargo" className="h-4 w-4" />
         Transporta carga
       </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Energia</span>
+        <select
+          name="energyType"
+          required
+          defaultValue="ICE"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+        >
+          <option value="ICE">Combustão (ICE)</option>
+          <option value="HEV">Híbrido (HEV)</option>
+          <option value="PHEV">Híbrido plug-in (PHEV)</option>
+          <option value="BEV">Elétrico (BEV)</option>
+        </select>
+      </label>
       <button
         type="submit"
         disabled={pending}

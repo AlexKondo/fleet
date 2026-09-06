@@ -635,6 +635,7 @@ export type Database = {
       }
       vehicle_categories: {
         Row: {
+          energy_type: Database["public"]["Enums"]["energy_type"]
           id: string
           name: string
           organization_id: string
@@ -642,6 +643,7 @@ export type Database = {
           supports_cargo: boolean
         }
         Insert: {
+          energy_type: Database["public"]["Enums"]["energy_type"]
           id?: string
           name: string
           organization_id: string
@@ -649,6 +651,7 @@ export type Database = {
           supports_cargo?: boolean
         }
         Update: {
+          energy_type?: Database["public"]["Enums"]["energy_type"]
           id?: string
           name?: string
           organization_id?: string
@@ -698,7 +701,6 @@ export type Database = {
           created_at: string
           current_location_id: string | null
           documentation_valid: boolean
-          energy_type: Database["public"]["Enums"]["energy_type"]
           estimated_range_km: number
           fuel_level_percent: number | null
           has_blocking_damage: boolean
@@ -723,7 +725,6 @@ export type Database = {
           created_at?: string
           current_location_id?: string | null
           documentation_valid?: boolean
-          energy_type: Database["public"]["Enums"]["energy_type"]
           estimated_range_km?: number
           fuel_level_percent?: number | null
           has_blocking_damage?: boolean
@@ -748,7 +749,6 @@ export type Database = {
           created_at?: string
           current_location_id?: string | null
           documentation_valid?: boolean
-          energy_type?: Database["public"]["Enums"]["energy_type"]
           estimated_range_km?: number
           fuel_level_percent?: number | null
           has_blocking_damage?: boolean
@@ -997,7 +997,7 @@ export type Database = {
     }
     Enums: {
       booking_mode: "ai_recommended" | "user_choice" | "hybrid"
-      energy_type: "ICE" | "PHEV" | "BEV"
+      energy_type: "ICE" | "PHEV" | "BEV" | "HEV"
       inspection_role: "traveler" | "security"
       inspection_type: "pickup" | "return"
       message_type:
@@ -1176,7 +1176,7 @@ export const Constants = {
   public: {
     Enums: {
       booking_mode: ["ai_recommended", "user_choice", "hybrid"],
-      energy_type: ["ICE", "PHEV", "BEV"],
+      energy_type: ["ICE", "PHEV", "BEV", "HEV"],
       inspection_role: ["traveler", "security"],
       inspection_type: ["pickup", "return"],
       message_type: [

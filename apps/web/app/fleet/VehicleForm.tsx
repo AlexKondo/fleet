@@ -10,24 +10,28 @@ export function VehicleForm({
   locations,
   onSaved,
 }: {
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
   onSaved?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(createVehicle, initialState);
   const formRef = useRef<HTMLFormElement>(null);
-  const [energyType, setEnergyType] = useState<"ICE" | "PHEV" | "BEV">("ICE");
+  const [categoryId, setCategoryId] = useState("");
 
   useEffect(() => {
     if (state.status === "success") {
       formRef.current?.reset();
-      setEnergyType("ICE");
+      setCategoryId("");
       onSaved?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  const showFuel = energyType === "ICE" || energyType === "PHEV";
+  // Energy type is a property of the category (0026_move_energy_type_to_category.sql),
+  // not something chosen per vehicle — which fuel/battery field to show follows whichever
+  // category is currently selected.
+  const energyType = categories.find((c) => c.id === categoryId)?.energyType;
+  const showFuel = energyType === "ICE" || energyType === "HEV" || energyType === "PHEV";
   const showBattery = energyType === "BEV" || energyType === "PHEV";
 
   if (categories.length === 0 || locations.length === 0) {
@@ -90,6 +94,8 @@ export function VehicleForm({
           <select
             name="categoryId"
             required
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
           >
             <option value="">Selecionar…</option>
@@ -98,23 +104,6 @@ export function VehicleForm({
                 {c.name}
               </option>
             ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Energia
-          </span>
-          <select
-            name="energyType"
-            required
-            value={energyType}
-            onChange={(e) => setEnergyType(e.target.value as "ICE" | "PHEV" | "BEV")}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
-          >
-            <option value="ICE">Combustão (ICE)</option>
-            <option value="PHEV">Híbrido plug-in (PHEV)</option>
-            <option value="BEV">Elétrico (BEV)</option>
           </select>
         </label>
 

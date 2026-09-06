@@ -29,6 +29,7 @@ const sedanCategory: VehicleCategory = {
   name: "Sedan",
   passengerCapacity: 5,
   supportsCargo: false,
+  energyType: "ICE",
 };
 
 function vehicle(overrides: Partial<Vehicle> = {}): Vehicle {

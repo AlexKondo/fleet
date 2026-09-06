@@ -125,13 +125,13 @@ insert into profiles (id, organization_id, full_name, role) values
 insert into vehicle_locations (id, organization_id, name) values
   ('${LOCATION_B}', '${ORG_B}', 'Tenant B HQ');
 
-insert into vehicle_categories (id, organization_id, name, passenger_capacity, supports_cargo) values
-  ('${CATEGORY_B}', '${ORG_B}', 'Tenant B Sedan', 5, false);
+insert into vehicle_categories (id, organization_id, name, passenger_capacity, supports_cargo, energy_type) values
+  ('${CATEGORY_B}', '${ORG_B}', 'Tenant B Sedan', 5, false, 'ICE');
 
 insert into vehicles (
-  id, organization_id, plate, category_id, energy_type, status, home_location_id, current_location_id
+  id, organization_id, plate, category_id, status, home_location_id, current_location_id
 ) values (
-  '${VEHICLE_B}', '${ORG_B}', 'TSTB01', '${CATEGORY_B}', 'ICE', 'available', '${LOCATION_B}', '${LOCATION_B}'
+  '${VEHICLE_B}', '${ORG_B}', 'TSTB01', '${CATEGORY_B}', 'available', '${LOCATION_B}', '${LOCATION_B}'
 );
 `;
 

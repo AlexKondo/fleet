@@ -46,14 +46,14 @@ export async function submitReturn(
     supabase.from("profiles").select("role, organization_id").eq("id", user.id).single(),
     supabase
       .from("reservations")
-      .select("vehicle:vehicles(energy_type, next_service_odometer_km)")
+      .select("vehicle:vehicles(next_service_odometer_km, category:vehicle_categories(energy_type))")
       .eq("id", input.reservationId)
       .single(),
   ]);
 
   if (!reservation?.vehicle) return { success: false, error: "reservation_not_found" };
 
-  const energyType = reservation.vehicle.energy_type as EnergyType;
+  const energyType = (reservation.vehicle.category?.energy_type ?? "ICE") as EnergyType;
   const nextService = reservation.vehicle.next_service_odometer_km;
   const maintenanceDueSoon =
     nextService !== null && nextService - input.odometerKm <= MAINTENANCE_DUE_SOON_KM;

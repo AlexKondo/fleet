@@ -114,7 +114,7 @@ async function buildPlanInputs(input: TripFormInput) {
   const vehicleCandidates: CandidateVehicle[] = (vehicleRows ?? [])
     .filter((row) => row.category && !vehicleIdsWithActiveReservation.has(row.id))
     .map((row) => ({
-      vehicle: toDomainVehicle(row),
+      vehicle: toDomainVehicle(row, row.category!.energy_type),
       category: toDomainCategory(row.category!),
     }));
 

@@ -15,7 +15,7 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
     .select(
       `id, status,
        trip_request:trip_requests(origin, destination),
-       vehicle:vehicles(id, plate, energy_type, status, odometer_km)`,
+       vehicle:vehicles(id, plate, status, odometer_km, category:vehicle_categories(energy_type))`,
     )
     .eq("id", id)
     .single();
@@ -35,7 +35,7 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
         <div className="mt-6 rounded-md border border-line-800 bg-panel-900/60 p-6">
           <PickupForm
             reservationId={reservation.id}
-            energyType={reservation.vehicle.energy_type}
+            energyType={reservation.vehicle.category?.energy_type ?? "ICE"}
             currentOdometer={reservation.vehicle.odometer_km}
           />
         </div>

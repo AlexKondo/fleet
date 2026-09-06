@@ -1,4 +1,4 @@
-export type EnergyType = "ICE" | "PHEV" | "BEV";
+export type EnergyType = "ICE" | "PHEV" | "BEV" | "HEV";
 
 /**
  * "Available" na frota física não implica "Ready for Trip" (fleet-car-saas.txt §6).
@@ -22,6 +22,10 @@ export interface VehicleCategory {
   name: string;
   passengerCapacity: number;
   supportsCargo: boolean;
+  /** Every vehicle added to this category shares this energy type — set once per
+   * category rather than per vehicle, since a category groups vehicles that are
+   * operationally interchangeable, including how they're refueled/recharged. */
+  energyType: EnergyType;
 }
 
 export interface VehicleLocation {
@@ -34,6 +38,10 @@ export interface Vehicle {
   organizationId: string;
   plate: string;
   categoryId: string;
+  /** Denormalized from the vehicle's own category (`VehicleCategory.energyType`) at
+   * mapping time — not a column on the vehicles table itself. Kept here so every
+   * existing domain function that reasons about a single Vehicle (readiness, ranking,
+   * traffic restrictions) doesn't need a second category lookup. */
   energyType: EnergyType;
   status: VehicleStatus;
   odometerKm: number;

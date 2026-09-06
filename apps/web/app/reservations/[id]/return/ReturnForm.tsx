@@ -29,7 +29,7 @@ export function ReturnForm({
   const [damageEvidenceMissing, setDamageEvidenceMissing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const showFuel = energyType === "ICE" || energyType === "PHEV";
+  const showFuel = energyType === "ICE" || energyType === "HEV" || energyType === "PHEV";
   const showBattery = energyType === "BEV" || energyType === "PHEV";
 
   function handleSubmit(formData: FormData) {

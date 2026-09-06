@@ -11,6 +11,7 @@ const sedanCategory: VehicleCategory = {
   name: "Sedan",
   passengerCapacity: 5,
   supportsCargo: false,
+  energyType: "ICE",
 };
 
 const cargoCategory: VehicleCategory = {
@@ -18,6 +19,7 @@ const cargoCategory: VehicleCategory = {
   name: "Pickup (Poer P30)",
   passengerCapacity: 3,
   supportsCargo: true,
+  energyType: "ICE",
 };
 
 const compactEvCategory: VehicleCategory = {
@@ -25,6 +27,7 @@ const compactEvCategory: VehicleCategory = {
   name: "Compact EV (ORA 03)",
   passengerCapacity: 4,
   supportsCargo: false,
+  energyType: "BEV",
 };
 
 function vehicle(overrides: Partial<Vehicle>): Vehicle {

@@ -51,7 +51,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
   const { data: vehicle } = await supabase
     .from("vehicles")
     .select(
-      "id, plate, name, color, status, energy_type, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
+      "id, plate, name, color, status, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
     )
     .eq("id", id)
     .single();

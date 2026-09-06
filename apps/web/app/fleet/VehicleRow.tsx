@@ -21,7 +21,7 @@ export function VehicleRow({
   status: keyof typeof STATUS_META;
   categoryName: string;
   locationName: string;
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
 }) {
   const [editing, setEditing] = useState(false);

@@ -1,0 +1,11 @@
+-- Fuel/battery gauges at pickup/return already showed the right fields per vehicle
+-- (ICE -> fuel only, BEV -> battery only, PHEV -> both), but the energy type itself was
+-- chosen per VEHICLE, so adding a car meant re-picking something that's really a property
+-- of the model/category it belongs to, not of that one specific unit. Moves it to
+-- vehicle_categories instead: every vehicle in a category now shares its energy type.
+--
+-- Also adds HEV (self-charging hybrid, no plug -- e.g. Corolla Hybrid): behaves exactly
+-- like ICE in the pickup/return checklist (fuel only, no user-manageable battery), but is
+-- worth its own value for fleet reporting/identification rather than being silently
+-- folded into ICE.
+alter type energy_type add value if not exists 'HEV';

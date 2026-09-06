@@ -143,9 +143,13 @@ export async function createCategory(
   const name = String(formData.get("name") ?? "").trim();
   const passengerCapacity = Number(formData.get("passengerCapacity"));
   const supportsCargo = formData.get("supportsCargo") === "on";
+  const energyType = String(formData.get("energyType") ?? "");
 
   if (!name || !Number.isFinite(passengerCapacity) || passengerCapacity < 0 || passengerCapacity > 60) {
     return { status: "error", error: "Preencha o nome e uma capacidade de passageiros válida (0-60)." };
+  }
+  if (!["ICE", "HEV", "PHEV", "BEV"].includes(energyType)) {
+    return { status: "error", error: "Selecione o tipo de energia da categoria." };
   }
 
   const { error } = await supabase.from("vehicle_categories").insert({
@@ -153,6 +157,7 @@ export async function createCategory(
     name,
     passenger_capacity: passengerCapacity,
     supports_cargo: supportsCargo,
+    energy_type: energyType as "ICE" | "HEV" | "PHEV" | "BEV",
   });
   if (error) return { status: "error", error: error.message };
 
@@ -171,14 +176,23 @@ export async function updateCategory(
   const name = String(formData.get("name") ?? "").trim();
   const passengerCapacity = Number(formData.get("passengerCapacity"));
   const supportsCargo = formData.get("supportsCargo") === "on";
+  const energyType = String(formData.get("energyType") ?? "");
 
   if (!id || !name || !Number.isFinite(passengerCapacity) || passengerCapacity < 0 || passengerCapacity > 60) {
     return { status: "error", error: "Preencha o nome e uma capacidade de passageiros válida (0-60)." };
   }
+  if (!["ICE", "HEV", "PHEV", "BEV"].includes(energyType)) {
+    return { status: "error", error: "Selecione o tipo de energia da categoria." };
+  }
 
   const { error } = await supabase
     .from("vehicle_categories")
-    .update({ name, passenger_capacity: passengerCapacity, supports_cargo: supportsCargo })
+    .update({
+      name,
+      passenger_capacity: passengerCapacity,
+      supports_cargo: supportsCargo,
+      energy_type: energyType as "ICE" | "HEV" | "PHEV" | "BEV",
+    })
     .eq("id", id)
     .eq("organization_id", organizationId);
   if (error) return { status: "error", error: error.message };
@@ -225,7 +239,6 @@ export async function createVehicle(
 
   const plate = String(formData.get("plate") ?? "").trim().toUpperCase();
   const categoryId = String(formData.get("categoryId") ?? "");
-  const energyType = String(formData.get("energyType") ?? "");
   const odometerKm = Number(formData.get("odometerKm"));
   const nextServiceOdometerKmRaw = formData.get("nextServiceOdometerKm");
   const nextServiceOdometerKm =
@@ -243,9 +256,6 @@ export async function createVehicle(
   if (!plate || !categoryId || !locationId) {
     return { status: "error", error: "Preencha placa, categoria e localização." };
   }
-  if (!["ICE", "PHEV", "BEV"].includes(energyType)) {
-    return { status: "error", error: "Selecione o tipo de energia do veículo." };
-  }
   if (!Number.isFinite(odometerKm) || odometerKm < 0) {
     return { status: "error", error: "Quilometragem inválida." };
   }
@@ -256,10 +266,11 @@ export async function createVehicle(
     return { status: "error", error: "Autonomia estimada inválida." };
   }
 
-  const showFuel = energyType === "ICE" || energyType === "PHEV";
-  const showBattery = energyType === "BEV" || energyType === "PHEV";
-  const fuelLevelPercent = showFuel && fuelLevelRaw ? Number(fuelLevelRaw) : null;
-  const batteryLevelPercent = showBattery && batteryLevelRaw ? Number(batteryLevelRaw) : null;
+  // Which of these two the vehicle's category actually shows (VehicleForm.tsx) already
+  // gates which fields the form renders — energyType itself lives on the category, not
+  // here, so whichever field the client never submitted just comes back null.
+  const fuelLevelPercent = fuelLevelRaw ? Number(fuelLevelRaw) : null;
+  const batteryLevelPercent = batteryLevelRaw ? Number(batteryLevelRaw) : null;
 
   // Mirrors the DB's `check (... between 0 and 100)` constraint (0001_init_schema.sql)
   // so an out-of-range or non-numeric value gets a friendly message here instead of a
@@ -290,7 +301,6 @@ export async function createVehicle(
       organization_id: organizationId,
       plate,
       category_id: categoryId,
-      energy_type: energyType as "ICE" | "PHEV" | "BEV",
       status: "available",
       odometer_km: odometerKm,
       next_service_odometer_km: nextServiceOdometerKm,
@@ -347,7 +357,6 @@ export async function updateVehicle(
 
   const plate = String(formData.get("plate") ?? "").trim().toUpperCase();
   const categoryId = String(formData.get("categoryId") ?? "");
-  const energyType = String(formData.get("energyType") ?? "");
   const odometerKm = Number(formData.get("odometerKm"));
   const nextServiceOdometerKmRaw = formData.get("nextServiceOdometerKm");
   const nextServiceOdometerKm =
@@ -365,9 +374,6 @@ export async function updateVehicle(
   if (!plate || !categoryId || !homeLocationId) {
     return { status: "error", error: "Preencha placa, categoria e localização." };
   }
-  if (!["ICE", "PHEV", "BEV"].includes(energyType)) {
-    return { status: "error", error: "Selecione o tipo de energia do veículo." };
-  }
   if (!Number.isFinite(odometerKm) || odometerKm < 0) {
     return { status: "error", error: "Quilometragem inválida." };
   }
@@ -378,10 +384,8 @@ export async function updateVehicle(
     return { status: "error", error: "Autonomia estimada inválida." };
   }
 
-  const showFuel = energyType === "ICE" || energyType === "PHEV";
-  const showBattery = energyType === "BEV" || energyType === "PHEV";
-  const fuelLevelPercent = showFuel && fuelLevelRaw ? Number(fuelLevelRaw) : null;
-  const batteryLevelPercent = showBattery && batteryLevelRaw ? Number(batteryLevelRaw) : null;
+  const fuelLevelPercent = fuelLevelRaw ? Number(fuelLevelRaw) : null;
+  const batteryLevelPercent = batteryLevelRaw ? Number(batteryLevelRaw) : null;
 
   if (fuelLevelPercent !== null && (!Number.isFinite(fuelLevelPercent) || fuelLevelPercent < 0 || fuelLevelPercent > 100)) {
     return { status: "error", error: "O nível de combustível deve estar entre 0 e 100%." };
@@ -412,7 +416,6 @@ export async function updateVehicle(
     .update({
       plate,
       category_id: categoryId,
-      energy_type: energyType as "ICE" | "PHEV" | "BEV",
       odometer_km: odometerKm,
       next_service_odometer_km: nextServiceOdometerKm,
       estimated_range_km: estimatedRangeKm,

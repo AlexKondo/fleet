@@ -16,7 +16,7 @@ export function AddVehicleSection({
   categories,
   locations,
 }: {
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);

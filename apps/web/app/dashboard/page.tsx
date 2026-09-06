@@ -55,7 +55,7 @@ export default async function DashboardPage({
       .from("vehicles")
       .select(
         `*,
-         category:vehicle_categories(name, passenger_capacity, supports_cargo),
+         category:vehicle_categories(name, passenger_capacity, supports_cargo, energy_type),
          current_location:vehicle_locations!vehicles_current_location_id_fkey(name)`,
       )
       .order("plate"),
@@ -68,7 +68,7 @@ export default async function DashboardPage({
 
   const vehiclesWithAttention = vehicles.map((row) => ({
     row,
-    attention: assessVehicleReadiness(toDomainVehicle(row)),
+    attention: assessVehicleReadiness(toDomainVehicle(row, row.category?.energy_type ?? "ICE")),
   }));
 
   // Grouped by reason -> which specific vehicles, not just a bare count — a fleet manager
@@ -458,8 +458,8 @@ export default async function DashboardPage({
                     <div>
                       <p className="uppercase tracking-widest text-fog-600">Energia</p>
                       <EnergyGauge
-                        percent={row.energy_type === "BEV" ? row.battery_level_percent : row.fuel_level_percent}
-                        kind={row.energy_type === "BEV" ? "battery" : "fuel"}
+                        percent={row.category?.energy_type === "BEV" ? row.battery_level_percent : row.fuel_level_percent}
+                        kind={row.category?.energy_type === "BEV" ? "battery" : "fuel"}
                       />
                     </div>
                     <div>

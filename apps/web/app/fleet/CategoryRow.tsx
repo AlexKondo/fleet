@@ -6,10 +6,23 @@ import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 
 const initialState: FleetActionState = { status: "idle" };
 
+const ENERGY_TYPE_LABEL: Record<string, string> = {
+  ICE: "Combustão (ICE)",
+  HEV: "Híbrido (HEV)",
+  PHEV: "Híbrido plug-in (PHEV)",
+  BEV: "Elétrico (BEV)",
+};
+
 export function CategoryRow({
   category,
 }: {
-  category: { id: string; name: string; passenger_capacity: number; supports_cargo: boolean };
+  category: {
+    id: string;
+    name: string;
+    passenger_capacity: number;
+    supports_cargo: boolean;
+    energy_type: string;
+  };
 }) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateAction, updatePending] = useActionState(updateCategory, initialState);
@@ -56,6 +69,20 @@ export function CategoryRow({
             />
             Transporta carga
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Energia</span>
+            <select
+              name="energyType"
+              required
+              defaultValue={category.energy_type}
+              className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            >
+              <option value="ICE">Combustão (ICE)</option>
+              <option value="HEV">Híbrido (HEV)</option>
+              <option value="PHEV">Híbrido plug-in (PHEV)</option>
+              <option value="BEV">Elétrico (BEV)</option>
+            </select>
+          </label>
           <div className="flex items-center gap-3">
             <button
               type="submit"
@@ -88,6 +115,7 @@ export function CategoryRow({
       <p className="text-xs text-fog-600">
         {category.passenger_capacity} passageiros{category.supports_cargo ? " · transporta carga" : ""}
       </p>
+      <p className="text-xs text-fog-600">{ENERGY_TYPE_LABEL[category.energy_type] ?? category.energy_type}</p>
       <div className="flex items-center gap-3 border-t border-line-800 pt-3">
         <button
           type="button"
