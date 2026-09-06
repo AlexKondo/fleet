@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "./dashboard/actions";
 import { InactivityLogout } from "./InactivityLogout";
+import { MobileNav } from "./MobileNav";
 import { NotificationBell } from "./dashboard/NotificationBell";
 import { ROLE_LABELS } from "./settings/users/ROLE_LABELS";
 import {
@@ -56,71 +57,56 @@ export function AppShell({
     { key: "settings", href: "/settings", label: "Configurações", icon: SettingsIcon, visible: isFleetManager },
   ];
 
+  const visibleItems = items.filter((i) => i.visible);
+
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       <InactivityLogout />
-      <aside className="flex shrink-0 flex-col border-b border-line-800 bg-panel-900/40 px-4 py-4 md:w-60 md:border-b-0 md:border-r md:py-5">
-        <div className="flex items-center justify-between md:mb-6 md:block">
-          <div className="px-1">
-            <p className="font-display text-xl font-extrabold uppercase tracking-tight text-paper-50">
-              Fleet<span className="text-signal-amber">.</span>
-            </p>
-            <p className="mt-0.5 max-w-[10rem] truncate text-xs uppercase tracking-widest text-fog-600">
-              {orgName}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 md:hidden">
-            <NotificationBell align="right" />
-          </div>
+      <MobileNav
+        items={visibleItems.map(({ key, href, label }) => ({ key, href, label }))}
+        active={active}
+        orgName={orgName}
+        userName={userName}
+        role={role}
+      />
+      <aside className="hidden shrink-0 flex-col border-line-800 bg-panel-900/40 px-4 py-4 md:flex md:w-60 md:border-r md:py-5">
+        <div className="px-1 md:mb-6">
+          <p className="font-display text-xl font-extrabold uppercase tracking-tight text-paper-50">
+            Fleet<span className="text-signal-amber">.</span>
+          </p>
+          <p className="mt-0.5 max-w-[10rem] truncate text-xs uppercase tracking-widest text-fog-600">
+            {orgName}
+          </p>
         </div>
 
         <Link
           href="/trips/new"
-          className="mb-5 hidden items-center justify-center gap-2 rounded-sm bg-signal-amber px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90 md:flex"
+          className="mb-5 flex items-center justify-center gap-2 rounded-sm bg-signal-amber px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
         >
           + Solicitar Viagem
         </Link>
 
-        <nav className="-mx-1 flex gap-1 overflow-x-auto md:mx-0 md:flex-1 md:flex-col md:overflow-visible">
-          {items
-            .filter((i) => i.visible)
-            .map((item) => {
-              const isActive = item.key === active;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`flex shrink-0 items-center gap-3 rounded-sm px-3 py-2.5 text-xs uppercase tracking-widest transition-colors md:text-sm md:normal-case md:tracking-normal ${
-                    isActive
-                      ? "bg-signal-amber/10 text-signal-amber"
-                      : "text-fog-400 hover:bg-panel-800 hover:text-paper-50"
-                  }`}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  {item.label}
-                </Link>
-              );
-            })}
+        <nav className="flex flex-1 flex-col gap-1">
+          {visibleItems.map((item) => {
+            const isActive = item.key === active;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                className={`flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors ${
+                  isActive
+                    ? "bg-signal-amber/10 text-signal-amber"
+                    : "text-fog-400 hover:bg-panel-800 hover:text-paper-50"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
-
-        <div className="mt-3 flex items-center justify-between md:hidden">
-          <Link
-            href="/trips/new"
-            className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
-          >
-            + Solicitar Viagem
-          </Link>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="rounded-sm border border-line-800 px-3 py-1.5 text-xs uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
-            >
-              Sair
-            </button>
-          </form>
-        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
