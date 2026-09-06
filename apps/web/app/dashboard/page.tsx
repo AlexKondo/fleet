@@ -186,14 +186,6 @@ export default async function DashboardPage({
           ) : (
             <ul className="flex flex-col gap-2">
               {pendingReservations.map((r) => {
-                // approve_reservation (0015_audit_trail.sql) requires the vehicle's
-                // current status to be 'available' — it's a single shared field, not a
-                // per-time-slot calendar, so a vehicle already committed to another
-                // confirmed/in-progress trip can't be approved into a second one yet even
-                // though this reservation's own window doesn't actually overlap. Showing
-                // "Aprovar" as if it would work here just to have it fail with a generic
-                // error is worse than saying so up front.
-                const vehicleAvailable = r.vehicle?.status === "available";
                 return (
                   <li
                     key={r.id}
@@ -209,31 +201,16 @@ export default async function DashboardPage({
                           {new Date(r.start_at).toLocaleString("pt-BR")}
                         </span>
                       </span>
-                      {!vehicleAvailable ? (
-                        <p className="mt-1 text-xs text-signal-yellow">
-                          Veículo ocupado em outra viagem — só pode ser aprovada quando ele
-                          voltar a ficar disponível (ou troque o veículo abaixo).
-                        </p>
-                      ) : null}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      {vehicleAvailable ? (
-                        <form action={approveReservation.bind(null, r.id)}>
-                          <button
-                            type="submit"
-                            className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
-                          >
-                            Aprovar
-                          </button>
-                        </form>
-                      ) : (
-                        <span
-                          title="Veículo ocupado em outra viagem"
-                          className="rounded-sm border border-line-700 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-600"
+                      <form action={approveReservation.bind(null, r.id)}>
+                        <button
+                          type="submit"
+                          className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
                         >
                           Aprovar
-                        </span>
-                      )}
+                        </button>
+                      </form>
                       <form action={cancelReservation.bind(null, r.id, "Rejeitada pelo gestor de frota")}>
                         <button
                           type="submit"
