@@ -200,6 +200,21 @@ describe("recommendVehicle", () => {
     expect(result.rankedEligible).toEqual([]);
   });
 
+  it("breaks ties between equally-suitable vehicles by odometer (lower first), instead of always picking whichever came first from the database", () => {
+    const candidates = [
+      { vehicle: vehicle({ id: "veh-high-mileage", odometerKm: 20_000 }), category: sedanCategory },
+      { vehicle: vehicle({ id: "veh-low-mileage", odometerKm: 5_000 }), category: sedanCategory },
+    ];
+    const result = recommendVehicle({
+      tripRequest: trip({ passengerCount: 1 }),
+      candidateVehicles: candidates,
+      now,
+      config: defaultReadinessConfig,
+    });
+    expect(result.recommendedVehicleId).toBe("veh-low-mileage");
+    expect(result.rankedEligible.map((r) => r.vehicleId)).toEqual(["veh-low-mileage", "veh-high-mileage"]);
+  });
+
   it("returns null with an explanation when no candidates are eligible", () => {
     const result = recommendVehicle({
       tripRequest: trip(),

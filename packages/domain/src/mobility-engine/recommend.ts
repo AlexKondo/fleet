@@ -64,6 +64,7 @@ interface EligibleCandidate {
   tier: 0 | 1;
   reasons: string[];
   requiredPreparation?: PreparationAction[];
+  odometerKm: number;
 }
 
 /**
@@ -124,6 +125,7 @@ export function recommendVehicle(input: RecommendationInput): RecommendationResu
             ]
           : readiness.reasons,
       requiredPreparation: readiness.requiredPreparation,
+      odometerKm: vehicle.odometerKm,
     });
   }
 
@@ -146,7 +148,12 @@ export function recommendVehicle(input: RecommendationInput): RecommendationResu
     const notElectric = c.energyType !== "BEV" ? 1 : 0;
     return c.tier * 1000 + unnecessaryCargo * 100 + notElectric * 10 + c.category.passengerCapacity;
   };
-  eligible.sort((a, b) => rankScore(a) - rankScore(b));
+  // Two vehicles of the same category/energy/tier score identically, and a stable sort
+  // would then always keep whichever came first from the database — the same "favorite"
+  // vehicle every time regardless of how often it was just used, starving the rest of the
+  // fleet of demand. Break ties by odometer (lower first) so usage rotates across
+  // equally-suitable vehicles instead of concentrating on one.
+  eligible.sort((a, b) => rankScore(a) - rankScore(b) || a.odometerKm - b.odometerKm);
   const [winner, ...losers] = eligible as [EligibleCandidate, ...EligibleCandidate[]];
 
   for (const loser of losers) {
