@@ -11,12 +11,23 @@ const RESERVATION_STATUS_LABEL: Record<string, string> = {
   completed: "Concluída",
 };
 
+const STATUS_BAR_CLASS: Record<string, string> = {
+  confirmed: "bg-signal-teal/70 border-signal-teal",
+  pending_approval: "bg-signal-amber/70 border-signal-amber hazard-stripe",
+  completed: "bg-fog-600/50 border-fog-600",
+  cancelled: "bg-fog-800/40 border-fog-700",
+};
+
+const DAY_WIDTH_PX = 96;
+const ROW_HEIGHT_PX = 44;
+
 /**
  * Vehicle schedule — lets anyone checking whether a car is really free for a given date
  * see its actual calendar instead of trusting a single "Reservado"/"Disponível" badge,
  * which only ever reflects the vehicle's current-moment state, not future bookings (see
  * 0024_time_aware_approval_and_pickup.sql — a vehicle can be legitimately booked for next
- * week while showing "Disponível" today).
+ * week while showing "Disponível" today). Rendered as a Gantt-style timeline — a glance at
+ * bar positions reads faster than scanning a list of date/time strings row by row.
  */
 export default async function VehicleSchedulePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -47,17 +58,46 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
 
   if (!vehicle) redirect("/fleet");
 
-  const { data: reservations } = await supabase
+  const { data: reservationRows } = await supabase
     .from("reservations")
     .select(
       `id, status, start_at, end_at, impacted_at,
        trip_request:trip_requests(origin, destination, requester:profiles(full_name))`,
     )
     .eq("vehicle_id", id)
-    .order("start_at", { ascending: false });
+    .order("start_at", { ascending: true });
 
+  const reservations = reservationRows ?? [];
   const meta = STATUS_META[vehicle.status];
-  const now = Date.now();
+  const now = new Date();
+
+  // Timeline bounds: a few days of padding around today plus whatever the reservations
+  // actually span, so a vehicle with no bookings still shows a readable empty week instead
+  // of a zero-width chart.
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const endOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+
+  const allTimes = reservations.flatMap((r) => [new Date(r.start_at), new Date(r.end_at)]);
+  const rangeStart = startOfDay(
+    new Date(Math.min(startOfDay(now).getTime(), ...allTimes.map((d) => d.getTime()))),
+  );
+  const rangeEnd = endOfDay(
+    new Date(Math.max(endOfDay(new Date(now.getTime() + 3 * 86400000)).getTime(), ...allTimes.map((d) => d.getTime()))),
+  );
+
+  const totalMs = rangeEnd.getTime() - rangeStart.getTime();
+  const totalDays = Math.round(totalMs / 86400000);
+  const totalWidthPx = totalDays * DAY_WIDTH_PX;
+
+  const days: Date[] = [];
+  for (let d = new Date(rangeStart); d < rangeEnd; d = new Date(d.getTime() + 86400000)) {
+    days.push(d);
+  }
+
+  const pxFor = (isoDate: string) =>
+    ((new Date(isoDate).getTime() - rangeStart.getTime()) / totalMs) * totalWidthPx;
+
+  const todayPx = pxFor(now.toISOString());
 
   return (
     <AppShell
@@ -89,53 +129,111 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
           </span>
         </div>
 
-        <h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Reservas deste veículo
-        </h2>
+        <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
+            Agenda deste veículo
+          </h2>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-fog-400">
+            <li className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-[2px] border border-signal-teal bg-signal-teal/70" />
+              Aprovada
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-[2px] border border-signal-amber bg-signal-amber/70" />
+              Aguardando aprovação
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-[2px] border border-fog-600 bg-fog-600/50" />
+              Concluída
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-[2px] border border-fog-700 bg-fog-800/40" />
+              Cancelada
+            </li>
+          </ul>
+        </div>
 
-        {!reservations || reservations.length === 0 ? (
+        {reservations.length === 0 ? (
           <p className="text-sm text-fog-400">Este veículo ainda não teve nenhuma reserva.</p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {reservations.map((r) => {
-              const active = r.status === "pending_approval" || r.status === "confirmed";
-              const isPast = new Date(r.end_at).getTime() < now;
-              return (
-                <li
+          <div className="flex overflow-hidden rounded-md border border-line-800 bg-panel-900/60">
+            {/* Fixed label column — stays put while only the timeline scrolls horizontally. */}
+            <div className="w-56 shrink-0 border-r border-line-800 sm:w-72">
+              <div style={{ height: 32 }} className="border-b border-line-800" />
+              {reservations.map((r) => (
+                <div
                   key={r.id}
-                  className={`rounded-sm border px-4 py-2.5 text-sm ${
-                    active && !isPast
-                      ? "border-signal-blue/30 bg-signal-blue/5"
-                      : "border-line-800 bg-panel-900/60"
-                  }`}
+                  style={{ height: ROW_HEIGHT_PX }}
+                  className="flex flex-col justify-center border-b border-line-800 px-3 last:border-b-0"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-paper-50">
-                      {r.trip_request?.requester?.full_name ?? "—"} · {r.trip_request?.origin} →{" "}
-                      {r.trip_request?.destination}
-                    </span>
-                    <span
-                      className={`text-xs uppercase tracking-widest ${
-                        r.status === "confirmed"
-                          ? "text-signal-teal"
-                          : r.status === "pending_approval"
-                            ? "text-signal-amber"
-                            : "text-fog-600"
-                      }`}
-                    >
-                      {RESERVATION_STATUS_LABEL[r.status] ?? r.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
-                    {new Date(r.start_at).toLocaleString("pt-BR")} → {new Date(r.end_at).toLocaleString("pt-BR")}
+                  <p className="truncate text-xs text-paper-50">
+                    {r.trip_request?.requester?.full_name ?? "—"}
                   </p>
-                  {r.impacted_at ? (
-                    <p className="mt-1 text-xs text-signal-yellow">⚠ Impactada por atraso</p>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
+                  <p className="truncate text-[11px] text-fog-600">
+                    {r.trip_request?.origin} → {r.trip_request?.destination}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="overflow-x-auto">
+              <div style={{ width: totalWidthPx }} className="relative">
+                {/* Date header */}
+                <div style={{ height: 32 }} className="flex border-b border-line-800">
+                  {days.map((d, i) => (
+                    <div
+                      key={i}
+                      style={{ width: DAY_WIDTH_PX }}
+                      className="flex shrink-0 items-center justify-center border-r border-line-800/60 text-[11px] uppercase tracking-widest text-fog-600"
+                    >
+                      {d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Day gridlines + "today" marker, spanning the full body height */}
+                <div className="pointer-events-none absolute inset-x-0 top-8 bottom-0">
+                  {days.map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute top-0 bottom-0 border-r border-line-800/40"
+                      style={{ left: i * DAY_WIDTH_PX }}
+                    />
+                  ))}
+                  <div
+                    className="absolute top-0 bottom-0 w-px bg-signal-red/70"
+                    style={{ left: todayPx }}
+                    title="Agora"
+                  />
+                </div>
+
+                {reservations.map((r) => {
+                  const left = pxFor(r.start_at);
+                  const width = Math.max(pxFor(r.end_at) - left, 6);
+                  return (
+                    <div
+                      key={r.id}
+                      style={{ height: ROW_HEIGHT_PX }}
+                      className="relative border-b border-line-800 last:border-b-0"
+                    >
+                      <div
+                        title={`${r.trip_request?.requester?.full_name ?? "—"} · ${r.trip_request?.origin} → ${r.trip_request?.destination}\n${new Date(r.start_at).toLocaleString("pt-BR")} → ${new Date(r.end_at).toLocaleString("pt-BR")}\n${RESERVATION_STATUS_LABEL[r.status] ?? r.status}`}
+                        className={`absolute top-1/2 h-6 -translate-y-1/2 rounded-sm border ${STATUS_BAR_CLASS[r.status] ?? "border-line-700 bg-panel-800"}`}
+                        style={{ left, width }}
+                      />
+                      {r.impacted_at ? (
+                        <span
+                          className="absolute top-1 h-2 w-2 -translate-x-1/2 rounded-full bg-signal-yellow"
+                          style={{ left }}
+                          title="Impactada por atraso"
+                        />
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </AppShell>
