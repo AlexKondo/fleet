@@ -16,12 +16,17 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
     .select(
       `id, status,
        trip_request:trip_requests(origin, destination),
-       vehicle:vehicles(id, plate, status, odometer_km, category:vehicle_categories(energy_type))`,
+       vehicle:vehicles(id, plate, name, color, status, odometer_km, estimated_range_km,
+         category:vehicle_categories(name, energy_type))`,
     )
     .eq("id", id)
     .single();
 
   if (!reservation || !reservation.vehicle) notFound();
+
+  const vehicle = reservation.vehicle;
+  const energyType = vehicle.category?.energy_type ?? "ICE";
+  const showElectricRange = energyType === "BEV" || energyType === "PHEV";
 
   return (
     <main className="min-h-dvh px-6 py-8">
@@ -35,15 +40,21 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
         <p className="mt-4 font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
           Checklist de Retirada
         </p>
-        <p className="mt-1 font-mono text-sm text-fog-400">
-          {reservation.vehicle.plate} · {reservation.trip_request?.origin} →{" "}
-          {reservation.trip_request?.destination}
+        <p className="mt-1 text-sm text-fog-400">
+          <span className="font-mono">{vehicle.plate}</span>
+          {vehicle.name ? ` · ${vehicle.name}` : ""}
+          {vehicle.category?.name ? ` · ${vehicle.category.name}` : ""}
+          {vehicle.color ? ` · ${vehicle.color}` : ""}
+          {showElectricRange ? ` · Autonomia elétrica: ${vehicle.estimated_range_km} km` : ""}
+        </p>
+        <p className="mt-1 font-mono text-xs text-fog-600">
+          {reservation.trip_request?.origin} → {reservation.trip_request?.destination}
         </p>
         <div className="mt-6 rounded-md border border-line-800 bg-panel-900/60 p-6">
           <PickupForm
             reservationId={reservation.id}
-            energyType={reservation.vehicle.category?.energy_type ?? "ICE"}
-            currentOdometer={reservation.vehicle.odometer_km}
+            energyType={energyType}
+            currentOdometer={vehicle.odometer_km}
           />
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { updateVehicle, type FleetActionState } from "./actions";
+import { FUEL_LEVEL_OPTIONS, VEHICLE_COLOR_OPTIONS } from "@/lib/domain/vehicleFieldOptions";
 
 const initialState: FleetActionState = { status: "idle" };
 
@@ -78,13 +79,21 @@ export function EditVehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Cor</span>
-          <input
-            type="text"
+          <select
             name="color"
-            placeholder="Opcional, ex.: Prata"
             defaultValue={vehicle.color ?? ""}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
-          />
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          >
+            <option value="">Opcional</option>
+            {vehicle.color && !VEHICLE_COLOR_OPTIONS.includes(vehicle.color) ? (
+              <option value={vehicle.color}>{vehicle.color} (atual)</option>
+            ) : null}
+            {VEHICLE_COLOR_OPTIONS.map((color) => (
+              <option key={color} value={color}>
+                {color}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="flex flex-col gap-1.5">
@@ -169,16 +178,25 @@ export function EditVehicleForm({
         {showFuel ? (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Combustível (%)
+              Combustível
             </span>
-            <input
-              type="number"
+            <select
               name="fuelLevelPercent"
-              min={0}
-              max={100}
               defaultValue={vehicle.fuel_level_percent ?? 100}
-              className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
-            />
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            >
+              {vehicle.fuel_level_percent != null &&
+              !FUEL_LEVEL_OPTIONS.some((opt) => opt.value === vehicle.fuel_level_percent) ? (
+                <option value={vehicle.fuel_level_percent}>
+                  {vehicle.fuel_level_percent}% (atual)
+                </option>
+              ) : null}
+              {FUEL_LEVEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </label>
         ) : null}
 

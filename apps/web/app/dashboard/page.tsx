@@ -303,7 +303,8 @@ export default async function DashboardPage({
                                 </option>
                                 {vehicleOptions.map((v) => (
                                   <option key={v.id} value={v.id}>
-                                    {v.plate}
+                                    {v.plate} — {v.category?.name ?? "—"}
+                                    {v.color ? ` · ${v.color}` : ""}
                                   </option>
                                 ))}
                               </select>
