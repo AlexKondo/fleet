@@ -43,8 +43,10 @@ export function PickupForm({
       }
     }
 
+    // Checkboxes ask which equipment is PRESENT (matches how a person actually checks a
+    // trunk); record_pickup still stores what's missing, so invert here at the boundary.
     const missing = SAFETY_EQUIPMENT_OPTIONS.filter(
-      (opt) => formData.get(`equip_${opt.value}`) === "on",
+      (opt) => formData.get(`equip_${opt.value}`) !== "on",
     ).map((opt) => opt.value);
 
     startTransition(async () => {
@@ -140,11 +142,16 @@ export function PickupForm({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-xs font-medium uppercase tracking-widest text-fog-400">
-          Equipamentos obrigatórios ausentes
+          Equipamentos obrigatórios presentes
         </legend>
         {SAFETY_EQUIPMENT_OPTIONS.map((opt) => (
           <label key={opt.value} className="flex items-center gap-2 text-sm text-fog-400">
-            <input type="checkbox" name={`equip_${opt.value}`} className="h-4 w-4" />
+            <input
+              type="checkbox"
+              name={`equip_${opt.value}`}
+              defaultChecked
+              className="h-4 w-4"
+            />
             {opt.label}
           </label>
         ))}
