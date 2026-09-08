@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "./dashboard/actions";
 import { InactivityLogout } from "./InactivityLogout";
+import { SessionBackupSync } from "./SessionBackupSync";
 import { MobileNav } from "./MobileNav";
 import { NotificationBell } from "./dashboard/NotificationBell";
 import { ROLE_LABELS } from "./settings/users/ROLE_LABELS";
@@ -62,6 +63,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       <InactivityLogout />
+      <SessionBackupSync />
       <MobileNav
         items={visibleItems.map(({ key, href, label }) => ({ key, href, label }))}
         active={active}
