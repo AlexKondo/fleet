@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { confirmTrip, planTrip, type PlanTripResult, type TripFormInput } from "./actions";
+import { useActionState, useState, useTransition, type FormEvent } from "react";
+import { confirmTrip, planTripAction, type PlanTripResult, type TripFormInput } from "./actions";
 
 const REASON_LABELS: Record<string, string> = {
   compatible_trip_found: "Já existe uma viagem compatível — você pode pegar carona.",
@@ -25,14 +25,17 @@ function toLocalInputValue(iso: string): string {
 }
 
 export function TripRequestForm() {
-  const [plan, setPlan] = useState<PlanTripResult | null>(null);
+  const [plan, planAction, isPlanning] = useActionState<PlanTripResult | null, FormData>(
+    planTripAction,
+    null,
+  );
   const [formInput, setFormInput] = useState<TripFormInput | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [isPlanning, startPlanning] = useTransition();
   const [isConfirming, startConfirming] = useTransition();
 
-  function handlePlan(formData: FormData) {
-    const input: TripFormInput = {
+  function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
+    const formData = new FormData(e.currentTarget);
+    setFormInput({
       departureAt: new Date(String(formData.get("departureAt"))).toISOString(),
       expectedReturnAt: new Date(String(formData.get("expectedReturnAt"))).toISOString(),
       origin: String(formData.get("origin")),
@@ -41,13 +44,8 @@ export function TripRequestForm() {
       passengerCount: Number(formData.get("passengerCount")),
       requiresCargo: formData.get("requiresCargo") === "on",
       justification: String(formData.get("justification")),
-    };
-    setFormInput(input);
-    setConfirmError(null);
-    startPlanning(async () => {
-      const result = await planTrip(input);
-      setPlan(result);
     });
+    setConfirmError(null);
   }
 
   function handleConfirm(targetId?: string) {
@@ -74,7 +72,8 @@ export function TripRequestForm() {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <form
-        action={handlePlan}
+        action={planAction}
+        onSubmit={handleFormSubmit}
         className="flex flex-col gap-4 rounded-md border border-line-800 bg-panel-900/60 p-6"
       >
         <div className="grid grid-cols-2 gap-4">

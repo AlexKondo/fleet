@@ -184,6 +184,37 @@ function filterTrafficRestrictionReasons(reasons: string[], enabled: boolean): s
   return enabled ? reasons : reasons.filter((r) => r !== "traffic_restriction_active");
 }
 
+function parseTripFormInput(formData: FormData): TripFormInput {
+  return {
+    departureAt: new Date(String(formData.get("departureAt"))).toISOString(),
+    expectedReturnAt: new Date(String(formData.get("expectedReturnAt"))).toISOString(),
+    origin: String(formData.get("origin")),
+    destination: String(formData.get("destination")),
+    distanceKm: Number(formData.get("distanceKm")),
+    passengerCount: Number(formData.get("passengerCount")),
+    requiresCargo: formData.get("requiresCargo") === "on",
+    justification: String(formData.get("justification")),
+  };
+}
+
+/**
+ * useActionState-bound wrapper around planTrip — kept separate from the plain planTrip()
+ * export (still used directly by tests/tools) because useActionState requires the
+ * (prevState, formData) signature bound straight to <form action>. DEBUG-SESSION NOTE:
+ * TripRequestForm previously called planTrip() as a bare async call from inside
+ * startTransition instead of binding it as the form's own action — that shape reproducibly
+ * cleared the session cookie and bounced the user to /login on submit in production
+ * (confirmed via direct network inspection), while the equivalent useActionState-bound
+ * EditVehicleForm/updateVehicle never did. Route every trip/new server action through this
+ * bound-to-form shape until the underlying Next.js/Supabase-SSR interaction is root-caused.
+ */
+export async function planTripAction(
+  _prevState: PlanTripResult | null,
+  formData: FormData,
+): Promise<PlanTripResult> {
+  return planTrip(parseTripFormInput(formData));
+}
+
 export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   const built = await buildPlanInputs(input);
   if ("error" in built) {
