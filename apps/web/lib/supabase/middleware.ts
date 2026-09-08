@@ -30,21 +30,7 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
 
   const {
     data: { user },
-    error: getUserError,
   } = await supabase.auth.getUser();
-
-  // TEMP DEBUG (remove after root-causing the /trips/new session-clear bug): surface
-  // exactly what middleware saw for this request, since the redirect below is
-  // indistinguishable at the network level from any other code path that might redirect
-  // to /login.
-  const debugHeaders: [string, string][] = [
-    ["x-debug-mw-ran", "1"],
-    ["x-debug-mw-had-user", user ? "1" : "0"],
-    ["x-debug-mw-method", request.method],
-    ["x-debug-mw-path", request.nextUrl.pathname],
-  ];
-  if (getUserError) debugHeaders.push(["x-debug-mw-error", getUserError.message.slice(0, 200)]);
-  for (const [k, v] of debugHeaders) response.headers.set(k, v);
 
   // /reset-password is reachable pre-session on purpose — auth/callback is what actually
   // establishes the session (from the recovery email's code), and the page itself
@@ -58,9 +44,7 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
 
   if (!user && !isPublicRoute) {
     const loginUrl = new URL("/login", request.url);
-    const redirectResponse = NextResponse.redirect(loginUrl);
-    for (const [k, v] of debugHeaders) redirectResponse.headers.set(k, v);
-    return redirectResponse;
+    return NextResponse.redirect(loginUrl);
   }
 
   return response;
