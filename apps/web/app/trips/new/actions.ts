@@ -212,7 +212,12 @@ export async function planTripAction(
   _prevState: PlanTripResult | null,
   formData: FormData,
 ): Promise<PlanTripResult> {
-  return planTrip(parseTripFormInput(formData));
+  // TEMP DEBUG (remove after root-causing the /trips/new session-clear bug): bypass
+  // buildPlanInputs entirely and just wait, to test whether the logout is caused by
+  // *how long* this action takes vs. something specific to its actual queries.
+  await new Promise((resolve) => setTimeout(resolve, 2500));
+  void parseTripFormInput(formData);
+  return { type: "none", reasons: ["DEBUG_SLOW_NOOP"], bookingMode: "ai_recommended" };
 }
 
 export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
