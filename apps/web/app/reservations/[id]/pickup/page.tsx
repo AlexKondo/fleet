@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PickupForm } from "./PickupForm";
@@ -25,7 +26,13 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
   return (
     <main className="min-h-dvh px-6 py-8">
       <div className="mx-auto max-w-xl">
-        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
+        <Link
+          href="/trips"
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+        >
+          ← Minhas Viagens
+        </Link>
+        <p className="mt-4 font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
           Checklist de Retirada
         </p>
         <p className="mt-1 font-mono text-sm text-fog-400">

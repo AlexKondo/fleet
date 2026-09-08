@@ -90,7 +90,7 @@ function PhotoCaptureField({
   );
 }
 
-export function PhotoCaptureSection({ showDamage }: { showDamage: boolean }) {
+export function PhotoCaptureSection() {
   return (
     <fieldset className="flex flex-col gap-2 border-t border-line-800 pt-4">
       <legend className="mb-1 text-xs font-medium uppercase tracking-widest text-fog-400">
@@ -104,13 +104,11 @@ export function PhotoCaptureSection({ showDamage }: { showDamage: boolean }) {
         {STANDARD_PHOTO_ANGLES.map((angle) => (
           <PhotoCaptureField key={angle.value} name={`photo_${angle.value}`} label={angle.label} />
         ))}
-        {showDamage ? (
-          <PhotoCaptureField
-            name={`photo_${DAMAGE_PHOTO_ANGLE.value}`}
-            label={DAMAGE_PHOTO_ANGLE.label}
-            hint="Fotografe a avaria descrita acima"
-          />
-        ) : null}
+        <PhotoCaptureField
+          name={`photo_${DAMAGE_PHOTO_ANGLE.value}`}
+          label={DAMAGE_PHOTO_ANGLE.label}
+          hint="Fotografe a avaria descrita acima"
+        />
       </div>
     </fieldset>
   );

@@ -18,9 +18,8 @@ export type PhotoAngle =
   | "interior"
   | "damage";
 
-// The six angles captured on every pickup/return, regardless of damage. "damage" is
-// intentionally excluded — it's only relevant (and only shown in the UI) when the
-// checklist's own damage checkbox is ticked.
+// The six standard angles, shown alongside the "damage" angle only when the checklist's
+// own damage checkbox is ticked — a no-damage pickup/return doesn't ask for photos at all.
 export const STANDARD_PHOTO_ANGLES: { value: Exclude<PhotoAngle, "damage">; label: string }[] = [
   { value: "front", label: "Frente" },
   { value: "back", label: "Traseira" },

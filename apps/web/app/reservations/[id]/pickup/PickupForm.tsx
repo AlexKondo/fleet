@@ -177,7 +177,7 @@ export function PickupForm({
         Sujeira interna
       </label>
 
-      <PhotoCaptureSection showDamage={hasDamage} />
+      {hasDamage ? <PhotoCaptureSection /> : null}
 
       {error ? (
         <p role="alert" className="text-sm text-signal-red">

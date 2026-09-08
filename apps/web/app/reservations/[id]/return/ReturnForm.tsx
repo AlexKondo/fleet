@@ -204,7 +204,7 @@ export function ReturnForm({
         Sujeira interna
       </label>
 
-      <PhotoCaptureSection showDamage={hasNewDamage} />
+      {hasNewDamage ? <PhotoCaptureSection /> : null}
 
       {error ? (
         <p role="alert" className="text-sm text-signal-red">
