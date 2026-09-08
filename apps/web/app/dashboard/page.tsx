@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { assessVehicleReadiness } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toDomainVehicle } from "@/lib/domain/mappers";
+import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../AppShell";
 import { ATTENTION_LABELS, STATUS_META } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
@@ -198,7 +199,7 @@ export default async function DashboardPage({
                         · {r.trip_request?.requester?.full_name} · {r.trip_request?.origin} →{" "}
                         {r.trip_request?.destination} ·{" "}
                         <span className="font-mono tabular-nums">
-                          {new Date(r.start_at).toLocaleString("pt-BR")}
+                          {formatDateTime(r.start_at)}
                         </span>
                       </span>
                     </div>
@@ -270,7 +271,7 @@ export default async function DashboardPage({
                           {r.trip_request?.requester?.full_name ?? "—"}
                         </td>
                         <td className="px-4 py-3 font-mono text-xs tabular-nums text-fog-400">
-                          {new Date(r.start_at).toLocaleString("pt-BR")}
+                          {formatDateTime(r.start_at)}
                         </td>
                         <td className="px-4 py-3">
                           <span className={r.status === "confirmed" ? "text-signal-blue" : "text-signal-amber"}>

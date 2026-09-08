@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../../AppShell";
 import { STATUS_META } from "../../dashboard/statusMeta";
 import { MessageThread, type ReservationMessage } from "./MessageThread";
@@ -101,8 +102,8 @@ export default async function ReservationDetailPage({ params }: { params: Promis
             </p>
             <p className="mt-1 text-xs text-fog-600">
               {reservation.trip_request.requester?.full_name} ·{" "}
-              {new Date(reservation.start_at).toLocaleString("pt-BR")} →{" "}
-              {new Date(reservation.end_at).toLocaleString("pt-BR")}
+              {formatDateTime(reservation.start_at)} →{" "}
+              {formatDateTime(reservation.end_at)}
             </p>
           </div>
           {statusMeta ? (

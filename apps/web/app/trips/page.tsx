@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../AppShell";
 import { cancelMyReservation, leaveCarpool } from "./actions";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
@@ -136,7 +137,7 @@ export default async function TripsPage({
                       {r.trip_request?.origin} → {r.trip_request?.destination}
                     </p>
                     <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
-                      {r.vehicle?.plate ?? "—"} · {new Date(r.start_at).toLocaleString("pt-BR")}
+                      {r.vehicle?.plate ?? "—"} · {formatDateTime(r.start_at)}
                     </p>
                     <p className="mt-1 text-xs text-fog-600">
                       {RESERVATION_STATUS_LABEL[r.status] ?? r.status}
@@ -205,7 +206,7 @@ export default async function TripsPage({
                         {r.trip_request?.origin} → {r.trip_request?.destination}
                       </p>
                       <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
-                        {r.vehicle?.plate ?? "—"} · {new Date(r.start_at).toLocaleString("pt-BR")}
+                        {r.vehicle?.plate ?? "—"} · {formatDateTime(r.start_at)}
                       </p>
                       <p className="mt-1 text-xs text-fog-600">
                         {RESERVATION_STATUS_LABEL[r.status] ?? r.status}

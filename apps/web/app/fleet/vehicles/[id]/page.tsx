@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../../../AppShell";
 import { STATUS_META } from "../../../dashboard/statusMeta";
 
@@ -186,7 +187,11 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
                       style={{ width: DAY_WIDTH_PX }}
                       className="flex shrink-0 items-center justify-center border-r border-line-800/60 text-[11px] uppercase tracking-widest text-fog-600"
                     >
-                      {d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                      {d.toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        timeZone: "America/Sao_Paulo",
+                      })}
                     </div>
                   ))}
                 </div>
@@ -217,7 +222,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
                       className="relative border-b border-line-800 last:border-b-0"
                     >
                       <div
-                        title={`${r.trip_request?.requester?.full_name ?? "—"} · ${r.trip_request?.origin} → ${r.trip_request?.destination}\n${new Date(r.start_at).toLocaleString("pt-BR")} → ${new Date(r.end_at).toLocaleString("pt-BR")}\n${RESERVATION_STATUS_LABEL[r.status] ?? r.status}`}
+                        title={`${r.trip_request?.requester?.full_name ?? "—"} · ${r.trip_request?.origin} → ${r.trip_request?.destination}\n${formatDateTime(r.start_at)} → ${formatDateTime(r.end_at)}\n${RESERVATION_STATUS_LABEL[r.status] ?? r.status}`}
                         className={`absolute top-1/2 h-6 -translate-y-1/2 rounded-sm border ${STATUS_BAR_CLASS[r.status] ?? "border-line-700 bg-panel-800"}`}
                         style={{ left, width }}
                       />

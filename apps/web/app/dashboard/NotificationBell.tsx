@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Database } from "@fleet/supabase-client";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { formatDate } from "@/lib/formatDateTime";
 import { markAllNotificationsRead, markNotificationRead } from "./notificationActions";
 
 type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
@@ -32,7 +33,7 @@ function formatRelativeTime(iso: string): string {
   if (diffHours < 24) return `há ${diffHours} h`;
   const diffDays = Math.round(diffHours / 24);
   if (diffDays < 7) return `há ${diffDays} d`;
-  return new Date(iso).toLocaleDateString("pt-BR");
+  return formatDate(iso);
 }
 
 export function NotificationBell({ align = "right" }: { align?: "left" | "right" }) {

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { MESSAGE_TYPE_LABELS, MESSAGE_TYPE_OPTIONS, type MessageType } from "@/lib/domain/messages";
+import { formatDateTime } from "@/lib/formatDateTime";
 import { postReservationMessage, type MessageActionState } from "./actions";
 
 export interface ReservationMessage {
@@ -50,7 +51,7 @@ export function MessageThread({
                     {MESSAGE_TYPE_LABELS[m.message_type]}
                   </span>
                   <span className="text-[11px] text-fog-600">
-                    {new Date(m.created_at).toLocaleString("pt-BR")}
+                    {formatDateTime(m.created_at)}
                   </span>
                 </div>
               </div>
