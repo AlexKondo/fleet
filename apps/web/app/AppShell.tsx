@@ -5,6 +5,9 @@ import { SessionBackupSync } from "./SessionBackupSync";
 import { MobileNav } from "./MobileNav";
 import { NotificationBell } from "./dashboard/NotificationBell";
 import { ROLE_LABELS } from "./settings/users/ROLE_LABELS";
+import { ThemeToggle } from "./ui/ThemeToggle";
+import { LanguageToggle } from "./ui/LanguageToggle";
+import { getLocale, getDictionary } from "../lib/i18n/getLocale";
 import {
   AnalyticsIcon,
   DashboardIcon,
@@ -24,7 +27,7 @@ export type NavKey = "dashboard" | "trips" | "analytics" | "fleet" | "team" | "s
  * ROLE_LABELS' "Administrador", visible uppercased in the old header). One shell, one
  * source of truth for navigation, org identity, and sign-out.
  */
-export function AppShell({
+export async function AppShell({
   active,
   orgName,
   userName,
@@ -49,13 +52,17 @@ export function AppShell({
   headerActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const dict = await getDictionary();
+  const roleLabels: Record<string, string> = { ...ROLE_LABELS, ...dict.roles };
+
   const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
-    { key: "dashboard", href: "/dashboard", label: "Painel", icon: DashboardIcon, visible: true },
-    { key: "trips", href: "/trips", label: "Minhas Viagens", icon: TripsIcon, visible: true },
-    { key: "analytics", href: "/analytics", label: "Analytics", icon: AnalyticsIcon, visible: isFleetManager },
-    { key: "fleet", href: "/fleet", label: "Frota", icon: FleetIcon, visible: isFleetManager },
-    { key: "team", href: "/settings/users", label: "Equipe", icon: TeamIcon, visible: isAdministrator },
-    { key: "settings", href: "/settings", label: "Configurações", icon: SettingsIcon, visible: isFleetManager },
+    { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: true },
+    { key: "trips", href: "/trips", label: dict.nav.trips, icon: TripsIcon, visible: true },
+    { key: "analytics", href: "/analytics", label: dict.nav.analytics, icon: AnalyticsIcon, visible: isFleetManager },
+    { key: "fleet", href: "/fleet", label: dict.nav.fleet, icon: FleetIcon, visible: isFleetManager },
+    { key: "team", href: "/settings/users", label: dict.nav.team, icon: TeamIcon, visible: isAdministrator },
+    { key: "settings", href: "/settings", label: dict.nav.settings, icon: SettingsIcon, visible: isFleetManager },
   ];
 
   const visibleItems = items.filter((i) => i.visible);
@@ -85,7 +92,7 @@ export function AppShell({
           href="/trips/new"
           className="mb-5 flex items-center justify-center gap-2 rounded-sm bg-signal-amber px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
         >
-          + Solicitar Viagem
+          {dict.chrome.requestTrip}
         </Link>
 
         <nav className="flex flex-1 flex-col gap-1">
@@ -118,18 +125,22 @@ export function AppShell({
           </p>
           <div className="flex items-center gap-4">
             {headerActions}
+            <div className="flex items-center gap-3">
+              <LanguageToggle locale={locale} dict={dict} />
+              <ThemeToggle dict={dict} />
+            </div>
             <div className="hidden items-center gap-4 md:flex">
               <NotificationBell align="right" />
               <div className="hidden text-right lg:block">
                 <p className="truncate text-sm text-paper-50">{userName}</p>
                 <p className="text-xs uppercase tracking-widest text-fog-600">
-                  {ROLE_LABELS[role] ?? role}
+                  {roleLabels[role] ?? role}
                 </p>
               </div>
               <form action={signOut}>
                 <button
                   type="submit"
-                  aria-label="Sair"
+                  aria-label={dict.chrome.signOut}
                   className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-signal-red hover:text-signal-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-red"
                 >
                   <LogoutIcon className="h-4 w-4" />

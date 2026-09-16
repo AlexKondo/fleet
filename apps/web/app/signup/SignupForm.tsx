@@ -5,10 +5,11 @@ import { PasswordInput } from "../PasswordInput";
 import { Button } from "../ui/Button";
 import { Field, Input } from "../ui/Input";
 import { signUp, type SignUpState } from "./actions";
+import type { Dictionary } from "../../lib/i18n/dictionaries";
 
 const initialState: SignUpState = { error: null };
 
-export function SignupForm() {
+export function SignupForm({ dict }: { dict: Dictionary }) {
   const [state, formAction, pending] = useActionState(signUp, initialState);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -16,43 +17,43 @@ export function SignupForm() {
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-4">
-      <Field label="Seu nome completo" htmlFor="fullName">
-        <Input id="fullName" type="text" name="fullName" required placeholder="Maria Silva" />
+      <Field label={dict.signup.fullNameLabel} htmlFor="fullName">
+        <Input id="fullName" type="text" name="fullName" required placeholder={dict.signup.fullNamePlaceholder} />
       </Field>
 
-      <Field label="E-mail" htmlFor="email">
+      <Field label={dict.signup.emailLabel} htmlFor="email">
         <Input
           id="email"
           type="email"
           name="email"
           required
           autoComplete="email"
-          placeholder="voce@suaempresa.com"
+          placeholder={dict.signup.emailPlaceholder}
           className="font-mono"
         />
       </Field>
 
       <PasswordInput
         name="password"
-        label="Senha"
+        label={dict.signup.passwordLabel}
         autoComplete="new-password"
         required
         minLength={8}
-        placeholder="Mínimo 8 caracteres"
+        placeholder={dict.signup.passwordPlaceholder}
         onValueChange={setPassword}
       />
 
       <PasswordInput
         name="confirmPassword"
-        label="Confirmar senha"
+        label={dict.signup.confirmPasswordLabel}
         autoComplete="new-password"
         required
         minLength={8}
-        placeholder="Digite a senha novamente"
+        placeholder={dict.signup.confirmPasswordPlaceholder}
         onValueChange={setConfirmPassword}
       />
       {mismatch ? (
-        <p className="-mt-2 text-xs text-signal-red">As senhas não coincidem.</p>
+        <p className="-mt-2 text-xs text-signal-red">{dict.signup.passwordMismatch}</p>
       ) : null}
 
       {state.error ? (
@@ -62,7 +63,7 @@ export function SignupForm() {
       ) : null}
 
       <Button type="submit" disabled={pending || mismatch} className="mt-2">
-        {pending ? "Criando…" : "Criar conta"}
+        {pending ? dict.signup.submitPending : dict.signup.submit}
       </Button>
     </form>
   );
