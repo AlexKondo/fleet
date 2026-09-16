@@ -3,21 +3,8 @@
 import { useActionState, useState, useTransition, type FormEvent } from "react";
 import { confirmTrip, planTripAction, type PlanTripResult, type TripFormInput } from "./actions";
 import { formatDateTime } from "@/lib/formatDateTime";
-
-const REASON_LABELS: Record<string, string> = {
-  compatible_trip_found: "Já existe uma viagem compatível — você pode pegar carona.",
-  passenger_capacity_sufficient: "Capacidade de passageiros suficiente.",
-  cargo_capable: "Veículo apto para transporte de carga.",
-  energy_insufficient: "Autonomia atual insuficiente — será preparado antes da viagem.",
-  cleaning_required: "Veículo será limpo antes da viagem.",
-  no_candidates_available: "Nenhum veículo cadastrado está disponível no momento.",
-  no_eligible_vehicle_for_trip_requirements: "Nenhum veículo elegível atende a esta viagem agora.",
-  traffic_restriction_active: "Restrição de circulação aplicável a esta viagem (rodízio em São Paulo).",
-};
-
-function reasonLabel(reason: string): string {
-  return REASON_LABELS[reason] ?? reason;
-}
+import type { Locale } from "@/lib/i18n/locales";
+import type { Dictionary } from "../../../lib/i18n/dictionaries";
 
 function toLocalInputValue(iso: string): string {
   const d = new Date(iso);
@@ -69,7 +56,10 @@ function clearDraft(): void {
   }
 }
 
-export function TripRequestForm() {
+export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Locale }) {
+  const t = dict.trips.request;
+  const reasonLabel = (reason: string): string =>
+    (dict.trips.reasons as Record<string, string>)[reason] ?? reason;
   const [plan, planAction, isPlanning] = useActionState<PlanTripResult | null, FormData>(
     planTripAction,
     null,
@@ -134,7 +124,7 @@ export function TripRequestForm() {
       >
         <div className="grid grid-cols-2 gap-4">
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Saída</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.departureLabel}</span>
             <input
               type="datetime-local"
               name="departureAt"
@@ -145,7 +135,7 @@ export function TripRequestForm() {
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Retorno previsto
+              {t.expectedReturnLabel}
             </span>
             <input
               type="datetime-local"
@@ -159,7 +149,7 @@ export function TripRequestForm() {
 
         <div className="grid grid-cols-2 gap-4">
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Origem</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.originLabel}</span>
             <input
               name="origin"
               required
@@ -168,12 +158,12 @@ export function TripRequestForm() {
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Destino</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.destinationLabel}</span>
             <input
               name="destination"
               required
               defaultValue={draft.destination}
-              placeholder="São Paulo"
+              placeholder={t.destinationPlaceholder}
               className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
             />
           </label>
@@ -182,7 +172,7 @@ export function TripRequestForm() {
         <div className="grid grid-cols-2 gap-4">
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Distância estimada (km)
+              {t.distanceLabel}
             </span>
             <input
               type="number"
@@ -195,7 +185,7 @@ export function TripRequestForm() {
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Passageiros
+              {t.passengersLabel}
             </span>
             <input
               type="number"
@@ -215,12 +205,12 @@ export function TripRequestForm() {
             defaultChecked={draft.requiresCargo === "on"}
             className="h-4 w-4"
           />
-          Esta viagem envolve transporte de carga
+          {t.cargoLabel}
         </label>
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Justificativa
+            {t.justificationLabel}
           </span>
           <textarea
             name="justification"
@@ -236,34 +226,28 @@ export function TripRequestForm() {
           disabled={isPlanning}
           className="mt-2 rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {isPlanning ? "Buscando melhor opção…" : "Buscar recomendação"}
+          {isPlanning ? t.submitPending : t.submit}
         </button>
       </form>
 
       <div className="rounded-md border border-line-800 bg-panel-900/60 p-6">
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Recomendação
+          {t.recommendationTitle}
         </h2>
 
         {!plan ? (
-          <p className="text-sm text-fog-600">
-            Preencha os dados da viagem para ver a melhor opção de mobilidade.
-          </p>
+          <p className="text-sm text-fog-600">{t.emptyState}</p>
         ) : plan.error ? (
-          <p className="text-sm text-signal-red">Não foi possível calcular a recomendação agora.</p>
+          <p className="text-sm text-signal-red">{t.planError}</p>
         ) : plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0 ? (
           <div className="flex flex-col gap-4">
             <p className="text-xs uppercase tracking-widest text-signal-teal">
               {plan.carpoolOptions.length > 1
-                ? `${plan.carpoolOptions.length} caronas compatíveis`
-                : "Carona disponível"}
+                ? t.carpoolsCompatible.replace("{count}", String(plan.carpoolOptions.length))
+                : t.carpoolAvailable}
             </p>
             {plan.carpoolOptions.length > 1 ? (
-              <p className="text-xs text-fog-600">
-                O destino é comparado de forma aproximada (sem acentuação/maiúsculas e
-                lugares mais específicos contam como o mesmo destino) — confira cada opção
-                antes de aceitar.
-              </p>
+              <p className="text-xs text-fog-600">{t.carpoolMatchNote}</p>
             ) : null}
             <ul className="flex flex-col gap-3">
               {plan.carpoolOptions.map((option) => (
@@ -273,15 +257,16 @@ export function TripRequestForm() {
                 >
                   <p className="font-mono text-lg text-paper-50">{option.vehiclePlate}</p>
                   <p className="mt-1 text-sm text-fog-400">
-                    Saída {formatDateTime(option.departureAt)} · Retorno{" "}
-                    {formatDateTime(option.expectedReturnAt)}
+                    {t.carpoolSchedule
+                      .replace("{departure}", formatDateTime(option.departureAt, locale))
+                      .replace("{returnAt}", formatDateTime(option.expectedReturnAt, locale))}
                   </p>
                   <button
                     onClick={() => handleConfirm(option.reservationId)}
                     disabled={isConfirming}
                     className="mt-3 rounded-sm bg-signal-teal px-4 py-2 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
                   >
-                    {isConfirming ? "Confirmando…" : "Aceitar esta carona"}
+                    {isConfirming ? t.confirming : t.acceptCarpool}
                   </button>
                 </li>
               ))}
@@ -295,7 +280,7 @@ export function TripRequestForm() {
         ) : plan.type === "vehicle" && plan.vehicle ? (
           <div className="flex flex-col gap-4">
             <div className="rounded-sm border border-signal-blue/40 bg-signal-blue/10 p-4">
-              <p className="text-xs uppercase tracking-widest text-signal-blue">Veículo recomendado</p>
+              <p className="text-xs uppercase tracking-widest text-signal-blue">{t.recommendedVehicle}</p>
               <p className="mt-1 font-mono text-lg text-paper-50">{plan.vehicle.plate}</p>
               <p className="mt-1 text-sm text-fog-400">{plan.vehicle.categoryName}</p>
             </div>
@@ -306,18 +291,16 @@ export function TripRequestForm() {
             </ul>
             {plan.vehicle.requiredPreparation && plan.vehicle.requiredPreparation.length > 0 ? (
               <p className="text-xs text-signal-amber">
-                O veículo passará por preparação antes da retirada.
+                {t.preparationNote}
               </p>
             ) : null}
             {plan.vehicle.trafficRestriction?.restricted ? (
               <div className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 p-4">
                 <p className="text-xs uppercase tracking-widest text-signal-amber">
-                  Restrição de circulação
+                  {t.trafficRestrictionTitle}
                 </p>
                 <p className="mt-1 text-sm text-fog-400">
-                  Este veículo está sujeito ao rodízio de veículos em São Paulo no horário
-                  desta viagem. Verifique a possibilidade de multa ou considere outro veículo
-                  ou horário.
+                  {t.trafficRestrictionBody}
                 </p>
               </div>
             ) : null}
@@ -326,15 +309,15 @@ export function TripRequestForm() {
               disabled={isConfirming}
               className="rounded-sm bg-signal-blue px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {isConfirming ? "Confirmando…" : "Solicitar reserva"}
+              {isConfirming ? t.confirming : t.requestReservation}
             </button>
 
             {plan.vehicle.alternatives.length > 0 ? (
               <div className="flex flex-col gap-3 border-t border-line-800 pt-4">
                 <p className="text-xs uppercase tracking-widest text-fog-400">
                   {plan.bookingMode === "user_choice"
-                    ? "Outros veículos elegíveis"
-                    : "Prefere outro veículo elegível?"}
+                    ? t.otherEligibleVehicles
+                    : t.preferAnotherVehicle}
                 </p>
                 <ul className="flex flex-col gap-2">
                   {plan.vehicle.alternatives.map((alt) => (
@@ -351,7 +334,7 @@ export function TripRequestForm() {
                         disabled={isConfirming}
                         className="shrink-0 rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-blue hover:text-signal-blue disabled:opacity-50"
                       >
-                        Escolher
+                        {t.choose}
                       </button>
                     </li>
                   ))}
@@ -362,7 +345,7 @@ export function TripRequestForm() {
         ) : (
           <div className="flex flex-col gap-2">
             <p className="text-sm text-signal-red">
-              Nenhuma opção de mobilidade atende esta viagem no momento.
+              {t.noOptions}
             </p>
             <ul className="flex flex-col gap-1 text-sm text-fog-400">
               {plan.reasons.map((r) => (
@@ -375,8 +358,8 @@ export function TripRequestForm() {
         {confirmError ? (
           <p role="alert" className="mt-4 text-sm text-signal-red">
             {confirmError === "RESERVATION_CONFLICT"
-              ? "Esse veículo acabou de ser reservado por outra pessoa nesse mesmo horário. Busque novamente para ver as opções atualizadas."
-              : `Não foi possível confirmar a reserva (${confirmError}). Tente buscar novamente.`}
+              ? t.reservationConflict
+              : t.confirmError.replace("{code}", confirmError)}
           </p>
         ) : null}
       </div>

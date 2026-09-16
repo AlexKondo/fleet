@@ -3,17 +3,14 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isMissingEnvVarError } from "@/lib/supabase/env";
+import { getDictionary } from "@/lib/i18n/getLocale";
 
 export interface SignInState {
   error: string | null;
 }
 
-const MISSING_ENV_VAR_MESSAGE =
-  "O servidor está com uma configuração incompleta e não pode autenticar ninguém agora " +
-  "(variável de ambiente ausente). Avise o administrador do sistema — tentar de novo não " +
-  "vai resolver.";
-
 export async function signIn(_prevState: SignInState, formData: FormData): Promise<SignInState> {
+  const dict = await getDictionary();
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
 
@@ -28,11 +25,15 @@ export async function signIn(_prevState: SignInState, formData: FormData): Promi
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      return { error: "E-mail ou senha incorretos." };
+      return { error: dict.errors.auth.invalidCredentials };
     }
   } catch (err) {
     console.error("signIn: unexpected error", err);
-    return { error: isMissingEnvVarError(err) ? MISSING_ENV_VAR_MESSAGE : "Não foi possível entrar agora. Tente novamente em instantes." };
+    return {
+      error: isMissingEnvVarError(err)
+        ? dict.errors.auth.missingEnvVarSignIn
+        : dict.errors.auth.signInFailed,
+    };
   }
 
   redirect("/dashboard");

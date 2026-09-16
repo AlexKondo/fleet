@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { signOut } from "./dashboard/actions";
 import { NotificationBell } from "./dashboard/NotificationBell";
-import { ROLE_LABELS } from "./settings/users/ROLE_LABELS";
+import { getRoleLabels } from "./settings/users/ROLE_LABELS";
+import type { Dictionary } from "../lib/i18n/dictionaries";
+import type { Locale } from "../lib/i18n/locales";
 import {
   AnalyticsIcon,
   DashboardIcon,
@@ -46,14 +48,19 @@ export function MobileNav({
   orgName,
   userName,
   role,
+  dict,
+  locale,
 }: {
   items: NavItem[];
   active: NavKey;
   orgName: string;
   userName: string;
   role: string;
+  dict: Dictionary;
+  locale: Locale;
 }) {
   const [open, setOpen] = useState(false);
+  const roleLabels = getRoleLabels(dict);
 
   return (
     <div className="md:hidden">
@@ -67,11 +74,11 @@ export function MobileNav({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <NotificationBell align="right" />
+          <NotificationBell align="right" dict={dict} locale={locale} />
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            aria-label={open ? dict.common.closeMenu : dict.common.openMenu}
             aria-expanded={open}
             className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-1 rounded-sm border border-line-800 text-fog-400 hover:border-signal-amber hover:text-signal-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-amber"
           >
@@ -114,20 +121,20 @@ export function MobileNav({
             href="/trips/new"
             className="mt-4 flex items-center justify-center gap-2 rounded-sm bg-signal-amber px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
           >
-            + Solicitar Viagem
+            {dict.chrome.requestTrip}
           </Link>
 
           <div className="mt-4 flex items-center justify-between border-t border-line-800 pt-4">
             <div className="min-w-0">
               <p className="truncate text-sm text-paper-50">{userName}</p>
               <p className="text-xs uppercase tracking-widest text-fog-600">
-                {ROLE_LABELS[role] ?? role}
+                {roleLabels[role] ?? role}
               </p>
             </div>
             <form action={signOut}>
               <button
                 type="submit"
-                aria-label="Sair"
+                aria-label={dict.chrome.signOut}
                 className="flex h-9 w-9 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-signal-red hover:text-signal-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-red"
               >
                 <LogoutIcon className="h-4 w-4" />

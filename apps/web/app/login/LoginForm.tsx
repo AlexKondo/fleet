@@ -32,6 +32,7 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
         autoComplete="current-password"
         required
         placeholder={dict.login.passwordPlaceholder}
+        dict={dict}
       />
       <Link
         href="/forgot-password"

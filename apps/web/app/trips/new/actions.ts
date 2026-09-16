@@ -10,6 +10,7 @@ import {
 } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/formatDateTime";
+import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import { toDomainCategory, toDomainVehicle } from "@/lib/domain/mappers";
 import { loadOrgConfig } from "@/lib/domain/orgConfig";
 import { getFleetManagerEmails } from "@/lib/email/recipients";
@@ -404,7 +405,7 @@ export async function confirmTrip(
         heading: "Nova reserva aguardando aprovação",
         bodyLines: [
           `Uma nova viagem para <strong>${input.destination}</strong> aguarda aprovação.`,
-          `Origem: ${input.origin} · Saída: ${formatDateTime(input.departureAt)}`,
+          `Origem: ${input.origin} · Saída: ${formatDateTime(input.departureAt, DEFAULT_LOCALE)}`,
         ],
         ctaLabel: "Abrir Painel",
         ctaUrl: `${getAppUrl()}/dashboard`,

@@ -11,7 +11,7 @@ export default async function LoginPage() {
   const dict = await getDictionary();
 
   return (
-    <LoginRecovery>
+    <LoginRecovery dict={dict}>
       <main className="flex min-h-dvh items-center justify-center px-4">
         <div className="w-full max-w-sm">
           <div className="mb-3 flex items-center justify-center gap-3">

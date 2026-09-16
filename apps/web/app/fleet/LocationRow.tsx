@@ -3,10 +3,18 @@
 import { useActionState, useEffect, useState } from "react";
 import { deleteLocation, updateLocation, type FleetActionState } from "./actions";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { errorLabel } from "@/lib/i18n/errorLabel";
 
 const initialState: FleetActionState = { status: "idle" };
 
-export function LocationRow({ location }: { location: { id: string; name: string } }) {
+export function LocationRow({
+  location,
+  dict,
+}: {
+  location: { id: string; name: string };
+  dict: Dictionary;
+}) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateAction, updatePending] = useActionState(updateLocation, initialState);
   const [deleteState, deleteAction, deletePending] = useActionState(deleteLocation, initialState);
@@ -34,20 +42,20 @@ export function LocationRow({ location }: { location: { id: string; name: string
               disabled={updatePending}
               className="text-xs font-semibold uppercase tracking-widest text-signal-amber hover:underline disabled:opacity-50"
             >
-              {updatePending ? "Salvando…" : "Salvar"}
+              {updatePending ? dict.common.saving : dict.common.save}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
               className="text-xs uppercase tracking-widest text-fog-400 hover:text-paper-50"
             >
-              Cancelar
+              {dict.common.cancel}
             </button>
           </div>
         </form>
         {updateState.status === "error" ? (
           <p role="alert" className="text-xs text-signal-red">
-            {updateState.error}
+            {errorLabel(dict, updateState.error)}
           </p>
         ) : null}
       </li>
@@ -63,22 +71,22 @@ export function LocationRow({ location }: { location: { id: string; name: string
           onClick={() => setEditing(true)}
           className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
         >
-          Editar
+          {dict.common.edit}
         </button>
         <form action={deleteAction}>
           <input type="hidden" name="id" value={location.id} />
           <ConfirmSubmitButton
-            confirmMessage={`Excluir a localização "${location.name}"?`}
+            confirmMessage={dict.fleet.locations.deleteConfirm.replace("{name}", location.name)}
             disabled={deletePending}
             className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
           >
-            {deletePending ? "Excluindo…" : "Excluir"}
+            {deletePending ? dict.common.deleting : dict.common.delete}
           </ConfirmSubmitButton>
         </form>
       </div>
       {deleteState.status === "error" ? (
         <p role="alert" className="text-xs text-signal-red">
-          {deleteState.error}
+          {errorLabel(dict, deleteState.error)}
         </p>
       ) : null}
     </li>

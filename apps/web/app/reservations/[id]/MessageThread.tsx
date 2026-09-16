@@ -1,9 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { MESSAGE_TYPE_LABELS, MESSAGE_TYPE_OPTIONS, type MessageType } from "@/lib/domain/messages";
+import { MESSAGE_TYPE_OPTIONS, type MessageType } from "@/lib/domain/messages";
 import { formatDateTime } from "@/lib/formatDateTime";
+import type { Locale } from "@/lib/i18n/locales";
 import { postReservationMessage, type MessageActionState } from "./actions";
+import type { Dictionary } from "../../../lib/i18n/dictionaries";
+import { errorLabel } from "@/lib/i18n/errorLabel";
 
 export interface ReservationMessage {
   id: string;
@@ -27,31 +30,36 @@ const TYPE_BADGE_CLASSES: Record<MessageType, string> = {
 export function MessageThread({
   reservationId,
   messages,
+  dict,
+  locale,
 }: {
   reservationId: string;
   messages: ReservationMessage[];
+  dict: Dictionary;
+  locale: Locale;
 }) {
   const [state, formAction, pending] = useActionState(postReservationMessage, initialState);
   const [messageType, setMessageType] = useState<MessageType>("text");
+  const t = dict.reservations.messages;
 
   return (
     <div className="flex flex-col gap-4">
       <ul className="flex max-h-80 flex-col gap-2 overflow-y-auto">
         {messages.length === 0 ? (
-          <li className="text-sm text-fog-600">Nenhuma mensagem ainda.</li>
+          <li className="text-sm text-fog-600">{t.empty}</li>
         ) : (
           messages.map((m) => (
             <li key={m.id} className="rounded-sm border border-line-800 bg-panel-800 p-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-paper-50">{m.sender_name ?? "Sistema"}</span>
+                <span className="text-xs font-medium text-paper-50">{m.sender_name ?? t.systemSender}</span>
                 <div className="flex items-center gap-2">
                   <span
                     className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-widest ${TYPE_BADGE_CLASSES[m.message_type]}`}
                   >
-                    {MESSAGE_TYPE_LABELS[m.message_type]}
+                    {t.types[m.message_type]}
                   </span>
                   <span className="text-[11px] text-fog-600">
-                    {formatDateTime(m.created_at)}
+                    {formatDateTime(m.created_at, locale)}
                   </span>
                 </div>
               </div>
@@ -74,7 +82,7 @@ export function MessageThread({
                 onChange={() => setMessageType(opt.value)}
                 className="h-3.5 w-3.5"
               />
-              {opt.label}
+              {t.types[opt.value]}
             </label>
           ))}
         </div>
@@ -82,7 +90,7 @@ export function MessageThread({
         {messageType === "delay" ? (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Novo horário de retorno estimado
+              {t.newReturnTimeLabel}
             </span>
             <input
               type="datetime-local"
@@ -90,8 +98,7 @@ export function MessageThread({
               className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
             />
             <span className="text-xs text-fog-600">
-              Se preenchido, a próxima reserva deste veículo será marcada como impactada e o
-              gestor de frota e o próximo solicitante serão notificados.
+              {t.newReturnTimeHint}
             </span>
           </label>
         ) : null}
@@ -100,13 +107,13 @@ export function MessageThread({
           name="body"
           required
           rows={2}
-          placeholder="Escreva uma mensagem…"
+          placeholder={t.bodyPlaceholder}
           className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
         />
 
         {state.status === "error" ? (
           <p role="alert" className="text-sm text-signal-red">
-            {state.error}
+            {errorLabel(dict, state.error)}
           </p>
         ) : null}
 
@@ -115,7 +122,7 @@ export function MessageThread({
           disabled={pending}
           className="w-fit rounded-sm bg-signal-amber px-4 py-2 text-xs font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {pending ? "Enviando…" : "Enviar"}
+          {pending ? t.sending : t.send}
         </button>
       </form>
     </div>

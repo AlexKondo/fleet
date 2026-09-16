@@ -2,8 +2,11 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AppShell } from "../../AppShell";
 import { TripRequestForm } from "./TripRequestForm";
+import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 
 export default async function NewTripPage() {
+  const dict = await getDictionary();
+  const locale = await getLocale();
   // Every other protected page checks auth itself rather than relying solely on
   // middleware (see e.g. trips/page.tsx) — this page was the one exception, reachable by
   // an unauthenticated visitor if middleware ever fails open (see middleware.ts's
@@ -31,14 +34,14 @@ export default async function NewTripPage() {
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Solicitar Viagem"
+      title={dict.trips.request.title}
     >
       <div className="px-6 py-8">
         <div className="mx-auto max-w-4xl">
           <p className="mb-6 text-xs uppercase tracking-widest text-fog-600">
-            Diga onde e quando — nós procuramos a melhor forma de te levar.
+            {dict.trips.request.subtitle}
           </p>
-          <TripRequestForm />
+          <TripRequestForm dict={dict} locale={locale} />
         </div>
       </div>
     </AppShell>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { InviteUserForm } from "./InviteUserForm";
+import type { Dictionary } from "../../../lib/i18n/dictionaries";
 
 /**
  * "Adicionar Usuário" used to be a form permanently open at the bottom of the page —
@@ -11,7 +12,7 @@ import { InviteUserForm } from "./InviteUserForm";
  * AddLocationSection, except as an overlay instead of an inline panel since this form
  * has no natural list of its own to sit next to.
  */
-export function InviteUserModal() {
+export function InviteUserModal({ dict }: { dict: Dictionary }) {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -41,14 +42,14 @@ export function InviteUserModal() {
         onClick={() => setOpen(true)}
         className="rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90"
       >
-        + Adicionar Usuário
+        {dict.team.invite.trigger}
       </button>
 
       {open ? (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Adicionar usuário"
+          aria-label={dict.team.invite.dialogLabel}
           className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-950/70 px-4 py-10 sm:items-center"
         >
           <div
@@ -57,18 +58,18 @@ export function InviteUserModal() {
           >
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm font-semibold uppercase tracking-widest text-fog-400">
-                Adicionar Usuário
+                {dict.team.invite.modalTitle}
               </p>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Fechar"
+                aria-label={dict.common.close}
                 className="flex h-7 w-7 items-center justify-center rounded-sm text-fog-400 hover:text-signal-red"
               >
                 ✕
               </button>
             </div>
-            <InviteUserForm onSaved={() => setOpen(false)} />
+            <InviteUserForm dict={dict} onSaved={() => setOpen(false)} />
           </div>
         </div>
       ) : null}

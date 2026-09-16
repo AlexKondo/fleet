@@ -2,6 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAppUrl } from "@/lib/getAppUrl";
+import { getDictionary } from "@/lib/i18n/getLocale";
 
 export interface ForgotPasswordState {
   status: "idle" | "success" | "error";
@@ -14,7 +15,8 @@ export async function requestPasswordReset(
 ): Promise<ForgotPasswordState> {
   const email = String(formData.get("email") ?? "").trim();
   if (!email) {
-    return { status: "error", error: "Informe seu e-mail." };
+    const dict = await getDictionary();
+    return { status: "error", error: dict.errors.auth.emailRequired };
   }
 
   const supabase = await createSupabaseServerClient();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import type { Dictionary } from "../lib/i18n/dictionaries";
 
 /**
  * A password `<input>` with a show/hide toggle — without one, a typo is invisible until
@@ -17,6 +18,7 @@ export function PasswordInput({
   minLength,
   placeholder,
   onValueChange,
+  dict,
 }: {
   name: string;
   label: string;
@@ -26,6 +28,9 @@ export function PasswordInput({
   placeholder?: string;
   /** Optional — lets a parent form track the live value (e.g. for a "confirm password" match check) without making this a fully controlled input. */
   onValueChange?: (value: string) => void;
+  /** Passed down from the nearest Server Component — this is a client component and
+   * cannot read the locale cookie itself. */
+  dict: Dictionary;
 }) {
   const [visible, setVisible] = useState(false);
   const inputId = useId();
@@ -48,7 +53,7 @@ export function PasswordInput({
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+          aria-label={visible ? dict.common.hidePassword : dict.common.showPassword}
           aria-pressed={visible}
           className="absolute inset-y-0 right-0 flex items-center px-3 text-fog-400 hover:text-signal-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-amber"
         >

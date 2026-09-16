@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { attemptAutomaticReassignment } from "@/lib/domain/autoReassignment";
+import { getDictionary } from "@/lib/i18n/getLocale";
 
 export interface MessageActionState {
   status: "idle" | "success" | "error";
@@ -51,10 +52,11 @@ export async function postReservationMessage(
   const body = String(formData.get("body") ?? "").trim();
   const newExpectedReturnAtRaw = String(formData.get("newExpectedReturnAt") ?? "").trim();
 
-  if (!reservationId) return { status: "error", error: "Reserva inválida." };
-  if (!body) return { status: "error", error: "Escreva uma mensagem." };
+  const dict = await getDictionary();
+  if (!reservationId) return { status: "error", error: dict.errors.reservations.reservationInvalid };
+  if (!body) return { status: "error", error: dict.errors.reservations.messageRequired };
   if (!MESSAGE_TYPES.includes(messageType as MessageType)) {
-    return { status: "error", error: "Tipo de mensagem inválido." };
+    return { status: "error", error: dict.errors.reservations.messageTypeInvalid };
   }
 
   const { data, error } = await supabase.rpc("post_reservation_message", {

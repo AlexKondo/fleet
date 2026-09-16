@@ -1,11 +1,15 @@
+import type { Dictionary } from "../../lib/i18n/dictionaries";
+
 const SEGMENTS = 5;
 
 export function EnergyGauge({
   percent,
   kind,
+  dict,
 }: {
   percent: number | null;
   kind: "fuel" | "battery";
+  dict: Dictionary;
 }) {
   if (percent === null) {
     return <span className="font-mono text-xs text-fog-600">—</span>;
@@ -29,7 +33,7 @@ export function EnergyGauge({
       <span
         className={`font-mono text-xs tabular-nums ${isLow ? "text-signal-red" : "text-fog-400"}`}
       >
-        {percent}%{kind === "battery" ? " bat." : ""}
+        {percent}%{kind === "battery" ? ` ${dict.dashboard.vehicles.batterySuffix}` : ""}
       </span>
     </div>
   );

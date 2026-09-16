@@ -3,16 +3,20 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createVehicle, type FleetActionState } from "./actions";
 import { FUEL_LEVEL_OPTIONS, VEHICLE_COLOR_OPTIONS } from "@/lib/domain/vehicleFieldOptions";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { errorLabel } from "@/lib/i18n/errorLabel";
 
 const initialState: FleetActionState = { status: "idle" };
 
 export function VehicleForm({
   categories,
   locations,
+  dict,
   onSaved,
 }: {
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
+  dict: Dictionary;
   onSaved?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(createVehicle, initialState);
@@ -38,8 +42,7 @@ export function VehicleForm({
   if (categories.length === 0 || locations.length === 0) {
     return (
       <p className="text-sm text-fog-400">
-        Cadastre pelo menos uma categoria e uma localização nas abas &quot;Categorias&quot;
-        e &quot;Localizações&quot; antes de adicionar um veículo.
+        {dict.fleet.vehicleForm.prerequisite}
       </p>
     );
   }
@@ -48,44 +51,44 @@ export function VehicleForm({
     <form ref={formRef} action={formAction} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Placa</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.plateLabel}</span>
           <input
             type="text"
             name="plate"
             required
-            placeholder="ABC1D23"
+            placeholder={dict.fleet.vehicleForm.platePlaceholder}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm uppercase text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
           />
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Nome</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.common.name}</span>
           <input
             type="text"
             name="name"
-            placeholder="Opcional, ex.: Haval H6 Prata"
+            placeholder={dict.fleet.vehicleForm.namePlaceholder}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
           />
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Cor</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.colorLabel}</span>
           <select
             name="color"
             defaultValue=""
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
           >
-            <option value="">Opcional</option>
+            <option value="">{dict.common.optional}</option>
             {VEHICLE_COLOR_OPTIONS.map((color) => (
               <option key={color} value={color}>
-                {color}
+                {dict.fleet.vehicleForm.colors[color]}
               </option>
             ))}
           </select>
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Foto</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.photoLabel}</span>
           <input
             type="file"
             name="photo"
@@ -96,7 +99,7 @@ export function VehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Categoria
+            {dict.fleet.vehicleForm.categoryLabel}
           </span>
           <select
             name="categoryId"
@@ -105,7 +108,7 @@ export function VehicleForm({
             onChange={(e) => setCategoryId(e.target.value)}
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
           >
-            <option value="">Selecionar…</option>
+            <option value="">{dict.fleet.vehicleForm.selectPlaceholder}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -116,7 +119,7 @@ export function VehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Odômetro (km)
+            {dict.fleet.vehicleForm.odometerLabel}
           </span>
           <input
             type="number"
@@ -130,20 +133,20 @@ export function VehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Próxima revisão (km)
+            {dict.fleet.vehicleForm.nextServiceLabel}
           </span>
           <input
             type="number"
             name="nextServiceOdometerKm"
             min={0}
-            placeholder="Opcional"
+            placeholder={dict.common.optional}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
           />
         </label>
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Autonomia estimada (km)
+            {dict.fleet.vehicleForm.estimatedRangeLabel}
           </span>
           <input
             type="number"
@@ -158,7 +161,7 @@ export function VehicleForm({
         {showFuel ? (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Combustível
+              {dict.fleet.vehicleForm.fuelLabel}
             </span>
             <select
               name="fuelLevelPercent"
@@ -167,7 +170,7 @@ export function VehicleForm({
             >
               {FUEL_LEVEL_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {dict.fleet.vehicleForm.fuelLevels[`${opt.value}`]}
                 </option>
               ))}
             </select>
@@ -177,7 +180,7 @@ export function VehicleForm({
         {showBattery ? (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Bateria (%)
+              {dict.fleet.vehicleForm.batteryLabel}
             </span>
             <input
               type="number"
@@ -192,14 +195,14 @@ export function VehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Localização inicial
+            {dict.fleet.vehicleForm.initialLocationLabel}
           </span>
           <select
             name="locationId"
             required
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
           >
-            <option value="">Selecionar…</option>
+            <option value="">{dict.fleet.vehicleForm.selectPlaceholder}</option>
             {locations.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.name}
@@ -211,7 +214,7 @@ export function VehicleForm({
 
       {state.status === "error" ? (
         <p role="alert" className="text-sm text-signal-red">
-          {state.error}
+          {errorLabel(dict, state.error)}
         </p>
       ) : null}
 
@@ -220,7 +223,7 @@ export function VehicleForm({
         disabled={pending}
         className="self-start rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {pending ? "Adicionando…" : "+ Adicionar Veículo"}
+        {pending ? dict.common.adding : `+ ${dict.fleet.addVehicle.label}`}
       </button>
     </form>
   );

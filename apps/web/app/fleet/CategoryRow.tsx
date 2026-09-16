@@ -3,19 +3,16 @@
 import { useActionState, useEffect, useState } from "react";
 import { deleteCategory, updateCategory, type FleetActionState } from "./actions";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { errorLabel } from "@/lib/i18n/errorLabel";
 
 const initialState: FleetActionState = { status: "idle" };
 
-const ENERGY_TYPE_LABEL: Record<string, string> = {
-  ICE: "Combustão (ICE)",
-  HEV: "Híbrido (HEV)",
-  PHEV: "Híbrido plug-in (PHEV)",
-  BEV: "Elétrico (BEV)",
-};
-
 export function CategoryRow({
   category,
+  dict,
 }: {
+  dict: Dictionary;
   category: {
     id: string;
     name: string;
@@ -38,7 +35,7 @@ export function CategoryRow({
         <form action={updateAction} className="flex flex-col gap-3">
           <input type="hidden" name="id" value={category.id} />
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Nome</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.common.name}</span>
             <input
               type="text"
               name="name"
@@ -49,7 +46,7 @@ export function CategoryRow({
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Passageiros</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.categoryForm.passengersLabel}</span>
             <input
               type="number"
               name="passengerCapacity"
@@ -67,20 +64,20 @@ export function CategoryRow({
               defaultChecked={category.supports_cargo}
               className="h-4 w-4"
             />
-            Transporta carga
+            {dict.fleet.categoryForm.cargoLabel}
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Energia</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.categoryForm.energyLabel}</span>
             <select
               name="energyType"
               required
               defaultValue={category.energy_type}
               className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
             >
-              <option value="ICE">Combustão (ICE)</option>
-              <option value="HEV">Híbrido (HEV)</option>
-              <option value="PHEV">Híbrido plug-in (PHEV)</option>
-              <option value="BEV">Elétrico (BEV)</option>
+              <option value="ICE">{dict.fleet.categories.energy.ICE}</option>
+              <option value="HEV">{dict.fleet.categories.energy.HEV}</option>
+              <option value="PHEV">{dict.fleet.categories.energy.PHEV}</option>
+              <option value="BEV">{dict.fleet.categories.energy.BEV}</option>
             </select>
           </label>
           <div className="flex items-center gap-3">
@@ -89,20 +86,20 @@ export function CategoryRow({
               disabled={updatePending}
               className="text-xs font-semibold uppercase tracking-widest text-signal-amber hover:underline disabled:opacity-50"
             >
-              {updatePending ? "Salvando…" : "Salvar"}
+              {updatePending ? dict.common.saving : dict.common.save}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
               className="text-xs uppercase tracking-widest text-fog-400 hover:text-paper-50"
             >
-              Cancelar
+              {dict.common.cancel}
             </button>
           </div>
         </form>
         {updateState.status === "error" ? (
           <p role="alert" className="text-xs text-signal-red">
-            {updateState.error}
+            {errorLabel(dict, updateState.error)}
           </p>
         ) : null}
       </li>
@@ -113,31 +110,36 @@ export function CategoryRow({
     <li className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4">
       <p className="text-sm text-paper-50">{category.name}</p>
       <p className="text-xs text-fog-600">
-        {category.passenger_capacity} passageiros{category.supports_cargo ? " · transporta carga" : ""}
+        {dict.fleet.categories.passengers.replace("{count}", String(category.passenger_capacity))}
+        {category.supports_cargo ? dict.fleet.categories.cargoSuffix : ""}
       </p>
-      <p className="text-xs text-fog-600">{ENERGY_TYPE_LABEL[category.energy_type] ?? category.energy_type}</p>
+      <p className="text-xs text-fog-600">
+        {dict.fleet.categories.energy[
+          category.energy_type as keyof typeof dict.fleet.categories.energy
+        ] ?? category.energy_type}
+      </p>
       <div className="flex items-center gap-3 border-t border-line-800 pt-3">
         <button
           type="button"
           onClick={() => setEditing(true)}
           className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
         >
-          Editar
+          {dict.common.edit}
         </button>
         <form action={deleteAction}>
           <input type="hidden" name="id" value={category.id} />
           <ConfirmSubmitButton
-            confirmMessage={`Excluir a categoria "${category.name}"?`}
+            confirmMessage={dict.fleet.categories.deleteConfirm.replace("{name}", category.name)}
             disabled={deletePending}
             className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
           >
-            {deletePending ? "Excluindo…" : "Excluir"}
+            {deletePending ? dict.common.deleting : dict.common.delete}
           </ConfirmSubmitButton>
         </form>
       </div>
       {deleteState.status === "error" ? (
         <p role="alert" className="text-xs text-signal-red">
-          {deleteState.error}
+          {errorLabel(dict, deleteState.error)}
         </p>
       ) : null}
     </li>

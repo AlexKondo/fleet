@@ -5,13 +5,7 @@ import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../AppShell";
 import { cancelMyReservation, leaveCarpool } from "./actions";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
-
-const RESERVATION_STATUS_LABEL: Record<string, string> = {
-  pending_approval: "Aguardando aprovação",
-  confirmed: "Aprovada",
-  cancelled: "Cancelada",
-  completed: "Concluída",
-};
+import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 
 export default async function TripsPage({
   searchParams,
@@ -19,6 +13,10 @@ export default async function TripsPage({
   searchParams: Promise<{ tripActionError?: string }>;
 }) {
   const { tripActionError } = await searchParams;
+  const dict = await getDictionary();
+  const locale = await getLocale();
+  const reservationStatusLabel = (status: string): string =>
+    (dict.trips.statuses as Record<string, string>)[status] ?? status;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -88,13 +86,13 @@ export default async function TripsPage({
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Minhas Viagens"
+      title={dict.trips.list.title}
       headerActions={
         <Link
           href="/trips/new"
           className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
         >
-          + Nova viagem
+          + {dict.trips.list.newTrip}
         </Link>
       }
     >
@@ -105,14 +103,13 @@ export default async function TripsPage({
             role="alert"
             className="mb-4 rounded-md border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red"
           >
-            Não foi possível concluir a ação. A viagem pode já ter mudado de status —
-            atualize a página e tente novamente.
+            {dict.trips.list.actionError}
           </div>
         ) : null}
 
         {!reservations || reservations.length === 0 ? (
           <p className="text-sm text-fog-400">
-            Você ainda não tem viagens. Solicite a primeira em &ldquo;+ Nova viagem&rdquo;.
+            {dict.trips.list.empty}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -137,12 +134,12 @@ export default async function TripsPage({
                       {r.trip_request?.origin} → {r.trip_request?.destination}
                     </p>
                     <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
-                      {r.vehicle?.plate ?? "—"} · {formatDateTime(r.start_at)}
+                      {r.vehicle?.plate ?? "—"} · {formatDateTime(r.start_at, locale)}
                     </p>
                     <p className="mt-1 text-xs text-fog-600">
-                      {RESERVATION_STATUS_LABEL[r.status] ?? r.status}
+                      {reservationStatusLabel(r.status)}
                       {r.impacted_at ? (
-                        <span className="ml-2 text-signal-yellow">· Impactada por atraso</span>
+                        <span className="ml-2 text-signal-yellow">· {dict.trips.list.impactedByDelay}</span>
                       ) : null}
                     </p>
                   </div>
@@ -151,30 +148,30 @@ export default async function TripsPage({
                       href={`/reservations/${r.id}`}
                       className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-amber hover:text-signal-amber"
                     >
-                      Mensagens
+                      {dict.trips.list.messages}
                     </Link>
                     {canPickup ? (
                       <Link
                         href={`/reservations/${r.id}/pickup`}
                         className="rounded-sm border border-signal-blue px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
                       >
-                        Iniciar Retirada
+                        {dict.trips.list.startPickup}
                       </Link>
                     ) : canReturn ? (
                       <Link
                         href={`/reservations/${r.id}/return`}
                         className="rounded-sm border border-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
                       >
-                        Registrar Retorno
+                        {dict.trips.list.registerReturn}
                       </Link>
                     ) : null}
                     {canCancel ? (
                       <form action={cancelMyReservation.bind(null, r.id)}>
                         <ConfirmSubmitButton
-                          confirmMessage="Cancelar esta viagem?"
+                          confirmMessage={dict.trips.list.confirmCancel}
                           className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
                         >
-                          Cancelar
+                          {dict.common.cancel}
                         </ConfirmSubmitButton>
                       </form>
                     ) : null}
@@ -188,7 +185,7 @@ export default async function TripsPage({
         {carpools.length > 0 ? (
           <div className="mt-8">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              Caronas
+              {dict.trips.list.carpoolsTitle}
             </h2>
             <ul className="flex flex-col gap-3">
               {carpools.map(({ participantId, status, reservation: r }) => {
@@ -206,22 +203,24 @@ export default async function TripsPage({
                         {r.trip_request?.origin} → {r.trip_request?.destination}
                       </p>
                       <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
-                        {r.vehicle?.plate ?? "—"} · {formatDateTime(r.start_at)}
+                        {r.vehicle?.plate ?? "—"} · {formatDateTime(r.start_at, locale)}
                       </p>
                       <p className="mt-1 text-xs text-fog-600">
-                        {RESERVATION_STATUS_LABEL[r.status] ?? r.status}
+                        {reservationStatusLabel(r.status)}
                         {status === "pending" ? (
-                          <span className="ml-2 text-signal-blue">· Aguardando aceite do motorista</span>
+                          <span className="ml-2 text-signal-blue">
+                            · {dict.trips.list.awaitingDriverAcceptance}
+                          </span>
                         ) : null}
                       </p>
                     </div>
                     {canLeave ? (
                       <form action={leaveCarpool.bind(null, participantId)}>
                         <ConfirmSubmitButton
-                          confirmMessage="Sair desta carona?"
+                          confirmMessage={dict.trips.list.confirmLeave}
                           className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
                         >
-                          Sair
+                          {dict.trips.list.leave}
                         </ConfirmSubmitButton>
                       </form>
                     ) : null}

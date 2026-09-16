@@ -4,17 +4,21 @@
  * (apps/web/app/dashboard/EnergyGauge.tsx), generalized past "fuel/battery percent" to
  * any labeled quantity (km, trip count, destination frequency, ...).
  */
+import type { Locale } from "../../lib/i18n/locales";
+
 export function StatBar({
   label,
   value,
   max,
   unit,
+  locale,
   colorClass = "bg-signal-teal",
 }: {
   label: string;
   value: number;
   max: number;
   unit?: string;
+  locale: Locale;
   colorClass?: string;
 }) {
   const percent = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
@@ -28,7 +32,7 @@ export function StatBar({
         <div className={`h-full ${colorClass}`} style={{ width: `${percent}%` }} />
       </div>
       <span className="w-24 shrink-0 text-right font-mono text-xs tabular-nums text-fog-400">
-        {value.toLocaleString("pt-BR")}
+        {value.toLocaleString(locale)}
         {unit ? ` ${unit}` : ""}
       </span>
     </div>

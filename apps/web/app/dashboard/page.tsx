@@ -4,8 +4,9 @@ import { assessVehicleReadiness } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toDomainVehicle } from "@/lib/domain/mappers";
 import { formatDateTime } from "@/lib/formatDateTime";
+import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { AppShell } from "../AppShell";
-import { ATTENTION_LABELS, STATUS_META } from "./statusMeta";
+import { getAttentionLabels, getStatusMeta } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import {
@@ -19,21 +20,18 @@ import {
   unblockVehicle,
 } from "./actions";
 
-const WORKFLOW_TASK_LABELS: Record<string, string> = {
-  repair: "Reparo",
-  safety: "Segurança",
-  preventive_maintenance: "Revisão preventiva",
-  cleaning: "Limpeza",
-  fuel: "Abastecimento",
-  charging: "Recarga",
-};
-
 export default async function DashboardPage({
   searchParams,
 }: {
   searchParams: Promise<{ fleetActionError?: string }>;
 }) {
   const { fleetActionError } = await searchParams;
+  const locale = await getLocale();
+  const dict = await getDictionary();
+  const t = dict.dashboard;
+  const statusMeta = getStatusMeta(dict);
+  const attentionLabels = getAttentionLabels(dict);
+  const workflowTaskLabels: Record<string, string> = t.tasks.types;
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -138,31 +136,30 @@ export default async function DashboardPage({
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Painel"
+      title={dict.nav.dashboard}
     >
       {fleetActionError ? (
         <div
           role="alert"
           className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
         >
-          Não foi possível concluir a ação. Ela pode já ter sido feita por outra pessoa, ou
-          você não tem mais permissão para isso — atualize a página e tente novamente.
+          {t.actionError}
         </div>
       ) : null}
 
       <section className="border-b border-line-800 px-6 py-4">
         <div className="mb-1.5 h-1.5 w-10 rounded-sm hazard-stripe" aria-hidden="true" />
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Precisa de Atenção
+          {t.attention.heading}
         </h2>
         {Object.keys(vehiclesByAttentionReason).length === 0 ? (
-          <p className="text-sm text-fog-400">Nenhuma pendência — frota operacionalmente pronta.</p>
+          <p className="text-sm text-fog-400">{t.attention.empty}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {Object.entries(vehiclesByAttentionReason).map(([reason, vehiclesForReason]) => (
               <li key={reason} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                 <span className="font-mono text-signal-amber">{vehiclesForReason.length}</span>
-                <span className="text-fog-400">{ATTENTION_LABELS[reason] ?? reason}:</span>
+                <span className="text-fog-400">{attentionLabels[reason] ?? reason}:</span>
                 {vehiclesForReason.map((v, i) => (
                   <span key={v.id} className="font-mono text-xs text-fog-400">
                     <a href={`#vehicle-${v.id}`} className="text-signal-amber underline-offset-2 hover:underline">
@@ -180,10 +177,10 @@ export default async function DashboardPage({
       {isFleetManager ? (
         <section className="border-b border-line-800 px-6 py-4">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-            Reservas Aguardando Aprovação
+            {t.pendingReservations.heading}
           </h2>
           {!pendingReservations || pendingReservations.length === 0 ? (
-            <p className="text-sm text-fog-400">Nenhuma reserva pendente.</p>
+            <p className="text-sm text-fog-400">{t.pendingReservations.empty}</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {pendingReservations.map((r) => {
@@ -199,7 +196,7 @@ export default async function DashboardPage({
                         · {r.trip_request?.requester?.full_name} · {r.trip_request?.origin} →{" "}
                         {r.trip_request?.destination} ·{" "}
                         <span className="font-mono tabular-nums">
-                          {formatDateTime(r.start_at)}
+                          {formatDateTime(r.start_at, locale)}
                         </span>
                       </span>
                     </div>
@@ -209,15 +206,15 @@ export default async function DashboardPage({
                           type="submit"
                           className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
                         >
-                          Aprovar
+                          {dict.common.approve}
                         </button>
                       </form>
-                      <form action={cancelReservation.bind(null, r.id, "Rejeitada pelo gestor de frota")}>
+                      <form action={cancelReservation.bind(null, r.id, dict.dashboard.cancelReasons.rejectedByManager)}>
                         <button
                           type="submit"
                           className="rounded-sm border border-signal-red px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
                         >
-                          Rejeitar
+                          {dict.common.reject}
                         </button>
                       </form>
                     </div>
@@ -232,23 +229,23 @@ export default async function DashboardPage({
       {isFleetManager ? (
         <section className="border-b border-line-800 px-6 py-4">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-            Reservas Ativas — Trocar Veículo / Transferir
+            {t.activeReservations.heading}
           </h2>
           {!activeReservations || activeReservations.length === 0 ? (
-            <p className="text-sm text-fog-400">Nenhuma reserva ativa no momento.</p>
+            <p className="text-sm text-fog-400">{t.activeReservations.empty}</p>
           ) : (
             <div className="overflow-x-auto rounded-md border border-line-800">
               <table className="w-full min-w-[1200px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
-                    <th className="px-4 py-3 font-medium">Veículo</th>
-                    <th className="px-4 py-3 font-medium">Rota</th>
-                    <th className="px-4 py-3 font-medium">Solicitante</th>
-                    <th className="px-4 py-3 font-medium">Saída</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Trocar Veículo</th>
-                    <th className="px-4 py-3 font-medium">Transferir</th>
-                    <th className="px-4 py-3 font-medium">Cancelar</th>
+                    <th className="px-4 py-3 font-medium">{dict.common.vehicle}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.routeColumn}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.requesterColumn}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.departureColumn}</th>
+                    <th className="px-4 py-3 font-medium">{dict.common.status}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.swapColumn}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.transferColumn}</th>
+                    <th className="px-4 py-3 font-medium">{dict.common.cancel}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -271,25 +268,31 @@ export default async function DashboardPage({
                           {r.trip_request?.requester?.full_name ?? "—"}
                         </td>
                         <td className="px-4 py-3 font-mono text-xs tabular-nums text-fog-400">
-                          {formatDateTime(r.start_at)}
+                          {formatDateTime(r.start_at, locale)}
                         </td>
                         <td className="px-4 py-3">
                           <span className={r.status === "confirmed" ? "text-signal-blue" : "text-signal-amber"}>
-                            {r.status === "confirmed" ? "Confirmada" : "Pendente"}
+                            {r.status === "confirmed"
+                              ? t.activeReservations.statusConfirmed
+                              : t.activeReservations.statusPending}
                           </span>
                           {r.impacted_at ? (
-                            <span className="ml-2 text-xs text-signal-yellow">⚠ Impactada</span>
+                            <span className="ml-2 text-xs text-signal-yellow">
+                              {t.activeReservations.impacted}
+                            </span>
                           ) : null}
                           <Link
                             href={`/reservations/${r.id}`}
                             className="ml-2 text-xs text-fog-400 hover:text-signal-amber hover:underline"
                           >
-                            Mensagens
+                            {t.activeReservations.messages}
                           </Link>
                         </td>
                         <td className="px-4 py-3">
                           {vehicleOptions.length === 0 ? (
-                            <span className="text-xs text-fog-600">Sem veículo disponível</span>
+                            <span className="text-xs text-fog-600">
+                              {t.activeReservations.noVehicleAvailable}
+                            </span>
                           ) : (
                             <form action={swapVehicle.bind(null, r.id)} className="flex items-center gap-2">
                               <select
@@ -299,7 +302,7 @@ export default async function DashboardPage({
                                 className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue"
                               >
                                 <option value="" disabled>
-                                  Selecionar…
+                                  {t.activeReservations.selectPlaceholder}
                                 </option>
                                 {vehicleOptions.map((v) => (
                                   <option key={v.id} value={v.id}>
@@ -312,7 +315,7 @@ export default async function DashboardPage({
                                 type="submit"
                                 className="rounded-sm border border-signal-blue px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
                               >
-                                Trocar
+                                {t.activeReservations.swapAction}
                               </button>
                             </form>
                           )}
@@ -329,7 +332,7 @@ export default async function DashboardPage({
                                 className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-violet"
                               >
                                 <option value="" disabled>
-                                  Selecionar…
+                                  {t.activeReservations.selectPlaceholder}
                                 </option>
                                 {transferOptions.map((p) => (
                                   <option key={p.id} value={p.id}>
@@ -341,18 +344,22 @@ export default async function DashboardPage({
                                 type="submit"
                                 className="rounded-sm border border-signal-violet px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-violet hover:bg-signal-violet/10"
                               >
-                                Transferir
+                                {t.activeReservations.transferAction}
                               </button>
                             </form>
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <form action={cancelReservation.bind(null, r.id, "Cancelada pelo gestor de frota")}>
+                          <form action={cancelReservation.bind(null, r.id, dict.dashboard.cancelReasons.cancelledByManager)}>
                             <ConfirmSubmitButton
-                              confirmMessage={`Cancelar a reserva de ${r.trip_request?.requester?.full_name ?? "este solicitante"}?`}
+                              confirmMessage={t.activeReservations.confirmCancel.replace(
+                                "{name}",
+                                r.trip_request?.requester?.full_name ??
+                                  t.activeReservations.unknownRequester,
+                              )}
                               className="rounded-sm border border-signal-red px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
                             >
-                              Cancelar
+                              {dict.common.cancel}
                             </ConfirmSubmitButton>
                           </form>
                         </td>
@@ -369,15 +376,15 @@ export default async function DashboardPage({
       {canManageTasks ? (
         <section className="border-b border-line-800 px-6 py-4">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-            Tarefas Operacionais
+            {t.tasks.heading}
           </h2>
           {!openTasks || openTasks.length === 0 ? (
-            <p className="text-sm text-fog-400">Nenhuma tarefa aberta.</p>
+            <p className="text-sm text-fog-400">{t.tasks.empty}</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {openTasks.map((t) => (
+              {openTasks.map((task) => (
                 <li
-                  key={t.id}
+                  key={task.id}
                   className="flex items-center justify-between rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5"
                 >
                   <div className="text-sm">
@@ -385,26 +392,26 @@ export default async function DashboardPage({
                       ›
                     </span>
                     <span className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber">
-                      {WORKFLOW_TASK_LABELS[t.type] ?? t.type}
+                      {workflowTaskLabels[task.type] ?? task.type}
                     </span>
-                    <span className="ml-2 font-mono text-paper-50">{t.vehicle?.plate}</span>
-                    {t.notes ? <span className="ml-2 text-fog-400">{t.notes}</span> : null}
+                    <span className="ml-2 font-mono text-paper-50">{task.vehicle?.plate}</span>
+                    {task.notes ? <span className="ml-2 text-fog-400">{task.notes}</span> : null}
                   </div>
                   <div className="flex items-center gap-2">
-                    <form action={completeWorkflowTask.bind(null, t.id)}>
+                    <form action={completeWorkflowTask.bind(null, task.id)}>
                       <button
                         type="submit"
                         className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-teal hover:text-signal-teal"
                       >
-                        Concluir
+                        {t.tasks.complete}
                       </button>
                     </form>
-                    <form action={cancelWorkflowTask.bind(null, t.id)}>
+                    <form action={cancelWorkflowTask.bind(null, task.id)}>
                       <ConfirmSubmitButton
-                        confirmMessage="Cancelar esta tarefa sem marcá-la como concluída?"
+                        confirmMessage={t.tasks.confirmCancel}
                         className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
                       >
-                        Cancelar
+                        {dict.common.cancel}
                       </ConfirmSubmitButton>
                     </form>
                   </div>
@@ -417,28 +424,26 @@ export default async function DashboardPage({
 
       <section className="px-6 py-4">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Painel de Veículos
+          {t.vehicles.heading}
         </h2>
 
         {vehiclesError ? (
-          <p className="text-sm text-signal-red">
-            Não foi possível carregar a frota agora. Tente novamente em instantes.
-          </p>
+          <p className="text-sm text-signal-red">{t.vehicles.loadError}</p>
         ) : vehicles.length === 0 ? (
           <p className="text-sm text-fog-400">
-            Nenhum veículo cadastrado ainda.{" "}
+            {t.vehicles.emptyLead}{" "}
             {isFleetManager ? (
               <Link href="/fleet" className="text-signal-amber hover:underline">
-                Adicione o primeiro veículo em Frota
+                {t.vehicles.emptyManagerCta}
               </Link>
             ) : (
-              "Peça ao gestor da frota para adicionar o primeiro veículo."
+              t.vehicles.emptyEmployeeHint
             )}
           </p>
         ) : (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {vehiclesWithAttention.map(({ row, attention }) => {
-              const meta = STATUS_META[row.status];
+              const meta = statusMeta[row.status];
               return (
                 <li
                   key={row.id}
@@ -458,20 +463,23 @@ export default async function DashboardPage({
 
                   <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-line-800 pt-3 text-xs">
                     <div>
-                      <p className="uppercase tracking-widest text-fog-600">Energia</p>
+                      <p className="uppercase tracking-widest text-fog-600">{t.vehicles.energy}</p>
                       <EnergyGauge
                         percent={row.category?.energy_type === "BEV" ? row.battery_level_percent : row.fuel_level_percent}
                         kind={row.category?.energy_type === "BEV" ? "battery" : "fuel"}
+                        dict={dict}
                       />
                     </div>
                     <div>
-                      <p className="uppercase tracking-widest text-fog-600">Odômetro</p>
+                      <p className="uppercase tracking-widest text-fog-600">{t.vehicles.odometer}</p>
                       <p className="mt-1 font-mono tabular-nums text-fog-400">
-                        {row.odometer_km.toLocaleString("pt-BR")} km
+                        {row.odometer_km.toLocaleString(locale)} km
                       </p>
                     </div>
                     <div className="col-span-2">
-                      <p className="uppercase tracking-widest text-fog-600">Localização atual</p>
+                      <p className="uppercase tracking-widest text-fog-600">
+                        {t.vehicles.currentLocation}
+                      </p>
                       <p className="mt-1 text-fog-400">{row.current_location?.name ?? "—"}</p>
                     </div>
                   </div>
@@ -484,7 +492,7 @@ export default async function DashboardPage({
                           className="relative overflow-hidden rounded-sm border border-signal-amber/40 border-t-transparent bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber"
                         >
                           <span className="hazard-stripe absolute inset-x-0 top-0 h-[3px]" aria-hidden="true" />
-                          {ATTENTION_LABELS[reason] ?? reason}
+                          {attentionLabels[reason] ?? reason}
                         </span>
                       ))}
                     </div>
@@ -498,7 +506,7 @@ export default async function DashboardPage({
                             type="submit"
                             className="w-full rounded-sm border border-signal-teal px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
                           >
-                            Desbloquear
+                            {t.vehicles.unblock}
                           </button>
                         </form>
                       ) : (
@@ -507,7 +515,7 @@ export default async function DashboardPage({
                             type="submit"
                             className="w-full rounded-sm border border-signal-red px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
                           >
-                            Bloquear
+                            {t.vehicles.block}
                           </button>
                         </form>
                       )}

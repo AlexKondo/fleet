@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AppShell } from "../AppShell";
 import { SettingsForm } from "./SettingsForm";
+import { getDictionary } from "../../lib/i18n/getLocale";
 
 /**
  * Organization-level configurability (fleet-car-saas.txt §8 "Range Safety Buffer
@@ -12,6 +13,7 @@ import { SettingsForm } from "./SettingsForm";
  */
 export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
+  const dict = await getDictionary();
 
   const {
     data: { user },
@@ -46,11 +48,12 @@ export default async function SettingsPage() {
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Configurações"
+      title={dict.settings.title}
     >
 
       <section className="px-6 py-6">
         <SettingsForm
+          dict={dict}
           initialValues={{
             rangeSafetyBufferPercent: settings?.range_safety_buffer_percent ?? 20,
             minChargeHoursBev: settings?.min_charge_hours_bev ?? 6,

@@ -41,6 +41,7 @@ export function SignupForm({ dict }: { dict: Dictionary }) {
         minLength={8}
         placeholder={dict.signup.passwordPlaceholder}
         onValueChange={setPassword}
+        dict={dict}
       />
 
       <PasswordInput
@@ -51,6 +52,7 @@ export function SignupForm({ dict }: { dict: Dictionary }) {
         minLength={8}
         placeholder={dict.signup.confirmPasswordPlaceholder}
         onValueChange={setConfirmPassword}
+        dict={dict}
       />
       {mismatch ? (
         <p className="-mt-2 text-xs text-signal-red">{dict.signup.passwordMismatch}</p>

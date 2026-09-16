@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { VehicleForm } from "./VehicleForm";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 /**
  * "+ Adicionar Veículo" reveal — the create form starts hidden and only appears once
@@ -15,9 +16,11 @@ import { VehicleForm } from "./VehicleForm";
 export function AddVehicleSection({
   categories,
   locations,
+  dict,
 }: {
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
+  dict: Dictionary;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -28,7 +31,7 @@ export function AddVehicleSection({
         onClick={() => setOpen(true)}
         className="rounded-sm border border-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
       >
-        + Adicionar Veículo
+        + {dict.fleet.addVehicle.label}
       </button>
     );
   }
@@ -37,17 +40,22 @@ export function AddVehicleSection({
     <div className="rounded-sm border border-line-800 bg-panel-800/60 p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Adicionar Veículo
+          {dict.fleet.addVehicle.label}
         </span>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red"
         >
-          Fechar
+          {dict.common.close}
         </button>
       </div>
-      <VehicleForm categories={categories} locations={locations} onSaved={() => setOpen(false)} />
+      <VehicleForm
+        categories={categories}
+        locations={locations}
+        dict={dict}
+        onSaved={() => setOpen(false)}
+      />
     </div>
   );
 }

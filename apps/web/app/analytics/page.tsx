@@ -1,5 +1,7 @@
+import { Fragment, type ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { predictNextService } from "@fleet/domain";
+import { getLocale, getDictionary } from "@/lib/i18n/getLocale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadOrgConfig } from "@/lib/domain/orgConfig";
 import { AppShell } from "../AppShell";
@@ -17,7 +19,22 @@ import { StatBar } from "./StatBar";
  * (§18/§19: "What needs attention? What is not ready? What is at risk?") — underused
  * vehicles lead, everything else is supporting evidence for that call, not a KPI wall.
  */
+/** Substitutes `{name}` placeholders in a dictionary string with React nodes, so a
+ * localized sentence can keep its inline <span> styling regardless of word order. */
+function interpolate(template: string, values: Record<string, ReactNode>): ReactNode[] {
+  return template.split(/(\{[A-Za-z]+\})/g).map((part, i) => {
+    const match = /^\{([A-Za-z]+)\}$/.exec(part);
+    const key = match?.[1];
+    const replacement = key === undefined ? undefined : values[key];
+    const node = replacement === undefined ? part : replacement;
+    return <Fragment key={i}>{node}</Fragment>;
+  });
+}
+
 export default async function AnalyticsPage() {
+  const locale = await getLocale();
+  const dict = await getDictionary();
+  const t = dict.analytics;
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -183,23 +200,19 @@ export default async function AnalyticsPage() {
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Analytics"
+      title={t.title}
     >
 
       {vehiclesError ? (
-        <p className="px-6 py-4 text-sm text-signal-red">
-          Não foi possível carregar os dados de analytics agora. Tente novamente em instantes.
-        </p>
+        <p className="px-6 py-4 text-sm text-signal-red">{t.loadError}</p>
       ) : (
         <>
           <section className="border-b border-line-800 px-6 py-4">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              Veículos Subutilizados
+              {t.underutilized.title}
             </h2>
             {underutilized.length === 0 ? (
-              <p className="text-sm text-fog-400">
-                Todos os veículos têm ao menos uma viagem concluída no histórico observado.
-              </p>
+              <p className="text-sm text-fog-400">{t.underutilized.empty}</p>
             ) : (
               <ul className="flex flex-wrap gap-x-6 gap-y-2">
                 {underutilized.map((v) => (
@@ -210,7 +223,7 @@ export default async function AnalyticsPage() {
                     <span className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 font-mono text-xs text-signal-amber">
                       {v.plate}
                     </span>
-                    <span className="text-fog-400">0 viagens concluídas no histórico</span>
+                    <span className="text-fog-400">{t.underutilized.noCompletedTrips}</span>
                   </li>
                 ))}
               </ul>
@@ -219,13 +232,10 @@ export default async function AnalyticsPage() {
 
           <section className="border-b border-line-800 px-6 py-4">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              Manutenção Preditiva
+              {t.maintenance.title}
             </h2>
             {maintenancePredictions.length === 0 ? (
-              <p className="text-sm text-fog-400">
-                Nenhum veículo com previsão de revisão no horizonte configurado, com base no
-                histórico de odômetro disponível.
-              </p>
+              <p className="text-sm text-fog-400">{t.maintenance.empty}</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {maintenancePredictions.map(({ id, plate, prediction }) => (
@@ -253,15 +263,16 @@ export default async function AnalyticsPage() {
                       </span>
                       <span className="text-fog-400">
                         {prediction.daysUntilService === 0
-                          ? "Revisão já vencida"
-                          : `Revisão estimada em ~${Math.round(prediction.daysUntilService ?? 0)} dia${
-                              Math.round(prediction.daysUntilService ?? 0) === 1 ? "" : "s"
-                            }`}
+                          ? t.maintenance.overdue
+                          : (Math.round(prediction.daysUntilService ?? 0) === 1
+                              ? t.maintenance.estimatedOne
+                              : t.maintenance.estimatedOther
+                            ).replace("{days}", String(Math.round(prediction.daysUntilService ?? 0)))}
                       </span>
                     </div>
                     <span className="font-mono text-xs text-fog-600">
                       {prediction.averageKmPerDay !== null
-                        ? `~${Math.round(prediction.averageKmPerDay)} km/dia (histórico)`
+                        ? t.maintenance.kmPerDay.replace("{km}", String(Math.round(prediction.averageKmPerDay)))
                         : "—"}
                     </span>
                   </li>
@@ -269,26 +280,25 @@ export default async function AnalyticsPage() {
               </ul>
             )}
             <p className="mt-2 text-xs text-fog-600">
-              Estimativa baseada no uso histórico registrado nos checklists — é uma
-              recomendação para agendamento, não uma data garantida.
+              {t.maintenance.note}
             </p>
           </section>
 
           <section className="border-b border-line-800 px-6 py-4">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              Utilização por Veículo — Viagens Concluídas &amp; Km Percorrido
+              {t.utilization.title}
             </h2>
             {vehicleStats.length === 0 ? (
-              <p className="text-sm text-fog-400">Nenhum veículo cadastrado ainda.</p>
+              <p className="text-sm text-fog-400">{t.utilization.empty}</p>
             ) : (
               <div className="overflow-x-auto rounded-md border border-line-800">
                 <table className="w-full min-w-[760px] border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
-                      <th className="px-4 py-3 font-medium">Placa</th>
-                      <th className="px-4 py-3 font-medium">Viagens Concluídas</th>
-                      <th className="px-4 py-3 font-medium">Km Percorrido (odômetro)</th>
-                      <th className="px-4 py-3 font-medium">Leituras de Odômetro</th>
+                      <th className="px-4 py-3 font-medium">{t.utilization.colPlate}</th>
+                      <th className="px-4 py-3 font-medium">{t.utilization.colCompletedTrips}</th>
+                      <th className="px-4 py-3 font-medium">{t.utilization.colKm}</th>
+                      <th className="px-4 py-3 font-medium">{t.utilization.colReadings}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -306,9 +316,9 @@ export default async function AnalyticsPage() {
                         </td>
                         <td className="px-4 py-3">
                           {v.km === null ? (
-                            <span className="text-xs text-fog-600">dados insuficientes</span>
+                            <span className="text-xs text-fog-600">{t.utilization.insufficientData}</span>
                           ) : (
-                            <StatBar label="" value={v.km} max={maxKm} unit="km" />
+                            <StatBar label="" value={v.km} max={maxKm} unit={t.units.km} locale={locale} />
                           )}
                         </td>
                         <td className="px-4 py-3 font-mono tabular-nums text-fog-400">{v.readingCount}</td>
@@ -322,32 +332,38 @@ export default async function AnalyticsPage() {
 
           <section className="border-b border-line-800 px-6 py-4">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              Km por Viagem
+              {t.kmPerTrip.title}
             </h2>
             {tripKm.length === 0 ? (
-              <p className="text-sm text-fog-400">
-                Nenhuma viagem com checklist de retirada e retorno completos ainda.
-              </p>
+              <p className="text-sm text-fog-400">{t.kmPerTrip.empty}</p>
             ) : (
               <>
                 <p className="mb-3 text-sm text-fog-400">
-                  Média: <span className="font-mono text-paper-50">{avgKmPerTrip} km</span> por viagem, em{" "}
-                  <span className="font-mono text-paper-50">{tripKm.length}</span> viagem
-                  {tripKm.length === 1 ? "" : "s"} com dados completos.
+                  {interpolate(t.kmPerTrip.average, {
+                    avg: (
+                      <span className="font-mono text-paper-50">
+                        {avgKmPerTrip} {t.units.km}
+                      </span>
+                    ),
+                    trips: interpolate(
+                      tripKm.length === 1 ? t.kmPerTrip.tripsCountOne : t.kmPerTrip.tripsCountOther,
+                      { count: <span className="font-mono text-paper-50">{tripKm.length}</span> },
+                    ),
+                  })}
                 </p>
                 <div className="overflow-x-auto rounded-md border border-line-800">
                   <table className="w-full min-w-[560px] border-collapse text-sm">
                     <thead>
                       <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
-                        <th className="px-4 py-3 font-medium">Destino</th>
-                        <th className="px-4 py-3 font-medium">Km</th>
+                        <th className="px-4 py-3 font-medium">{dict.common.destination}</th>
+                        <th className="px-4 py-3 font-medium">{t.kmPerTrip.colKm}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {tripKm.slice(0, 10).map((t) => (
-                        <tr key={t.reservationId} className="border-b border-line-800 last:border-0 hover:bg-panel-900/60">
-                          <td className="px-4 py-3 text-fog-400">{t.destination}</td>
-                          <td className="px-4 py-3 font-mono tabular-nums text-paper-50">{t.km} km</td>
+                      {tripKm.slice(0, 10).map((trip) => (
+                        <tr key={trip.reservationId} className="border-b border-line-800 last:border-0 hover:bg-panel-900/60">
+                          <td className="px-4 py-3 text-fog-400">{trip.destination}</td>
+                          <td className="px-4 py-3 font-mono tabular-nums text-paper-50">{trip.km} {t.units.km}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -359,10 +375,10 @@ export default async function AnalyticsPage() {
 
           <section className="border-b border-line-800 px-6 py-4">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              Destinos Mais Frequentes
+              {t.destinations.title}
             </h2>
             {topDestinations.length === 0 ? (
-              <p className="text-sm text-fog-400">Nenhuma solicitação de viagem registrada ainda.</p>
+              <p className="text-sm text-fog-400">{t.destinations.empty}</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {topDestinations.map((d) => (
@@ -371,7 +387,8 @@ export default async function AnalyticsPage() {
                     label={d.destination}
                     value={d.count}
                     max={maxDestinationCount}
-                    unit={d.count === 1 ? "solicitação" : "solicitações"}
+                    unit={d.count === 1 ? t.destinations.unitOne : t.destinations.unitOther}
+                    locale={locale}
                     colorClass="bg-signal-blue"
                   />
                 ))}
@@ -381,25 +398,35 @@ export default async function AnalyticsPage() {
 
           <section className="px-6 py-4">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              Potencial de Carpooling
+              {t.carpooling.title}
             </h2>
             {totalTripRequests === 0 ? (
-              <p className="text-sm text-fog-400">Nenhuma solicitação de viagem registrada ainda.</p>
+              <p className="text-sm text-fog-400">{t.carpooling.empty}</p>
             ) : (
               <div className="flex flex-col gap-2">
                 <StatBar
-                  label="Taxa"
+                  label={t.carpooling.rateLabel}
                   value={carpoolRatePercent}
                   max={100}
                   unit="%"
+                  locale={locale}
                   colorClass="bg-signal-teal"
                 />
                 <p className="text-sm text-fog-400">
-                  <span className="font-mono text-paper-50">{totalParticipants}</span> carona
-                  {totalParticipants === 1 ? "" : "s"} registrada
-                  {totalParticipants === 1 ? "" : "s"} em{" "}
-                  <span className="font-mono text-paper-50">{totalTripRequests}</span> solicitaç
-                  {totalTripRequests === 1 ? "ão" : "ões"} de viagem no total.
+                  {interpolate(t.carpooling.summary, {
+                    carpools: interpolate(
+                      totalParticipants === 1
+                        ? t.carpooling.carpoolsCountOne
+                        : t.carpooling.carpoolsCountOther,
+                      { count: <span className="font-mono text-paper-50">{totalParticipants}</span> },
+                    ),
+                    requests: interpolate(
+                      totalTripRequests === 1
+                        ? t.carpooling.requestsCountOne
+                        : t.carpooling.requestsCountOther,
+                      { count: <span className="font-mono text-paper-50">{totalTripRequests}</span> },
+                    ),
+                  })}
                 </p>
               </div>
             )}

@@ -4,7 +4,7 @@ import { InactivityLogout } from "./InactivityLogout";
 import { SessionBackupSync } from "./SessionBackupSync";
 import { MobileNav } from "./MobileNav";
 import { NotificationBell } from "./dashboard/NotificationBell";
-import { ROLE_LABELS } from "./settings/users/ROLE_LABELS";
+import { getRoleLabels } from "./settings/users/ROLE_LABELS";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { LanguageToggle } from "./ui/LanguageToggle";
 import { getLocale, getDictionary } from "../lib/i18n/getLocale";
@@ -54,7 +54,7 @@ export async function AppShell({
 }) {
   const locale = await getLocale();
   const dict = await getDictionary();
-  const roleLabels: Record<string, string> = { ...ROLE_LABELS, ...dict.roles };
+  const roleLabels = getRoleLabels(dict);
 
   const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
     { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: true },
@@ -77,6 +77,8 @@ export async function AppShell({
         orgName={orgName}
         userName={userName}
         role={role}
+        dict={dict}
+        locale={locale}
       />
       <aside className="hidden shrink-0 flex-col border-line-800 bg-panel-900/40 px-4 py-4 md:flex md:w-60 md:border-r md:py-5">
         <div className="px-1 md:mb-6">
@@ -130,7 +132,7 @@ export async function AppShell({
               <ThemeToggle dict={dict} />
             </div>
             <div className="hidden items-center gap-4 md:flex">
-              <NotificationBell align="right" />
+              <NotificationBell align="right" dict={dict} locale={locale} />
               <div className="hidden text-right lg:block">
                 <p className="truncate text-sm text-paper-50">{userName}</p>
                 <p className="text-xs uppercase tracking-widest text-fog-600">

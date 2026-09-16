@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
+import { getDictionary } from "@/lib/i18n/getLocale";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 export interface FleetActionState {
   status: "idle" | "success" | "error";
@@ -23,12 +25,13 @@ async function uploadVehiclePhoto(
   organizationId: string,
   vehicleId: string,
   file: File,
+  dict: Dictionary,
 ): Promise<{ path: string } | { error: string }> {
   if (!file.type.startsWith("image/")) {
-    return { error: "A foto deve ser uma imagem." };
+    return { error: dict.errors.fleet.photoMustBeImage };
   }
   if (file.size > MAX_PHOTO_BYTES) {
-    return { error: "A foto deve ter no máximo 10MB." };
+    return { error: dict.errors.fleet.photoTooLarge };
   }
   const extensionMatch = /\.([a-zA-Z0-9]+)$/.exec(file.name);
   const extension = extensionMatch ? extensionMatch[1] : "jpg";
@@ -37,7 +40,7 @@ async function uploadVehiclePhoto(
   const { error } = await supabase.storage
     .from("vehicle-photos")
     .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
-  if (error) return { error: "Não foi possível enviar a foto agora." };
+  if (error) return { error: dict.errors.fleet.photoUploadFailed };
 
   return { path: storagePath };
 }
@@ -66,8 +69,9 @@ export async function createLocation(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { status: "error", error: "Informe um nome para a localização." };
+  if (!name) return { status: "error", error: dict.errors.fleet.locationNameRequired };
 
   const { error } = await supabase
     .from("vehicle_locations")
@@ -85,9 +89,10 @@ export async function updateLocation(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
-  if (!id || !name) return { status: "error", error: "Informe um nome para a localização." };
+  if (!id || !name) return { status: "error", error: dict.errors.fleet.locationNameRequired };
 
   const { error } = await supabase
     .from("vehicle_locations")
@@ -107,8 +112,9 @@ export async function deleteLocation(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const id = String(formData.get("id") ?? "");
-  if (!id) return { status: "error", error: "Localização inválida." };
+  if (!id) return { status: "error", error: dict.errors.fleet.locationInvalid };
 
   const { error } = await supabase
     .from("vehicle_locations")
@@ -123,9 +129,7 @@ export async function deleteLocation(
     const inUse = error.code === "23503";
     return {
       status: "error",
-      error: inUse
-        ? "Não é possível excluir: existem veículos usando esta localização."
-        : error.message,
+      error: inUse ? dict.errors.fleet.locationInUse : error.message,
     };
   }
 
@@ -140,16 +144,17 @@ export async function createCategory(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const name = String(formData.get("name") ?? "").trim();
   const passengerCapacity = Number(formData.get("passengerCapacity"));
   const supportsCargo = formData.get("supportsCargo") === "on";
   const energyType = String(formData.get("energyType") ?? "");
 
   if (!name || !Number.isFinite(passengerCapacity) || passengerCapacity < 0 || passengerCapacity > 60) {
-    return { status: "error", error: "Preencha o nome e uma capacidade de passageiros válida (0-60)." };
+    return { status: "error", error: dict.errors.fleet.categoryNameAndCapacity };
   }
   if (!["ICE", "HEV", "PHEV", "BEV"].includes(energyType)) {
-    return { status: "error", error: "Selecione o tipo de energia da categoria." };
+    return { status: "error", error: dict.errors.fleet.energyTypeRequired };
   }
 
   const { error } = await supabase.from("vehicle_categories").insert({
@@ -172,6 +177,7 @@ export async function updateCategory(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const passengerCapacity = Number(formData.get("passengerCapacity"));
@@ -179,10 +185,10 @@ export async function updateCategory(
   const energyType = String(formData.get("energyType") ?? "");
 
   if (!id || !name || !Number.isFinite(passengerCapacity) || passengerCapacity < 0 || passengerCapacity > 60) {
-    return { status: "error", error: "Preencha o nome e uma capacidade de passageiros válida (0-60)." };
+    return { status: "error", error: dict.errors.fleet.categoryNameAndCapacity };
   }
   if (!["ICE", "HEV", "PHEV", "BEV"].includes(energyType)) {
-    return { status: "error", error: "Selecione o tipo de energia da categoria." };
+    return { status: "error", error: dict.errors.fleet.energyTypeRequired };
   }
 
   const { error } = await supabase
@@ -208,8 +214,9 @@ export async function deleteCategory(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const id = String(formData.get("id") ?? "");
-  if (!id) return { status: "error", error: "Categoria inválida." };
+  if (!id) return { status: "error", error: dict.errors.fleet.categoryInvalid };
 
   const { error } = await supabase
     .from("vehicle_categories")
@@ -220,9 +227,7 @@ export async function deleteCategory(
     const inUse = error.code === "23503";
     return {
       status: "error",
-      error: inUse
-        ? "Não é possível excluir: existem veículos cadastrados nesta categoria."
-        : error.message,
+      error: inUse ? dict.errors.fleet.categoryInUse : error.message,
     };
   }
 
@@ -237,6 +242,7 @@ export async function createVehicle(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const plate = String(formData.get("plate") ?? "").trim().toUpperCase();
   const categoryId = String(formData.get("categoryId") ?? "");
   const odometerKm = Number(formData.get("odometerKm"));
@@ -254,16 +260,16 @@ export async function createVehicle(
   const photo = formData.get("photo");
 
   if (!plate || !categoryId || !locationId) {
-    return { status: "error", error: "Preencha placa, categoria e localização." };
+    return { status: "error", error: dict.errors.fleet.vehicleRequiredFields };
   }
   if (!Number.isFinite(odometerKm) || odometerKm < 0) {
-    return { status: "error", error: "Quilometragem inválida." };
+    return { status: "error", error: dict.errors.fleet.odometerInvalid };
   }
   if (nextServiceOdometerKm !== null && (!Number.isFinite(nextServiceOdometerKm) || nextServiceOdometerKm < odometerKm)) {
-    return { status: "error", error: "A quilometragem da próxima revisão deve ser maior que a atual." };
+    return { status: "error", error: dict.errors.fleet.nextServiceOdometerInvalid };
   }
   if (!Number.isFinite(estimatedRangeKm) || estimatedRangeKm < 0) {
-    return { status: "error", error: "Autonomia estimada inválida." };
+    return { status: "error", error: dict.errors.fleet.estimatedRangeInvalid };
   }
 
   // Which of these two the vehicle's category actually shows (VehicleForm.tsx) already
@@ -276,10 +282,10 @@ export async function createVehicle(
   // so an out-of-range or non-numeric value gets a friendly message here instead of a
   // raw Postgres constraint-violation string surfacing to the fleet manager.
   if (fuelLevelPercent !== null && (!Number.isFinite(fuelLevelPercent) || fuelLevelPercent < 0 || fuelLevelPercent > 100)) {
-    return { status: "error", error: "O nível de combustível deve estar entre 0 e 100%." };
+    return { status: "error", error: dict.errors.fleet.fuelLevelRange };
   }
   if (batteryLevelPercent !== null && (!Number.isFinite(batteryLevelPercent) || batteryLevelPercent < 0 || batteryLevelPercent > 100)) {
-    return { status: "error", error: "O nível de bateria deve estar entre 0 e 100%." };
+    return { status: "error", error: dict.errors.fleet.batteryLevelRange };
   }
 
   // category_id/location_id are plain FKs (0001_init_schema.sql) with no org-scoped
@@ -292,7 +298,7 @@ export async function createVehicle(
     supabase.from("vehicle_locations").select("id").eq("id", locationId).eq("organization_id", organizationId).maybeSingle(),
   ]);
   if (!categoryRow || !locationRow) {
-    return { status: "error", error: "Categoria ou localização inválida." };
+    return { status: "error", error: dict.errors.fleet.categoryOrLocationInvalid };
   }
 
   const { data: inserted, error } = await supabase
@@ -316,8 +322,8 @@ export async function createVehicle(
     .single();
   if (error || !inserted) {
     const friendlyError = error?.message.includes("duplicate") || error?.message.includes("unique")
-      ? "Já existe um veículo com essa placa nesta organização."
-      : (error?.message ?? "Não foi possível criar o veículo.");
+      ? dict.errors.fleet.duplicatePlate
+      : (error?.message ?? dict.errors.fleet.vehicleCreateFailed);
     return { status: "error", error: friendlyError };
   }
 
@@ -325,7 +331,7 @@ export async function createVehicle(
   // returns one — a failure here shouldn't undo an otherwise-successful vehicle creation,
   // it just leaves the photo unset (the fleet manager can add it via Editar).
   if (photo instanceof File && photo.size > 0) {
-    const uploadResult = await uploadVehiclePhoto(supabase, organizationId, inserted.id, photo);
+    const uploadResult = await uploadVehiclePhoto(supabase, organizationId, inserted.id, photo, dict);
     if ("path" in uploadResult) {
       await supabase.from("vehicles").update({ photo_storage_path: uploadResult.path }).eq("id", inserted.id);
     }
@@ -352,8 +358,9 @@ export async function updateVehicle(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const id = String(formData.get("id") ?? "");
-  if (!id) return { status: "error", error: "Veículo inválido." };
+  if (!id) return { status: "error", error: dict.errors.fleet.vehicleInvalid };
 
   const plate = String(formData.get("plate") ?? "").trim().toUpperCase();
   const categoryId = String(formData.get("categoryId") ?? "");
@@ -372,26 +379,26 @@ export async function updateVehicle(
   const photo = formData.get("photo");
 
   if (!plate || !categoryId || !homeLocationId) {
-    return { status: "error", error: "Preencha placa, categoria e localização." };
+    return { status: "error", error: dict.errors.fleet.vehicleRequiredFields };
   }
   if (!Number.isFinite(odometerKm) || odometerKm < 0) {
-    return { status: "error", error: "Quilometragem inválida." };
+    return { status: "error", error: dict.errors.fleet.odometerInvalid };
   }
   if (nextServiceOdometerKm !== null && (!Number.isFinite(nextServiceOdometerKm) || nextServiceOdometerKm < odometerKm)) {
-    return { status: "error", error: "A quilometragem da próxima revisão deve ser maior que a atual." };
+    return { status: "error", error: dict.errors.fleet.nextServiceOdometerInvalid };
   }
   if (!Number.isFinite(estimatedRangeKm) || estimatedRangeKm < 0) {
-    return { status: "error", error: "Autonomia estimada inválida." };
+    return { status: "error", error: dict.errors.fleet.estimatedRangeInvalid };
   }
 
   const fuelLevelPercent = fuelLevelRaw ? Number(fuelLevelRaw) : null;
   const batteryLevelPercent = batteryLevelRaw ? Number(batteryLevelRaw) : null;
 
   if (fuelLevelPercent !== null && (!Number.isFinite(fuelLevelPercent) || fuelLevelPercent < 0 || fuelLevelPercent > 100)) {
-    return { status: "error", error: "O nível de combustível deve estar entre 0 e 100%." };
+    return { status: "error", error: dict.errors.fleet.fuelLevelRange };
   }
   if (batteryLevelPercent !== null && (!Number.isFinite(batteryLevelPercent) || batteryLevelPercent < 0 || batteryLevelPercent > 100)) {
-    return { status: "error", error: "O nível de bateria deve estar entre 0 e 100%." };
+    return { status: "error", error: dict.errors.fleet.batteryLevelRange };
   }
 
   const [{ data: categoryRow }, { data: locationRow }] = await Promise.all([
@@ -399,14 +406,14 @@ export async function updateVehicle(
     supabase.from("vehicle_locations").select("id").eq("id", homeLocationId).eq("organization_id", organizationId).maybeSingle(),
   ]);
   if (!categoryRow || !locationRow) {
-    return { status: "error", error: "Categoria ou localização inválida." };
+    return { status: "error", error: dict.errors.fleet.categoryOrLocationInvalid };
   }
 
   // Uploaded before the row update so a failed upload can report an error without
   // silently discarding the rest of the (already-validated) form on write.
   let photoStoragePath: string | undefined;
   if (photo instanceof File && photo.size > 0) {
-    const uploadResult = await uploadVehiclePhoto(supabase, organizationId, id, photo);
+    const uploadResult = await uploadVehiclePhoto(supabase, organizationId, id, photo, dict);
     if ("error" in uploadResult) return { status: "error", error: uploadResult.error };
     photoStoragePath = uploadResult.path;
   }
@@ -430,7 +437,7 @@ export async function updateVehicle(
     .eq("organization_id", organizationId);
   if (error) {
     const friendlyError = error.message.includes("duplicate") || error.message.includes("unique")
-      ? "Já existe um veículo com essa placa nesta organização."
+      ? dict.errors.fleet.duplicatePlate
       : error.message;
     return { status: "error", error: friendlyError };
   }
@@ -447,8 +454,9 @@ export async function deleteVehicle(
   const { supabase, organizationId } = await requireFleetManager();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const id = String(formData.get("id") ?? "");
-  if (!id) return { status: "error", error: "Veículo inválido." };
+  if (!id) return { status: "error", error: dict.errors.fleet.vehicleInvalid };
 
   const { error } = await supabase
     .from("vehicles")
@@ -464,9 +472,7 @@ export async function deleteVehicle(
     const hasHistory = error.code === "23503";
     return {
       status: "error",
-      error: hasHistory
-        ? 'Não é possível excluir: este veículo já tem reservas ou inspeções registradas. Use "Bloquear" no Painel para retirá-lo de operação sem perder o histórico.'
-        : error.message,
+      error: hasHistory ? dict.errors.fleet.vehicleHasHistory : error.message,
     };
   }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { readSessionBackup, clearSessionBackup } from "@/lib/supabase/sessionBackup";
+import type { Dictionary } from "../../lib/i18n/dictionaries";
 
 /**
  * Silently retries a browser-local session backup before showing the login form — see
@@ -12,7 +13,7 @@ import { readSessionBackup, clearSessionBackup } from "@/lib/supabase/sessionBac
  * signOut), so setSession() below naturally fails and falls through to the normal login
  * form in that case — this only fires for the spurious bounce.
  */
-export function LoginRecovery({ children }: { children: React.ReactNode }) {
+export function LoginRecovery({ dict, children }: { dict: Dictionary; children: React.ReactNode }) {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export function LoginRecovery({ children }: { children: React.ReactNode }) {
   if (checking) {
     return (
       <main className="flex min-h-dvh items-center justify-center px-4">
-        <p className="text-xs uppercase tracking-widest text-fog-600">Verificando sessão…</p>
+        <p className="text-xs uppercase tracking-widest text-fog-600">{dict.auth.verifyingSession}</p>
       </main>
     );
   }

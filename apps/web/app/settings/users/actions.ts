@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getDictionary } from "@/lib/i18n/getLocale";
 
 export interface UserActionState {
   status: "idle" | "success" | "error";
@@ -47,16 +48,17 @@ export async function inviteUser(
   const { organizationId, actingUserId } = await requireAdministrator();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const role = String(formData.get("role") ?? "");
 
   if (!fullName || !email || password.length < 8) {
-    return { status: "error", error: "Preencha nome, e-mail e uma senha com pelo menos 8 caracteres." };
+    return { status: "error", error: dict.errors.users.inviteRequiredFields };
   }
   if (!ROLES.includes(role as Role)) {
-    return { status: "error", error: "Selecione uma função válida." };
+    return { status: "error", error: dict.errors.users.roleInvalid };
   }
 
   const admin = createSupabaseAdminClient();
@@ -71,8 +73,8 @@ export async function inviteUser(
     return {
       status: "error",
       error: alreadyRegistered
-        ? "Este e-mail já está cadastrado."
-        : "Não foi possível criar o usuário agora. Tente novamente em instantes.",
+        ? dict.errors.users.emailAlreadyRegistered
+        : dict.errors.users.userCreateFailed,
     };
   }
 
@@ -84,7 +86,7 @@ export async function inviteUser(
   });
   if (profileError) {
     await admin.auth.admin.deleteUser(authData.user.id);
-    return { status: "error", error: "Não foi possível concluir o cadastro do usuário. Tente novamente." };
+    return { status: "error", error: dict.errors.users.profileCreateFailed };
   }
 
   await admin.rpc("log_audit_event", {
@@ -107,10 +109,11 @@ export async function updateUserRole(
   const { organizationId, actingUserId } = await requireAdministrator();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const userId = String(formData.get("userId") ?? "");
   const role = String(formData.get("role") ?? "");
   if (!userId || !ROLES.includes(role as Role)) {
-    return { status: "error", error: "Seleção inválida." };
+    return { status: "error", error: dict.errors.users.selectionInvalid };
   }
 
   const admin = createSupabaseAdminClient();
@@ -128,9 +131,9 @@ export async function updateUserRole(
   });
   if (error) {
     const message = error.message.includes("would be left with none")
-      ? "Não é possível remover o último administrador da organização."
+      ? dict.errors.users.lastAdministrator
       : error.message.includes("User not found")
-        ? "Usuário não encontrado."
+        ? dict.errors.users.userNotFound
         : error.message;
     return { status: "error", error: message };
   }
@@ -163,8 +166,9 @@ export async function updateDriverAuthorization(
   const { organizationId, actingUserId } = await requireAdministrator();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const userId = String(formData.get("userId") ?? "");
-  if (!userId) return { status: "error", error: "Usuário inválido." };
+  if (!userId) return { status: "error", error: dict.errors.users.userInvalid };
 
   const driverAuthorized = formData.get("driverAuthorized") === "on";
   const licenseNumber = String(formData.get("licenseNumber") ?? "").trim() || null;
@@ -180,7 +184,7 @@ export async function updateDriverAuthorization(
     .eq("id", userId)
     .maybeSingle();
   if (!targetProfile || targetProfile.organization_id !== organizationId) {
-    return { status: "error", error: "Usuário não encontrado." };
+    return { status: "error", error: dict.errors.users.userNotFound };
   }
 
   const { error } = await admin
@@ -192,7 +196,7 @@ export async function updateDriverAuthorization(
       drivers_license_expiration: licenseExpiration,
     })
     .eq("id", userId);
-  if (error) return { status: "error", error: "Não foi possível salvar a habilitação agora." };
+  if (error) return { status: "error", error: dict.errors.users.driverAuthorizationSaveFailed };
 
   await admin.rpc("log_audit_event", {
     p_organization_id: organizationId,
@@ -217,10 +221,11 @@ export async function removeUser(
   const { organizationId, actingUserId } = await requireAdministrator();
   if (!organizationId) return { status: "error", error: "not_authorized" };
 
+  const dict = await getDictionary();
   const userId = String(formData.get("userId") ?? "");
-  if (!userId) return { status: "error", error: "Usuário inválido." };
+  if (!userId) return { status: "error", error: dict.errors.users.userInvalid };
   if (userId === actingUserId) {
-    return { status: "error", error: "Você não pode remover sua própria conta por aqui." };
+    return { status: "error", error: dict.errors.users.cannotRemoveSelf };
   }
 
   const admin = createSupabaseAdminClient();
@@ -231,7 +236,7 @@ export async function removeUser(
     .eq("id", userId)
     .maybeSingle();
   if (!targetProfile || targetProfile.organization_id !== organizationId) {
-    return { status: "error", error: "Usuário não encontrado." };
+    return { status: "error", error: dict.errors.users.userNotFound };
   }
 
   // lock_and_require_multiple_administrators (0013_atomic_last_administrator_guard.sql)
@@ -249,10 +254,7 @@ export async function removeUser(
       p_organization_id: organizationId,
     });
     if (guardError) {
-      return {
-        status: "error",
-        error: "Não é possível remover o último administrador da organização.",
-      };
+      return { status: "error", error: dict.errors.users.lastAdministrator };
     }
   }
 
@@ -268,12 +270,7 @@ export async function removeUser(
     // (see comment above) — GoTrue's admin API doesn't reliably surface the underlying
     // Postgres error text, so this message names both the likely cause and the fix
     // instead of guessing from the raw error string.
-    return {
-      status: "error",
-      error:
-        "Não foi possível remover este usuário. Se ele já solicitou viagens no sistema, " +
-        "altere a função dele para revogar o acesso em vez de excluir.",
-    };
+    return { status: "error", error: dict.errors.users.removeUserFailed };
   }
 
   await admin.rpc("log_audit_event", {

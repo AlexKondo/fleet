@@ -2,9 +2,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ReturnForm } from "./ReturnForm";
+import { getDictionary, getLocale } from "../../../../lib/i18n/getLocale";
 
 export default async function ReturnPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const dict = await getDictionary();
+  const locale = await getLocale();
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -43,17 +46,19 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
           href="/trips"
           className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
         >
-          ← Minhas Viagens
+          {dict.reservations.detail.backToTrips}
         </Link>
         <p className="mt-4 font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-          Checklist de Retorno
+          {dict.reservations.return.title}
         </p>
         <p className="mt-1 text-sm text-fog-400">
           <span className="font-mono">{vehicle.plate}</span>
           {vehicle.name ? ` · ${vehicle.name}` : ""}
           {vehicle.category?.name ? ` · ${vehicle.category.name}` : ""}
           {vehicle.color ? ` · ${vehicle.color}` : ""}
-          {showElectricRange ? ` · Autonomia elétrica: ${vehicle.estimated_range_km} km` : ""}
+          {showElectricRange
+            ? ` · ${dict.reservations.checklist.electricRange.replace("{km}", String(vehicle.estimated_range_km))}`
+            : ""}
         </p>
         <p className="mt-1 font-mono text-xs text-fog-600">
           {reservation.trip_request?.origin} → {reservation.trip_request?.destination}
@@ -65,6 +70,8 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
             currentOdometer={vehicle.odometer_km}
             locations={locations ?? []}
             homeLocationId={vehicle.home_location_id}
+            dict={dict}
+            locale={locale}
           />
         </div>
       </div>

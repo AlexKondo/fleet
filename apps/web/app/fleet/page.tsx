@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
+import { getStatusMeta } from "../dashboard/statusMeta";
 import { AppShell } from "../AppShell";
 import { AddCategorySection } from "./AddCategorySection";
 import { AddLocationSection } from "./AddLocationSection";
@@ -18,6 +20,9 @@ import { VehicleRow } from "./VehicleRow";
  */
 export default async function FleetPage() {
   const supabase = await createSupabaseServerClient();
+  const dict = await getDictionary();
+  const locale = await getLocale();
+  const statusMeta = getStatusMeta(dict);
 
   const {
     data: { user },
@@ -81,7 +86,7 @@ export default async function FleetPage() {
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Frota"
+      title={dict.fleet.title}
     >
 
       {loadError ? (
@@ -89,7 +94,7 @@ export default async function FleetPage() {
           role="alert"
           className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
         >
-          Não foi possível carregar os dados da frota agora. Tente novamente em instantes.
+          {dict.fleet.loadError}
         </div>
       ) : null}
 
@@ -98,7 +103,7 @@ export default async function FleetPage() {
           tabs={[
             {
               key: "vehicles",
-              label: "Veículos",
+              label: dict.fleet.tabs.vehicles,
               count: vehicles?.length ?? 0,
               content: (
                 <div className="flex flex-col gap-4">
@@ -107,6 +112,7 @@ export default async function FleetPage() {
                       {vehicles.map((v) => (
                         <VehicleRow
                           key={v.id}
+                          locale={locale}
                           vehicle={{
                             id: v.id,
                             plate: v.plate,
@@ -121,59 +127,63 @@ export default async function FleetPage() {
                             battery_level_percent: v.battery_level_percent,
                             home_location_id: v.home_location_id,
                           }}
-                          status={v.status}
+                          statusMeta={statusMeta[v.status]}
                           categoryName={v.category?.name ?? "—"}
                           locationName={v.current_location?.name ?? "—"}
                           categories={categoriesForVehicleForms}
                           locations={locations ?? []}
+                          dict={dict}
                         />
                       ))}
                     </ul>
                   ) : (
                     <p className="text-sm text-fog-400">
-                      Nenhum veículo cadastrado ainda — a frota aparece no Painel assim
-                      que o primeiro veículo for adicionado abaixo.
+                      {dict.fleet.empty.vehicles}
                     </p>
                   )}
-                  <AddVehicleSection categories={categoriesForVehicleForms} locations={locations ?? []} />
+                  <AddVehicleSection
+                    categories={categoriesForVehicleForms}
+                    locations={locations ?? []}
+                    dict={dict}
+                  />
                 </div>
               ),
             },
             {
               key: "categories",
-              label: "Categorias",
+              label: dict.fleet.tabs.categories,
               count: categories?.length ?? 0,
               content: (
                 <div className="flex flex-col gap-4">
                   {categories && categories.length > 0 ? (
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                       {categories.map((c) => (
-                        <CategoryRow key={c.id} category={c} />
+                        <CategoryRow key={c.id} category={c} dict={dict} />
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-fog-400">Nenhuma categoria cadastrada ainda.</p>
+                    <p className="text-sm text-fog-400">{dict.fleet.empty.categories}</p>
                   )}
-                  <AddCategorySection />
+                  <AddCategorySection dict={dict} />
                 </div>
               ),
             },
             {
               key: "locations",
-              label: "Localizações",
+              label: dict.fleet.tabs.locations,
               count: locations?.length ?? 0,
               content: (
                 <div className="flex flex-col gap-4">
                   {locations && locations.length > 0 ? (
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                       {locations.map((l) => (
-                        <LocationRow key={l.id} location={l} />
+                        <LocationRow key={l.id} location={l} dict={dict} />
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-fog-400">Nenhuma localização cadastrada ainda.</p>
+                    <p className="text-sm text-fog-400">{dict.fleet.empty.locations}</p>
                   )}
-                  <AddLocationSection />
+                  <AddLocationSection dict={dict} />
                 </div>
               ),
             },

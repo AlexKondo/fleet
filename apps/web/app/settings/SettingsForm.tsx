@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { saveOrganizationSettings, type SettingsActionState } from "./actions";
+import type { Dictionary } from "../../lib/i18n/dictionaries";
 
 export interface SettingsFormValues {
   rangeSafetyBufferPercent: number;
@@ -16,40 +17,29 @@ export interface SettingsFormValues {
   earlyPickupGraceMinutes: number;
 }
 
-const BOOKING_MODE_OPTIONS: { value: SettingsFormValues["bookingMode"]; label: string; hint: string }[] = [
-  {
-    value: "ai_recommended",
-    label: "Recomendação automática",
-    hint: "O sistema escolhe o melhor veículo; o solicitante não escolhe manualmente.",
-  },
-  {
-    value: "hybrid",
-    label: "Híbrido",
-    hint: "O sistema recomenda um veículo, mas o solicitante pode escolher outra opção elegível.",
-  },
-  {
-    value: "user_choice",
-    label: "Escolha do usuário",
-    hint: "O solicitante escolhe entre todos os veículos elegíveis para a viagem.",
-  },
+const BOOKING_MODE_VALUES: SettingsFormValues["bookingMode"][] = [
+  "ai_recommended",
+  "hybrid",
+  "user_choice",
 ];
 
 const initialState: SettingsActionState = { status: "idle" };
 
-const ERROR_LABELS: Record<string, string> = {
-  not_authenticated: "Sessão expirada — faça login novamente.",
-  not_authorized: "Você não tem permissão para alterar estas configurações.",
-  invalid_values:
-    "Verifique os valores informados — todos devem ser números válidos e não negativos.",
-};
-
-function errorLabel(code?: string): string {
-  if (!code) return "Não foi possível salvar as configurações agora.";
-  return ERROR_LABELS[code] ?? code;
+function errorLabel(dict: Dictionary, code?: string): string {
+  const errors = dict.settings.form.errors;
+  if (!code) return errors.generic;
+  return (errors as Record<string, string>)[code] ?? code;
 }
 
-export function SettingsForm({ initialValues }: { initialValues: SettingsFormValues }) {
+export function SettingsForm({
+  dict,
+  initialValues,
+}: {
+  dict: Dictionary;
+  initialValues: SettingsFormValues;
+}) {
   const [state, formAction, pending] = useActionState(saveOrganizationSettings, initialState);
+  const t = dict.settings.form;
 
   return (
     <form
@@ -58,18 +48,15 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
     >
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Autonomia &amp; Preparação de Veículos
+          {t.range.heading}
         </h2>
-        <p className="mt-1 text-xs text-fog-600">
-          Parâmetros usados pelo Mobility Decision Engine para avaliar se um veículo está
-          pronto para uma viagem específica (§7, §8).
-        </p>
+        <p className="mt-1 text-xs text-fog-600">{t.range.description}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Margem de segurança de autonomia (%)
+            {t.range.safetyBufferLabel}
           </span>
           <input
             type="number"
@@ -84,7 +71,7 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Horas mín. de recarga (BEV)
+            {t.range.minChargeHoursBevLabel}
           </span>
           <input
             type="number"
@@ -98,7 +85,7 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Horas mín. de abastecimento (ICE/PHEV)
+            {t.range.minRefuelHoursLabel}
           </span>
           <input
             type="number"
@@ -112,7 +99,7 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Horas mín. de limpeza
+            {t.range.minCleaningHoursLabel}
           </span>
           <input
             type="number"
@@ -128,18 +115,15 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
 
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Corporate Carpooling
+          {t.carpool.heading}
         </h2>
-        <p className="mt-1 text-xs text-fog-600">
-          Tolerância de horário para considerar uma viagem existente compatível com uma nova
-          solicitação de carona (§4).
-        </p>
+        <p className="mt-1 text-xs text-fog-600">{t.carpool.description}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Tolerância de saída (min)
+            {t.carpool.departureToleranceLabel}
           </span>
           <input
             type="number"
@@ -153,7 +137,7 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Tolerância de retorno (min)
+            {t.carpool.returnToleranceLabel}
           </span>
           <input
             type="number"
@@ -169,30 +153,27 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
 
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Modo de Reserva de Veículo
+          {t.booking.heading}
         </h2>
-        <p className="mt-1 text-xs text-fog-600">
-          Como o Mobility Decision Engine apresenta a escolha de veículo ao solicitante
-          (BR-005).
-        </p>
+        <p className="mt-1 text-xs text-fog-600">{t.booking.description}</p>
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        {BOOKING_MODE_OPTIONS.map((opt) => (
+        {BOOKING_MODE_VALUES.map((value) => (
           <label
-            key={opt.value}
+            key={value}
             className="flex items-start gap-2 rounded-sm border border-line-800 bg-panel-800 px-3 py-2"
           >
             <input
               type="radio"
               name="bookingMode"
-              value={opt.value}
-              defaultChecked={initialValues.bookingMode === opt.value}
+              value={value}
+              defaultChecked={initialValues.bookingMode === value}
               className="mt-0.5 h-4 w-4"
             />
             <span className="flex flex-col">
-              <span className="text-sm text-paper-50">{opt.label}</span>
-              <span className="text-xs text-fog-600">{opt.hint}</span>
+              <span className="text-sm text-paper-50">{t.booking.modes[value].label}</span>
+              <span className="text-xs text-fog-600">{t.booking.modes[value].hint}</span>
             </span>
           </label>
         ))}
@@ -200,17 +181,15 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
 
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Manutenção Preditiva &amp; Restrição de Circulação
+          {t.maintenance.heading}
         </h2>
-        <p className="mt-1 text-xs text-fog-600">
-          Janela de aviso de revisão (§12) e alerta de rodízio de veículos em São Paulo (§15).
-        </p>
+        <p className="mt-1 text-xs text-fog-600">{t.maintenance.description}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Janela de revisão &quot;em breve&quot; (dias)
+            {t.maintenance.dueSoonDaysLabel}
           </span>
           <input
             type="number"
@@ -229,22 +208,20 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
             defaultChecked={initialValues.trafficRestrictionEnabled}
             className="h-4 w-4"
           />
-          Alertar sobre rodízio de veículos em São Paulo
+          {t.maintenance.trafficRestrictionLabel}
         </label>
       </div>
 
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Retirada Antecipada
+          {t.earlyPickup.heading}
         </h2>
-        <p className="mt-1 text-xs text-fog-600">
-          Quanto tempo antes do horário agendado da reserva um veículo pode ser retirado.
-        </p>
+        <p className="mt-1 text-xs text-fog-600">{t.earlyPickup.description}</p>
       </div>
 
       <label className="flex w-fit flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-          Tolerância de retirada antecipada (minutos)
+          {t.earlyPickup.graceMinutesLabel}
         </span>
         <input
           type="number"
@@ -259,12 +236,12 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
 
       {state.status === "error" ? (
         <p role="alert" className="text-sm text-signal-red">
-          {errorLabel(state.error)}
+          {errorLabel(dict, state.error)}
         </p>
       ) : null}
       {state.status === "success" ? (
         <p role="status" className="text-sm text-signal-teal">
-          Configurações salvas.
+          {t.success}
         </p>
       ) : null}
 
@@ -273,7 +250,7 @@ export function SettingsForm({ initialValues }: { initialValues: SettingsFormVal
         disabled={pending}
         className="mt-2 w-fit rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {pending ? "Salvando…" : "Salvar Configurações"}
+        {pending ? dict.common.saving : t.submit}
       </button>
     </form>
   );

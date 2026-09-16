@@ -3,29 +3,32 @@
 import { useActionState } from "react";
 import { PasswordInput } from "../PasswordInput";
 import { updatePassword, type ResetPasswordState } from "./actions";
+import type { Dictionary } from "../../lib/i18n/dictionaries";
 
 const initialState: ResetPasswordState = { status: "idle" };
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({ dict }: { dict: Dictionary }) {
   const [state, formAction, pending] = useActionState(updatePassword, initialState);
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-4">
       <PasswordInput
         name="password"
-        label="Nova senha"
+        label={dict.auth.newPasswordLabel}
         autoComplete="new-password"
         required
         minLength={8}
-        placeholder="Mín. 8 caracteres"
+        placeholder={dict.auth.newPasswordPlaceholder}
+        dict={dict}
       />
       <PasswordInput
         name="confirmPassword"
-        label="Confirmar nova senha"
+        label={dict.auth.confirmNewPasswordLabel}
         autoComplete="new-password"
         required
         minLength={8}
-        placeholder="Repita a senha"
+        placeholder={dict.auth.confirmNewPasswordPlaceholder}
+        dict={dict}
       />
 
       {state.status === "error" ? (
@@ -39,7 +42,7 @@ export function ResetPasswordForm() {
         disabled={pending}
         className="mt-2 rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {pending ? "Salvando…" : "Salvar nova senha"}
+        {pending ? dict.common.saving : dict.auth.saveNewPassword}
       </button>
     </form>
   );

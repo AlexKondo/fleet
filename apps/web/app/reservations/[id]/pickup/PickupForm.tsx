@@ -3,9 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Database } from "@fleet/supabase-client";
-import { PHOTO_ANGLE_LABELS, SAFETY_EQUIPMENT_OPTIONS, type PhotoAngle } from "@/lib/domain/checklist";
+import { SAFETY_EQUIPMENT_OPTIONS, type PhotoAngle } from "@/lib/domain/checklist";
 import { PhotoCaptureSection } from "../PhotoCapture";
 import { submitPickup } from "./actions";
+import type { Dictionary } from "../../../../lib/i18n/dictionaries";
 
 type EnergyType = Database["public"]["Enums"]["energy_type"];
 
@@ -13,11 +14,15 @@ export function PickupForm({
   reservationId,
   energyType,
   currentOdometer,
+  dict,
 }: {
   reservationId: string;
   energyType: EnergyType;
   currentOdometer: number;
+  dict: Dictionary;
 }) {
+  const t = dict.reservations.pickup;
+  const tc = dict.reservations.checklist;
   const router = useRouter();
   const [hasDamage, setHasDamage] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +100,7 @@ export function PickupForm({
     <form action={handleSubmit} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-          Quilometragem atual
+          {t.odometerLabel}
         </span>
         <input
           type="number"
@@ -111,7 +116,7 @@ export function PickupForm({
         {showFuel ? (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Combustível (%)
+              {tc.fuelLabel}
             </span>
             <input
               type="number"
@@ -126,7 +131,7 @@ export function PickupForm({
         {showBattery ? (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Bateria (%)
+              {tc.batteryLabel}
             </span>
             <input
               type="number"
@@ -142,7 +147,7 @@ export function PickupForm({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-xs font-medium uppercase tracking-widest text-fog-400">
-          Equipamentos obrigatórios presentes
+          {tc.safetyEquipmentLegend}
         </legend>
         {SAFETY_EQUIPMENT_OPTIONS.map((opt) => (
           <label key={opt.value} className="flex items-center gap-2 text-sm text-fog-400">
@@ -152,7 +157,7 @@ export function PickupForm({
               defaultChecked
               className="h-4 w-4"
             />
-            {opt.label}
+            {tc.equipment[opt.value]}
           </label>
         ))}
       </fieldset>
@@ -164,12 +169,12 @@ export function PickupForm({
           onChange={(e) => setHasDamage(e.target.checked)}
           className="h-4 w-4"
         />
-        Avaria identificada
+        {t.hasDamage}
       </label>
       {hasDamage ? (
         <textarea
           name="damageNotes"
-          placeholder="Descreva a avaria"
+          placeholder={tc.damageNotesPlaceholder}
           rows={2}
           className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
         />
@@ -177,41 +182,43 @@ export function PickupForm({
 
       <label className="flex items-center gap-2 text-sm text-fog-400">
         <input type="checkbox" name="isDirtyExterior" className="h-4 w-4" />
-        Sujeira externa
+        {tc.dirtyExterior}
       </label>
       <label className="flex items-center gap-2 text-sm text-fog-400">
         <input type="checkbox" name="isDirtyInterior" className="h-4 w-4" />
-        Sujeira interna
+        {tc.dirtyInterior}
       </label>
 
-      {hasDamage ? <PhotoCaptureSection /> : null}
+      {hasDamage ? <PhotoCaptureSection dict={dict} /> : null}
 
       {error ? (
         <p role="alert" className="text-sm text-signal-red">
-          Não foi possível registrar a retirada ({error}).
+          {t.submitError.replace("{error}", error)}
         </p>
       ) : null}
 
       {damageEvidenceMissing ? (
         <p role="alert" className="text-sm text-signal-red">
-          A foto da avaria é obrigatória — capture-a acima e envie novamente.
+          {tc.damagePhotoRequired}
         </p>
       ) : null}
 
       {!damageEvidenceMissing && failedPhotoAngles ? (
         <div role="alert" className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 p-3">
           <p className="text-sm text-signal-amber">
-            Retirada registrada, mas {failedPhotoAngles.length === 1 ? "a foto" : "as fotos"} de{" "}
-            {failedPhotoAngles.map((angle) => PHOTO_ANGLE_LABELS[angle]).join(", ")}{" "}
-            não {failedPhotoAngles.length === 1 ? "foi enviada" : "foram enviadas"}. Você pode
-            adicioná-las depois.
+            {(failedPhotoAngles.length === 1 ? t.photosFailedOne : t.photosFailedOther).replace(
+              "{angles}",
+              failedPhotoAngles
+                .map((angle) => dict.reservations.photos.angles[angle])
+                .join(", "),
+            )}
           </p>
           <button
             type="button"
             onClick={() => router.push("/trips")}
             className="mt-2 rounded-sm border border-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
           >
-            Ir para Minhas Viagens
+            {tc.goToTrips}
           </button>
         </div>
       ) : null}
@@ -222,7 +229,7 @@ export function PickupForm({
           disabled={isPending}
           className="mt-2 rounded-sm bg-signal-blue px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {isPending ? "Registrando…" : "Concluir Retirada"}
+          {isPending ? tc.submitting : t.submit}
         </button>
       )}
     </form>

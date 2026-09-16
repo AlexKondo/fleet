@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n/getLocale";
 
 export interface ResetPasswordState {
   status: "idle" | "error";
@@ -12,14 +13,15 @@ export async function updatePassword(
   _prevState: ResetPasswordState,
   formData: FormData,
 ): Promise<ResetPasswordState> {
+  const dict = await getDictionary();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
   if (password.length < 8) {
-    return { status: "error", error: "A senha precisa ter pelo menos 8 caracteres." };
+    return { status: "error", error: dict.errors.auth.passwordTooShort };
   }
   if (password !== confirmPassword) {
-    return { status: "error", error: "As senhas não coincidem." };
+    return { status: "error", error: dict.errors.auth.passwordMismatch };
   }
 
   // Relies on the session auth/callback/route.ts already established from the recovery
@@ -28,10 +30,7 @@ export async function updatePassword(
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {
-    return {
-      status: "error",
-      error: "Não foi possível atualizar a senha. O link pode ter expirado — solicite um novo.",
-    };
+    return { status: "error", error: dict.errors.auth.passwordUpdateFailed };
   }
 
   redirect("/dashboard");

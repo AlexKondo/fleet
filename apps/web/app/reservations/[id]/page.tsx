@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../../AppShell";
-import { STATUS_META } from "../../dashboard/statusMeta";
+import { getStatusMeta } from "../../dashboard/statusMeta";
+import { getDictionary, getLocale } from "../../../lib/i18n/getLocale";
 import { MessageThread, type ReservationMessage } from "./MessageThread";
 import { respondToCarpoolRequest } from "./actions";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
@@ -16,6 +17,8 @@ import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
  */
 export default async function ReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const dict = await getDictionary();
+  const locale = await getLocale();
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -74,7 +77,7 @@ export default async function ReservationDetailPage({ params }: { params: Promis
     sender_name: m.sender?.full_name ?? null,
   }));
 
-  const statusMeta = reservation.vehicle ? STATUS_META[reservation.vehicle.status] : null;
+  const statusMeta = reservation.vehicle ? getStatusMeta(dict)[reservation.vehicle.status] : null;
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
 
@@ -86,11 +89,11 @@ export default async function ReservationDetailPage({ params }: { params: Promis
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Viagem"
+      title={dict.reservations.detail.title}
     >
       <div className="mx-auto max-w-3xl px-4 py-6">
       <Link href="/trips" className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber">
-        ← Minhas Viagens
+        {dict.reservations.detail.backToTrips}
       </Link>
 
       <header className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-6">
@@ -102,8 +105,8 @@ export default async function ReservationDetailPage({ params }: { params: Promis
             </p>
             <p className="mt-1 text-xs text-fog-600">
               {reservation.trip_request.requester?.full_name} ·{" "}
-              {formatDateTime(reservation.start_at)} →{" "}
-              {formatDateTime(reservation.end_at)}
+              {formatDateTime(reservation.start_at, locale)} →{" "}
+              {formatDateTime(reservation.end_at, locale)}
             </p>
           </div>
           {statusMeta ? (
@@ -116,16 +119,16 @@ export default async function ReservationDetailPage({ params }: { params: Promis
         {reservation.impacted_at ? (
           <div className="mt-4 rounded-sm border border-signal-yellow/40 bg-signal-yellow/10 p-3">
             <p className="text-xs uppercase tracking-widest text-signal-yellow">
-              Reserva impactada por atraso
+              {dict.reservations.detail.impactedTitle}
             </p>
             <p className="mt-1 text-sm text-fog-400">
-              {reservation.impacted_reason ?? "Um atraso na viagem anterior deste veículo pode afetar este horário."}
+              {reservation.impacted_reason ?? dict.reservations.detail.impactedDefaultReason}
             </p>
             {isPrivileged ? (
               <p className="mt-1 text-xs text-fog-600">
-                Avalie reatribuir o veículo em{" "}
+                {dict.reservations.detail.impactedReassignPrefix}{" "}
                 <Link href="/dashboard" className="text-signal-yellow hover:underline">
-                  Painel
+                  {dict.reservations.detail.impactedReassignLink}
                 </Link>
                 .
               </p>
@@ -137,7 +140,7 @@ export default async function ReservationDetailPage({ params }: { params: Promis
       {isOwnReservation && pendingCarpoolRequests && pendingCarpoolRequests.length > 0 ? (
         <section className="mt-4 rounded-md border border-signal-blue/40 bg-signal-blue/10 p-6">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-signal-blue">
-            Pedidos de Carona
+            {dict.reservations.detail.carpoolRequestsTitle}
           </h2>
           <ul className="flex flex-col gap-3">
             {pendingCarpoolRequests.map((request) => (
@@ -148,7 +151,10 @@ export default async function ReservationDetailPage({ params }: { params: Promis
                 <p className="text-sm text-paper-50">
                   {request.passenger?.full_name ?? "—"}
                   <span className="ml-2 text-xs text-fog-600">
-                    {request.passenger_count} passageiro{request.passenger_count > 1 ? "s" : ""}
+                    {(request.passenger_count === 1
+                      ? dict.reservations.detail.passengerCountOne
+                      : dict.reservations.detail.passengerCountOther
+                    ).replace("{count}", String(request.passenger_count))}
                   </span>
                 </p>
                 <div className="flex shrink-0 items-center gap-2">
@@ -157,15 +163,15 @@ export default async function ReservationDetailPage({ params }: { params: Promis
                       type="submit"
                       className="rounded-sm border border-signal-teal px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
                     >
-                      Aceitar
+                      {dict.reservations.detail.accept}
                     </button>
                   </form>
                   <form action={respondToCarpoolRequest.bind(null, id, request.id, false)}>
                     <ConfirmSubmitButton
-                      confirmMessage="Recusar este pedido de carona?"
+                      confirmMessage={dict.reservations.detail.declineConfirm}
                       className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
                     >
-                      Recusar
+                      {dict.reservations.detail.decline}
                     </ConfirmSubmitButton>
                   </form>
                 </div>
@@ -177,9 +183,9 @@ export default async function ReservationDetailPage({ params }: { params: Promis
 
       <section className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-6">
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Comunicação
+          {dict.reservations.detail.communicationTitle}
         </h2>
-        <MessageThread reservationId={id} messages={messages} />
+        <MessageThread reservationId={id} messages={messages} dict={dict} locale={locale} />
       </section>
       </div>
     </AppShell>

@@ -4,34 +4,45 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isMissingEnvVarError } from "@/lib/supabase/env";
 import { signUpOrganization, type SignUpOrganizationError } from "@/lib/domain/signUpOrganization";
+import { getDictionary } from "@/lib/i18n/getLocale";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 export interface SignUpState {
   error: string | null;
 }
 
-const ERROR_MESSAGES: Record<
+/**
+ * The keys stay internal error CODES (returned by signUpOrganization / decided here); only
+ * the user-facing message values are localized, so this is now a function of the active
+ * locale's dictionary rather than a module-level constant map.
+ */
+const errorMessages = (
+  dict: Dictionary,
+): Record<
   SignUpOrganizationError | "invalid_input" | "password_mismatch" | "signin_after_signup_failed",
   string
-> = {
-  email_already_registered: "Este e-mail já está cadastrado. Tente entrar em vez de criar uma nova conta.",
-  user_creation_failed: "Não foi possível criar sua conta agora. Tente novamente em instantes.",
-  profile_creation_failed: "Não foi possível concluir seu cadastro. Tente novamente.",
-  invalid_input: "Preencha todos os campos — a senha precisa ter pelo menos 8 caracteres.",
-  password_mismatch: "As senhas não coincidem.",
-  signin_after_signup_failed: "Conta criada, mas não foi possível entrar automaticamente. Faça login normalmente.",
-};
+> => ({
+  email_already_registered: dict.errors.auth.emailAlreadyRegistered,
+  user_creation_failed: dict.errors.auth.userCreationFailed,
+  profile_creation_failed: dict.errors.auth.profileCreationFailed,
+  invalid_input: dict.errors.auth.invalidInput,
+  password_mismatch: dict.errors.auth.passwordMismatch,
+  signin_after_signup_failed: dict.errors.auth.signinAfterSignupFailed,
+});
 
 export async function signUp(_prevState: SignUpState, formData: FormData): Promise<SignUpState> {
+  const dict = await getDictionary();
+  const messages = errorMessages(dict);
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
   if (!fullName || !email || password.length < 8) {
-    return { error: ERROR_MESSAGES.invalid_input };
+    return { error: messages.invalid_input };
   }
   if (password !== confirmPassword) {
-    return { error: ERROR_MESSAGES.password_mismatch };
+    return { error: messages.password_mismatch };
   }
 
   // signUpOrganization uses the service-role admin client, which throws (rather than
@@ -41,19 +52,14 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   try {
     const result = await signUpOrganization({ fullName, email, password });
     if (!result.success) {
-      return { error: ERROR_MESSAGES[result.error ?? "user_creation_failed"] };
+      return { error: messages[result.error ?? "user_creation_failed"] };
     }
   } catch (err) {
     console.error("signUp: unexpected error creating account", err);
     if (isMissingEnvVarError(err)) {
-      return {
-        error:
-          "O servidor está com uma configuração incompleta e não pode criar contas agora " +
-          "(variável de ambiente ausente). Avise o administrador do sistema — tentar de " +
-          "novo não vai resolver.",
-      };
+      return { error: dict.errors.auth.missingEnvVarSignUp };
     }
-    return { error: "Não foi possível criar sua conta agora. Tente novamente em instantes." };
+    return { error: dict.errors.auth.signUpFailed };
   }
 
   // The org/user/profile are already committed at this point, so any failure below —
@@ -69,23 +75,18 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     signedIn = !signInError;
   } catch (err) {
     console.error("signUp: unexpected error signing in after account creation", err);
-    // Distinct from ERROR_MESSAGES.signin_after_signup_failed below: that message tells
+    // Distinct from messages.signin_after_signup_failed below: that message tells
     // the user to "just log in normally," which is correct advice for a one-off sign-in
     // hiccup but actively wrong here — if the env var is genuinely missing, login will
     // fail identically every time, and sending the user to retry a broken action forever
     // hides the fact that only an administrator can fix this.
     if (isMissingEnvVarError(err)) {
-      return {
-        error:
-          "Sua conta foi criada, mas o servidor está com uma configuração incompleta e não " +
-          "pode entrar automaticamente (variável de ambiente ausente). Avise o administrador " +
-          "do sistema — tentar fazer login não vai funcionar até isso ser corrigido.",
-      };
+      return { error: dict.errors.auth.missingEnvVarSigninAfterSignup };
     }
   }
 
   if (!signedIn) {
-    return { error: ERROR_MESSAGES.signin_after_signup_failed };
+    return { error: messages.signin_after_signup_failed };
   }
   redirect("/dashboard");
 }

@@ -3,30 +3,45 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { deleteVehicle, type FleetActionState } from "./actions";
-import { STATUS_META } from "../dashboard/statusMeta";
+import type { StatusMeta } from "../dashboard/statusMeta";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { EditVehicleForm, type EditableVehicle } from "./EditVehicleForm";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/locales";
+import { VEHICLE_COLOR_OPTIONS, type VehicleColorValue } from "@/lib/domain/vehicleFieldOptions";
+import { errorLabel } from "@/lib/i18n/errorLabel";
 
 const initialState: FleetActionState = { status: "idle" };
 
+/** vehicles.color stores the stable pt-BR value; free-text/legacy values pass through. */
+function colorLabel(dict: Dictionary, color: string): string {
+  return (VEHICLE_COLOR_OPTIONS as readonly string[]).includes(color)
+    ? dict.fleet.vehicleForm.colors[color as VehicleColorValue]
+    : color;
+}
+
 export function VehicleRow({
   vehicle,
-  status,
+  statusMeta,
   categoryName,
   locationName,
   categories,
   locations,
+  dict,
+  locale,
 }: {
   vehicle: EditableVehicle;
-  status: keyof typeof STATUS_META;
+  statusMeta: StatusMeta;
   categoryName: string;
   locationName: string;
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
+  dict: Dictionary;
+  locale: Locale;
 }) {
   const [editing, setEditing] = useState(false);
   const [deleteState, deleteAction, deletePending] = useActionState(deleteVehicle, initialState);
-  const meta = STATUS_META[status];
+  const meta = statusMeta;
 
   return (
     <li className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4">
@@ -34,7 +49,7 @@ export function VehicleRow({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={vehicle.photoUrl}
-          alt={`Foto de ${vehicle.name ?? vehicle.plate}`}
+          alt={dict.fleet.vehicleForm.photoAlt.replace("{name}", vehicle.name ?? vehicle.plate)}
           className="h-32 w-full rounded-sm border border-line-800 object-cover"
         />
       ) : null}
@@ -53,19 +68,19 @@ export function VehicleRow({
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-line-800 pt-3 text-xs">
         <div>
-          <p className="uppercase tracking-widest text-fog-600">Odômetro</p>
+          <p className="uppercase tracking-widest text-fog-600">{dict.fleet.vehicleRow.odometer}</p>
           <p className="mt-1 font-mono tabular-nums text-fog-400">
-            {vehicle.odometer_km.toLocaleString("pt-BR")} km
+            {vehicle.odometer_km.toLocaleString(locale)} km
           </p>
         </div>
         <div>
-          <p className="uppercase tracking-widest text-fog-600">Localização</p>
+          <p className="uppercase tracking-widest text-fog-600">{dict.fleet.vehicleRow.location}</p>
           <p className="mt-1 text-fog-400">{locationName}</p>
         </div>
         {vehicle.color ? (
           <div>
-            <p className="uppercase tracking-widest text-fog-600">Cor</p>
-            <p className="mt-1 text-fog-400">{vehicle.color}</p>
+            <p className="uppercase tracking-widest text-fog-600">{dict.fleet.vehicleRow.color}</p>
+            <p className="mt-1 text-fog-400">{colorLabel(dict, vehicle.color)}</p>
           </div>
         ) : null}
       </div>
@@ -75,30 +90,30 @@ export function VehicleRow({
           href={`/fleet/vehicles/${vehicle.id}`}
           className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
         >
-          Ver Agenda
+          {dict.fleet.vehicleRow.viewSchedule}
         </Link>
         <button
           type="button"
           onClick={() => setEditing((v) => !v)}
           className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
         >
-          {editing ? "Fechar" : "Editar"}
+          {editing ? dict.common.close : dict.common.edit}
         </button>
         <form action={deleteAction}>
           <input type="hidden" name="id" value={vehicle.id} />
           <ConfirmSubmitButton
-            confirmMessage={`Excluir o veículo ${vehicle.plate}? Isso só é possível se ele nunca teve reservas ou inspeções.`}
+            confirmMessage={dict.fleet.vehicleRow.deleteConfirm.replace("{plate}", vehicle.plate)}
             disabled={deletePending}
             className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
           >
-            {deletePending ? "Excluindo…" : "Excluir"}
+            {deletePending ? dict.common.deleting : dict.common.delete}
           </ConfirmSubmitButton>
         </form>
       </div>
 
       {deleteState.status === "error" ? (
         <p role="alert" className="text-xs text-signal-red">
-          {deleteState.error}
+          {errorLabel(dict, deleteState.error)}
         </p>
       ) : null}
 
@@ -108,6 +123,7 @@ export function VehicleRow({
             vehicle={vehicle}
             categories={categories}
             locations={locations}
+            dict={dict}
             onSaved={() => setEditing(false)}
             onCancel={() => setEditing(false)}
           />

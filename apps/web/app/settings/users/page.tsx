@@ -4,7 +4,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AppShell } from "../../AppShell";
 import { InviteUserModal } from "./InviteUserModal";
 import { UserRow } from "./UserRow";
-import { ROLE_LABELS } from "./ROLE_LABELS";
+import { getRoleLabels } from "./ROLE_LABELS";
+import { getDictionary } from "../../../lib/i18n/getLocale";
 
 /**
  * Team management: create/read/update/delete for the people inside an organization —
@@ -15,6 +16,7 @@ import { ROLE_LABELS } from "./ROLE_LABELS";
  */
 export default async function UsersPage() {
   const supabase = await createSupabaseServerClient();
+  const dict = await getDictionary();
 
   const {
     data: { user },
@@ -55,8 +57,8 @@ export default async function UsersPage() {
       role={profile.role}
       isFleetManager
       isAdministrator
-      title="Equipe"
-      headerActions={<InviteUserModal />}
+      title={dict.team.title}
+      headerActions={<InviteUserModal dict={dict} />}
     >
 
       {profilesError ? (
@@ -64,23 +66,23 @@ export default async function UsersPage() {
           role="alert"
           className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
         >
-          Não foi possível carregar a equipe agora. Tente novamente em instantes.
+          {dict.team.loadError}
         </div>
       ) : null}
 
       <section className="px-6 py-4">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          Membros ({members.length})
+          {dict.team.membersHeading.replace("{count}", String(members.length))}
         </h2>
 
         <div className="mb-6 overflow-x-auto rounded-md border border-line-800">
           <table className="w-full min-w-[860px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
-                <th className="px-4 py-3 font-medium">Membro</th>
-                <th className="px-4 py-3 font-medium">Função</th>
-                <th className="px-4 py-3 font-medium">CNH</th>
-                <th className="px-4 py-3 font-medium text-right">Ação</th>
+                <th className="px-4 py-3 font-medium">{dict.team.columns.member}</th>
+                <th className="px-4 py-3 font-medium">{dict.team.columns.role}</th>
+                <th className="px-4 py-3 font-medium">{dict.team.columns.license}</th>
+                <th className="px-4 py-3 font-medium text-right">{dict.team.columns.action}</th>
               </tr>
             </thead>
             <tbody>
@@ -98,6 +100,7 @@ export default async function UsersPage() {
                     drivers_license_expiration: m.drivers_license_expiration,
                   }}
                   isSelf={m.id === user.id}
+                  dict={dict}
                 />
               ))}
             </tbody>
@@ -105,7 +108,10 @@ export default async function UsersPage() {
         </div>
 
         <p className="text-xs text-fog-600">
-          Funções: {Object.entries(ROLE_LABELS).map(([, label]) => label).join(" · ")}.
+          {dict.team.rolesLegend.replace(
+            "{roles}",
+            Object.values(getRoleLabels(dict)).join(" · "),
+          )}
         </p>
       </section>
     </AppShell>

@@ -3,6 +3,7 @@
 import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { uploadInspectionPhotos } from "@/lib/domain/uploadInspectionPhotos";
+import { getDictionary } from "@/lib/i18n/getLocale";
 
 export interface PickupFormInput {
   reservationId: string;
@@ -71,12 +72,13 @@ export async function submitPickup(
   });
 
   if (error) {
+    const dict = await getDictionary();
     const message = error.message.includes("DRIVER_NOT_AUTHORIZED")
-      ? "Motorista sem autorização para dirigir. Fale com o gestor de frota."
+      ? dict.errors.reservations.driverNotAuthorized
       : error.message.includes("LICENSE_EXPIRED")
-        ? "A CNH do motorista está vencida. Atualize-a com o gestor de frota antes de retirar o veículo."
+        ? dict.errors.reservations.licenseExpired
         : error.message.includes("EARLY_PICKUP_NOT_ALLOWED")
-          ? "Ainda não é possível retirar este veículo — a reserva ainda não começou."
+          ? dict.errors.reservations.earlyPickupNotAllowed
           : error.message;
     return { success: false, error: message };
   }

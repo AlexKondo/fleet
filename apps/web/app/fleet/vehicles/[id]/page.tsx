@@ -1,16 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTime, formatDayMonth } from "@/lib/formatDateTime";
+import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { AppShell } from "../../../AppShell";
-import { STATUS_META } from "../../../dashboard/statusMeta";
-
-const RESERVATION_STATUS_LABEL: Record<string, string> = {
-  pending_approval: "Aguardando aprovação",
-  confirmed: "Aprovada",
-  cancelled: "Cancelada",
-  completed: "Concluída",
-};
+import { getStatusMeta } from "../../../dashboard/statusMeta";
 
 const STATUS_BAR_CLASS: Record<string, string> = {
   confirmed: "bg-signal-teal/70 border-signal-teal",
@@ -33,6 +27,8 @@ const ROW_HEIGHT_PX = 44;
 export default async function VehicleSchedulePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
+  const dict = await getDictionary();
+  const locale = await getLocale();
 
   const {
     data: { user },
@@ -69,7 +65,8 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
     .order("start_at", { ascending: true });
 
   const reservations = reservationRows ?? [];
-  const meta = STATUS_META[vehicle.status];
+  const meta = getStatusMeta(dict)[vehicle.status];
+  const reservationStatusLabel: Record<string, string> = dict.fleet.detail.reservationStatus;
   const now = new Date();
 
   // Timeline bounds: a few days of padding around today plus whatever the reservations
@@ -108,11 +105,11 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Agenda do Veículo"
+      title={dict.fleet.detail.title}
     >
       <div className="px-6 py-6">
         <Link href="/fleet" className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber">
-          ← Frota
+          ← {dict.fleet.detail.backToFleet}
         </Link>
 
         <div className="mt-4 flex flex-wrap items-start justify-between gap-3 rounded-md border border-line-800 bg-panel-900/60 p-5">
@@ -132,30 +129,30 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
 
         <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
-            Agenda deste veículo
+            {dict.fleet.detail.scheduleHeading}
           </h2>
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-fog-400">
             <li className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-[2px] border border-signal-teal bg-signal-teal/70" />
-              Aprovada
+              {dict.fleet.detail.reservationStatus.confirmed}
             </li>
             <li className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-[2px] border border-signal-amber bg-signal-amber/70" />
-              Aguardando aprovação
+              {dict.fleet.detail.reservationStatus.pending_approval}
             </li>
             <li className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-[2px] border border-fog-600 bg-fog-600/50" />
-              Concluída
+              {dict.fleet.detail.reservationStatus.completed}
             </li>
             <li className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-[2px] border border-fog-700 bg-fog-800/40" />
-              Cancelada
+              {dict.fleet.detail.reservationStatus.cancelled}
             </li>
           </ul>
         </div>
 
         {reservations.length === 0 ? (
-          <p className="text-sm text-fog-400">Este veículo ainda não teve nenhuma reserva.</p>
+          <p className="text-sm text-fog-400">{dict.fleet.detail.empty}</p>
         ) : (
           <div className="flex overflow-hidden rounded-md border border-line-800 bg-panel-900/60">
             {/* Fixed label column — stays put while only the timeline scrolls horizontally. */}
@@ -187,11 +184,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
                       style={{ width: DAY_WIDTH_PX }}
                       className="flex shrink-0 items-center justify-center border-r border-line-800/60 text-[11px] uppercase tracking-widest text-fog-600"
                     >
-                      {d.toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        timeZone: "America/Sao_Paulo",
-                      })}
+                      {formatDayMonth(d, locale)}
                     </div>
                   ))}
                 </div>
@@ -208,7 +201,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
                   <div
                     className="absolute top-0 bottom-0 w-px bg-signal-red/70"
                     style={{ left: todayPx }}
-                    title="Agora"
+                    title={dict.fleet.detail.nowMarker}
                   />
                 </div>
 
@@ -222,7 +215,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
                       className="relative border-b border-line-800 last:border-b-0"
                     >
                       <div
-                        title={`${r.trip_request?.requester?.full_name ?? "—"} · ${r.trip_request?.origin} → ${r.trip_request?.destination}\n${formatDateTime(r.start_at)} → ${formatDateTime(r.end_at)}\n${RESERVATION_STATUS_LABEL[r.status] ?? r.status}`}
+                        title={`${r.trip_request?.requester?.full_name ?? "—"} · ${r.trip_request?.origin} → ${r.trip_request?.destination}\n${formatDateTime(r.start_at, locale)} → ${formatDateTime(r.end_at, locale)}\n${reservationStatusLabel[r.status] ?? r.status}`}
                         className={`absolute top-1/2 h-6 -translate-y-1/2 rounded-sm border ${STATUS_BAR_CLASS[r.status] ?? "border-line-700 bg-panel-800"}`}
                         style={{ left, width }}
                       />
@@ -230,7 +223,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
                         <span
                           className="absolute top-1 h-2 w-2 -translate-x-1/2 rounded-full bg-signal-yellow"
                           style={{ left }}
-                          title="Impactada por atraso"
+                          title={dict.fleet.detail.impacted}
                         />
                       ) : null}
                     </div>

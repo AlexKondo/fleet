@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DAMAGE_PHOTO_ANGLE, STANDARD_PHOTO_ANGLES } from "@/lib/domain/checklist";
+import type { Dictionary } from "../../../lib/i18n/dictionaries";
 
 /**
  * Standardized photo capture for pickup/return checklists (fleet-car-saas.txt §10).
@@ -37,11 +38,14 @@ function PhotoCaptureField({
   name,
   label,
   hint,
+  dict,
 }: {
   name: string;
   label: string;
   hint?: string;
+  dict: Dictionary;
 }) {
+  const t = dict.reservations.photos;
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -68,7 +72,7 @@ function PhotoCaptureField({
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{label}</span>
         <span className="truncate font-mono text-[11px] text-fog-600">
-          {file ? file.name : (hint ?? "Toque para capturar")}
+          {file ? file.name : (hint ?? t.tapToCapture)}
         </span>
       </span>
       <span
@@ -76,7 +80,7 @@ function PhotoCaptureField({
           file ? "border-signal-teal text-signal-teal" : "border-line-700 text-fog-400"
         }`}
       >
-        {file ? "OK" : "Capturar"}
+        {file ? t.captured : t.capture}
       </span>
       <input
         type="file"
@@ -90,24 +94,29 @@ function PhotoCaptureField({
   );
 }
 
-export function PhotoCaptureSection() {
+export function PhotoCaptureSection({ dict }: { dict: Dictionary }) {
+  const t = dict.reservations.photos;
+
   return (
     <fieldset className="flex flex-col gap-2 border-t border-line-800 pt-4">
       <legend className="mb-1 text-xs font-medium uppercase tracking-widest text-fog-400">
-        Fotos padronizadas
+        {t.legend}
       </legend>
-      <p className="-mt-1 mb-1 text-xs text-fog-600">
-        Recomendado fotografar os 7 ângulos do veículo. O checklist é registrado mesmo que uma
-        foto falhe ao enviar.
-      </p>
+      <p className="-mt-1 mb-1 text-xs text-fog-600">{t.hint}</p>
       <div className="flex flex-col gap-2">
         {STANDARD_PHOTO_ANGLES.map((angle) => (
-          <PhotoCaptureField key={angle.value} name={`photo_${angle.value}`} label={angle.label} />
+          <PhotoCaptureField
+            key={angle.value}
+            name={`photo_${angle.value}`}
+            label={t.angles[angle.value]}
+            dict={dict}
+          />
         ))}
         <PhotoCaptureField
           name={`photo_${DAMAGE_PHOTO_ANGLE.value}`}
-          label={DAMAGE_PHOTO_ANGLE.label}
-          hint="Fotografe a avaria descrita acima"
+          label={t.angles[DAMAGE_PHOTO_ANGLE.value]}
+          hint={t.damageHint}
+          dict={dict}
         />
       </div>
     </fieldset>

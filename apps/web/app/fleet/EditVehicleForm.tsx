@@ -3,6 +3,8 @@
 import { useActionState, useEffect, useState } from "react";
 import { updateVehicle, type FleetActionState } from "./actions";
 import { FUEL_LEVEL_OPTIONS, VEHICLE_COLOR_OPTIONS } from "@/lib/domain/vehicleFieldOptions";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { errorLabel } from "@/lib/i18n/errorLabel";
 
 const initialState: FleetActionState = { status: "idle" };
 
@@ -25,12 +27,14 @@ export function EditVehicleForm({
   vehicle,
   categories,
   locations,
+  dict,
   onSaved,
   onCancel,
 }: {
   vehicle: EditableVehicle;
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
+  dict: Dictionary;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -56,7 +60,7 @@ export function EditVehicleForm({
       <input type="hidden" name="id" value={vehicle.id} />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Placa</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.plateLabel}</span>
           <input
             type="text"
             name="plate"
@@ -67,30 +71,32 @@ export function EditVehicleForm({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Nome</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.common.name}</span>
           <input
             type="text"
             name="name"
-            placeholder="Opcional, ex.: Haval H6 Prata"
+            placeholder={dict.fleet.vehicleForm.namePlaceholder}
             defaultValue={vehicle.name ?? ""}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
           />
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Cor</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.colorLabel}</span>
           <select
             name="color"
             defaultValue={vehicle.color ?? ""}
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
           >
-            <option value="">Opcional</option>
-            {vehicle.color && !VEHICLE_COLOR_OPTIONS.includes(vehicle.color) ? (
-              <option value={vehicle.color}>{vehicle.color} (atual)</option>
+            <option value="">{dict.common.optional}</option>
+            {vehicle.color && !(VEHICLE_COLOR_OPTIONS as readonly string[]).includes(vehicle.color) ? (
+              <option value={vehicle.color}>
+                {dict.fleet.vehicleForm.colorCurrent.replace("{color}", vehicle.color)}
+              </option>
             ) : null}
             {VEHICLE_COLOR_OPTIONS.map((color) => (
               <option key={color} value={color}>
-                {color}
+                {dict.fleet.vehicleForm.colors[color]}
               </option>
             ))}
           </select>
@@ -98,13 +104,15 @@ export function EditVehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            {vehicle.photoUrl ? "Trocar foto" : "Foto"}
+            {vehicle.photoUrl
+              ? dict.fleet.vehicleForm.changePhotoLabel
+              : dict.fleet.vehicleForm.photoLabel}
           </span>
           {vehicle.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={vehicle.photoUrl}
-              alt={`Foto de ${vehicle.plate}`}
+              alt={dict.fleet.vehicleForm.photoAlt.replace("{name}", vehicle.plate)}
               className="h-16 w-24 rounded-sm border border-line-800 object-cover"
             />
           ) : null}
@@ -117,7 +125,7 @@ export function EditVehicleForm({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">Categoria</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.categoryLabel}</span>
           <select
             name="categoryId"
             required
@@ -135,7 +143,7 @@ export function EditVehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Odômetro (km)
+            {dict.fleet.vehicleForm.odometerLabel}
           </span>
           <input
             type="number"
@@ -149,13 +157,13 @@ export function EditVehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Próxima revisão (km)
+            {dict.fleet.vehicleForm.nextServiceLabel}
           </span>
           <input
             type="number"
             name="nextServiceOdometerKm"
             min={0}
-            placeholder="Opcional"
+            placeholder={dict.common.optional}
             defaultValue={vehicle.next_service_odometer_km ?? ""}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
           />
@@ -163,7 +171,7 @@ export function EditVehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Autonomia estimada (km)
+            {dict.fleet.vehicleForm.estimatedRangeLabel}
           </span>
           <input
             type="number"
@@ -178,7 +186,7 @@ export function EditVehicleForm({
         {showFuel ? (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Combustível
+              {dict.fleet.vehicleForm.fuelLabel}
             </span>
             <select
               name="fuelLevelPercent"
@@ -188,12 +196,15 @@ export function EditVehicleForm({
               {vehicle.fuel_level_percent != null &&
               !FUEL_LEVEL_OPTIONS.some((opt) => opt.value === vehicle.fuel_level_percent) ? (
                 <option value={vehicle.fuel_level_percent}>
-                  {vehicle.fuel_level_percent}% (atual)
+                  {dict.fleet.vehicleForm.fuelCurrent.replace(
+                    "{percent}",
+                    String(vehicle.fuel_level_percent),
+                  )}
                 </option>
               ) : null}
               {FUEL_LEVEL_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {dict.fleet.vehicleForm.fuelLevels[`${opt.value}`]}
                 </option>
               ))}
             </select>
@@ -203,7 +214,7 @@ export function EditVehicleForm({
         {showBattery ? (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              Bateria (%)
+              {dict.fleet.vehicleForm.batteryLabel}
             </span>
             <input
               type="number"
@@ -218,7 +229,7 @@ export function EditVehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            Localização base
+            {dict.fleet.vehicleForm.homeLocationLabel}
           </span>
           <select
             name="locationId"
@@ -226,7 +237,7 @@ export function EditVehicleForm({
             defaultValue={vehicle.home_location_id ?? ""}
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
           >
-            <option value="">Selecionar…</option>
+            <option value="">{dict.fleet.vehicleForm.selectPlaceholder}</option>
             {locations.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.name}
@@ -237,13 +248,12 @@ export function EditVehicleForm({
       </div>
 
       <p className="text-xs text-fog-600">
-        Status e localização atual são controlados pelas operações do Painel (retirada,
-        retorno, bloqueio) e não podem ser editados aqui.
+        {dict.fleet.vehicleForm.statusNote}
       </p>
 
       {state.status === "error" ? (
         <p role="alert" className="text-sm text-signal-red">
-          {state.error}
+          {errorLabel(dict, state.error)}
         </p>
       ) : null}
 
@@ -253,14 +263,14 @@ export function EditVehicleForm({
           disabled={pending}
           className="self-start rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {pending ? "Salvando…" : "Salvar Alterações"}
+          {pending ? dict.common.saving : dict.common.saveChanges}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="text-xs uppercase tracking-widest text-fog-400 hover:text-paper-50"
         >
-          Cancelar
+          {dict.common.cancel}
         </button>
       </div>
     </form>

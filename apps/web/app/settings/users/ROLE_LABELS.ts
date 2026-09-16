@@ -1,3 +1,7 @@
+import type { Dictionary } from "../../../lib/i18n/dictionaries";
+
+/** Fallback (pt-BR) labels, kept for non-localized call sites and as a safety net when a
+ * role code has no dictionary entry. Prefer getRoleLabels(dict). */
 export const ROLE_LABELS: Record<string, string> = {
   employee: "Colaborador",
   fleet_manager: "Gestor de Frota",
@@ -6,10 +10,19 @@ export const ROLE_LABELS: Record<string, string> = {
   administrator: "Administrador",
 };
 
-export const ROLE_OPTIONS = [
-  { value: "employee", label: ROLE_LABELS.employee },
-  { value: "fleet_manager", label: ROLE_LABELS.fleet_manager },
-  { value: "security", label: ROLE_LABELS.security },
-  { value: "maintenance_operator", label: ROLE_LABELS.maintenance_operator },
-  { value: "administrator", label: ROLE_LABELS.administrator },
+export const ROLE_KEYS = [
+  "employee",
+  "fleet_manager",
+  "security",
+  "maintenance_operator",
+  "administrator",
 ] as const;
+
+export function getRoleLabels(dict: Dictionary): Record<string, string> {
+  return { ...ROLE_LABELS, ...dict.roles };
+}
+
+export function getRoleOptions(dict: Dictionary): { value: string; label: string }[] {
+  const labels = getRoleLabels(dict);
+  return ROLE_KEYS.map((value) => ({ value: value as string, label: labels[value] ?? value }));
+}
