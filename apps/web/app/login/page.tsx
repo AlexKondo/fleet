@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 import { LoginRecovery } from "./LoginRecovery";
+import { Card } from "../ui/Card";
 
 export default function LoginPage() {
   return (
@@ -15,13 +16,13 @@ export default function LoginPage() {
               Right Vehicle. Right Trip. Ready to Go.
             </p>
           </div>
-          <div className="rounded-md border border-line-800 bg-panel-900/60 p-6">
+          <Card>
             <LoginForm />
-          </div>
+          </Card>
           <p className="mt-4 text-center text-sm text-fog-400">
             Sua empresa ainda não usa o Fleet?{" "}
             <Link href="/signup" className="text-signal-amber hover:underline">
-              Criar organização
+              Criar conta
             </Link>
           </p>
         </div>

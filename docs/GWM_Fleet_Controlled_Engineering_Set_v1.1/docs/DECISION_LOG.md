@@ -32,3 +32,11 @@ BEV round-trip policy must be configurable.
 
 ## DV-011
 Employee Fleet Rental is future, not MVP.
+
+## DV-012
+Reversed 2026-09-02 multi-tenant SaaS decision (2026-09-16): the app now operates as
+single-tenant. Self-service signup still creates the initial user accounts — it now
+joins everyone to one pre-seeded organization instead of creating a new tenant per
+signup — and remains the front door until SSO login replaces it. The
+`organization_id` + RLS scaffolding stays in the schema for now (cheap to keep,
+reversible later) but the app no longer creates additional tenants. See ADR-009.

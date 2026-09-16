@@ -14,9 +14,6 @@ const ERROR_MESSAGES: Record<
   string
 > = {
   email_already_registered: "Este e-mail já está cadastrado. Tente entrar em vez de criar uma nova conta.",
-  org_creation_failed: "Não foi possível criar a organização agora. Tente novamente em instantes.",
-  settings_creation_failed: "Não foi possível concluir a configuração da organização. Tente novamente.",
-  location_creation_failed: "Não foi possível concluir a configuração da organização. Tente novamente.",
   user_creation_failed: "Não foi possível criar sua conta agora. Tente novamente em instantes.",
   profile_creation_failed: "Não foi possível concluir seu cadastro. Tente novamente.",
   invalid_input: "Preencha todos os campos — a senha precisa ter pelo menos 8 caracteres.",
@@ -25,13 +22,12 @@ const ERROR_MESSAGES: Record<
 };
 
 export async function signUp(_prevState: SignUpState, formData: FormData): Promise<SignUpState> {
-  const organizationName = String(formData.get("organizationName") ?? "").trim();
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-  if (!organizationName || !fullName || !email || password.length < 8) {
+  if (!fullName || !email || password.length < 8) {
     return { error: ERROR_MESSAGES.invalid_input };
   }
   if (password !== confirmPassword) {
@@ -43,7 +39,7 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   // no end user caused and can't fix by retrying, but it must never surface as Next.js's
   // generic "a server-side exception has occurred" crash page.
   try {
-    const result = await signUpOrganization({ organizationName, fullName, email, password });
+    const result = await signUpOrganization({ fullName, email, password });
     if (!result.success) {
       return { error: ERROR_MESSAGES[result.error ?? "user_creation_failed"] };
     }

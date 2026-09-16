@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignupForm } from "./SignupForm";
+import { Card } from "../ui/Card";
 
 export default function SignupPage() {
   return (
@@ -13,9 +14,9 @@ export default function SignupPage() {
             Comece a operar sua frota
           </p>
         </div>
-        <div className="rounded-md border border-line-800 bg-panel-900/60 p-6">
+        <Card>
           <SignupForm />
-        </div>
+        </Card>
         <p className="mt-4 text-center text-sm text-fog-400">
           Já tem uma conta?{" "}
           <Link href="/login" className="text-signal-amber hover:underline">
