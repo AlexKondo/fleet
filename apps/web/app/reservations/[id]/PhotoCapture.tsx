@@ -94,7 +94,18 @@ function PhotoCaptureField({
   );
 }
 
-export function PhotoCaptureSection({ dict }: { dict: Dictionary }) {
+/**
+ * The standard angles are always requested (a pickup/return with no damage still needs a
+ * "what did this car look like right now" record); `includeDamageAngle` adds the extra
+ * damage-specific field, and is driven by the checklist's own damage checkbox.
+ */
+export function PhotoCaptureSection({
+  dict,
+  includeDamageAngle = false,
+}: {
+  dict: Dictionary;
+  includeDamageAngle?: boolean;
+}) {
   const t = dict.reservations.photos;
 
   return (
@@ -112,12 +123,14 @@ export function PhotoCaptureSection({ dict }: { dict: Dictionary }) {
             dict={dict}
           />
         ))}
-        <PhotoCaptureField
-          name={`photo_${DAMAGE_PHOTO_ANGLE.value}`}
-          label={t.angles[DAMAGE_PHOTO_ANGLE.value]}
-          hint={t.damageHint}
-          dict={dict}
-        />
+        {includeDamageAngle ? (
+          <PhotoCaptureField
+            name={`photo_${DAMAGE_PHOTO_ANGLE.value}`}
+            label={t.angles[DAMAGE_PHOTO_ANGLE.value]}
+            hint={t.damageHint}
+            dict={dict}
+          />
+        ) : null}
       </div>
     </fieldset>
   );

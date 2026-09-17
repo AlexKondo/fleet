@@ -17,7 +17,7 @@ export default async function ForgotPasswordPage() {
         </div>
         <div className="mb-8 text-center">
           <p className="font-display text-4xl font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-signal-amber">.</span>
+            Fleet<span className="text-gwm-accent">.</span>
           </p>
           <p className="mt-1 text-xs uppercase tracking-[0.2em] text-fog-400">
             {dict.auth.forgotTitle}
@@ -27,7 +27,7 @@ export default async function ForgotPasswordPage() {
           <ForgotPasswordForm dict={dict} />
         </div>
         <p className="mt-4 text-center text-sm text-fog-400">
-          <Link href="/login" className="text-signal-amber hover:underline">
+          <Link href="/login" className="text-gwm-accent hover:underline">
             {dict.auth.backToLogin}
           </Link>
         </p>

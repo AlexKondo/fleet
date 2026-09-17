@@ -32,7 +32,7 @@ export function InviteUserForm({ dict, onSaved }: { dict: Dictionary; onSaved?: 
             name="fullName"
             required
             placeholder={t.namePlaceholder}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -42,7 +42,7 @@ export function InviteUserForm({ dict, onSaved }: { dict: Dictionary; onSaved?: 
             name="email"
             required
             placeholder={t.emailPlaceholder}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -55,7 +55,7 @@ export function InviteUserForm({ dict, onSaved }: { dict: Dictionary; onSaved?: 
             required
             minLength={8}
             placeholder={t.passwordPlaceholder}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -64,7 +64,7 @@ export function InviteUserForm({ dict, onSaved }: { dict: Dictionary; onSaved?: 
             name="role"
             required
             defaultValue="employee"
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           >
             {roleOptions.map((r) => (
               <option key={r.value} value={r.value}>
@@ -91,7 +91,7 @@ export function InviteUserForm({ dict, onSaved }: { dict: Dictionary; onSaved?: 
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="self-start rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {pending ? t.submitPending : t.submit}
       </button>

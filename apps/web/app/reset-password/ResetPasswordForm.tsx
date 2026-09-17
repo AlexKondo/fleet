@@ -40,7 +40,7 @@ export function ResetPasswordForm({ dict }: { dict: Dictionary }) {
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="mt-2 rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {pending ? dict.common.saving : dict.auth.saveNewPassword}
       </button>

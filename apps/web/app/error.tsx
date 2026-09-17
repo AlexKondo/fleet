@@ -39,7 +39,7 @@ export default function GlobalError({
     <main className="flex min-h-dvh items-center justify-center bg-ink-950 px-6">
       <div className="w-full max-w-md rounded-md border border-line-800 bg-panel-900/60 p-8 text-center">
         <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-          Fleet<span className="text-signal-amber">.</span>
+          Fleet<span className="text-gwm-accent">.</span>
         </p>
         <p className="mt-4 text-sm text-paper-50">{dict.appError.title}</p>
         <p className="mt-2 text-sm text-fog-400">{dict.appError.description}</p>
@@ -51,7 +51,7 @@ export default function GlobalError({
         <button
           type="button"
           onClick={reset}
-          className="mt-6 rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-amber"
+          className="mt-6 rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
         >
           {dict.appError.retry}
         </button>

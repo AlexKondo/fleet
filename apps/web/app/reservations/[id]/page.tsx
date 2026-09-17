@@ -15,8 +15,16 @@ import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
  * reservation's own trip context together with its message thread; messaging didn't
  * exist anywhere in the app before this.
  */
-export default async function ReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ReservationDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { id } = await params;
+  // Set by respondToCarpoolRequest when the accept/reject RPC fails — see actions.ts.
+  const carpoolError = (await searchParams)?.carpoolError === "1";
   const dict = await getDictionary();
   const locale = await getLocale();
   const supabase = await createSupabaseServerClient();
@@ -92,7 +100,15 @@ export default async function ReservationDetailPage({ params }: { params: Promis
       title={dict.reservations.detail.title}
     >
       <div className="mx-auto max-w-3xl px-4 py-6">
-      <Link href="/trips" className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber">
+      {carpoolError ? (
+        <div
+          role="alert"
+          className="mb-4 rounded-sm border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red"
+        >
+          {dict.reservations.detail.carpoolActionError}
+        </div>
+      ) : null}
+      <Link href="/trips" className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent">
         {dict.reservations.detail.backToTrips}
       </Link>
 

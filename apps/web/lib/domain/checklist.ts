@@ -20,8 +20,9 @@ export type PhotoAngle =
   | "interior"
   | "damage";
 
-// The six standard angles, shown alongside the "damage" angle only when the checklist's
-// own damage checkbox is ticked — a no-damage pickup/return doesn't ask for photos at all.
+// The six standard angles, always requested at pickup and return — a no-damage checklist
+// still needs a photographic record. The "damage" angle below is shown alongside them only
+// when the checklist's own damage checkbox is ticked.
 // Values only — labels live in `dict.reservations.photos.angles`, keyed by these values.
 export const STANDARD_PHOTO_ANGLES: { value: Exclude<PhotoAngle, "damage"> }[] = [
   { value: "front" },

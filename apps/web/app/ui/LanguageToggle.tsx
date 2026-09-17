@@ -34,7 +34,7 @@ export function LanguageToggle({
           router.refresh();
         });
       }}
-      className={`h-8 rounded-sm border border-line-800 bg-panel-900 px-2 text-xs uppercase tracking-widest text-fog-400 outline-none hover:border-signal-amber hover:text-signal-amber focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber ${className}`}
+      className={`h-8 rounded-sm border border-line-800 bg-panel-900 px-2 text-xs uppercase tracking-widest text-fog-400 outline-none hover:border-gwm-accent hover:text-gwm-accent focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent ${className}`}
     >
       {LOCALES.map((code) => (
         <option key={code} value={code}>

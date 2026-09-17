@@ -14,20 +14,43 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: reservation } = await supabase
-    .from("reservations")
-    .select(
-      `id, status,
-       trip_request:trip_requests(origin, destination),
+  const [{ data: profile }, { data: reservation }] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase
+      .from("reservations")
+      .select(
+        `id, status,
+       trip_request:trip_requests(origin, destination, requester_id),
        vehicle:vehicles(id, plate, name, color, status, odometer_km, estimated_range_km,
          home_location_id, category:vehicle_categories(name, energy_type))`,
-    )
-    .eq("id", id)
-    .single();
+      )
+      .eq("id", id)
+      .single(),
+  ]);
 
-  if (!reservation || !reservation.vehicle) notFound();
+  if (!reservation || !reservation.vehicle || !reservation.trip_request) notFound();
 
   const vehicle = reservation.vehicle;
+
+  // Same authorization rule as reservations/[id]/page.tsx (and as record_return itself,
+  // 0004_operational_actions.sql): the trip's own requester, or a privileged fleet role.
+  const isPrivileged =
+    profile?.role === "fleet_manager" ||
+    profile?.role === "administrator" ||
+    profile?.role === "security";
+  // Security never requests trips, so /trips is permanently empty for them (the same
+  // reason /gate exists) — bounce them back there instead of into a dead end.
+  const fallbackPath = profile?.role === "security" ? "/gate" : "/trips";
+  if (!isPrivileged && reservation.trip_request.requester_id !== user.id) {
+    redirect(`${fallbackPath}?tripActionError=checklist_not_authorized`);
+  }
+
+  // Mirrors record_return's own preconditions: there's nothing to return until the vehicle
+  // has actually been picked up, and a cancelled/completed reservation is already closed.
+  const canReturn =
+    reservation.status === "confirmed" &&
+    (vehicle.status === "in_use" || vehicle.status === "returning");
+  if (!canReturn) redirect(`${fallbackPath}?tripActionError=return_wrong_status`);
   const energyType = vehicle.category?.energy_type ?? "ICE";
   const showElectricRange = energyType === "BEV" || energyType === "PHEV";
 
@@ -44,7 +67,7 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
       <div className="mx-auto max-w-xl">
         <Link
           href="/trips"
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
         >
           {dict.reservations.detail.backToTrips}
         </Link>

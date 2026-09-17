@@ -128,6 +128,7 @@ export type Dictionary = {
   nav: {
     dashboard: string;
     trips: string;
+    gate: string;
     analytics: string;
     fleet: string;
     team: string;
@@ -180,6 +181,10 @@ export type Dictionary = {
   dashboard: {
     /** Banner shown when a fleet server action fails (?fleetActionError). */
     actionError: string;
+    /** Banner shown when a fleet server action succeeds (?actionSuccess). */
+    actionSuccess: string;
+    /** Dismiss link on both the error and success banners. */
+    dismissBanner: string;
     /**
      * Reason strings passed to cancelReservation when a fleet manager rejects/cancels
      * from the dashboard (as opposed to a manager-typed free-text reason). Sourced from
@@ -197,6 +202,21 @@ export type Dictionary = {
     pendingReservations: {
       heading: string;
       empty: string;
+      /** {count} — number of passengers on the trip request. */
+      passengers: string;
+      /** Prefix before the expected return timestamp. */
+      returnBy: string;
+      /** Prefix before the (possibly truncated) justification text. */
+      justification: string;
+      noJustification: string;
+      /** Tooltip/label on the link opening the full reservation. */
+      openReservation: string;
+      /** {name} — the requester's full name. */
+      confirmApprove: string;
+      confirmReject: string;
+      /** Placeholder on the inline free-text rejection reason input. */
+      reasonPlaceholder: string;
+      reasonLabel: string;
     };
     activeReservations: {
       heading: string;
@@ -217,12 +237,35 @@ export type Dictionary = {
       /** {name} — the requester's full name, or `unknownRequester`. */
       confirmCancel: string;
       unknownRequester: string;
+      confirmSwap: string;
+      confirmTransfer: string;
     };
     tasks: {
       heading: string;
       empty: string;
       complete: string;
       confirmCancel: string;
+      confirmComplete: string;
+      /** "My tasks" / "All" filter toggle over the open-task queue. */
+      filterMine: string;
+      filterAll: string;
+      /** Empty state while the "my tasks" filter is active. */
+      emptyMine: string;
+      claim: string;
+      confirmClaim: string;
+      claiming: string;
+      /** {name} — the assignee's full name. */
+      assignedTo: string;
+      unassigned: string;
+      /** Shown instead of `unassigned` when a task IS assigned but the assignee's
+       * profile join came back empty — distinct so it doesn't read as "no one has this". */
+      assigneeNameUnavailable: string;
+      priorityLabel: string;
+      priorities: {
+        low: string;
+        normal: string;
+        high: string;
+      };
       types: {
         repair: string;
         safety: string;
@@ -245,6 +288,13 @@ export type Dictionary = {
       batterySuffix: string;
       unblock: string;
       block: string;
+      /** {plate} — the vehicle's plate. */
+      confirmBlock: string;
+      confirmUnblock: string;
+      /** Inline free-text block reason: placeholder and the fallback used when empty. */
+      blockReasonPlaceholder: string;
+      blockReasonLabel: string;
+      blockReasonDefault: string;
     };
   };
   /** Notification bell dropdown (app/dashboard/NotificationBell.tsx). */
@@ -305,6 +355,25 @@ export type Dictionary = {
       vehicles: string;
       categories: string;
       locations: string;
+    };
+    /** Client-side search/filter controls above the vehicle card grid. */
+    filters: {
+      searchPlaceholder: string;
+      statusAll: string;
+      categoryAll: string;
+      clear: string;
+      /** {shown} = matches, {total} = total vehicles. */
+      resultCount: string;
+      noMatches: string;
+    };
+    /** Empty-state lead line + hint pointing at the "+ Adicionar ..." button below. */
+    emptyState: {
+      vehiclesLead: string;
+      vehiclesHint: string;
+      categoriesLead: string;
+      categoriesHint: string;
+      locationsLead: string;
+      locationsHint: string;
     };
     addVehicle: { label: string };
     addCategory: { label: string };
@@ -567,6 +636,13 @@ export type Dictionary = {
     };
     /** {roles} = the role labels joined with " · ". */
     rolesLegend: string;
+    /** Client-side search above the member table. */
+    search: {
+      placeholder: string;
+      /** {shown} = matches, {total} = total members. */
+      resultCount: string;
+      noMatches: string;
+    };
     invite: {
       trigger: string;
       modalTitle: string;
@@ -610,6 +686,7 @@ export type Dictionary = {
       decline: string;
       declineConfirm: string;
       communicationTitle: string;
+      carpoolActionError: string;
     };
     messages: {
       empty: string;
@@ -682,6 +759,15 @@ export type Dictionary = {
       submit: string;
       photosFailedOne: string;
       photosFailedOther: string;
+    };
+    /**
+     * Shown on /trips when the pickup/return checklist page itself refused to open,
+     * via ?tripActionError=<reason> (see reservations/[id]/{pickup,return}/page.tsx).
+     */
+    checklistGuard: {
+      notAuthorized: string;
+      pickupWrongStatus: string;
+      returnWrongStatus: string;
     };
   };
   /** User-facing error/validation messages returned by Server Actions. */
@@ -760,5 +846,18 @@ export type Dictionary = {
       licenseExpired: string;
       earlyPickupNotAllowed: string;
     };
+  };
+  /** /gate — portaria (gatehouse) movements board. */
+  gate: {
+    title: string;
+    description: string;
+    searchLabel: string;
+    searchPlaceholder: string;
+    empty: string;
+    noResults: string;
+    details: string;
+    pickupAction: string;
+    returnAction: string;
+    loadError: string;
   };
 };

@@ -90,7 +90,7 @@ export default async function TripsPage({
       headerActions={
         <Link
           href="/trips/new"
-          className="rounded-sm bg-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
+          className="rounded-sm bg-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
         >
           + {dict.trips.list.newTrip}
         </Link>
@@ -103,7 +103,15 @@ export default async function TripsPage({
             role="alert"
             className="mb-4 rounded-md border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red"
           >
-            {dict.trips.list.actionError}
+            {/* The pickup/return checklist pages redirect here with a specific reason when
+                they refuse to open; anything else keeps the generic action-failed text. */}
+            {tripActionError === "checklist_not_authorized"
+              ? dict.reservations.checklistGuard.notAuthorized
+              : tripActionError === "pickup_wrong_status"
+                ? dict.reservations.checklistGuard.pickupWrongStatus
+                : tripActionError === "return_wrong_status"
+                  ? dict.reservations.checklistGuard.returnWrongStatus
+                  : dict.trips.list.actionError}
           </div>
         ) : null}
 
@@ -146,7 +154,7 @@ export default async function TripsPage({
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/reservations/${r.id}`}
-                      className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-amber hover:text-signal-amber"
+                      className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-gwm-accent hover:text-gwm-accent"
                     >
                       {dict.trips.list.messages}
                     </Link>
@@ -160,7 +168,7 @@ export default async function TripsPage({
                     ) : canReturn ? (
                       <Link
                         href={`/reservations/${r.id}/return`}
-                        className="rounded-sm border border-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
+                        className="rounded-sm border border-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
                       >
                         {dict.trips.list.registerReturn}
                       </Link>

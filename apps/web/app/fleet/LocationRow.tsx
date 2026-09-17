@@ -25,7 +25,7 @@ export function LocationRow({
 
   if (editing) {
     return (
-      <li className="flex flex-col gap-3 rounded-md border border-signal-amber/60 bg-panel-900/60 p-4">
+      <li className="flex flex-col gap-3 rounded-md border border-gwm-accent/60 bg-panel-900/60 p-4">
         <form action={updateAction} className="flex flex-col gap-2">
           <input type="hidden" name="id" value={location.id} />
           <input
@@ -34,13 +34,13 @@ export function LocationRow({
             required
             defaultValue={location.name}
             autoFocus
-            className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={updatePending}
-              className="text-xs font-semibold uppercase tracking-widest text-signal-amber hover:underline disabled:opacity-50"
+              className="text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:underline disabled:opacity-50"
             >
               {updatePending ? dict.common.saving : dict.common.save}
             </button>
@@ -69,7 +69,7 @@ export function LocationRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
         >
           {dict.common.edit}
         </button>

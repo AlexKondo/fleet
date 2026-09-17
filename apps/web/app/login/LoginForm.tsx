@@ -36,7 +36,7 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
       />
       <Link
         href="/forgot-password"
-        className="self-end text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+        className="self-end text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
       >
         {dict.login.forgotPassword}
       </Link>

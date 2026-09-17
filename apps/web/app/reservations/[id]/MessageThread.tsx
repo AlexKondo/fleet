@@ -95,7 +95,7 @@ export function MessageThread({
             <input
               type="datetime-local"
               name="newExpectedReturnAt"
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
             <span className="text-xs text-fog-600">
               {t.newReturnTimeHint}
@@ -108,7 +108,7 @@ export function MessageThread({
           required
           rows={2}
           placeholder={t.bodyPlaceholder}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
         />
 
         {state.status === "error" ? (
@@ -120,7 +120,7 @@ export function MessageThread({
         <button
           type="submit"
           disabled={pending}
-          className="w-fit rounded-sm bg-signal-amber px-4 py-2 text-xs font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-fit rounded-sm bg-gwm-accent px-4 py-2 text-xs font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {pending ? t.sending : t.send}
         </button>

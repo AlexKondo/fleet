@@ -92,6 +92,7 @@ const dict: Dictionary = {
   nav: {
     dashboard: "Painel",
     trips: "Minhas Viagens",
+    gate: "Movimentações",
     analytics: "Analytics",
     fleet: "Frota",
     team: "Equipe",
@@ -143,6 +144,8 @@ const dict: Dictionary = {
   dashboard: {
     actionError:
       "Não foi possível concluir a ação. Ela pode já ter sido feita por outra pessoa, ou você não tem mais permissão para isso — atualize a página e tente novamente.",
+    actionSuccess: "Ação concluída.",
+    dismissBanner: "Fechar",
     cancelReasons: {
       rejectedByManager: "Rejeitada pelo gestor de frota",
       cancelledByManager: "Cancelada pelo gestor de frota",
@@ -154,6 +157,15 @@ const dict: Dictionary = {
     pendingReservations: {
       heading: "Reservas Aguardando Aprovação",
       empty: "Nenhuma reserva pendente.",
+      passengers: "{count} passageiro(s)",
+      returnBy: "Retorno previsto",
+      justification: "Justificativa",
+      noJustification: "Sem justificativa",
+      openReservation: "Ver reserva completa",
+      confirmApprove: "Aprovar a reserva de {name}?",
+      confirmReject: "Rejeitar a reserva de {name}?",
+      reasonPlaceholder: "Motivo da rejeição (opcional)",
+      reasonLabel: "Motivo da rejeição",
     },
     activeReservations: {
       heading: "Reservas Ativas — Trocar Veículo / Transferir",
@@ -173,12 +185,30 @@ const dict: Dictionary = {
       transferAction: "Transferir",
       confirmCancel: "Cancelar a reserva de {name}?",
       unknownRequester: "este solicitante",
+      confirmSwap: "Confirmar a troca de veículo desta reserva?",
+      confirmTransfer: "Transferir esta reserva para outro solicitante?",
     },
     tasks: {
       heading: "Tarefas Operacionais",
       empty: "Nenhuma tarefa aberta.",
       complete: "Concluir",
       confirmCancel: "Cancelar esta tarefa sem marcá-la como concluída?",
+      confirmComplete: "Marcar esta tarefa como concluída?",
+      filterMine: "Minhas e disponíveis",
+      filterAll: "Todas",
+      emptyMine: "Nenhuma tarefa atribuída a você, e nenhuma disponível para assumir.",
+      claim: "Assumir",
+      confirmClaim: "Assumir esta tarefa e ficar responsável por ela?",
+      claiming: "Assumindo…",
+      assignedTo: "Responsável: {name}",
+      unassigned: "Sem responsável",
+      assigneeNameUnavailable: "Responsável atribuído",
+      priorityLabel: "Prioridade",
+      priorities: {
+        low: "Baixa",
+        normal: "Normal",
+        high: "Alta",
+      },
       types: {
         repair: "Reparo",
         safety: "Segurança",
@@ -200,6 +230,11 @@ const dict: Dictionary = {
       batterySuffix: "bat.",
       unblock: "Desbloquear",
       block: "Bloquear",
+      confirmBlock: "Bloquear o veículo {plate} e impedir novas reservas?",
+      confirmUnblock: "Desbloquear o veículo {plate} e liberá-lo para reservas?",
+      blockReasonPlaceholder: "Motivo (ex.: pneu furado, recall)",
+      blockReasonLabel: "Motivo do bloqueio",
+      blockReasonDefault: "Bloqueado manualmente pelo gestor",
     },
   },
   notifications: {
@@ -271,6 +306,23 @@ const dict: Dictionary = {
         "Nenhum veículo cadastrado ainda — a frota aparece no Painel assim que o primeiro veículo for adicionado abaixo.",
       categories: "Nenhuma categoria cadastrada ainda.",
       locations: "Nenhuma localização cadastrada ainda.",
+    },
+    filters: {
+      searchPlaceholder: "Buscar por placa ou nome…",
+      statusAll: "Todos os status",
+      categoryAll: "Todas as categorias",
+      clear: "Limpar",
+      resultCount: "{shown} de {total} veículos",
+      noMatches: "Nenhum veículo corresponde aos filtros.",
+    },
+    emptyState: {
+      vehiclesLead: "Nenhum veículo cadastrado — adicione o primeiro",
+      vehiclesHint:
+        "A frota aparece no Painel assim que o primeiro veículo for adicionado. Use o botão abaixo.",
+      categoriesLead: "Nenhuma categoria cadastrada — adicione a primeira",
+      categoriesHint: "Todo veículo precisa de uma categoria. Use o botão abaixo.",
+      locationsLead: "Nenhuma localização cadastrada — adicione a primeira",
+      locationsHint: "As localizações definem onde os veículos ficam estacionados. Use o botão abaixo.",
     },
     addVehicle: { label: "Adicionar Veículo" },
     addCategory: { label: "Adicionar Categoria" },
@@ -566,6 +618,11 @@ const dict: Dictionary = {
       action: "Ação",
     },
     rolesLegend: "Funções: {roles}.",
+    search: {
+      placeholder: "Buscar por nome ou e-mail…",
+      resultCount: "{shown} de {total} membros",
+      noMatches: "Nenhum membro corresponde à busca.",
+    },
     invite: {
       trigger: "+ Adicionar Usuário",
       modalTitle: "Adicionar Usuário",
@@ -608,6 +665,7 @@ const dict: Dictionary = {
       decline: "Recusar",
       declineConfirm: "Recusar este pedido de carona?",
       communicationTitle: "Comunicação",
+      carpoolActionError: "Não foi possível responder à solicitação de carona. Tente novamente.",
     },
     messages: {
       empty: "Nenhuma mensagem ainda.",
@@ -681,6 +739,13 @@ const dict: Dictionary = {
       submit: "Concluir Retorno",
       photosFailedOne: "Retorno registrado, mas a foto de {angles} não foi enviada. Você pode adicioná-la depois.",
       photosFailedOther: "Retorno registrado, mas as fotos de {angles} não foram enviadas. Você pode adicioná-las depois.",
+    },
+    checklistGuard: {
+      notAuthorized: "Você não tem permissão para realizar a vistoria desta reserva.",
+      pickupWrongStatus:
+        "Esta reserva não está disponível para retirada (ela já foi retirada, cancelada ou ainda não foi confirmada).",
+      returnWrongStatus:
+        "Esta reserva não está disponível para retorno (o veículo ainda não foi retirado ou a viagem já foi encerrada).",
     },
   },
   errors: {
@@ -764,6 +829,19 @@ const dict: Dictionary = {
       earlyPickupNotAllowed:
         "Ainda não é possível retirar este veículo — a reserva ainda não começou.",
     },
+  },
+  gate: {
+    title: "Movimentações",
+    description:
+      "Reservas prontas para retirada ou devolução na portaria. Busque pela placa e abra o checklist correspondente.",
+    searchLabel: "Buscar por placa",
+    searchPlaceholder: "Ex.: ABC1D23",
+    empty: "Nenhuma movimentação em aberto no momento.",
+    noResults: "Nenhuma reserva com essa placa.",
+    details: "Detalhes",
+    pickupAction: "Retirada",
+    returnAction: "Devolução",
+    loadError: "Não foi possível carregar as movimentações agora.",
   },
 };
 

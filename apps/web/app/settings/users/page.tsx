@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AppShell } from "../../AppShell";
 import { InviteUserModal } from "./InviteUserModal";
 import { UserRow } from "./UserRow";
+import { UserTable } from "./UserTable";
 import { getRoleLabels } from "./ROLE_LABELS";
 import { getDictionary } from "../../../lib/i18n/getLocale";
 
@@ -75,37 +76,31 @@ export default async function UsersPage() {
           {dict.team.membersHeading.replace("{count}", String(members.length))}
         </h2>
 
-        <div className="mb-6 overflow-x-auto rounded-md border border-line-800">
-          <table className="w-full min-w-[860px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
-                <th className="px-4 py-3 font-medium">{dict.team.columns.member}</th>
-                <th className="px-4 py-3 font-medium">{dict.team.columns.role}</th>
-                <th className="px-4 py-3 font-medium">{dict.team.columns.license}</th>
-                <th className="px-4 py-3 font-medium text-right">{dict.team.columns.action}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((m) => (
-                <UserRow
-                  key={m.id}
-                  member={{
-                    id: m.id,
-                    full_name: m.full_name,
-                    email: m.email,
-                    role: m.role,
-                    driver_authorized: m.driver_authorized,
-                    drivers_license_number: m.drivers_license_number,
-                    drivers_license_category: m.drivers_license_category,
-                    drivers_license_expiration: m.drivers_license_expiration,
-                  }}
-                  isSelf={m.id === user.id}
-                  dict={dict}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <UserTable
+          dict={dict}
+          members={members.map((m) => ({
+            id: m.id,
+            fullName: m.full_name,
+            email: m.email,
+            node: (
+              <UserRow
+                key={m.id}
+                member={{
+                  id: m.id,
+                  full_name: m.full_name,
+                  email: m.email,
+                  role: m.role,
+                  driver_authorized: m.driver_authorized,
+                  drivers_license_number: m.drivers_license_number,
+                  drivers_license_category: m.drivers_license_category,
+                  drivers_license_expiration: m.drivers_license_expiration,
+                }}
+                isSelf={m.id === user.id}
+                dict={dict}
+              />
+            ),
+          }))}
+        />
 
         <p className="text-xs text-fog-600">
           {dict.team.rolesLegend.replace(

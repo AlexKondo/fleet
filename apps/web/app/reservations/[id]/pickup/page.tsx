@@ -13,20 +13,43 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: reservation } = await supabase
-    .from("reservations")
-    .select(
-      `id, status,
-       trip_request:trip_requests(origin, destination),
+  const [{ data: profile }, { data: reservation }] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase
+      .from("reservations")
+      .select(
+        `id, status,
+       trip_request:trip_requests(origin, destination, requester_id),
        vehicle:vehicles(id, plate, name, color, status, odometer_km, estimated_range_km,
          category:vehicle_categories(name, energy_type))`,
-    )
-    .eq("id", id)
-    .single();
+      )
+      .eq("id", id)
+      .single(),
+  ]);
 
-  if (!reservation || !reservation.vehicle) notFound();
+  if (!reservation || !reservation.vehicle || !reservation.trip_request) notFound();
 
   const vehicle = reservation.vehicle;
+
+  // Same authorization rule as reservations/[id]/page.tsx (and as record_pickup itself,
+  // 0004_operational_actions.sql): the trip's own requester, or a privileged fleet role.
+  const isPrivileged =
+    profile?.role === "fleet_manager" ||
+    profile?.role === "administrator" ||
+    profile?.role === "security";
+  // Security never requests trips, so /trips is permanently empty for them (the same
+  // reason /gate exists) — bounce them back there instead of into a dead end.
+  const fallbackPath = profile?.role === "security" ? "/gate" : "/trips";
+  if (!isPrivileged && reservation.trip_request.requester_id !== user.id) {
+    redirect(`${fallbackPath}?tripActionError=checklist_not_authorized`);
+  }
+
+  // Mirrors record_pickup's own preconditions so the user learns the pickup doesn't apply
+  // here *before* filling in the whole checklist, not after the submit fails server-side.
+  const canPickUp =
+    reservation.status === "confirmed" &&
+    (vehicle.status === "reserved" || vehicle.status === "awaiting_pickup");
+  if (!canPickUp) redirect(`${fallbackPath}?tripActionError=pickup_wrong_status`);
   const energyType = vehicle.category?.energy_type ?? "ICE";
   const showElectricRange = energyType === "BEV" || energyType === "PHEV";
 
@@ -35,7 +58,7 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
       <div className="mx-auto max-w-xl">
         <Link
           href="/trips"
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
         >
           {dict.reservations.detail.backToTrips}
         </Link>

@@ -130,7 +130,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
               name="departureAt"
               required
               defaultValue={defaultDeparture}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -142,7 +142,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
               name="expectedReturnAt"
               required
               defaultValue={defaultReturn}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
         </div>
@@ -154,7 +154,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
               name="origin"
               required
               defaultValue={draft.origin ?? "Iracemápolis"}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -164,7 +164,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
               required
               defaultValue={draft.destination}
               placeholder={t.destinationPlaceholder}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
         </div>
@@ -180,7 +180,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
               required
               min={1}
               defaultValue={draft.distanceKm ?? 100}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -193,7 +193,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
               required
               min={1}
               defaultValue={draft.passengerCount ?? 1}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
         </div>
@@ -217,14 +217,14 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
             required
             rows={3}
             defaultValue={draft.justification}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>
 
         <button
           type="submit"
           disabled={isPlanning}
-          className="mt-2 rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="mt-2 rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {isPlanning ? t.submitPending : t.submit}
         </button>
@@ -290,13 +290,13 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
               ))}
             </ul>
             {plan.vehicle.requiredPreparation && plan.vehicle.requiredPreparation.length > 0 ? (
-              <p className="text-xs text-signal-amber">
+              <p className="text-xs text-gwm-accent">
                 {t.preparationNote}
               </p>
             ) : null}
             {plan.vehicle.trafficRestriction?.restricted ? (
-              <div className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 p-4">
-                <p className="text-xs uppercase tracking-widest text-signal-amber">
+              <div className="rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-4">
+                <p className="text-xs uppercase tracking-widest text-gwm-accent">
                   {t.trafficRestrictionTitle}
                 </p>
                 <p className="mt-1 text-sm text-fog-400">

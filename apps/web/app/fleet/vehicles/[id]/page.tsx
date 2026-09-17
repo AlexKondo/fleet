@@ -5,10 +5,11 @@ import { formatDateTime, formatDayMonth } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { AppShell } from "../../../AppShell";
 import { getStatusMeta } from "../../../dashboard/statusMeta";
+import { StatusBadge } from "../../../ui/StatusBadge";
 
 const STATUS_BAR_CLASS: Record<string, string> = {
   confirmed: "bg-signal-teal/70 border-signal-teal",
-  pending_approval: "bg-signal-amber/70 border-signal-amber hazard-stripe",
+  pending_approval: "bg-gwm-accent/70 border-gwm-accent hazard-stripe",
   completed: "bg-fog-600/50 border-fog-600",
   cancelled: "bg-fog-800/40 border-fog-700",
 };
@@ -108,7 +109,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
       title={dict.fleet.detail.title}
     >
       <div className="px-6 py-6">
-        <Link href="/fleet" className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber">
+        <Link href="/fleet" className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent">
           ← {dict.fleet.detail.backToFleet}
         </Link>
 
@@ -121,10 +122,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
               {vehicle.color ? ` · ${vehicle.color}` : ""} · {vehicle.current_location?.name ?? "—"}
             </p>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-            <span className={`text-xs uppercase tracking-widest ${meta.text}`}>{meta.label}</span>
-          </span>
+          <StatusBadge meta={meta} />
         </div>
 
         <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-3">
@@ -137,7 +135,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
               {dict.fleet.detail.reservationStatus.confirmed}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-[2px] border border-signal-amber bg-signal-amber/70" />
+              <span className="h-2.5 w-2.5 rounded-[2px] border border-gwm-accent bg-gwm-accent/70" />
               {dict.fleet.detail.reservationStatus.pending_approval}
             </li>
             <li className="flex items-center gap-1.5">

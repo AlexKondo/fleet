@@ -29,7 +29,7 @@ export function Field({
 export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`rounded-sm border border-line-800 bg-panel-900 px-3 py-2.5 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber ${className}`}
+      className={`rounded-sm border border-line-800 bg-panel-900 px-3 py-2.5 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent ${className}`}
       {...props}
     />
   );

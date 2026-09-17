@@ -57,7 +57,7 @@ export function VehicleForm({
             name="plate"
             required
             placeholder={dict.fleet.vehicleForm.platePlaceholder}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm uppercase text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm uppercase text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
 
@@ -67,7 +67,7 @@ export function VehicleForm({
             type="text"
             name="name"
             placeholder={dict.fleet.vehicleForm.namePlaceholder}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
 
@@ -76,7 +76,7 @@ export function VehicleForm({
           <select
             name="color"
             defaultValue=""
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           >
             <option value="">{dict.common.optional}</option>
             {VEHICLE_COLOR_OPTIONS.map((color) => (
@@ -93,7 +93,7 @@ export function VehicleForm({
             type="file"
             name="photo"
             accept="image/*"
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-xs text-fog-400 outline-none file:mr-2 file:rounded-sm file:border-0 file:bg-line-800 file:px-2 file:py-1 file:text-xs file:text-paper-50 focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-xs text-fog-400 outline-none file:mr-2 file:rounded-sm file:border-0 file:bg-line-800 file:px-2 file:py-1 file:text-xs file:text-paper-50 focus-visible:border-gwm-accent"
           />
         </label>
 
@@ -106,7 +106,7 @@ export function VehicleForm({
             required
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           >
             <option value="">{dict.fleet.vehicleForm.selectPlaceholder}</option>
             {categories.map((c) => (
@@ -127,7 +127,7 @@ export function VehicleForm({
             required
             min={0}
             defaultValue={0}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
 
@@ -140,7 +140,7 @@ export function VehicleForm({
             name="nextServiceOdometerKm"
             min={0}
             placeholder={dict.common.optional}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
 
@@ -154,7 +154,7 @@ export function VehicleForm({
             required
             min={0}
             defaultValue={400}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
 
@@ -166,7 +166,7 @@ export function VehicleForm({
             <select
               name="fuelLevelPercent"
               defaultValue={100}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             >
               {FUEL_LEVEL_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -188,7 +188,7 @@ export function VehicleForm({
               min={0}
               max={100}
               defaultValue={100}
-              className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
             />
           </label>
         ) : null}
@@ -200,7 +200,7 @@ export function VehicleForm({
           <select
             name="locationId"
             required
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           >
             <option value="">{dict.fleet.vehicleForm.selectPlaceholder}</option>
             {locations.map((l) => (
@@ -221,7 +221,7 @@ export function VehicleForm({
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="self-start rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {pending ? dict.common.adding : `+ ${dict.fleet.addVehicle.label}`}
       </button>

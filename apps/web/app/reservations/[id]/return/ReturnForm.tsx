@@ -116,7 +116,7 @@ export function ReturnForm({
           required
           min={currentOdometer}
           defaultValue={currentOdometer}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
         />
         <span className="text-xs text-fog-600">
           {t.odometerAtPickup.replace("{km}", currentOdometer.toLocaleString(locale))}
@@ -131,7 +131,7 @@ export function ReturnForm({
           name="currentLocationId"
           required
           defaultValue={homeLocationId ?? ""}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
         >
           <option value="" disabled>
             {t.selectLocation}
@@ -156,7 +156,7 @@ export function ReturnForm({
               min={0}
               max={100}
               required
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
         ) : null}
@@ -171,7 +171,7 @@ export function ReturnForm({
               min={0}
               max={100}
               required
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
         ) : null}
@@ -208,7 +208,7 @@ export function ReturnForm({
           name="damageNotes"
           placeholder={tc.damageNotesPlaceholder}
           rows={2}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
         />
       ) : null}
 
@@ -221,7 +221,9 @@ export function ReturnForm({
         {tc.dirtyInterior}
       </label>
 
-      {hasNewDamage ? <PhotoCaptureSection dict={dict} /> : null}
+      {/* The seven standard angles are routine evidence on every return, damage or not
+          (fleet-car-saas.txt §10) — only the extra damage-specific angle is conditional. */}
+      <PhotoCaptureSection dict={dict} includeDamageAngle={hasNewDamage} />
 
       {error ? (
         <p role="alert" className="text-sm text-signal-red">
@@ -236,8 +238,8 @@ export function ReturnForm({
       ) : null}
 
       {!damageEvidenceMissing && failedPhotoAngles ? (
-        <div role="alert" className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 p-3">
-          <p className="text-sm text-signal-amber">
+        <div role="alert" className="rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-3">
+          <p className="text-sm text-gwm-accent">
             {(failedPhotoAngles.length === 1 ? t.photosFailedOne : t.photosFailedOther).replace(
               "{angles}",
               failedPhotoAngles
@@ -248,7 +250,7 @@ export function ReturnForm({
           <button
             type="button"
             onClick={() => router.push("/trips")}
-            className="mt-2 rounded-sm border border-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
+            className="mt-2 rounded-sm border border-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
           >
             {tc.goToTrips}
           </button>
@@ -259,7 +261,7 @@ export function ReturnForm({
         <button
           type="submit"
           disabled={isPending}
-          className="mt-2 rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="mt-2 rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? tc.submitting : t.submit}
         </button>

@@ -66,7 +66,7 @@ export function SettingsForm({
             max={100}
             step={1}
             defaultValue={initialValues.rangeSafetyBufferPercent}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -80,7 +80,7 @@ export function SettingsForm({
             min={0}
             step={0.5}
             defaultValue={initialValues.minChargeHoursBev}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -94,7 +94,7 @@ export function SettingsForm({
             min={0}
             step={0.5}
             defaultValue={initialValues.minRefuelHoursIceOrPhev}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -108,7 +108,7 @@ export function SettingsForm({
             min={0}
             step={0.5}
             defaultValue={initialValues.minCleaningHours}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>
       </div>
@@ -132,7 +132,7 @@ export function SettingsForm({
             min={0}
             step={1}
             defaultValue={initialValues.carpoolDepartureToleranceMinutes}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -146,7 +146,7 @@ export function SettingsForm({
             min={0}
             step={1}
             defaultValue={initialValues.carpoolReturnToleranceMinutes}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>
       </div>
@@ -198,7 +198,7 @@ export function SettingsForm({
             min={0}
             step={1}
             defaultValue={initialValues.maintenanceDueSoonDays}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>
         <label className="flex items-center gap-2 self-end pb-2 text-sm text-fog-400">
@@ -230,7 +230,7 @@ export function SettingsForm({
           min={0}
           step={1}
           defaultValue={initialValues.earlyPickupGraceMinutes}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
         />
       </label>
 
@@ -248,7 +248,7 @@ export function SettingsForm({
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 w-fit rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="mt-2 w-fit rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {pending ? dict.common.saving : t.submit}
       </button>

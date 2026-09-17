@@ -12,13 +12,14 @@ import {
   AnalyticsIcon,
   DashboardIcon,
   FleetIcon,
+  GateIcon,
   LogoutIcon,
   SettingsIcon,
   TeamIcon,
   TripsIcon,
 } from "./NavIcons";
 
-export type NavKey = "dashboard" | "trips" | "analytics" | "fleet" | "team" | "settings";
+export type NavKey = "dashboard" | "trips" | "gate" | "analytics" | "fleet" | "team" | "settings";
 
 /**
  * Shared left-sidebar shell for every authenticated screen — previously each page built
@@ -56,9 +57,21 @@ export async function AppShell({
   const dict = await getDictionary();
   const roleLabels = getRoleLabels(dict);
 
+  // Derived from `role` (which every caller already passes) rather than taken as another
+  // prop: the gatehouse nav item has to appear on every screen a security user can land
+  // on — including /dashboard — without each page having to opt in.
+  const isSecurity = role === "security";
+
   const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
     { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: true },
     { key: "trips", href: "/trips", label: dict.nav.trips, icon: TripsIcon, visible: true },
+    {
+      key: "gate",
+      href: "/gate",
+      label: dict.nav.gate,
+      icon: GateIcon,
+      visible: isSecurity || isFleetManager,
+    },
     { key: "analytics", href: "/analytics", label: dict.nav.analytics, icon: AnalyticsIcon, visible: isFleetManager },
     { key: "fleet", href: "/fleet", label: dict.nav.fleet, icon: FleetIcon, visible: isFleetManager },
     { key: "team", href: "/settings/users", label: dict.nav.team, icon: TeamIcon, visible: isAdministrator },
@@ -83,7 +96,7 @@ export async function AppShell({
       <aside className="hidden shrink-0 flex-col border-line-800 bg-panel-900/40 px-4 py-4 md:flex md:w-60 md:border-r md:py-5">
         <div className="px-1 md:mb-6">
           <p className="font-display text-xl font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-signal-amber">.</span>
+            Fleet<span className="text-gwm-accent">.</span>
           </p>
           <p className="mt-0.5 max-w-[10rem] truncate text-xs uppercase tracking-widest text-fog-600">
             {orgName}
@@ -92,7 +105,7 @@ export async function AppShell({
 
         <Link
           href="/trips/new"
-          className="mb-5 flex items-center justify-center gap-2 rounded-sm bg-signal-amber px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
+          className="mb-5 flex items-center justify-center gap-2 rounded-sm bg-gwm-accent px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
         >
           {dict.chrome.requestTrip}
         </Link>
@@ -108,7 +121,7 @@ export async function AppShell({
                 aria-current={isActive ? "page" : undefined}
                 className={`flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors ${
                   isActive
-                    ? "bg-signal-amber/10 text-signal-amber"
+                    ? "bg-gwm-accent/10 text-gwm-accent"
                     : "text-fog-400 hover:bg-panel-800 hover:text-paper-50"
                 }`}
               >

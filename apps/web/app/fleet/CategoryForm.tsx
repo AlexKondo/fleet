@@ -28,7 +28,7 @@ export function CategoryForm({ dict, onSaved }: { dict: Dictionary; onSaved?: ()
           name="name"
           required
           placeholder={dict.fleet.categoryForm.namePlaceholder}
-          className="w-40 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          className="w-40 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
         />
       </label>
       <label className="flex flex-col gap-1.5">
@@ -42,7 +42,7 @@ export function CategoryForm({ dict, onSaved }: { dict: Dictionary; onSaved?: ()
           min={0}
           max={60}
           defaultValue={5}
-          className="w-24 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          className="w-24 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
         />
       </label>
       <label className="flex items-center gap-2 pb-2.5 text-sm text-fog-400">
@@ -55,7 +55,7 @@ export function CategoryForm({ dict, onSaved }: { dict: Dictionary; onSaved?: ()
           name="energyType"
           required
           defaultValue="ICE"
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
         >
           <option value="ICE">{dict.fleet.categories.energy.ICE}</option>
           <option value="HEV">{dict.fleet.categories.energy.HEV}</option>
@@ -66,7 +66,7 @@ export function CategoryForm({ dict, onSaved }: { dict: Dictionary; onSaved?: ()
       <button
         type="submit"
         disabled={pending}
-        className="rounded-sm border border-signal-amber px-3 py-2 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10 disabled:opacity-50"
+        className="rounded-sm border border-gwm-accent px-3 py-2 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10 disabled:opacity-50"
       >
         {pending ? dict.common.adding : `+ ${dict.common.add}`}
       </button>

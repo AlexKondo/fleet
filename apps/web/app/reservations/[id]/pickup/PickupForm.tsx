@@ -108,7 +108,7 @@ export function PickupForm({
           required
           min={currentOdometer}
           defaultValue={currentOdometer}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
         />
       </label>
 
@@ -124,7 +124,7 @@ export function PickupForm({
               min={0}
               max={100}
               required
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
         ) : null}
@@ -139,7 +139,7 @@ export function PickupForm({
               min={0}
               max={100}
               required
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
         ) : null}
@@ -176,7 +176,7 @@ export function PickupForm({
           name="damageNotes"
           placeholder={tc.damageNotesPlaceholder}
           rows={2}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
         />
       ) : null}
 
@@ -189,7 +189,9 @@ export function PickupForm({
         {tc.dirtyInterior}
       </label>
 
-      {hasDamage ? <PhotoCaptureSection dict={dict} /> : null}
+      {/* The seven standard angles are routine evidence on every pickup, damage or not
+          (fleet-car-saas.txt §10) — only the extra damage-specific angle is conditional. */}
+      <PhotoCaptureSection dict={dict} includeDamageAngle={hasDamage} />
 
       {error ? (
         <p role="alert" className="text-sm text-signal-red">
@@ -204,8 +206,8 @@ export function PickupForm({
       ) : null}
 
       {!damageEvidenceMissing && failedPhotoAngles ? (
-        <div role="alert" className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 p-3">
-          <p className="text-sm text-signal-amber">
+        <div role="alert" className="rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-3">
+          <p className="text-sm text-gwm-accent">
             {(failedPhotoAngles.length === 1 ? t.photosFailedOne : t.photosFailedOther).replace(
               "{angles}",
               failedPhotoAngles
@@ -216,7 +218,7 @@ export function PickupForm({
           <button
             type="button"
             onClick={() => router.push("/trips")}
-            className="mt-2 rounded-sm border border-signal-amber px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
+            className="mt-2 rounded-sm border border-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
           >
             {tc.goToTrips}
           </button>

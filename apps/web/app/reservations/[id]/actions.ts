@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { attemptAutomaticReassignment } from "@/lib/domain/autoReassignment";
 import { getDictionary } from "@/lib/i18n/getLocale";
@@ -92,6 +93,17 @@ export async function postReservationMessage(
  * dashboard/actions.ts's runFleetAction: this is bound directly to a form with no state
  * slot, and a failure here (request already resolved by a race, capacity now full) is a
  * normal outcome, not something that should crash the page.
+ *
+ * The "no state slot" part still holds — what didn't is the silence that followed. The
+ * original docblock's reasoning only justifies *not throwing*; it never justified giving
+ * the host no feedback at all. And the benign case it names (a request another tab already
+ * resolved) is the one case that IS self-evident after the revalidate, because the request
+ * disappears from the list. Every other failure — capacity now full, RLS rejection, a
+ * network/RPC error — leaves the request sitting there, so a host who clicks Accept sees
+ * exactly the same screen and no explanation. It now redirects with a generic
+ * `?carpoolError=1` flag, the same shape dashboard/actions.ts's runFleetAction uses, which
+ * reservations/[id]/page.tsx renders as a banner. The raw Postgres message stays in the
+ * server log (it may be an internal detail not fit for display).
  */
 export async function respondToCarpoolRequest(
   reservationId: string,
@@ -106,5 +118,6 @@ export async function respondToCarpoolRequest(
   revalidatePath(`/reservations/${reservationId}`);
   if (error) {
     console.error("respondToCarpoolRequest failed:", error.message);
+    redirect(`/reservations/${reservationId}?carpoolError=1`);
   }
 }

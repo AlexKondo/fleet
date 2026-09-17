@@ -58,7 +58,7 @@ export function UserRow({
             name="role"
             defaultValue={member.role}
             disabled={isSelf}
-            className="w-40 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber disabled:opacity-50"
+            className="w-40 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent disabled:opacity-50"
           >
             {roleOptions.map((r) => (
               <option key={r.value} value={r.value}>
@@ -70,7 +70,7 @@ export function UserRow({
             <button
               type="submit"
               disabled={rolePending}
-              className="shrink-0 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:underline disabled:opacity-50"
+              className="shrink-0 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:underline disabled:opacity-50"
             >
               {rolePending ? t.savingShort : dict.common.save}
             </button>
@@ -101,25 +101,25 @@ export function UserRow({
               name="licenseNumber"
               placeholder={t.licenseNumberPlaceholder}
               defaultValue={member.drivers_license_number ?? ""}
-              className="w-24 rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="w-24 rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
             <input
               type="text"
               name="licenseCategory"
               placeholder={t.licenseCategoryPlaceholder}
               defaultValue={member.drivers_license_category ?? ""}
-              className="w-14 rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="w-14 rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
             <input
               type="date"
               name="licenseExpiration"
               defaultValue={member.drivers_license_expiration ?? ""}
-              className="rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
             <button
               type="submit"
               disabled={driverPending}
-              className="text-xs font-semibold uppercase tracking-widest text-signal-amber hover:underline disabled:opacity-50"
+              className="text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:underline disabled:opacity-50"
             >
               {driverPending ? t.savingShort : dict.common.save}
             </button>

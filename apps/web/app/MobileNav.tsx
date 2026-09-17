@@ -11,6 +11,7 @@ import {
   AnalyticsIcon,
   DashboardIcon,
   FleetIcon,
+  GateIcon,
   LogoutIcon,
   SettingsIcon,
   TeamIcon,
@@ -24,6 +25,7 @@ import type { NavKey } from "./AppShell";
 const ICONS_BY_KEY: Record<NavKey, (props: { className?: string }) => React.ReactElement> = {
   dashboard: DashboardIcon,
   trips: TripsIcon,
+  gate: GateIcon,
   analytics: AnalyticsIcon,
   fleet: FleetIcon,
   team: TeamIcon,
@@ -67,7 +69,7 @@ export function MobileNav({
       <div className="flex items-center justify-between border-b border-line-800 bg-panel-900/40 px-4 py-3">
         <div className="min-w-0">
           <p className="font-display text-lg font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-signal-amber">.</span>
+            Fleet<span className="text-gwm-accent">.</span>
           </p>
           <p className="max-w-[10rem] truncate text-[11px] uppercase tracking-widest text-fog-600">
             {orgName}
@@ -80,7 +82,7 @@ export function MobileNav({
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? dict.common.closeMenu : dict.common.openMenu}
             aria-expanded={open}
-            className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-1 rounded-sm border border-line-800 text-fog-400 hover:border-signal-amber hover:text-signal-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-amber"
+            className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-1 rounded-sm border border-line-800 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
           >
             <span
               className={`h-0.5 w-4 rounded-full bg-current transition-transform ${open ? "translate-y-1.5 rotate-45" : ""}`}
@@ -106,7 +108,7 @@ export function MobileNav({
                   aria-current={isActive ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm uppercase tracking-widest transition-colors ${
                     isActive
-                      ? "bg-signal-amber/10 text-signal-amber"
+                      ? "bg-gwm-accent/10 text-gwm-accent"
                       : "text-fog-400 hover:bg-panel-800 hover:text-paper-50"
                   }`}
                 >
@@ -119,7 +121,7 @@ export function MobileNav({
 
           <Link
             href="/trips/new"
-            className="mt-4 flex items-center justify-center gap-2 rounded-sm bg-signal-amber px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
+            className="mt-4 flex items-center justify-center gap-2 rounded-sm bg-gwm-accent px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
           >
             {dict.chrome.requestTrip}
           </Link>

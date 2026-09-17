@@ -90,6 +90,7 @@ const dict: Dictionary = {
   nav: {
     dashboard: "仪表盘",
     trips: "我的行程",
+    gate: "车辆进出",
     analytics: "数据分析",
     fleet: "车队",
     team: "团队",
@@ -141,6 +142,8 @@ const dict: Dictionary = {
   dashboard: {
     actionError:
       "无法完成该操作。可能已有其他人执行过，或您已不再拥有相应权限——请刷新页面后重试。",
+    actionSuccess: "操作已完成。",
+    dismissBanner: "关闭",
     cancelReasons: {
       rejectedByManager: "已被车队经理拒绝",
       cancelledByManager: "已被车队经理取消",
@@ -152,6 +155,15 @@ const dict: Dictionary = {
     pendingReservations: {
       heading: "待审批预约",
       empty: "暂无待审批预约。",
+      passengers: "{count} 名乘客",
+      returnBy: "预计返回",
+      justification: "申请理由",
+      noJustification: "未填写理由",
+      openReservation: "查看完整预约",
+      confirmApprove: "确定批准 {name} 的预约吗？",
+      confirmReject: "确定拒绝 {name} 的预约吗？",
+      reasonPlaceholder: "拒绝理由（可选）",
+      reasonLabel: "拒绝理由",
     },
     activeReservations: {
       heading: "进行中的预约 — 更换车辆 / 转移",
@@ -171,12 +183,30 @@ const dict: Dictionary = {
       transferAction: "转移",
       confirmCancel: "确定取消 {name} 的预约吗？",
       unknownRequester: "该申请人",
+      confirmSwap: "确定更换此预约的车辆吗？",
+      confirmTransfer: "确定将此预约转移给其他申请人吗？",
     },
     tasks: {
       heading: "运营任务",
       empty: "暂无未完成任务。",
       complete: "完成",
       confirmCancel: "确定不标记为已完成就取消此任务吗？",
+      confirmComplete: "确定将此任务标记为已完成吗？",
+      filterMine: "我的和可认领的",
+      filterAll: "全部",
+      emptyMine: "没有分配给您的任务，也没有可认领的任务。",
+      claim: "认领",
+      confirmClaim: "确定认领此任务并负责处理吗？",
+      claiming: "认领中…",
+      assignedTo: "负责人：{name}",
+      unassigned: "暂无负责人",
+      assigneeNameUnavailable: "已指派负责人",
+      priorityLabel: "优先级",
+      priorities: {
+        low: "低",
+        normal: "普通",
+        high: "高",
+      },
       types: {
         repair: "维修",
         safety: "安全",
@@ -198,6 +228,11 @@ const dict: Dictionary = {
       batterySuffix: "电量",
       unblock: "解除锁定",
       block: "锁定",
+      confirmBlock: "确定锁定车辆 {plate} 并停止接受新预约吗？",
+      confirmUnblock: "确定解除车辆 {plate} 的锁定并重新开放预约吗？",
+      blockReasonPlaceholder: "原因（如：轮胎漏气、召回）",
+      blockReasonLabel: "锁定原因",
+      blockReasonDefault: "由车队经理手动锁定",
     },
   },
   notifications: {
@@ -265,6 +300,23 @@ const dict: Dictionary = {
       vehicles: "尚未录入任何车辆——在下方添加第一辆车后，车队即会显示在仪表板中。",
       categories: "尚未录入任何车型分类。",
       locations: "尚未录入任何停放点。",
+    },
+    filters: {
+      searchPlaceholder: "按车牌或名称搜索…",
+      statusAll: "全部状态",
+      categoryAll: "全部分类",
+      clear: "清除",
+      resultCount: "{total} 辆中的 {shown} 辆",
+      noMatches: "没有符合筛选条件的车辆。",
+    },
+    emptyState: {
+      vehiclesLead: "尚未录入任何车辆——请添加第一辆",
+      vehiclesHint:
+        "添加第一辆车后，车队即会显示在仪表板中。请使用下方按钮。",
+      categoriesLead: "尚未录入任何车型分类——请添加第一个",
+      categoriesHint: "每辆车都需要一个分类。请使用下方按钮。",
+      locationsLead: "尚未录入任何停放点——请添加第一个",
+      locationsHint: "停放点用于定义车辆的停放位置。请使用下方按钮。",
     },
     addVehicle: { label: "添加车辆" },
     addCategory: { label: "添加分类" },
@@ -548,6 +600,11 @@ const dict: Dictionary = {
       action: "操作",
     },
     rolesLegend: "角色：{roles}。",
+    search: {
+      placeholder: "按姓名或邮箱搜索…",
+      resultCount: "{total} 人中的 {shown} 人",
+      noMatches: "没有符合搜索条件的成员。",
+    },
     invite: {
       trigger: "+ 添加用户",
       modalTitle: "添加用户",
@@ -589,6 +646,7 @@ const dict: Dictionary = {
       decline: "拒绝",
       declineConfirm: "确定拒绝此拼车申请吗？",
       communicationTitle: "沟通",
+      carpoolActionError: "无法回应拼车请求，请重试。",
     },
     messages: {
       empty: "暂无消息。",
@@ -661,6 +719,11 @@ const dict: Dictionary = {
       submit: "完成还车",
       photosFailedOne: "还车已记录，但 {angles} 的照片未能上传。您可以稍后补充。",
       photosFailedOther: "还车已记录，但 {angles} 的照片未能上传。您可以稍后补充。",
+    },
+    checklistGuard: {
+      notAuthorized: "您没有权限为此预约执行车辆检查。",
+      pickupWrongStatus: "此预约当前无法取车（车辆已取走、预约已取消，或尚未确认）。",
+      returnWrongStatus: "此预约当前无法还车（车辆尚未取走，或行程已结束）。",
     },
   },
   errors: {
@@ -737,6 +800,18 @@ const dict: Dictionary = {
       licenseExpired: "该驾驶员的驾照已过期。请在取车前联系车队管理员更新。",
       earlyPickupNotAllowed: "暂时无法取走该车辆——预订尚未开始。",
     },
+  },
+  gate: {
+    title: "车辆进出",
+    description: "门岗可办理的取车与还车预约。按车牌搜索，直接打开对应的检查清单。",
+    searchLabel: "按车牌搜索",
+    searchPlaceholder: "例如：ABC1D23",
+    empty: "当前没有待办的进出记录。",
+    noResults: "没有匹配该车牌的预约。",
+    details: "详情",
+    pickupAction: "取车",
+    returnAction: "还车",
+    loadError: "暂时无法加载进出记录。",
   },
 };
 

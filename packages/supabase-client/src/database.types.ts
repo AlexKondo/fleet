@@ -698,6 +698,7 @@ export type Database = {
         Row: {
           battery_level_percent: number | null
           category_id: string
+          color: string | null
           created_at: string
           current_location_id: string | null
           documentation_valid: boolean
@@ -714,14 +715,15 @@ export type Database = {
           odometer_km: number
           organization_id: string
           photo_storage_path: string | null
-          color: string | null
           plate: string
+          pre_block_status: Database["public"]["Enums"]["vehicle_status"] | null
           status: Database["public"]["Enums"]["vehicle_status"]
           updated_at: string
         }
         Insert: {
           battery_level_percent?: number | null
           category_id: string
+          color?: string | null
           created_at?: string
           current_location_id?: string | null
           documentation_valid?: boolean
@@ -738,14 +740,17 @@ export type Database = {
           odometer_km?: number
           organization_id: string
           photo_storage_path?: string | null
-          color?: string | null
           plate: string
+          pre_block_status?:
+            | Database["public"]["Enums"]["vehicle_status"]
+            | null
           status?: Database["public"]["Enums"]["vehicle_status"]
           updated_at?: string
         }
         Update: {
           battery_level_percent?: number | null
           category_id?: string
+          color?: string | null
           created_at?: string
           current_location_id?: string | null
           documentation_valid?: boolean
@@ -762,8 +767,10 @@ export type Database = {
           odometer_km?: number
           organization_id?: string
           photo_storage_path?: string | null
-          color?: string | null
           plate?: string
+          pre_block_status?:
+            | Database["public"]["Enums"]["vehicle_status"]
+            | null
           status?: Database["public"]["Enums"]["vehicle_status"]
           updated_at?: string
         }
@@ -800,10 +807,12 @@ export type Database = {
       }
       workflow_tasks: {
         Row: {
+          assigned_to: string | null
           created_at: string
           id: string
           notes: string | null
           organization_id: string
+          priority: string
           resolved_at: string | null
           source_inspection_id: string | null
           status: Database["public"]["Enums"]["workflow_task_status"]
@@ -811,10 +820,12 @@ export type Database = {
           vehicle_id: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           id?: string
           notes?: string | null
           organization_id: string
+          priority?: string
           resolved_at?: string | null
           source_inspection_id?: string | null
           status?: Database["public"]["Enums"]["workflow_task_status"]
@@ -822,10 +833,12 @@ export type Database = {
           vehicle_id: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           id?: string
           notes?: string | null
           organization_id?: string
+          priority?: string
           resolved_at?: string | null
           source_inspection_id?: string | null
           status?: Database["public"]["Enums"]["workflow_task_status"]
@@ -833,6 +846,13 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "workflow_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "workflow_tasks_organization_id_fkey"
             columns: ["organization_id"]

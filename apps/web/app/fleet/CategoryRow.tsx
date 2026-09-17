@@ -31,7 +31,7 @@ export function CategoryRow({
 
   if (editing) {
     return (
-      <li className="flex flex-col gap-3 rounded-md border border-signal-amber/60 bg-panel-900/60 p-4">
+      <li className="flex flex-col gap-3 rounded-md border border-gwm-accent/60 bg-panel-900/60 p-4">
         <form action={updateAction} className="flex flex-col gap-3">
           <input type="hidden" name="id" value={category.id} />
           <label className="flex flex-col gap-1">
@@ -42,7 +42,7 @@ export function CategoryRow({
               required
               defaultValue={category.name}
               autoFocus
-              className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -54,7 +54,7 @@ export function CategoryRow({
               min={0}
               max={60}
               defaultValue={category.passenger_capacity}
-              className="w-20 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 font-mono text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="w-20 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             />
           </label>
           <label className="flex items-center gap-2 text-sm text-fog-400">
@@ -72,7 +72,7 @@ export function CategoryRow({
               name="energyType"
               required
               defaultValue={category.energy_type}
-              className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-signal-amber"
+              className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             >
               <option value="ICE">{dict.fleet.categories.energy.ICE}</option>
               <option value="HEV">{dict.fleet.categories.energy.HEV}</option>
@@ -84,7 +84,7 @@ export function CategoryRow({
             <button
               type="submit"
               disabled={updatePending}
-              className="text-xs font-semibold uppercase tracking-widest text-signal-amber hover:underline disabled:opacity-50"
+              className="text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:underline disabled:opacity-50"
             >
               {updatePending ? dict.common.saving : dict.common.save}
             </button>
@@ -122,7 +122,7 @@ export function CategoryRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
         >
           {dict.common.edit}
         </button>

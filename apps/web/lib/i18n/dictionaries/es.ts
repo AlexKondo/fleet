@@ -92,6 +92,7 @@ const dict: Dictionary = {
   nav: {
     dashboard: "Panel",
     trips: "Mis Viajes",
+    gate: "Movimientos",
     analytics: "Analítica",
     fleet: "Flota",
     team: "Equipo",
@@ -143,6 +144,8 @@ const dict: Dictionary = {
   dashboard: {
     actionError:
       "No fue posible completar la acción. Es posible que otra persona ya la haya realizado o que ya no tengas permiso para ello — actualiza la página e inténtalo de nuevo.",
+    actionSuccess: "Acción completada.",
+    dismissBanner: "Cerrar",
     cancelReasons: {
       rejectedByManager: "Rechazada por el gestor de flota",
       cancelledByManager: "Cancelada por el gestor de flota",
@@ -154,6 +157,15 @@ const dict: Dictionary = {
     pendingReservations: {
       heading: "Reservas Pendientes de Aprobación",
       empty: "No hay reservas pendientes.",
+      passengers: "{count} pasajero(s)",
+      returnBy: "Regreso previsto",
+      justification: "Justificación",
+      noJustification: "Sin justificación",
+      openReservation: "Ver la reserva completa",
+      confirmApprove: "¿Aprobar la reserva de {name}?",
+      confirmReject: "¿Rechazar la reserva de {name}?",
+      reasonPlaceholder: "Motivo del rechazo (opcional)",
+      reasonLabel: "Motivo del rechazo",
     },
     activeReservations: {
       heading: "Reservas Activas — Cambiar Vehículo / Transferir",
@@ -173,12 +185,30 @@ const dict: Dictionary = {
       transferAction: "Transferir",
       confirmCancel: "¿Cancelar la reserva de {name}?",
       unknownRequester: "este solicitante",
+      confirmSwap: "¿Confirmar el cambio de vehículo de esta reserva?",
+      confirmTransfer: "¿Transferir esta reserva a otro solicitante?",
     },
     tasks: {
       heading: "Tareas Operativas",
       empty: "No hay tareas abiertas.",
       complete: "Completar",
       confirmCancel: "¿Cancelar esta tarea sin marcarla como completada?",
+      confirmComplete: "¿Marcar esta tarea como completada?",
+      filterMine: "Mías y disponibles",
+      filterAll: "Todas",
+      emptyMine: "No tienes tareas asignadas, y no hay ninguna disponible para asumir.",
+      claim: "Asumir",
+      confirmClaim: "¿Asumir esta tarea y hacerte responsable de ella?",
+      claiming: "Asumiendo…",
+      assignedTo: "Responsable: {name}",
+      unassigned: "Sin responsable",
+      assigneeNameUnavailable: "Responsable asignado",
+      priorityLabel: "Prioridad",
+      priorities: {
+        low: "Baja",
+        normal: "Normal",
+        high: "Alta",
+      },
       types: {
         repair: "Reparación",
         safety: "Seguridad",
@@ -200,6 +230,11 @@ const dict: Dictionary = {
       batterySuffix: "bat.",
       unblock: "Desbloquear",
       block: "Bloquear",
+      confirmBlock: "¿Bloquear el vehículo {plate} e impedir nuevas reservas?",
+      confirmUnblock: "¿Desbloquear el vehículo {plate} y volver a dejarlo disponible?",
+      blockReasonPlaceholder: "Motivo (p. ej.: neumático pinchado, llamado a revisión)",
+      blockReasonLabel: "Motivo del bloqueo",
+      blockReasonDefault: "Bloqueado manualmente por el gestor de flota",
     },
   },
   notifications: {
@@ -271,6 +306,23 @@ const dict: Dictionary = {
         "Aún no hay vehículos registrados: la flota aparece en el Panel en cuanto se añade el primer vehículo abajo.",
       categories: "Aún no hay categorías registradas.",
       locations: "Aún no hay ubicaciones registradas.",
+    },
+    filters: {
+      searchPlaceholder: "Buscar por matrícula o nombre…",
+      statusAll: "Todos los estados",
+      categoryAll: "Todas las categorías",
+      clear: "Limpiar",
+      resultCount: "{shown} de {total} vehículos",
+      noMatches: "Ningún vehículo coincide con los filtros.",
+    },
+    emptyState: {
+      vehiclesLead: "No hay vehículos registrados: añade el primero",
+      vehiclesHint:
+        "La flota aparece en el Panel en cuanto se añade el primer vehículo. Usa el botón de abajo.",
+      categoriesLead: "No hay categorías registradas: añade la primera",
+      categoriesHint: "Cada vehículo necesita una categoría. Usa el botón de abajo.",
+      locationsLead: "No hay ubicaciones registradas: añade la primera",
+      locationsHint: "Las ubicaciones definen dónde se estacionan los vehículos. Usa el botón de abajo.",
     },
     addVehicle: { label: "Añadir Vehículo" },
     addCategory: { label: "Añadir Categoría" },
@@ -566,6 +618,11 @@ const dict: Dictionary = {
       action: "Acción",
     },
     rolesLegend: "Funciones: {roles}.",
+    search: {
+      placeholder: "Buscar por nombre o correo…",
+      resultCount: "{shown} de {total} miembros",
+      noMatches: "Ningún miembro coincide con la búsqueda.",
+    },
     invite: {
       trigger: "+ Agregar usuario",
       modalTitle: "Agregar usuario",
@@ -608,6 +665,7 @@ const dict: Dictionary = {
       decline: "Rechazar",
       declineConfirm: "¿Rechazar esta solicitud de viaje compartido?",
       communicationTitle: "Comunicación",
+      carpoolActionError: "No se pudo responder a la solicitud de viaje compartido. Inténtalo de nuevo.",
     },
     messages: {
       empty: "Todavía no hay mensajes.",
@@ -681,6 +739,13 @@ const dict: Dictionary = {
       submit: "Finalizar Devolución",
       photosFailedOne: "Devolución registrada, pero la foto de {angles} no se envió. Puedes añadirla más tarde.",
       photosFailedOther: "Devolución registrada, pero las fotos de {angles} no se enviaron. Puedes añadirlas más tarde.",
+    },
+    checklistGuard: {
+      notAuthorized: "No tienes permiso para realizar la inspección de esta reserva.",
+      pickupWrongStatus:
+        "Esta reserva no está disponible para retirada (ya fue retirada, cancelada o aún no está confirmada).",
+      returnWrongStatus:
+        "Esta reserva no está disponible para devolución (el vehículo aún no se ha retirado o el viaje ya está cerrado).",
     },
   },
   errors: {
@@ -764,6 +829,19 @@ const dict: Dictionary = {
       earlyPickupNotAllowed:
         "Todavía no es posible retirar este vehículo: la reserva aún no ha comenzado.",
     },
+  },
+  gate: {
+    title: "Movimientos",
+    description:
+      "Reservas listas para retiro o devolución en la portería. Busca por placa y abre la lista de verificación correspondiente.",
+    searchLabel: "Buscar por placa",
+    searchPlaceholder: "Ej.: ABC1D23",
+    empty: "No hay movimientos abiertos en este momento.",
+    noResults: "Ninguna reserva con esa placa.",
+    details: "Detalles",
+    pickupAction: "Retiro",
+    returnAction: "Devolución",
+    loadError: "No fue posible cargar los movimientos ahora.",
   },
 };
 

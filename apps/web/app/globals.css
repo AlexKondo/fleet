@@ -26,7 +26,11 @@
   --color-fog-400: rgba(0, 0, 0, 0.7);
   --color-fog-600: rgba(0, 0, 0, 0.5);
   --color-paper-50: var(--color-gwm-black);
-  --color-signal-amber: var(--color-gwm-blue);
+  /* Primary action / active-nav accent — GWM blue. Renamed from the old
+     "signal-amber" (a holdover from the pre-rebrand dark-amber theme; it hadn't
+     rendered amber since the GWM palette migration, which was confusing to
+     read in 252 call sites — audit finding #15). */
+  --color-gwm-accent: var(--color-gwm-blue);
 
   /* Status colors — functional exception, not brand color (see comment above). */
   --color-signal-green: #3fae68;
@@ -48,7 +52,7 @@
 
 /*
  * Dark mode — same closed 3-color palette (white/black/blue), values
- * inverted. GWM blue (--color-signal-amber) stays fixed in both themes;
+ * inverted. GWM blue (--color-gwm-accent) stays fixed in both themes;
  * only the black/white pairing flips. The legacy black-alpha tokens
  * (line/fog/panel) read as near-invisible on a black background, so they're
  * redefined here using white-based rgba instead — same token names, same
@@ -63,7 +67,7 @@
   --color-fog-400: rgba(255, 255, 255, 0.7);
   --color-fog-600: rgba(255, 255, 255, 0.5);
   --color-paper-50: var(--color-gwm-white);
-  --color-signal-amber: var(--color-gwm-blue);
+  --color-gwm-accent: var(--color-gwm-blue);
 }
 
 :root[data-theme="dark"] body {

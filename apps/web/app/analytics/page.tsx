@@ -217,10 +217,10 @@ export default async function AnalyticsPage() {
               <ul className="flex flex-wrap gap-x-6 gap-y-2">
                 {underutilized.map((v) => (
                   <li key={v.id} className="flex items-center gap-2 text-sm">
-                    <span className="font-mono text-signal-amber" aria-hidden="true">
+                    <span className="font-mono text-gwm-accent" aria-hidden="true">
                       ›
                     </span>
-                    <span className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 font-mono text-xs text-signal-amber">
+                    <span className="rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 px-1.5 py-0.5 font-mono text-xs text-gwm-accent">
                       {v.plate}
                     </span>
                     <span className="text-fog-400">{t.underutilized.noCompletedTrips}</span>
@@ -246,7 +246,7 @@ export default async function AnalyticsPage() {
                     <div className="flex items-center gap-2">
                       <span
                         className={`font-mono ${
-                          prediction.daysUntilService === 0 ? "text-signal-red" : "text-signal-amber"
+                          prediction.daysUntilService === 0 ? "text-signal-red" : "text-gwm-accent"
                         }`}
                         aria-hidden="true"
                       >
@@ -256,7 +256,7 @@ export default async function AnalyticsPage() {
                         className={`rounded-sm border px-1.5 py-0.5 font-mono text-xs ${
                           prediction.daysUntilService === 0
                             ? "border-signal-red/40 bg-signal-red/10 text-signal-red"
-                            : "border-signal-amber/40 bg-signal-amber/10 text-signal-amber"
+                            : "border-gwm-accent/40 bg-gwm-accent/10 text-gwm-accent"
                         }`}
                       >
                         {plate}
@@ -308,7 +308,7 @@ export default async function AnalyticsPage() {
                         <td className="px-4 py-3">
                           <span
                             className={
-                              v.completedTrips === 0 ? "font-mono text-signal-amber" : "font-mono text-fog-400"
+                              v.completedTrips === 0 ? "font-mono text-gwm-accent" : "font-mono text-fog-400"
                             }
                           >
                             {v.completedTrips}

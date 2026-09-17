@@ -32,14 +32,14 @@ export function FleetTabs({ tabs }: { tabs: FleetTab[] }) {
               onClick={() => setActive(tab.key)}
               className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-3 text-sm uppercase tracking-widest transition-colors ${
                 isActive
-                  ? "border-signal-amber text-signal-amber"
+                  ? "border-gwm-accent text-gwm-accent"
                   : "border-transparent text-fog-400 hover:text-paper-50"
               }`}
             >
               {tab.label}
               <span
                 className={`rounded-sm px-1.5 py-0.5 font-mono text-xs ${
-                  isActive ? "bg-signal-amber/10" : "bg-panel-800 text-fog-600"
+                  isActive ? "bg-gwm-accent/10" : "bg-panel-800 text-fog-600"
                 }`}
               >
                 {tab.count}

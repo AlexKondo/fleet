@@ -29,7 +29,7 @@ export function AddVehicleSection({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-sm border border-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10"
+        className="rounded-sm border border-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
       >
         + {dict.fleet.addVehicle.label}
       </button>

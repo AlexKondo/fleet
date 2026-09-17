@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
-import { getStatusMeta } from "../dashboard/statusMeta";
+import { VEHICLE_STATUSES, getStatusMeta } from "../dashboard/statusMeta";
 import { AppShell } from "../AppShell";
 import { AddCategorySection } from "./AddCategorySection";
 import { AddLocationSection } from "./AddLocationSection";
@@ -10,6 +10,8 @@ import { FleetTabs } from "./FleetTabs";
 import { LocationRow } from "./LocationRow";
 import { CategoryRow } from "./CategoryRow";
 import { VehicleRow } from "./VehicleRow";
+import { VehicleFilterGrid } from "./VehicleFilterGrid";
+import { EmptyState } from "./EmptyState";
 
 /**
  * Fleet setup: add vehicles, categories, and locations. Until this page existed, a
@@ -23,6 +25,9 @@ export default async function FleetPage() {
   const dict = await getDictionary();
   const locale = await getLocale();
   const statusMeta = getStatusMeta(dict);
+  // Options for the client-side status filter, localized here so the client component
+  // never needs the status → label map itself.
+  const statusOptions = VEHICLE_STATUSES.map((s) => ({ value: s, label: statusMeta[s].label }));
 
   const {
     data: { user },
@@ -108,38 +113,50 @@ export default async function FleetPage() {
               content: (
                 <div className="flex flex-col gap-4">
                   {vehicles && vehicles.length > 0 ? (
-                    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                      {vehicles.map((v) => (
-                        <VehicleRow
-                          key={v.id}
-                          locale={locale}
-                          vehicle={{
-                            id: v.id,
-                            plate: v.plate,
-                            name: v.name,
-                            color: v.color,
-                            photoUrl: v.photo_storage_path ? (photoUrlByPath.get(v.photo_storage_path) ?? null) : null,
-                            category_id: v.category_id,
-                            odometer_km: v.odometer_km,
-                            next_service_odometer_km: v.next_service_odometer_km,
-                            estimated_range_km: v.estimated_range_km,
-                            fuel_level_percent: v.fuel_level_percent,
-                            battery_level_percent: v.battery_level_percent,
-                            home_location_id: v.home_location_id,
-                          }}
-                          statusMeta={statusMeta[v.status]}
-                          categoryName={v.category?.name ?? "—"}
-                          locationName={v.current_location?.name ?? "—"}
-                          categories={categoriesForVehicleForms}
-                          locations={locations ?? []}
-                          dict={dict}
-                        />
-                      ))}
-                    </ul>
+                    <VehicleFilterGrid
+                      dict={dict}
+                      statusOptions={statusOptions}
+                      vehicles={vehicles.map((v) => ({
+                        id: v.id,
+                        plate: v.plate,
+                        name: v.name,
+                        status: v.status,
+                        categoryName: v.category?.name ?? "—",
+                        node: (
+                          <VehicleRow
+                            key={v.id}
+                            locale={locale}
+                            vehicle={{
+                              id: v.id,
+                              plate: v.plate,
+                              name: v.name,
+                              color: v.color,
+                              photoUrl: v.photo_storage_path
+                                ? (photoUrlByPath.get(v.photo_storage_path) ?? null)
+                                : null,
+                              category_id: v.category_id,
+                              odometer_km: v.odometer_km,
+                              next_service_odometer_km: v.next_service_odometer_km,
+                              estimated_range_km: v.estimated_range_km,
+                              fuel_level_percent: v.fuel_level_percent,
+                              battery_level_percent: v.battery_level_percent,
+                              home_location_id: v.home_location_id,
+                            }}
+                            statusMeta={statusMeta[v.status]}
+                            categoryName={v.category?.name ?? "—"}
+                            locationName={v.current_location?.name ?? "—"}
+                            categories={categoriesForVehicleForms}
+                            locations={locations ?? []}
+                            dict={dict}
+                          />
+                        ),
+                      }))}
+                    />
                   ) : (
-                    <p className="text-sm text-fog-400">
-                      {dict.fleet.empty.vehicles}
-                    </p>
+                    <EmptyState
+                      lead={dict.fleet.emptyState.vehiclesLead}
+                      hint={dict.fleet.emptyState.vehiclesHint}
+                    />
                   )}
                   <AddVehicleSection
                     categories={categoriesForVehicleForms}
@@ -162,7 +179,10 @@ export default async function FleetPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-fog-400">{dict.fleet.empty.categories}</p>
+                    <EmptyState
+                      lead={dict.fleet.emptyState.categoriesLead}
+                      hint={dict.fleet.emptyState.categoriesHint}
+                    />
                   )}
                   <AddCategorySection dict={dict} />
                 </div>
@@ -181,7 +201,10 @@ export default async function FleetPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-fog-400">{dict.fleet.empty.locations}</p>
+                    <EmptyState
+                      lead={dict.fleet.emptyState.locationsLead}
+                      hint={dict.fleet.emptyState.locationsHint}
+                    />
                   )}
                   <AddLocationSection dict={dict} />
                 </div>

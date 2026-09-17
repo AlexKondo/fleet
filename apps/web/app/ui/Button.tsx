@@ -6,11 +6,11 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   // Primary — solid GWM blue, sanctioned by the brand book as the one place the
   // accent color may be a filled background (gwm-design skill, §5/§3.3).
   primary:
-    "bg-signal-amber text-ink-950 hover:opacity-90 focus-visible:outline-signal-amber disabled:opacity-50",
+    "bg-gwm-accent text-ink-950 hover:opacity-90 focus-visible:outline-gwm-accent disabled:opacity-50",
   secondary:
-    "border border-line-800 text-paper-50 hover:bg-panel-800 focus-visible:outline-signal-amber disabled:opacity-50",
+    "border border-line-800 text-paper-50 hover:bg-panel-800 focus-visible:outline-gwm-accent disabled:opacity-50",
   tertiary:
-    "text-paper-50 hover:text-signal-amber underline-offset-2 hover:underline focus-visible:outline-signal-amber",
+    "text-paper-50 hover:text-gwm-accent underline-offset-2 hover:underline focus-visible:outline-gwm-accent",
 };
 
 export function Button({

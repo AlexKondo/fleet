@@ -69,7 +69,7 @@ export function ThemeToggle({ dict, className = "" }: { dict: Dictionary; classN
       onClick={toggle}
       aria-label={dict.chrome.theme}
       title={dict.chrome.theme}
-      className={`flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-signal-amber hover:text-signal-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-amber ${className}`}
+      className={`flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent ${className}`}
     >
       {theme === null ? null : isDark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
     </button>

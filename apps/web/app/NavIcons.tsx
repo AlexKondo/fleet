@@ -60,6 +60,20 @@ export function FleetIcon({ className }: { className?: string }) {
   );
 }
 
+/** Gatehouse boom barrier — the portaria/checkpoint where pickups and returns happen. */
+export function GateIcon({ className }: { className?: string }) {
+  return (
+    <Svg className={className}>
+      <path d="M5 20V6" />
+      <circle cx="5" cy="4.5" r="1.5" />
+      <path d="M8 8.5h13v4H8z" />
+      <path d="M12 8.5 10 12.5" />
+      <path d="M16 8.5 14 12.5" />
+      <path d="M20 8.5 18 12.5" />
+    </Svg>
+  );
+}
+
 export function TeamIcon({ className }: { className?: string }) {
   return (
     <Svg className={className}>

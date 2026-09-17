@@ -40,7 +40,7 @@ export function InviteUserModal({ dict }: { dict: Dictionary }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90"
+        className="rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90"
       >
         {dict.team.invite.trigger}
       </button>

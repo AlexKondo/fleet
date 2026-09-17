@@ -92,6 +92,7 @@ const dict: Dictionary = {
   nav: {
     dashboard: "Dashboard",
     trips: "My Trips",
+    gate: "Movements",
     analytics: "Analytics",
     fleet: "Fleet",
     team: "Team",
@@ -143,6 +144,8 @@ const dict: Dictionary = {
   dashboard: {
     actionError:
       "We couldn't complete that action. Someone else may have already done it, or you no longer have permission — refresh the page and try again.",
+    actionSuccess: "Done.",
+    dismissBanner: "Dismiss",
     cancelReasons: {
       rejectedByManager: "Rejected by the fleet manager",
       cancelledByManager: "Cancelled by the fleet manager",
@@ -154,6 +157,15 @@ const dict: Dictionary = {
     pendingReservations: {
       heading: "Reservations Awaiting Approval",
       empty: "No pending reservations.",
+      passengers: "{count} passenger(s)",
+      returnBy: "Expected return",
+      justification: "Justification",
+      noJustification: "No justification",
+      openReservation: "View full reservation",
+      confirmApprove: "Approve the reservation for {name}?",
+      confirmReject: "Reject the reservation for {name}?",
+      reasonPlaceholder: "Reason for rejection (optional)",
+      reasonLabel: "Reason for rejection",
     },
     activeReservations: {
       heading: "Active Reservations — Swap Vehicle / Transfer",
@@ -173,12 +185,30 @@ const dict: Dictionary = {
       transferAction: "Transfer",
       confirmCancel: "Cancel the reservation for {name}?",
       unknownRequester: "this requester",
+      confirmSwap: "Swap the vehicle on this reservation?",
+      confirmTransfer: "Transfer this reservation to another requester?",
     },
     tasks: {
       heading: "Operational Tasks",
       empty: "No open tasks.",
       complete: "Complete",
       confirmCancel: "Cancel this task without marking it as completed?",
+      confirmComplete: "Mark this task as completed?",
+      filterMine: "Mine & unclaimed",
+      filterAll: "All",
+      emptyMine: "No tasks assigned to you, and none left to claim.",
+      claim: "Claim",
+      confirmClaim: "Claim this task and take responsibility for it?",
+      claiming: "Claiming…",
+      assignedTo: "Assignee: {name}",
+      unassigned: "Unassigned",
+      assigneeNameUnavailable: "Assigned",
+      priorityLabel: "Priority",
+      priorities: {
+        low: "Low",
+        normal: "Normal",
+        high: "High",
+      },
       types: {
         repair: "Repair",
         safety: "Safety",
@@ -200,6 +230,11 @@ const dict: Dictionary = {
       batterySuffix: "batt.",
       unblock: "Unblock",
       block: "Block",
+      confirmBlock: "Block vehicle {plate} and stop new reservations?",
+      confirmUnblock: "Unblock vehicle {plate} and make it available again?",
+      blockReasonPlaceholder: "Reason (e.g. flat tire, recall)",
+      blockReasonLabel: "Reason for blocking",
+      blockReasonDefault: "Blocked manually by the fleet manager",
     },
   },
   notifications: {
@@ -271,6 +306,23 @@ const dict: Dictionary = {
         "No vehicles registered yet — your fleet shows up on the Dashboard as soon as the first vehicle is added below.",
       categories: "No categories registered yet.",
       locations: "No locations registered yet.",
+    },
+    filters: {
+      searchPlaceholder: "Search by plate or name…",
+      statusAll: "All statuses",
+      categoryAll: "All categories",
+      clear: "Clear",
+      resultCount: "{shown} of {total} vehicles",
+      noMatches: "No vehicle matches these filters.",
+    },
+    emptyState: {
+      vehiclesLead: "No vehicles registered — add the first one",
+      vehiclesHint:
+        "Your fleet shows up on the Dashboard as soon as the first vehicle is added. Use the button below.",
+      categoriesLead: "No categories registered — add the first one",
+      categoriesHint: "Every vehicle needs a category. Use the button below.",
+      locationsLead: "No locations registered — add the first one",
+      locationsHint: "Locations define where vehicles are parked. Use the button below.",
     },
     addVehicle: { label: "Add Vehicle" },
     addCategory: { label: "Add Category" },
@@ -566,6 +618,11 @@ const dict: Dictionary = {
       action: "Action",
     },
     rolesLegend: "Roles: {roles}.",
+    search: {
+      placeholder: "Search by name or email…",
+      resultCount: "{shown} of {total} members",
+      noMatches: "No member matches this search.",
+    },
     invite: {
       trigger: "+ Add User",
       modalTitle: "Add User",
@@ -608,6 +665,7 @@ const dict: Dictionary = {
       decline: "Decline",
       declineConfirm: "Decline this carpool request?",
       communicationTitle: "Communication",
+      carpoolActionError: "Couldn't respond to the carpool request. Please try again.",
     },
     messages: {
       empty: "No messages yet.",
@@ -681,6 +739,13 @@ const dict: Dictionary = {
       submit: "Complete Return",
       photosFailedOne: "Return recorded, but the {angles} photo was not uploaded. You can add it later.",
       photosFailedOther: "Return recorded, but the {angles} photos were not uploaded. You can add them later.",
+    },
+    checklistGuard: {
+      notAuthorized: "You do not have permission to run the inspection for this reservation.",
+      pickupWrongStatus:
+        "This reservation is not available for pickup (it has already been picked up, cancelled, or is not confirmed yet).",
+      returnWrongStatus:
+        "This reservation is not available for return (the vehicle has not been picked up yet, or the trip is already closed).",
     },
   },
   errors: {
@@ -764,6 +829,19 @@ const dict: Dictionary = {
       earlyPickupNotAllowed:
         "You can't pick up this vehicle yet — the reservation hasn't started.",
     },
+  },
+  gate: {
+    title: "Movements",
+    description:
+      "Reservations ready for pickup or return at the gatehouse. Search by plate and open the matching checklist.",
+    searchLabel: "Search by plate",
+    searchPlaceholder: "e.g. ABC1D23",
+    empty: "No open movements right now.",
+    noResults: "No reservation matches that plate.",
+    details: "Details",
+    pickupAction: "Pickup",
+    returnAction: "Return",
+    loadError: "Could not load movements right now.",
   },
 };
 

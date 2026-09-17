@@ -30,13 +30,13 @@ export function LocationForm({ dict, onSaved }: { dict: Dictionary; onSaved?: ()
           name="name"
           required
           placeholder={dict.fleet.locations.placeholder}
-          className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
         />
       </label>
       <button
         type="submit"
         disabled={pending}
-        className="rounded-sm border border-signal-amber px-3 py-2 text-xs font-semibold uppercase tracking-widest text-signal-amber hover:bg-signal-amber/10 disabled:opacity-50"
+        className="rounded-sm border border-gwm-accent px-3 py-2 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10 disabled:opacity-50"
       >
         {pending ? dict.common.adding : `+ ${dict.common.add}`}
       </button>

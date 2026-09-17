@@ -28,7 +28,7 @@ export default async function ResetPasswordPage() {
         </div>
         <div className="mb-8 text-center">
           <p className="font-display text-4xl font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-signal-amber">.</span>
+            Fleet<span className="text-gwm-accent">.</span>
           </p>
           <p className="mt-1 text-xs uppercase tracking-[0.2em] text-fog-400">
             {dict.auth.resetTitle}

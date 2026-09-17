@@ -220,7 +220,7 @@ export function NotificationBell({
         aria-haspopup="true"
         aria-expanded={isOpen}
         aria-label={unreadCount > 0 ? withCount(t.ariaUnread, unreadCount) : t.label}
-        className="relative flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-signal-amber hover:text-signal-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-amber"
+        className="relative flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
       >
         <svg
           width="16"
@@ -286,7 +286,7 @@ export function NotificationBell({
                       >
                         <span
                           className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                            isUnread ? "bg-signal-amber" : "bg-transparent"
+                            isUnread ? "bg-gwm-accent" : "bg-transparent"
                           }`}
                           aria-hidden="true"
                         />

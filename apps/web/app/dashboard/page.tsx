@@ -9,23 +9,32 @@ import { AppShell } from "../AppShell";
 import { getAttentionLabels, getStatusMeta } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
+import { StatusBadge } from "../ui/StatusBadge";
+import { RevealAction } from "../ui/RevealAction";
 import {
   approveReservation,
   blockVehicle,
   cancelReservation,
   cancelWorkflowTask,
+  claimWorkflowTask,
   completeWorkflowTask,
   swapVehicle,
   transferReservation,
   unblockVehicle,
 } from "./actions";
 
+/** Long free-text (justification, task notes) shown inline — full text stays in `title`. */
+function truncate(text: string, max = 90): string {
+  return text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ fleetActionError?: string }>;
+  searchParams: Promise<{ fleetActionError?: string; actionSuccess?: string; myTasks?: string }>;
 }) {
-  const { fleetActionError } = await searchParams;
+  const { fleetActionError, actionSuccess, myTasks } = await searchParams;
+  const onlyMyTasks = myTasks === "1";
   const locale = await getLocale();
   const dict = await getDictionary();
   const t = dict.dashboard;
@@ -96,18 +105,32 @@ export default async function DashboardPage({
           .from("reservations")
           .select(
             `id, start_at, end_at,
-             trip_request:trip_requests(origin, destination, passenger_count, requester:profiles(full_name)),
+             trip_request:trip_requests(origin, destination, passenger_count, justification, requester:profiles(full_name)),
              vehicle:vehicles(plate, status)`,
           )
           .eq("status", "pending_approval")
           .order("start_at")
+          .limit(50)
       : Promise.resolve({ data: [] as never[] }),
     canManageTasks
-      ? supabase
-          .from("workflow_tasks")
-          .select("id, type, notes, created_at, vehicle:vehicles(plate)")
-          .eq("status", "open")
-          .order("created_at")
+      ? (() => {
+          // "Minhas tarefas" = mine or still up for grabs; an operator filtering the queue
+          // down still needs to see the unassigned pool, otherwise the filter hides
+          // exactly the tasks they're supposed to claim.
+          const query = supabase
+            .from("workflow_tasks")
+            .select(
+              `id, type, notes, created_at, priority, assigned_to,
+               assignee:profiles!workflow_tasks_assigned_to_fkey(full_name),
+               vehicle:vehicles(plate)`,
+            )
+            .eq("status", "open");
+          return (
+            onlyMyTasks ? query.or(`assigned_to.eq.${user.id},assigned_to.is.null`) : query
+          )
+            .order("created_at")
+            .limit(50);
+        })()
       : Promise.resolve({ data: [] as never[] }),
     // Backing data for the swap-vehicle / transfer-reservation actions below (§5
     // "Substituir veículos" / "Transferir reservas"): every reservation still active
@@ -122,6 +145,7 @@ export default async function DashboardPage({
           )
           .in("status", ["pending_approval", "confirmed"])
           .order("start_at")
+          .limit(50)
       : Promise.resolve({ data: [] as never[] }),
     isFleetManager
       ? supabase.from("profiles").select("id, full_name").order("full_name")
@@ -141,9 +165,29 @@ export default async function DashboardPage({
       {fleetActionError ? (
         <div
           role="alert"
-          className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
+          className="flex items-start justify-between gap-4 border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
         >
-          {t.actionError}
+          <span>{t.actionError}</span>
+          <Link href="/dashboard" className="shrink-0 text-xs uppercase tracking-widest hover:underline">
+            {t.dismissBanner}
+          </Link>
+        </div>
+      ) : null}
+
+      {/* Success counterpart of the error banner above — same weight, same shape, just the
+          positive status token, so a completed action is acknowledged instead of silent. */}
+      {actionSuccess ? (
+        <div
+          role="status"
+          className="flex items-start justify-between gap-4 border-b border-signal-green/40 bg-signal-green/10 px-6 py-3 text-sm text-signal-green"
+        >
+          <span>{t.actionSuccess}</span>
+          <Link
+            href={onlyMyTasks ? "/dashboard?myTasks=1" : "/dashboard"}
+            className="shrink-0 text-xs uppercase tracking-widest hover:underline"
+          >
+            {t.dismissBanner}
+          </Link>
         </div>
       ) : null}
 
@@ -158,11 +202,11 @@ export default async function DashboardPage({
           <ul className="flex flex-col gap-2">
             {Object.entries(vehiclesByAttentionReason).map(([reason, vehiclesForReason]) => (
               <li key={reason} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                <span className="font-mono text-signal-amber">{vehiclesForReason.length}</span>
+                <span className="font-mono text-gwm-accent">{vehiclesForReason.length}</span>
                 <span className="text-fog-400">{attentionLabels[reason] ?? reason}:</span>
                 {vehiclesForReason.map((v, i) => (
                   <span key={v.id} className="font-mono text-xs text-fog-400">
-                    <a href={`#vehicle-${v.id}`} className="text-signal-amber underline-offset-2 hover:underline">
+                    <a href={`#vehicle-${v.id}`} className="text-gwm-accent underline-offset-2 hover:underline">
                       {v.plate}
                     </a>
                     {i < vehiclesForReason.length - 1 ? "," : ""}
@@ -184,38 +228,98 @@ export default async function DashboardPage({
           ) : (
             <ul className="flex flex-col gap-2">
               {pendingReservations.map((r) => {
+                const requesterName =
+                  r.trip_request?.requester?.full_name ?? t.activeReservations.unknownRequester;
+                const justification = r.trip_request?.justification?.trim();
                 return (
                   <li
                     key={r.id}
-                    className="flex items-center justify-between gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5"
+                    className="flex flex-col gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5 lg:flex-row lg:items-start lg:justify-between"
                   >
-                    <div className="text-sm">
-                      <span className="font-mono text-paper-50">{r.vehicle?.plate}</span>
-                      <span className="text-fog-400">
-                        {" "}
-                        · {r.trip_request?.requester?.full_name} · {r.trip_request?.origin} →{" "}
-                        {r.trip_request?.destination} ·{" "}
-                        <span className="font-mono tabular-nums">
-                          {formatDateTime(r.start_at, locale)}
+                    {/* Plate/requester/route/date alone is not enough to decide on: the
+                        passenger count, the return time and the stated reason are what
+                        make an approval a judgement rather than a rubber stamp — and the
+                        route links into the reservation for messages/photos. */}
+                    <div className="min-w-0 text-sm">
+                      <div>
+                        <span className="font-mono text-paper-50">{r.vehicle?.plate}</span>
+                        <span className="text-fog-400">
+                          {" "}
+                          · {requesterName} ·{" "}
+                          <Link
+                            href={`/reservations/${r.id}`}
+                            title={t.pendingReservations.openReservation}
+                            className="text-fog-400 underline-offset-2 hover:text-gwm-accent hover:underline"
+                          >
+                            {r.trip_request?.origin} → {r.trip_request?.destination}
+                          </Link>{" "}
+                          ·{" "}
+                          <span className="font-mono tabular-nums">
+                            {formatDateTime(r.start_at, locale)}
+                          </span>
                         </span>
-                      </span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fog-600">
+                        <span>
+                          {t.pendingReservations.passengers.replace(
+                            "{count}",
+                            String(r.trip_request?.passenger_count ?? 1),
+                          )}
+                        </span>
+                        <span className="font-mono tabular-nums">
+                          {t.pendingReservations.returnBy} {formatDateTime(r.end_at, locale)}
+                        </span>
+                      </div>
+                      <p
+                        className="mt-1 text-xs text-fog-400"
+                        title={justification || undefined}
+                      >
+                        <span className="text-fog-600">{t.pendingReservations.justification}: </span>
+                        {justification
+                          ? truncate(justification)
+                          : t.pendingReservations.noJustification}
+                      </p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
                       <form action={approveReservation.bind(null, r.id)}>
-                        <button
-                          type="submit"
+                        <ConfirmSubmitButton
+                          confirmMessage={t.pendingReservations.confirmApprove.replace(
+                            "{name}",
+                            requesterName,
+                          )}
                           className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
                         >
                           {dict.common.approve}
-                        </button>
+                        </ConfirmSubmitButton>
                       </form>
-                      <form action={cancelReservation.bind(null, r.id, dict.dashboard.cancelReasons.rejectedByManager)}>
-                        <button
-                          type="submit"
+                      {/* Rejecting used to be one unguarded click that always stored the
+                          same generic reason. Inline input + confirm: the requester gets
+                          the manager's actual words, and a misclick is recoverable. */}
+                      <form
+                        action={cancelReservation.bind(
+                          null,
+                          r.id,
+                          dict.dashboard.cancelReasons.rejectedByManager,
+                        )}
+                        className="flex items-center gap-2"
+                      >
+                        <input
+                          type="text"
+                          name="reason"
+                          maxLength={200}
+                          aria-label={t.pendingReservations.reasonLabel}
+                          placeholder={t.pendingReservations.reasonPlaceholder}
+                          className="w-52 rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 placeholder:text-fog-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-red"
+                        />
+                        <ConfirmSubmitButton
+                          confirmMessage={t.pendingReservations.confirmReject.replace(
+                            "{name}",
+                            requesterName,
+                          )}
                           className="rounded-sm border border-signal-red px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
                         >
                           {dict.common.reject}
-                        </button>
+                        </ConfirmSubmitButton>
                       </form>
                     </div>
                   </li>
@@ -271,7 +375,7 @@ export default async function DashboardPage({
                           {formatDateTime(r.start_at, locale)}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={r.status === "confirmed" ? "text-signal-blue" : "text-signal-amber"}>
+                          <span className={r.status === "confirmed" ? "text-signal-blue" : "text-gwm-accent"}>
                             {r.status === "confirmed"
                               ? t.activeReservations.statusConfirmed
                               : t.activeReservations.statusPending}
@@ -283,7 +387,7 @@ export default async function DashboardPage({
                           ) : null}
                           <Link
                             href={`/reservations/${r.id}`}
-                            className="ml-2 text-xs text-fog-400 hover:text-signal-amber hover:underline"
+                            className="ml-2 text-xs text-fog-400 hover:text-gwm-accent hover:underline"
                           >
                             {t.activeReservations.messages}
                           </Link>
@@ -294,59 +398,63 @@ export default async function DashboardPage({
                               {t.activeReservations.noVehicleAvailable}
                             </span>
                           ) : (
-                            <form action={swapVehicle.bind(null, r.id)} className="flex items-center gap-2">
-                              <select
-                                name="vehicleId"
-                                required
-                                defaultValue=""
-                                className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue"
-                              >
-                                <option value="" disabled>
-                                  {t.activeReservations.selectPlaceholder}
-                                </option>
-                                {vehicleOptions.map((v) => (
-                                  <option key={v.id} value={v.id}>
-                                    {v.plate} — {v.category?.name ?? "—"}
-                                    {v.color ? ` · ${v.color}` : ""}
+                            <RevealAction trigger={t.activeReservations.swapAction}>
+                              <form action={swapVehicle.bind(null, r.id)} className="flex items-center gap-2">
+                                <select
+                                  name="vehicleId"
+                                  required
+                                  defaultValue=""
+                                  className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue"
+                                >
+                                  <option value="" disabled>
+                                    {t.activeReservations.selectPlaceholder}
                                   </option>
-                                ))}
-                              </select>
-                              <button
-                                type="submit"
-                                className="rounded-sm border border-signal-blue px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
-                              >
-                                {t.activeReservations.swapAction}
-                              </button>
-                            </form>
+                                  {vehicleOptions.map((v) => (
+                                    <option key={v.id} value={v.id}>
+                                      {v.plate} — {v.category?.name ?? "—"}
+                                      {v.color ? ` · ${v.color}` : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ConfirmSubmitButton
+                                  confirmMessage={t.activeReservations.confirmSwap}
+                                  className="rounded-sm border border-signal-blue px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
+                                >
+                                  {t.activeReservations.swapAction}
+                                </ConfirmSubmitButton>
+                              </form>
+                            </RevealAction>
                           )}
                         </td>
                         <td className="px-4 py-3">
                           {transferOptions.length === 0 ? (
                             <span className="text-xs text-fog-600">—</span>
                           ) : (
-                            <form action={transferReservation.bind(null, r.id)} className="flex items-center gap-2">
-                              <select
-                                name="requesterId"
-                                required
-                                defaultValue=""
-                                className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-violet"
-                              >
-                                <option value="" disabled>
-                                  {t.activeReservations.selectPlaceholder}
-                                </option>
-                                {transferOptions.map((p) => (
-                                  <option key={p.id} value={p.id}>
-                                    {p.full_name}
+                            <RevealAction trigger={t.activeReservations.transferAction}>
+                              <form action={transferReservation.bind(null, r.id)} className="flex items-center gap-2">
+                                <select
+                                  name="requesterId"
+                                  required
+                                  defaultValue=""
+                                  className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-violet"
+                                >
+                                  <option value="" disabled>
+                                    {t.activeReservations.selectPlaceholder}
                                   </option>
-                                ))}
-                              </select>
-                              <button
-                                type="submit"
-                                className="rounded-sm border border-signal-violet px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-violet hover:bg-signal-violet/10"
-                              >
-                                {t.activeReservations.transferAction}
-                              </button>
-                            </form>
+                                  {transferOptions.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.full_name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ConfirmSubmitButton
+                                  confirmMessage={t.activeReservations.confirmTransfer}
+                                  className="rounded-sm border border-signal-violet px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-violet hover:bg-signal-violet/10"
+                                >
+                                  {t.activeReservations.transferAction}
+                                </ConfirmSubmitButton>
+                              </form>
+                            </RevealAction>
                           )}
                         </td>
                         <td className="px-4 py-3">
@@ -375,48 +483,120 @@ export default async function DashboardPage({
 
       {canManageTasks ? (
         <section className="border-b border-line-800 px-6 py-4">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-            {t.tasks.heading}
-          </h2>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
+              {t.tasks.heading}
+            </h2>
+            {/* A single global queue gave a maintenance operator no way to see what is
+                theirs. Plain links, so the filter survives a reload and stays shareable —
+                no client state needed on a Server Component page. */}
+            <div className="flex items-center gap-1 rounded-sm border border-line-800 p-0.5">
+              <Link
+                href="/dashboard?myTasks=1"
+                aria-current={onlyMyTasks ? "true" : undefined}
+                className={`rounded-sm px-2.5 py-1 text-xs uppercase tracking-widest ${
+                  onlyMyTasks
+                    ? "bg-gwm-accent/10 text-gwm-accent"
+                    : "text-fog-400 hover:text-paper-50"
+                }`}
+              >
+                {t.tasks.filterMine}
+              </Link>
+              <Link
+                href="/dashboard"
+                aria-current={onlyMyTasks ? undefined : "true"}
+                className={`rounded-sm px-2.5 py-1 text-xs uppercase tracking-widest ${
+                  onlyMyTasks
+                    ? "text-fog-400 hover:text-paper-50"
+                    : "bg-gwm-accent/10 text-gwm-accent"
+                }`}
+              >
+                {t.tasks.filterAll}
+              </Link>
+            </div>
+          </div>
           {!openTasks || openTasks.length === 0 ? (
-            <p className="text-sm text-fog-400">{t.tasks.empty}</p>
+            <p className="text-sm text-fog-400">{onlyMyTasks ? t.tasks.emptyMine : t.tasks.empty}</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {openTasks.map((task) => (
-                <li
-                  key={task.id}
-                  className="flex items-center justify-between rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5"
-                >
-                  <div className="text-sm">
-                    <span className="mr-1.5 font-mono text-signal-amber" aria-hidden="true">
-                      ›
-                    </span>
-                    <span className="rounded-sm border border-signal-amber/40 bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber">
-                      {workflowTaskLabels[task.type] ?? task.type}
-                    </span>
-                    <span className="ml-2 font-mono text-paper-50">{task.vehicle?.plate}</span>
-                    {task.notes ? <span className="ml-2 text-fog-400">{task.notes}</span> : null}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <form action={completeWorkflowTask.bind(null, task.id)}>
-                      <button
-                        type="submit"
-                        className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-teal hover:text-signal-teal"
+              {openTasks.map((task) => {
+                const priority = (
+                  task.priority === "high" || task.priority === "low" ? task.priority : "normal"
+                ) as "low" | "normal" | "high";
+                const priorityClass =
+                  priority === "high"
+                    ? "border-signal-red/40 bg-signal-red/10 text-signal-red"
+                    : priority === "low"
+                      ? "border-line-800 text-fog-600"
+                      : "border-line-800 text-fog-400";
+                return (
+                  <li
+                    key={task.id}
+                    className="flex flex-col gap-2 rounded-sm border border-line-800 bg-panel-900/60 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0 text-sm">
+                      <span className="mr-1.5 font-mono text-gwm-accent" aria-hidden="true">
+                        ›
+                      </span>
+                      <span className="rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 px-1.5 py-0.5 text-xs text-gwm-accent">
+                        {workflowTaskLabels[task.type] ?? task.type}
+                      </span>
+                      <span
+                        title={t.tasks.priorityLabel}
+                        className={`ml-1.5 rounded-sm border px-1.5 py-0.5 text-xs ${priorityClass}`}
                       >
-                        {t.tasks.complete}
-                      </button>
-                    </form>
-                    <form action={cancelWorkflowTask.bind(null, task.id)}>
-                      <ConfirmSubmitButton
-                        confirmMessage={t.tasks.confirmCancel}
-                        className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
-                      >
-                        {dict.common.cancel}
-                      </ConfirmSubmitButton>
-                    </form>
-                  </div>
-                </li>
-              ))}
+                        {t.tasks.priorities[priority]}
+                      </span>
+                      <span className="ml-2 font-mono text-paper-50">{task.vehicle?.plate}</span>
+                      {task.notes ? (
+                        <span className="ml-2 text-fog-400" title={task.notes}>
+                          {truncate(task.notes)}
+                        </span>
+                      ) : null}
+                      <span className="ml-2 text-xs text-fog-600">
+                        {task.assigned_to
+                          ? t.tasks.assignedTo.replace(
+                              "{name}",
+                              task.assignee?.full_name ?? t.tasks.assigneeNameUnavailable,
+                            )
+                          : t.tasks.unassigned}
+                      </span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {!task.assigned_to ? (
+                        <form action={claimWorkflowTask.bind(null, task.id)}>
+                          <input type="hidden" name="myTasks" value={onlyMyTasks ? "1" : "0"} />
+                          <ConfirmSubmitButton
+                            confirmMessage={t.tasks.confirmClaim}
+                            pendingLabel={t.tasks.claiming}
+                            className="rounded-sm border border-gwm-accent px-3 py-1 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
+                          >
+                            {t.tasks.claim}
+                          </ConfirmSubmitButton>
+                        </form>
+                      ) : null}
+                      <form action={completeWorkflowTask.bind(null, task.id)}>
+                        <input type="hidden" name="myTasks" value={onlyMyTasks ? "1" : "0"} />
+                        <ConfirmSubmitButton
+                          confirmMessage={t.tasks.confirmComplete}
+                          className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-teal hover:text-signal-teal"
+                        >
+                          {t.tasks.complete}
+                        </ConfirmSubmitButton>
+                      </form>
+                      <form action={cancelWorkflowTask.bind(null, task.id)}>
+                        <input type="hidden" name="myTasks" value={onlyMyTasks ? "1" : "0"} />
+                        <ConfirmSubmitButton
+                          confirmMessage={t.tasks.confirmCancel}
+                          className="rounded-sm border border-line-800 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
+                        >
+                          {dict.common.cancel}
+                        </ConfirmSubmitButton>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -433,7 +613,7 @@ export default async function DashboardPage({
           <p className="text-sm text-fog-400">
             {t.vehicles.emptyLead}{" "}
             {isFleetManager ? (
-              <Link href="/fleet" className="text-signal-amber hover:underline">
+              <Link href="/fleet" className="text-gwm-accent hover:underline">
                 {t.vehicles.emptyManagerCta}
               </Link>
             ) : (
@@ -448,17 +628,14 @@ export default async function DashboardPage({
                 <li
                   key={row.id}
                   id={`vehicle-${row.id}`}
-                  className="flex scroll-mt-4 flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4 target:border-signal-amber"
+                  className="flex scroll-mt-4 flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4 target:border-gwm-accent"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-mono text-lg text-paper-50">{row.plate}</p>
                       <p className="text-xs text-fog-400">{row.category?.name ?? "—"}</p>
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-                      <span className={`text-xs uppercase tracking-widest ${meta.text}`}>{meta.label}</span>
-                    </span>
+                    <StatusBadge meta={meta} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-line-800 pt-3 text-xs">
@@ -489,7 +666,7 @@ export default async function DashboardPage({
                       {attention.map((reason) => (
                         <span
                           key={reason}
-                          className="relative overflow-hidden rounded-sm border border-signal-amber/40 border-t-transparent bg-signal-amber/10 px-1.5 py-0.5 text-xs text-signal-amber"
+                          className="relative overflow-hidden rounded-sm border border-gwm-accent/40 border-t-transparent bg-gwm-accent/10 px-1.5 py-0.5 text-xs text-gwm-accent"
                         >
                           <span className="hazard-stripe absolute inset-x-0 top-0 h-[3px]" aria-hidden="true" />
                           {attentionLabels[reason] ?? reason}
@@ -502,21 +679,35 @@ export default async function DashboardPage({
                     <div className="border-t border-line-800 pt-3">
                       {row.status === "blocked" ? (
                         <form action={unblockVehicle.bind(null, row.id)}>
-                          <button
-                            type="submit"
+                          <ConfirmSubmitButton
+                            confirmMessage={t.vehicles.confirmUnblock.replace("{plate}", row.plate)}
                             className="w-full rounded-sm border border-signal-teal px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
                           >
                             {t.vehicles.unblock}
-                          </button>
+                          </ConfirmSubmitButton>
                         </form>
                       ) : (
-                        <form action={blockVehicle.bind(null, row.id, "Bloqueado manualmente pelo gestor")}>
-                          <button
-                            type="submit"
+                        // The reason is what the requesters' block notification shows, so a
+                        // hardcoded "Bloqueado manualmente pelo gestor" told nobody whether
+                        // it was a flat tire or a recall. Typed inline, localized default.
+                        <form
+                          action={blockVehicle.bind(null, row.id, t.vehicles.blockReasonDefault)}
+                          className="flex flex-col gap-2"
+                        >
+                          <input
+                            type="text"
+                            name="reason"
+                            maxLength={200}
+                            aria-label={t.vehicles.blockReasonLabel}
+                            placeholder={t.vehicles.blockReasonPlaceholder}
+                            className="w-full rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 placeholder:text-fog-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-red"
+                          />
+                          <ConfirmSubmitButton
+                            confirmMessage={t.vehicles.confirmBlock.replace("{plate}", row.plate)}
                             className="w-full rounded-sm border border-signal-red px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
                           >
                             {t.vehicles.block}
-                          </button>
+                          </ConfirmSubmitButton>
                         </form>
                       )}
                     </div>

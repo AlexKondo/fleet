@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { deleteVehicle, type FleetActionState } from "./actions";
 import type { StatusMeta } from "../dashboard/statusMeta";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
+import { StatusBadge } from "../ui/StatusBadge";
 import { EditVehicleForm, type EditableVehicle } from "./EditVehicleForm";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/locales";
@@ -60,10 +61,7 @@ export function VehicleRow({
           <p className="font-mono text-sm text-fog-400">{vehicle.plate}</p>
           <p className="text-xs text-fog-400">{categoryName}</p>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1.5">
-          <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-          <span className={`text-xs uppercase tracking-widest ${meta.text}`}>{meta.label}</span>
-        </span>
+        <StatusBadge meta={meta} />
       </div>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-line-800 pt-3 text-xs">
@@ -88,14 +86,14 @@ export function VehicleRow({
       <div className="flex items-center gap-3 border-t border-line-800 pt-3">
         <Link
           href={`/fleet/vehicles/${vehicle.id}`}
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
         >
           {dict.fleet.vehicleRow.viewSchedule}
         </Link>
         <button
           type="button"
           onClick={() => setEditing((v) => !v)}
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-amber"
+          className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
         >
           {editing ? dict.common.close : dict.common.edit}
         </button>

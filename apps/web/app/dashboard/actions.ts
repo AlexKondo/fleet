@@ -40,6 +40,27 @@ async function runFleetAction(
 }
 
 /**
+ * Counterpart of the `?fleetActionError=1` redirect above, for the success path. Every
+ * action here used to end in silence: the page just re-rendered and the manager had to
+ * infer from the row disappearing (or not) whether the click landed. `?actionSuccess=1`
+ * renders the same banner the error flag does, in a positive color.
+ *
+ * Callers invoke this *last*, after any best-effort email, because `redirect()` throws.
+ */
+function redirectSuccess(searchParams = ""): never {
+  redirect(`/dashboard?actionSuccess=1${searchParams}`);
+}
+
+/**
+ * Free-text reason typed by the manager into an inline `<input name="...">`, falling back
+ * to the localized default bound to the action when the field is left empty.
+ */
+function readReason(formData: FormData | undefined, field: string, fallback: string): string {
+  const value = formData?.get(field);
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+/**
  * Best-effort email to the reservation's requester, mirroring whichever in-app
  * notification the calling RPC already inserted (0008/0010_*.sql) — same audience, same
  * event, just a second delivery channel. `build` receives the destination text so the
@@ -83,40 +104,110 @@ export async function approveReservation(reservationId: string): Promise<void> {
       `Sua reserva para <strong>${destination}</strong> foi aprovada e o veículo está confirmado.`,
     ],
   }));
+  redirectSuccess();
 }
 
-export async function completeWorkflowTask(taskId: string): Promise<void> {
-  return runFleetAction((supabase) =>
+/** `?myTasks=1` is the operator's active filter — preserved across a task action's redirect. */
+function taskFilterSuffix(formData: FormData | undefined): string {
+  return formData?.get("myTasks") === "1" ? "&myTasks=1" : "";
+}
+
+export async function completeWorkflowTask(taskId: string, formData?: FormData): Promise<void> {
+  await runFleetAction((supabase) =>
     supabase.rpc("complete_workflow_task", { p_task_id: taskId }),
   );
+  redirectSuccess(taskFilterSuffix(formData));
 }
 
 /** Dismiss a task that turned out unnecessary, without marking it falsely 'done' (0011_cancel_workflow_task.sql). */
-export async function cancelWorkflowTask(taskId: string): Promise<void> {
-  return runFleetAction((supabase) =>
+export async function cancelWorkflowTask(taskId: string, formData?: FormData): Promise<void> {
+  await runFleetAction((supabase) =>
     supabase.rpc("cancel_workflow_task", { p_task_id: taskId }),
   );
+  redirectSuccess(taskFilterSuffix(formData));
 }
 
-export async function blockVehicle(vehicleId: string, reason: string): Promise<void> {
-  return runFleetAction((supabase) =>
-    supabase.rpc("block_vehicle", { p_vehicle_id: vehicleId, p_reason: reason }),
+/**
+ * Claim an unassigned operational task (0030_workflow_task_assignee.sql). There's no RPC
+ * for this one, so the guards the sibling actions get from their SECURITY DEFINER
+ * functions are spelled out here: the caller must be signed in and hold a role that may
+ * work the queue, and the update is conditioned on `assigned_to is null` so two operators
+ * racing for the same task can't both "win" — the loser's update matches zero rows and
+ * gets the same generic error banner as any other lost race.
+ */
+export async function claimWorkflowTask(taskId: string, formData?: FormData): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const canManageTasks =
+    profile?.role === "fleet_manager" ||
+    profile?.role === "administrator" ||
+    profile?.role === "maintenance_operator";
+  if (!canManageTasks) {
+    redirect("/dashboard?fleetActionError=1");
+  }
+
+  const { data, error } = await supabase
+    .from("workflow_tasks")
+    .update({ assigned_to: user.id })
+    .eq("id", taskId)
+    .eq("status", "open")
+    .is("assigned_to", null)
+    .select("id");
+
+  revalidatePath("/dashboard");
+  if (error || !data || data.length === 0) {
+    console.error("Fleet action failed:", error?.message ?? "task already claimed");
+    redirect("/dashboard?fleetActionError=1");
+  }
+  redirectSuccess(taskFilterSuffix(formData));
+}
+
+export async function blockVehicle(
+  vehicleId: string,
+  defaultReason: string,
+  formData?: FormData,
+): Promise<void> {
+  await runFleetAction((supabase) =>
+    supabase.rpc("block_vehicle", {
+      p_vehicle_id: vehicleId,
+      p_reason: readReason(formData, "reason", defaultReason),
+    }),
   );
+  redirectSuccess();
 }
 
 export async function unblockVehicle(vehicleId: string): Promise<void> {
-  return runFleetAction((supabase) =>
+  await runFleetAction((supabase) =>
     supabase.rpc("unblock_vehicle", { p_vehicle_id: vehicleId }),
   );
+  redirectSuccess();
 }
 
 /**
  * Reject a pending reservation or cancel a confirmed-but-not-yet-picked-up one
- * (0010_cancel_reservation.sql). Same bound-with-a-fixed-reason shape as the
- * blockVehicle button above (`.bind(null, r.id, "...")`) — no reason input in this UI,
- * matching that precedent's level of simplicity.
+ * (0010_cancel_reservation.sql). Bound with the reservation id and a localized *default*
+ * reason (`.bind(null, r.id, dict…)`); when the form carries a `reason` input the
+ * manager's own words win. The reason is what the requester sees in their cancellation
+ * notification and email, so "Rejeitada pelo gestor de frota" on every single rejection
+ * told them nothing — this is the one field that explains the decision.
  */
-export async function cancelReservation(reservationId: string, reason: string): Promise<void> {
+export async function cancelReservation(
+  reservationId: string,
+  defaultReason: string,
+  formData?: FormData,
+): Promise<void> {
+  const reason = readReason(formData, "reason", defaultReason);
   await runFleetAction((supabase) =>
     supabase.rpc("cancel_reservation", { p_reservation_id: reservationId, p_reason: reason }),
   );
@@ -127,6 +218,7 @@ export async function cancelReservation(reservationId: string, reason: string): 
       `Sua reserva para <strong>${destination}</strong> foi cancelada${reason ? `: ${reason}` : "."}`,
     ],
   }));
+  redirectSuccess();
 }
 
 /**
@@ -140,12 +232,13 @@ export async function swapVehicle(reservationId: string, formData: FormData): Pr
   if (typeof newVehicleId !== "string" || newVehicleId.length === 0) {
     redirect("/dashboard?fleetActionError=1");
   }
-  return runFleetAction((supabase) =>
+  await runFleetAction((supabase) =>
     supabase.rpc("swap_reservation_vehicle", {
       p_reservation_id: reservationId,
       p_new_vehicle_id: newVehicleId,
     }),
   );
+  redirectSuccess();
 }
 
 /**
@@ -158,10 +251,11 @@ export async function transferReservation(reservationId: string, formData: FormD
   if (typeof newRequesterId !== "string" || newRequesterId.length === 0) {
     redirect("/dashboard?fleetActionError=1");
   }
-  return runFleetAction((supabase) =>
+  await runFleetAction((supabase) =>
     supabase.rpc("transfer_reservation", {
       p_reservation_id: reservationId,
       p_new_requester_id: newRequesterId,
     }),
   );
+  redirectSuccess();
 }

@@ -29,7 +29,7 @@ export function ForgotPasswordForm({ dict }: { dict: Dictionary }) {
           required
           autoComplete="email"
           placeholder={dict.auth.emailPlaceholder}
-          className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2.5 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-signal-amber focus-visible:ring-1 focus-visible:ring-signal-amber"
+          className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2.5 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
         />
       </label>
 
@@ -42,7 +42,7 @@ export function ForgotPasswordForm({ dict }: { dict: Dictionary }) {
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 rounded-sm bg-signal-amber px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="mt-2 rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {pending ? dict.common.sending : dict.auth.sendResetLink}
       </button>
