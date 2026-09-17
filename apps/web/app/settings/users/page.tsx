@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AppShell } from "../../AppShell";
 import { InviteUserModal } from "./InviteUserModal";
@@ -19,9 +20,7 @@ export default async function UsersPage() {
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase

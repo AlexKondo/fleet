@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { ReturnForm } from "./ReturnForm";
 import { getDictionary, getLocale } from "../../../../lib/i18n/getLocale";
 
@@ -9,12 +10,15 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
   const dict = await getDictionary();
   const locale = await getLocale();
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: reservation }] = await Promise.all([
+  // §14 Current Vehicle Location: the return checklist is where the traveler reports
+  // where they parked, so the location picker is scoped to this org's vehicle_locations
+  // the same way the Fleet Manager dashboard's "Localização Atual" column is. It depends
+  // on nothing above it, so it rides along here instead of costing its own round trip
+  // after every authorization check has already passed.
+  const [{ data: profile }, { data: reservation }, { data: locations }] = await Promise.all([
     supabase.from("profiles").select("role").eq("id", user.id).single(),
     supabase
       .from("reservations")
@@ -26,6 +30,7 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
       )
       .eq("id", id)
       .single(),
+    supabase.from("vehicle_locations").select("id, name").order("name"),
   ]);
 
   if (!reservation || !reservation.vehicle || !reservation.trip_request) notFound();
@@ -53,14 +58,6 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
   if (!canReturn) redirect(`${fallbackPath}?tripActionError=return_wrong_status`);
   const energyType = vehicle.category?.energy_type ?? "ICE";
   const showElectricRange = energyType === "BEV" || energyType === "PHEV";
-
-  // §14 Current Vehicle Location: the return checklist is where the traveler reports
-  // where they parked, so the location picker is scoped to this org's vehicle_locations
-  // the same way the Fleet Manager dashboard's "Localização Atual" column is.
-  const { data: locations } = await supabase
-    .from("vehicle_locations")
-    .select("id, name")
-    .order("name");
 
   return (
     <main className="min-h-dvh px-6 py-8">

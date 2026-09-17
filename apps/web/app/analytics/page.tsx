@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { predictNextService } from "@fleet/domain";
 import { getLocale, getDictionary } from "@/lib/i18n/getLocale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { loadOrgConfig } from "@/lib/domain/orgConfig";
 import { AppShell } from "../AppShell";
 import { StatBar } from "./StatBar";
@@ -37,37 +38,29 @@ export default async function AnalyticsPage() {
   const t = dict.analytics;
   const supabase = await createSupabaseServerClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, organization_id, organization:organizations(name)")
-    .eq("id", user.id)
-    .single();
-
-  const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
-  const isAdministrator = profile?.role === "administrator";
-  if (!profile || !isFleetManager) {
-    redirect("/dashboard");
-  }
-
-  // §12 Predictive Maintenance's "due soon" window is organization-configurable
-  // (organization_settings.maintenance_due_soon_days, edited from /settings) — replaces the
-  // domain package's hardcoded defaultMaintenancePredictionConfig below.
-  const orgConfig = await loadOrgConfig(supabase, profile.organization_id);
-
+  // None of the five analytics queries is scoped by anything on `profile` (RLS already
+  // scopes them to the caller's org), so the profile lookup joins them in one round trip
+  // instead of gating them behind its own. Only loadOrgConfig genuinely depends on
+  // profile.organization_id, so it stays as the second — and last — round trip, down from
+  // three sequential stages.
   const [
+    { data: profile },
     { data: vehicles, error: vehiclesError },
     { data: inspections },
     { data: reservations },
     { data: tripRequests },
-    { data: participants },
+    { count: participantCount },
   ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role, organization_id, organization:organizations(name)")
+      .eq("id", user.id)
+      .single(),
     supabase
       .from("vehicles")
       .select("id, plate, status, odometer_km, next_service_odometer_km")
@@ -79,9 +72,23 @@ export default async function AnalyticsPage() {
     supabase
       .from("reservations")
       .select("id, vehicle_id, status, trip_request:trip_requests(destination)"),
-    supabase.from("trip_requests").select("id, destination"),
-    supabase.from("trip_participants").select("id"),
+    // `id` was selected but never read — this page only counts destinations.
+    supabase.from("trip_requests").select("destination"),
+    // Only the row count is ever used — `head: true` returns it without shipping a row
+    // (and without a single id) per carpool participation in the whole organization.
+    supabase.from("trip_participants").select("id", { count: "exact", head: true }),
   ]);
+
+  const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const isAdministrator = profile?.role === "administrator";
+  if (!profile || !isFleetManager) {
+    redirect("/dashboard");
+  }
+
+  // §12 Predictive Maintenance's "due soon" window is organization-configurable
+  // (organization_settings.maintenance_due_soon_days, edited from /settings) — replaces the
+  // domain package's hardcoded defaultMaintenancePredictionConfig below.
+  const orgConfig = await loadOrgConfig(supabase, profile.organization_id);
 
   // --- Km per vehicle: max - min odometer reading across every inspection (pickup and
   // return) recorded for that vehicle. Chosen over "current odometer - first reading"
@@ -188,7 +195,7 @@ export default async function AnalyticsPage() {
   // instead of generating a new reservation — a rough measure of how much demand the
   // fleet satisfied without putting another vehicle on the road.
   const totalTripRequests = tripRequests?.length ?? 0;
-  const totalParticipants = participants?.length ?? 0;
+  const totalParticipants = participantCount ?? 0;
   const carpoolRatePercent =
     totalTripRequests > 0 ? Math.round((totalParticipants / totalTripRequests) * 100) : 0;
 

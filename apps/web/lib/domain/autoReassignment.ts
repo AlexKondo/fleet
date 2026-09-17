@@ -1,6 +1,11 @@
 import { recommendVehicle, type CandidateVehicle, type TripRequest } from "@fleet/domain";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
-import { toDomainCategory, toDomainVehicle } from "./mappers";
+import {
+  toDomainCategory,
+  toDomainVehicle,
+  VEHICLE_CATEGORY_DOMAIN_COLUMNS,
+  VEHICLE_DOMAIN_COLUMNS,
+} from "./mappers";
 import { loadOrgConfig } from "./orgConfig";
 import { createSupabaseAdminClient } from "../supabase/admin";
 
@@ -21,7 +26,7 @@ async function loadAvailableVehicleCandidates(
 ): Promise<CandidateVehicle[]> {
   const { data: vehicleRows } = await supabase
     .from("vehicles")
-    .select("*, category:vehicle_categories(*)")
+    .select(`${VEHICLE_DOMAIN_COLUMNS}, category:vehicle_categories(${VEHICLE_CATEGORY_DOMAIN_COLUMNS})`)
     .eq("organization_id", organizationId)
     .eq("status", "available");
 
@@ -57,6 +62,18 @@ export async function attemptAutomaticReassignment(
   const config = await loadOrgConfig(supabase, organizationId);
   const admin = createSupabaseAdminClient();
   const now = new Date().toISOString();
+
+  // One notification row per impacted reservation, accumulated and written as a single
+  // multi-row INSERT after the loop rather than one round trip per reservation — the
+  // vehicle/reservation reads below genuinely must be sequential (each swap changes what
+  // the next iteration may offer, see loadAvailableVehicleCandidates), but the
+  // notifications don't feed anything and were paying N serial round trips for nothing.
+  const notificationRows: {
+    organization_id: string;
+    user_id: string;
+    title: string;
+    body: string;
+  }[] = [];
 
   for (const reservationId of impactedReservationIds) {
     const { data: reservation } = await supabase
@@ -118,20 +135,24 @@ export async function attemptAutomaticReassignment(
       }
     }
 
-    if (reassignedPlate !== null) {
-      await supabase.from("notifications").insert({
-        organization_id: organizationId,
-        user_id: requesterId,
-        title: "Veículo reatribuído automaticamente",
-        body: `Devido a um atraso na reserva anterior, sua viagem foi movida automaticamente para o veículo ${reassignedPlate}.`,
-      });
-    } else {
-      await supabase.from("notifications").insert({
-        organization_id: organizationId,
-        user_id: requesterId,
-        title: "Seu pedido de veículo não pôde ser atendido",
-        body: "Um atraso na reserva anterior deste veículo afeta o horário da sua viagem, e não encontramos outro veículo disponível agora. O gestor de frota já foi avisado para resolver manualmente.",
-      });
-    }
+    notificationRows.push(
+      reassignedPlate !== null
+        ? {
+            organization_id: organizationId,
+            user_id: requesterId,
+            title: "Veículo reatribuído automaticamente",
+            body: `Devido a um atraso na reserva anterior, sua viagem foi movida automaticamente para o veículo ${reassignedPlate}.`,
+          }
+        : {
+            organization_id: organizationId,
+            user_id: requesterId,
+            title: "Seu pedido de veículo não pôde ser atendido",
+            body: "Um atraso na reserva anterior deste veículo afeta o horário da sua viagem, e não encontramos outro veículo disponível agora. O gestor de frota já foi avisado para resolver manualmente.",
+          },
+    );
+  }
+
+  if (notificationRows.length > 0) {
+    await supabase.from("notifications").insert(notificationRows);
   }
 }

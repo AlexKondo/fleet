@@ -1,14 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { Database } from "@fleet/supabase-client";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { Database, TypedSupabaseClient } from "@fleet/supabase-client";
 import { formatDate } from "@/lib/formatDateTime";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/locales";
 import { markAllNotificationsRead, markNotificationRead } from "./notificationActions";
 
-type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
+/**
+ * Only the columns this bell actually renders. `organization_id`/`user_id` were being
+ * selected purely to satisfy the full `Row` type and are read by nothing — RLS already
+ * scopes every row to this viewer's own org and user, so they carry no information here.
+ * This query runs on mount, on every open, and on a 45s poll for as long as any page is
+ * open, so the trim is paid back continuously.
+ */
+type NotificationRow = Pick<
+  Database["public"]["Tables"]["notifications"]["Row"],
+  "id" | "title" | "body" | "read_at" | "created_at"
+>;
 
 // Self-contained: reads notifications directly with the browser Supabase client (RLS —
 // "members read own notifications" in 0008_notifications.sql — already scopes every
@@ -25,6 +34,84 @@ type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
 // for this scope.
 const POLL_INTERVAL_MS = 45_000;
 const LIST_LIMIT = 20;
+
+/* ------------------------------------------------------------------------------------
+ * Shared store
+ *
+ * AppShell renders this bell twice per page — once in the desktop header, once inside
+ * MobileNav — and the two are separated only by CSS breakpoints (`hidden md:flex`), which
+ * hides an element but does NOT unmount it. So every authenticated page was running two
+ * independent copies of the 45s poll: two Supabase round trips per tick, forever, for one
+ * user looking at one bell. Hoisting the fetch, the timer and the state out of the
+ * component into this module-level store makes N mounted bells cost exactly one poll,
+ * and has the side benefit that both bells now always agree on the unread count.
+ *
+ * The Supabase client is loaded with a dynamic `import()`. A static one dragged
+ * `@supabase/ssr` + `@supabase/supabase-js` (~70 kB) into the First Load JS of every
+ * authenticated route, because this component sits in the shared shell. The bell's chrome
+ * (icon + badge) renders from the store's empty initial snapshot with no JS dependency on
+ * Supabase at all; the data arrives a moment later, which is already how a poll behaves.
+ * ---------------------------------------------------------------------------------- */
+
+interface BellSnapshot {
+  notifications: NotificationRow[];
+  unreadCount: number;
+  loadError: boolean;
+}
+
+const EMPTY_SNAPSHOT: BellSnapshot = { notifications: [], unreadCount: 0, loadError: false };
+
+let snapshot: BellSnapshot = EMPTY_SNAPSHOT;
+const listeners = new Set<() => void>();
+let clientPromise: Promise<TypedSupabaseClient> | null = null;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let subscriberCount = 0;
+
+function getClient(): Promise<TypedSupabaseClient> {
+  clientPromise ??= import("@/lib/supabase/client").then((m) => m.createSupabaseBrowserClient());
+  return clientPromise;
+}
+
+function setSnapshot(next: BellSnapshot): void {
+  snapshot = next;
+  for (const listener of listeners) listener();
+}
+
+async function refreshStore(): Promise<void> {
+  const supabase = await getClient();
+  const [{ data: list, error: listError }, { count, error: countError }] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select("id,title,body,read_at,created_at")
+      .order("created_at", { ascending: false })
+      .limit(LIST_LIMIT),
+    supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
+  ]);
+
+  if (listError || countError) {
+    setSnapshot({ ...snapshot, loadError: true });
+    return;
+  }
+  setSnapshot({ notifications: list ?? [], unreadCount: count ?? 0, loadError: false });
+}
+
+/** Refcounted: the first bell to mount starts the poll, the last to unmount stops it. */
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  subscriberCount += 1;
+  if (subscriberCount === 1) {
+    refreshStore();
+    pollTimer = setInterval(refreshStore, POLL_INTERVAL_MS);
+  }
+  return () => {
+    listeners.delete(listener);
+    subscriberCount -= 1;
+    if (subscriberCount === 0 && pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  };
+}
 
 /** Minimal `{count}` interpolation — no i18n runtime, no date library. */
 function withCount(template: string, count: number): string {
@@ -138,41 +225,20 @@ export function NotificationBell({
   locale: Locale;
 }) {
   const t = dict.notifications;
-  const [supabase] = useState(() => createSupabaseBrowserClient());
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationRow[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loadError, setLoadError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const refresh = useCallback(async () => {
-    const [{ data: list, error: listError }, { count, error: countError }] = await Promise.all([
-      supabase
-        .from("notifications")
-        .select("id,organization_id,user_id,title,body,read_at,created_at")
-        .order("created_at", { ascending: false })
-        .limit(LIST_LIMIT),
-      supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
-    ]);
-
-    if (listError || countError) {
-      setLoadError(true);
-      return;
-    }
-    setLoadError(false);
-    setNotifications(list ?? []);
-    setUnreadCount(count ?? 0);
-  }, [supabase]);
-
-  useEffect(() => {
-    refresh();
-    const interval = setInterval(refresh, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [refresh]);
+  // Server snapshot is the empty one: the bell is chrome that hydrates into live data,
+  // and the notification list is per-user data this page never server-renders anyway.
+  const { notifications, unreadCount, loadError } = useSyncExternalStore(
+    subscribe,
+    () => snapshot,
+    () => EMPTY_SNAPSHOT,
+  );
 
   useEffect(() => {
     if (!isOpen) return;
-    refresh();
+    refreshStore();
 
     function handlePointerDown(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -191,24 +257,35 @@ export function NotificationBell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  // Optimistic updates go through the shared store, so marking one read in the desktop
+  // bell is reflected instantly in the mobile one (and vice versa) rather than leaving
+  // the two instances showing different unread counts.
   async function handleMarkOne(id: string) {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
-    setUnreadCount((c) => Math.max(0, c - 1));
+    setSnapshot({
+      ...snapshot,
+      notifications: snapshot.notifications.map((n) =>
+        n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
+      ),
+      unreadCount: Math.max(0, snapshot.unreadCount - 1),
+    });
     try {
       await markNotificationRead(id);
     } catch {
-      refresh();
+      refreshStore();
     }
   }
 
   async function handleMarkAll() {
     const now = new Date().toISOString();
-    setNotifications((prev) => prev.map((n) => (n.read_at ? n : { ...n, read_at: now })));
-    setUnreadCount(0);
+    setSnapshot({
+      ...snapshot,
+      notifications: snapshot.notifications.map((n) => (n.read_at ? n : { ...n, read_at: now })),
+      unreadCount: 0,
+    });
     try {
       await markAllNotificationsRead();
     } catch {
-      refresh();
+      refreshStore();
     }
   }
 

@@ -9,9 +9,15 @@ import {
   type TrafficRestrictionResult,
 } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
-import { toDomainCategory, toDomainVehicle } from "@/lib/domain/mappers";
+import {
+  toDomainCategory,
+  toDomainVehicle,
+  VEHICLE_CATEGORY_DOMAIN_COLUMNS,
+  VEHICLE_DOMAIN_COLUMNS,
+} from "@/lib/domain/mappers";
 import { loadOrgConfig } from "@/lib/domain/orgConfig";
 import { getFleetManagerEmails } from "@/lib/email/recipients";
 import { renderEmail } from "@/lib/email/renderEmail";
@@ -65,9 +71,7 @@ interface CarpoolCandidateWithPlate extends CarpoolCandidate {
 
 async function buildPlanInputs(input: TripFormInput) {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) {
     return { error: "not_authenticated" as const };
   }
@@ -86,7 +90,7 @@ async function buildPlanInputs(input: TripFormInput) {
 
   const { data: vehicleRows } = await supabase
     .from("vehicles")
-    .select("*, category:vehicle_categories(*)")
+    .select(`${VEHICLE_DOMAIN_COLUMNS}, category:vehicle_categories(${VEHICLE_CATEGORY_DOMAIN_COLUMNS})`)
     .in("status", ["available", "charging", "cleaning"]);
 
   const { data: activeReservations } = await supabase

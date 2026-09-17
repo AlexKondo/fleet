@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getUserEmail } from "@/lib/email/recipients";
 import { renderEmail } from "@/lib/email/renderEmail";
 import { sendEmail } from "@/lib/email/sendEmail";
@@ -137,9 +138,7 @@ export async function cancelWorkflowTask(taskId: string, formData?: FormData): P
  */
 export async function claimWorkflowTask(taskId: string, formData?: FormData): Promise<void> {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) {
     redirect("/login");
   }

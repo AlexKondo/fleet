@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../../AppShell";
 import { getStatusMeta } from "../../dashboard/statusMeta";
@@ -29,26 +30,33 @@ export default async function ReservationDetailPage({
   const locale = await getLocale();
   const supabase = await createSupabaseServerClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, organization:organizations(name)")
-    .eq("id", user.id)
-    .single();
-
-  const { data: reservation } = await supabase
-    .from("reservations")
-    .select(
-      `id, status, start_at, end_at, impacted_at, impacted_reason,
+  // Profile, the reservation itself and its message thread are all keyed off the user id
+  // and the route param, so they go out together — the thread in particular was the third
+  // sequential round trip on a page whose whole job is to show it.
+  const [{ data: profile }, { data: reservation }, { data: messageRows }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role, organization:organizations(name)")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("reservations")
+      .select(
+        `id, status, start_at, end_at, impacted_at, impacted_reason,
        vehicle:vehicles(plate, status, category:vehicle_categories(name)),
        trip_request:trip_requests(id, origin, destination, requester_id, justification, requester:profiles(full_name))`,
-    )
-    .eq("id", id)
-    .single();
+      )
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("reservation_messages")
+      .select("id, message_type, body, created_at, sender:profiles(full_name)")
+      .eq("reservation_id", id)
+      .order("created_at", { ascending: true }),
+  ]);
 
   if (!reservation || !reservation.trip_request) redirect("/trips");
 
@@ -70,12 +78,6 @@ export default async function ReservationDetailPage({
         .eq("status", "pending")
         .order("joined_at", { ascending: true })
     : { data: [] };
-
-  const { data: messageRows } = await supabase
-    .from("reservation_messages")
-    .select("id, message_type, body, created_at, sender:profiles(full_name)")
-    .eq("reservation_id", id)
-    .order("created_at", { ascending: true });
 
   const messages: ReservationMessage[] = (messageRows ?? []).map((m) => ({
     id: m.id,

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useActionState, useEffect, useState } from "react";
 import { updateVehicle, type FleetActionState } from "./actions";
 import { FUEL_LEVEL_OPTIONS, VEHICLE_COLOR_OPTIONS } from "@/lib/domain/vehicleFieldOptions";
@@ -109,10 +110,13 @@ export function EditVehicleForm({
               : dict.fleet.vehicleForm.photoLabel}
           </span>
           {vehicle.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            // Fixed-size thumbnail, so intrinsic width/height rather than `fill` — the
+            // optimizer then serves a ~96x64 image instead of the multi-MB original.
+            <Image
               src={vehicle.photoUrl}
               alt={dict.fleet.vehicleForm.photoAlt.replace("{name}", vehicle.plate)}
+              width={96}
+              height={64}
               className="h-16 w-24 rounded-sm border border-line-800 object-cover"
             />
           ) : null}

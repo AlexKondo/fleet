@@ -22,7 +22,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Every request that reaches this middleware pays for a Supabase auth round trip
+  // (updateSupabaseSession), so anything that can never need a session is excluded here
+  // rather than filtered inside the handler — a matched-but-skipped request still costs a
+  // middleware invocation. Covers the Next build output, the PWA icon/manifest set in
+  // public/, and the usual static extensions (fonts and .map included: a browser fetches
+  // those alongside the page, and each one used to trigger its own auth check).
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|map|txt|xml|webmanifest|woff|woff2|ttf|otf)$).*)",
   ],
 };

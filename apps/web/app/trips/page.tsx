@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../AppShell";
 import { cancelMyReservation, leaveCarpool } from "./actions";
@@ -18,38 +19,39 @@ export default async function TripsPage({
   const reservationStatusLabel = (status: string): string =>
     (dict.trips.statuses as Record<string, string>)[status] ?? status;
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, organization:organizations(name)")
-    .eq("id", user.id)
-    .single();
-
-  const { data: reservations } = await supabase
-    .from("reservations")
-    .select(
-      `id, status, start_at, end_at, impacted_at,
-       trip_request:trip_requests!inner(origin, destination, requester_id, justification),
-       vehicle:vehicles(plate, status)`,
-    )
-    .eq("trip_request.requester_id", user.id)
-    .order("start_at", { ascending: false });
-
+  // All three are keyed only by `user.id` — running them one after another cost three
+  // full round trips to render a page that needs one.
+  //
   // Carpools joined via create_carpool_participation (0003_trip_request_flow.sql): a
   // trip_participants row, never a second reservation on the same vehicle/time (that
   // would collide with the double-booking constraint). trip_participants.trip_request_id
   // points at the *driver's* trip request, not the joiner's own — there's no direct FK
   // from trip_participants to reservations, so the matching reservation is fetched as a
   // second query and joined here in application code.
-  const { data: participations } = await supabase
-    .from("trip_participants")
-    .select("id, trip_request_id, joined_at, status")
-    .eq("passenger_id", user.id)
-    .order("joined_at", { ascending: false });
+  const [{ data: profile }, { data: reservations }, { data: participations }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role, organization:organizations(name)")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("reservations")
+      .select(
+        `id, status, start_at, end_at, impacted_at,
+       trip_request:trip_requests!inner(origin, destination, requester_id, justification),
+       vehicle:vehicles(plate, status)`,
+      )
+      .eq("trip_request.requester_id", user.id)
+      .order("start_at", { ascending: false }),
+    supabase
+      .from("trip_participants")
+      .select("id, trip_request_id, joined_at, status")
+      .eq("passenger_id", user.id)
+      .order("joined_at", { ascending: false }),
+  ]);
 
   const carpoolTripRequestIds = (participations ?? []).map((p) => p.trip_request_id);
   const { data: carpoolReservations } =

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assessVehicleReadiness } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { toDomainVehicle } from "@/lib/domain/mappers";
+import { getCurrentUser } from "@/lib/auth/currentUser";
+import { toDomainVehicle, VEHICLE_DOMAIN_COLUMNS } from "@/lib/domain/mappers";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { AppShell } from "../AppShell";
@@ -43,9 +44,7 @@ export default async function DashboardPage({
   const workflowTaskLabels: Record<string, string> = t.tasks.types;
   const supabase = await createSupabaseServerClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) {
     redirect("/login");
   }
@@ -61,9 +60,14 @@ export default async function DashboardPage({
       .single(),
     supabase
       .from("vehicles")
+      // Explicit column list rather than `*`: the readiness assessment needs exactly
+      // VEHICLE_DOMAIN_COLUMNS, and the only other `vehicles` column this page renders is
+      // `color` (the swap-vehicle <option> label). created_at/updated_at/name/
+      // photo_storage_path/pre_block_status were being shipped for every vehicle in the
+      // fleet on every dashboard load and read by nothing.
       .select(
-        `*,
-         category:vehicle_categories(name, passenger_capacity, supports_cargo, energy_type),
+        `${VEHICLE_DOMAIN_COLUMNS}, color,
+         category:vehicle_categories(name, energy_type),
          current_location:vehicle_locations!vehicles_current_location_id_fkey(name)`,
       )
       .order("plate"),

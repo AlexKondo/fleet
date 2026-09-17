@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { VEHICLE_STATUSES, getStatusMeta } from "../dashboard/statusMeta";
 import { AppShell } from "../AppShell";
@@ -29,26 +30,25 @@ export default async function FleetPage() {
   // never needs the status → label map itself.
   const statusOptions = VEHICLE_STATUSES.map((s) => ({ value: s, label: statusMeta[s].label }));
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, organization:organizations(name)")
-    .eq("id", user.id)
-    .single();
-
-  const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
-  const isAdministrator = profile?.role === "administrator";
-  if (!profile || !isFleetManager) redirect("/dashboard");
-
+  // The profile lookup is folded into the same round trip as the three fleet queries:
+  // none of them are scoped by anything on `profile` (RLS already scopes them to the
+  // caller's org), so gating on the role *before* issuing them only bought a wasted
+  // sequential round trip on every load. An unauthorized role still never sees the data —
+  // it's discarded by the redirect below.
   const [
+    { data: profile },
     { data: locations, error: locationsError },
     { data: categories, error: categoriesError },
     { data: vehicles, error: vehiclesError },
   ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role, organization:organizations(name)")
+      .eq("id", user.id)
+      .single(),
     supabase.from("vehicle_locations").select("id, name").order("name"),
     supabase.from("vehicle_categories").select("id, name, passenger_capacity, supports_cargo, energy_type").order("name"),
     supabase
@@ -58,6 +58,11 @@ export default async function FleetPage() {
       )
       .order("plate"),
   ]);
+
+  const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const isAdministrator = profile?.role === "administrator";
+  if (!profile || !isFleetManager) redirect("/dashboard");
+
   const loadError = locationsError || categoriesError || vehiclesError;
 
   // VehicleForm/EditVehicleForm read `energyType` (camelCase) to decide which fuel/

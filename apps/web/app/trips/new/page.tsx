@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { AppShell } from "../../AppShell";
 import { TripRequestForm } from "./TripRequestForm";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
@@ -12,9 +13,7 @@ export default async function NewTripPage() {
   // an unauthenticated visitor if middleware ever fails open (see middleware.ts's
   // MissingEnvVarError handling).
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase

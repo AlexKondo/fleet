@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTime, formatDayMonth } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { AppShell } from "../../../AppShell";
@@ -31,39 +32,40 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
   const dict = await getDictionary();
   const locale = await getLocale();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, organization:organizations(name)")
-    .eq("id", user.id)
-    .single();
+  // Profile, vehicle and its reservations are all keyed off values already in hand (the
+  // user id and the route param) — none depends on the result of another, so all three go
+  // out together instead of as three back-to-back round trips.
+  const [{ data: profile }, { data: vehicle }, { data: reservationRows }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role, organization:organizations(name)")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("vehicles")
+      .select(
+        "id, plate, name, color, status, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
+      )
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("reservations")
+      .select(
+        `id, status, start_at, end_at, impacted_at,
+       trip_request:trip_requests(origin, destination, requester:profiles(full_name))`,
+      )
+      .eq("vehicle_id", id)
+      .order("start_at", { ascending: true }),
+  ]);
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
   if (!profile || !isFleetManager) redirect("/dashboard");
 
-  const { data: vehicle } = await supabase
-    .from("vehicles")
-    .select(
-      "id, plate, name, color, status, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
-    )
-    .eq("id", id)
-    .single();
-
   if (!vehicle) redirect("/fleet");
-
-  const { data: reservationRows } = await supabase
-    .from("reservations")
-    .select(
-      `id, status, start_at, end_at, impacted_at,
-       trip_request:trip_requests(origin, destination, requester:profiles(full_name))`,
-    )
-    .eq("vehicle_id", id)
-    .order("start_at", { ascending: true });
 
   const reservations = reservationRows ?? [];
   const meta = getStatusMeta(dict)[vehicle.status];

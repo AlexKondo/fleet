@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 
 export interface SettingsActionState {
   status: "idle" | "success" | "error";
@@ -22,9 +23,7 @@ export async function saveOrganizationSettings(
 ): Promise<SettingsActionState> {
   const supabase = await createSupabaseServerClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) {
     return { status: "error", error: "not_authenticated" };
   }

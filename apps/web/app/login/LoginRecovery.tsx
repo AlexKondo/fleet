@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { readSessionBackup, clearSessionBackup } from "@/lib/supabase/sessionBackup";
 import type { Dictionary } from "../../lib/i18n/dictionaries";
 
@@ -23,9 +22,18 @@ export function LoginRecovery({ dict, children }: { dict: Dictionary; children: 
       return;
     }
 
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth
-      .setSession({ access_token: backup.access_token, refresh_token: backup.refresh_token })
+    // Dynamic import: the Supabase client is only ever needed on the rare path where a
+    // backup actually exists (the spurious-bounce case). A static import instead put
+    // ~70 kB of `@supabase/ssr` + `@supabase/supabase-js` into /login's First Load JS —
+    // paid by every ordinary sign-in, which is exactly the page where time-to-interactive
+    // matters most and where that code does nothing at all.
+    import("@/lib/supabase/client")
+      .then(({ createSupabaseBrowserClient }) =>
+        createSupabaseBrowserClient().auth.setSession({
+          access_token: backup.access_token,
+          refresh_token: backup.refresh_token,
+        }),
+      )
       .then(({ data, error }) => {
         if (data.session && !error) {
           // Full navigation, not router.push — middleware needs to see the cookie

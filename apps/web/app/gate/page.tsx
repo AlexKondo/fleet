@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { AppShell } from "../AppShell";
@@ -29,16 +30,30 @@ export default async function GatePage() {
   const locale = await getLocale();
   const statusMeta = getStatusMeta(dict);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, organization:organizations(name)")
-    .eq("id", user.id)
-    .single();
+  // The gate board is org-scoped by RLS, not by anything on `profile` — so the profile
+  // lookup (needed only for the nav shell and the role gate below) and the reservation
+  // list are independent, and running them back-to-back cost two full round trips where
+  // one suffices.
+  const [{ data: profile }, { data: reservations, error: loadError }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role, organization:organizations(name)")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("reservations")
+      .select(
+        `id, status, start_at, end_at,
+       trip_request:trip_requests(origin, destination, requester:profiles(full_name)),
+       vehicle:vehicles(plate, name, status)`,
+      )
+      .eq("status", "confirmed")
+      .order("start_at")
+      .limit(100),
+  ]);
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
@@ -50,18 +65,7 @@ export default async function GatePage() {
   // Org-wide (RLS: "members read own organization reservations" is org-scoped for every
   // role), deliberately NOT narrowed to the reservations a given manager approved and not
   // date-filtered — the gate cares about the current actionable set, whatever day it
-  // started on.
-  const { data: reservations, error: loadError } = await supabase
-    .from("reservations")
-    .select(
-      `id, status, start_at, end_at,
-       trip_request:trip_requests(origin, destination, requester:profiles(full_name)),
-       vehicle:vehicles(plate, name, status)`,
-    )
-    .eq("status", "confirmed")
-    .order("start_at")
-    .limit(100);
-
+  // started on. Fetched in the Promise.all above.
   const rows: GateRow[] = (reservations ?? [])
     .filter((r) => {
       const s = r.vehicle?.status;

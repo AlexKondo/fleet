@@ -3,6 +3,7 @@
 import { deriveReturnOutcome, MAINTENANCE_DUE_SOON_KM, type EnergyType } from "@fleet/domain";
 import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { uploadInspectionPhotos } from "@/lib/domain/uploadInspectionPhotos";
 import { getFleetManagerEmails } from "@/lib/email/recipients";
 import { renderEmail } from "@/lib/email/renderEmail";
@@ -37,9 +38,7 @@ export async function submitReturn(
   photos: FormData,
 ): Promise<SubmitReturnResult> {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) return { success: false, error: "not_authenticated" };
 
   const [{ data: profile }, { data: reservation }] = await Promise.all([

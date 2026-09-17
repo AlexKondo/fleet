@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { AppShell } from "../AppShell";
 import { SettingsForm } from "./SettingsForm";
 import { getDictionary } from "../../lib/i18n/getLocale";
@@ -15,9 +16,7 @@ export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) {
     redirect("/login");
   }
@@ -36,7 +35,9 @@ export default async function SettingsPage() {
 
   const { data: settings } = await supabase
     .from("organization_settings")
-    .select("*")
+    .select(
+      "range_safety_buffer_percent, min_charge_hours_bev, min_refuel_hours_ice_or_phev, min_cleaning_hours, carpool_departure_tolerance_minutes, carpool_return_tolerance_minutes, maintenance_due_soon_days, traffic_restriction_enabled, booking_mode, early_pickup_grace_minutes",
+    )
     .eq("organization_id", profile.organization_id)
     .single();
 

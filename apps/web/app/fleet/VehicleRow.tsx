@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useActionState, useState } from "react";
 import { deleteVehicle, type FleetActionState } from "./actions";
 import type { StatusMeta } from "../dashboard/statusMeta";
@@ -47,12 +48,21 @@ export function VehicleRow({
   return (
     <li className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4">
       {vehicle.photoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={vehicle.photoUrl}
-          alt={dict.fleet.vehicleForm.photoAlt.replace("{name}", vehicle.name ?? vehicle.plate)}
-          className="h-32 w-full rounded-sm border border-line-800 object-cover"
-        />
+        // next/image (not a bare <img>): these are raw phone-camera uploads served
+        // straight from Supabase Storage at full resolution into a 128px-tall card. The
+        // optimizer resizes and re-encodes to the actual displayed size, and `sizes`
+        // describes the responsive grid below (1 / 2 / 3 columns) so it never fetches a
+        // width wider than the column. Lazy loading is the default, so the cards below
+        // the fold on a large fleet cost nothing until scrolled to.
+        <div className="relative h-32 w-full overflow-hidden rounded-sm border border-line-800">
+          <Image
+            src={vehicle.photoUrl}
+            alt={dict.fleet.vehicleForm.photoAlt.replace("{name}", vehicle.name ?? vehicle.plate)}
+            fill
+            sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        </div>
       ) : null}
 
       <div className="flex items-start justify-between gap-2">

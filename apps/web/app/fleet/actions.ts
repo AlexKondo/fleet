@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { getDictionary } from "@/lib/i18n/getLocale";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -47,9 +48,7 @@ async function uploadVehiclePhoto(
 
 async function requireFleetManager() {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) return { supabase, organizationId: null };
 
   const { data: profile } = await supabase

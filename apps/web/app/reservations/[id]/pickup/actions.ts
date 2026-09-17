@@ -2,6 +2,7 @@
 
 import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { uploadInspectionPhotos } from "@/lib/domain/uploadInspectionPhotos";
 import { getDictionary } from "@/lib/i18n/getLocale";
 
@@ -44,9 +45,7 @@ export async function submitPickup(
   photos: FormData,
 ): Promise<SubmitPickupResult> {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) return { success: false, error: "not_authenticated" };
 
   const { data: profile } = await supabase

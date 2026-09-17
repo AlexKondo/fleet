@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { attemptAutomaticReassignment } from "@/lib/domain/autoReassignment";
 import { getDictionary } from "@/lib/i18n/getLocale";
 
@@ -36,9 +37,7 @@ export async function postReservationMessage(
   formData: FormData,
 ): Promise<MessageActionState> {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) return { status: "error", error: "not_authenticated" };
 
   const { data: profile } = await supabase

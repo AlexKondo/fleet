@@ -27,7 +27,9 @@ export async function loadOrgConfig(
 ): Promise<OrgConfig> {
   const { data } = await supabase
     .from("organization_settings")
-    .select("*")
+    .select(
+      "range_safety_buffer_percent, min_charge_hours_bev, min_refuel_hours_ice_or_phev, min_cleaning_hours, carpool_departure_tolerance_minutes, carpool_return_tolerance_minutes, maintenance_due_soon_days, traffic_restriction_enabled, booking_mode",
+    )
     .eq("organization_id", organizationId)
     .single();
 

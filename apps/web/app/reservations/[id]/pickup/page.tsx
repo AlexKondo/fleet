@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { PickupForm } from "./PickupForm";
 import { getDictionary } from "../../../../lib/i18n/getLocale";
 
@@ -8,9 +9,7 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const dict = await getDictionary();
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
   const [{ data: profile }, { data: reservation }] = await Promise.all([

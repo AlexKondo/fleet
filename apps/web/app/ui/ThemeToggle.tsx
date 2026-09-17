@@ -54,6 +54,14 @@ export function ThemeToggle({ dict, className = "" }: { dict: Dictionary; classN
     setTheme(next);
     document.documentElement.setAttribute("data-theme", next);
     updateThemeColorMeta(next);
+    // Cookie is the source of truth (readable server-side by layout.tsx, so the very
+    // next navigation — including straight after login — renders in the right theme
+    // without a client-side flash-fix). localStorage is kept as a same-tab fallback only.
+    try {
+      document.cookie = `fleet-theme=${next}; path=/; max-age=31536000; samesite=lax`;
+    } catch {
+      // ignore (cookies blocked)
+    }
     try {
       localStorage.setItem("fleet-theme", next);
     } catch {
