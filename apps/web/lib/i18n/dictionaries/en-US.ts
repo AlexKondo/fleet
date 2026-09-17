@@ -166,6 +166,8 @@ const dict: Dictionary = {
       confirmReject: "Reject the reservation for {name}?",
       reasonPlaceholder: "Reason for rejection (optional)",
       reasonLabel: "Reason for rejection",
+      vehicleUnavailable: "Vehicle unavailable",
+      vehicleUnavailableHint: "This vehicle is in maintenance or blocked and can't be approved right now.",
     },
     activeReservations: {
       heading: "Active Reservations — Swap Vehicle / Transfer",

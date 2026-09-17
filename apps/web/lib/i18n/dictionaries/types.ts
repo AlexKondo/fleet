@@ -217,6 +217,10 @@ export type Dictionary = {
       /** Placeholder on the inline free-text rejection reason input. */
       reasonPlaceholder: string;
       reasonLabel: string;
+      /** Shown instead of the Approve button when the vehicle is currently
+       * maintenance/blocked — approve_reservation would reject it anyway. */
+      vehicleUnavailable: string;
+      vehicleUnavailableHint: string;
     };
     activeReservations: {
       heading: string;

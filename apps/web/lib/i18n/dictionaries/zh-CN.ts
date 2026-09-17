@@ -164,6 +164,8 @@ const dict: Dictionary = {
       confirmReject: "确定拒绝 {name} 的预约吗？",
       reasonPlaceholder: "拒绝理由（可选）",
       reasonLabel: "拒绝理由",
+      vehicleUnavailable: "车辆不可用",
+      vehicleUnavailableHint: "该车辆正在维保或已被锁定，目前无法批准。",
     },
     activeReservations: {
       heading: "进行中的预约 — 更换车辆 / 转移",

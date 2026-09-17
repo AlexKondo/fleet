@@ -235,6 +235,12 @@ export default async function DashboardPage({
                 const requesterName =
                   r.trip_request?.requester?.full_name ?? t.activeReservations.unknownRequester;
                 const justification = r.trip_request?.justification?.trim();
+                // Mirrors approve_reservation's own guard (0024_time_aware_approval_and_pickup.sql):
+                // it refuses to approve onto a 'maintenance'/'blocked' vehicle. The reservation can
+                // still legitimately sit here waiting — the vehicle may come back — but showing an
+                // Approve button that's guaranteed to fail is worse than disabling it with a reason.
+                const vehicleUnavailable =
+                  r.vehicle?.status === "maintenance" || r.vehicle?.status === "blocked";
                 return (
                   <li
                     key={r.id}
@@ -285,17 +291,26 @@ export default async function DashboardPage({
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center gap-2">
-                      <form action={approveReservation.bind(null, r.id)}>
-                        <ConfirmSubmitButton
-                          confirmMessage={t.pendingReservations.confirmApprove.replace(
-                            "{name}",
-                            requesterName,
-                          )}
-                          className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                      {vehicleUnavailable ? (
+                        <span
+                          className="rounded-sm border border-signal-red/40 bg-signal-red/10 px-3 py-1 text-xs uppercase tracking-widest text-signal-red"
+                          title={t.pendingReservations.vehicleUnavailableHint}
                         >
-                          {dict.common.approve}
-                        </ConfirmSubmitButton>
-                      </form>
+                          {t.pendingReservations.vehicleUnavailable}
+                        </span>
+                      ) : (
+                        <form action={approveReservation.bind(null, r.id)}>
+                          <ConfirmSubmitButton
+                            confirmMessage={t.pendingReservations.confirmApprove.replace(
+                              "{name}",
+                              requesterName,
+                            )}
+                            className="rounded-sm border border-signal-teal px-3 py-1 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                          >
+                            {dict.common.approve}
+                          </ConfirmSubmitButton>
+                        </form>
+                      )}
                       {/* Rejecting used to be one unguarded click that always stored the
                           same generic reason. Inline input + confirm: the requester gets
                           the manager's actual words, and a misclick is recoverable. */}
