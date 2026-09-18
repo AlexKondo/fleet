@@ -127,12 +127,12 @@ export function MobileNav({
           </Link>
 
           <div className="mt-4 flex items-center justify-between border-t border-line-800 pt-4">
-            <div className="min-w-0">
-              <p className="truncate text-sm text-paper-50">{userName}</p>
+            <Link href="/account" className="min-w-0" title={dict.chrome.accountLink}>
+              <p className="truncate text-sm text-paper-50 hover:text-gwm-accent">{userName}</p>
               <p className="text-xs uppercase tracking-widest text-fog-600">
                 {roleLabels[role] ?? role}
               </p>
-            </div>
+            </Link>
             <form action={signOut}>
               <button
                 type="submit"

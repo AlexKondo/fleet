@@ -110,6 +110,15 @@ const dict: Dictionary = {
     theme: "主题",
     appTitle: "Fleet — 车队管理面板",
     appDescription: "Right Vehicle. Right Trip. Right Time. Ready to Go.",
+    accountLink: "我的账户",
+  },
+  account: {
+    title: "我的账户",
+    description: "修改您的账户密码。",
+    newPasswordLabel: "新密码",
+    confirmNewPasswordLabel: "确认新密码",
+    submit: "保存新密码",
+    success: "密码已成功更新。",
   },
   login: {
     tagline: "Right Vehicle. Right Trip. Ready to Go.",

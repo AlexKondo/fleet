@@ -146,12 +146,16 @@ export async function AppShell({
             </div>
             <div className="hidden items-center gap-4 md:flex">
               <NotificationBell align="right" dict={dict} locale={locale} />
-              <div className="hidden text-right lg:block">
-                <p className="truncate text-sm text-paper-50">{userName}</p>
+              <Link
+                href="/account"
+                className="hidden text-right lg:block"
+                title={dict.chrome.accountLink}
+              >
+                <p className="truncate text-sm text-paper-50 hover:text-gwm-accent">{userName}</p>
                 <p className="text-xs uppercase tracking-widest text-fog-600">
                   {roleLabels[role] ?? role}
                 </p>
-              </div>
+              </Link>
               <form action={signOut}>
                 <button
                   type="submit"

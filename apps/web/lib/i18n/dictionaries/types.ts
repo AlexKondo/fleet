@@ -148,6 +148,17 @@ export type Dictionary = {
     theme: string;
     appTitle: string;
     appDescription: string;
+    /** Title/hover text on the user name block in the header, linking to /account. */
+    accountLink: string;
+  };
+  /** Self-service "change my password" screen, reachable by any role from the header. */
+  account: {
+    title: string;
+    description: string;
+    newPasswordLabel: string;
+    confirmNewPasswordLabel: string;
+    submit: string;
+    success: string;
   };
   login: {
     tagline: string;

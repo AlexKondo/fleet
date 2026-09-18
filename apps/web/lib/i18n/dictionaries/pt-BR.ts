@@ -112,6 +112,15 @@ const dict: Dictionary = {
     theme: "Tema",
     appTitle: "Fleet — Painel de Frota",
     appDescription: "Right Vehicle. Right Trip. Right Time. Ready to Go.",
+    accountLink: "Minha conta",
+  },
+  account: {
+    title: "Minha Conta",
+    description: "Altere a senha da sua conta.",
+    newPasswordLabel: "Nova senha",
+    confirmNewPasswordLabel: "Confirmar nova senha",
+    submit: "Salvar nova senha",
+    success: "Senha atualizada com sucesso.",
   },
   login: {
     tagline: "Right Vehicle. Right Trip. Ready to Go.",
