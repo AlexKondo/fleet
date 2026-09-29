@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import type { Database } from "@fleet/supabase-client";
 import { SAFETY_EQUIPMENT_OPTIONS, type PhotoAngle } from "@/lib/domain/checklist";
 import { PhotoCaptureSection } from "../PhotoCapture";
@@ -36,6 +36,7 @@ export function ReturnForm({
   const [failedPhotoAngles, setFailedPhotoAngles] = useState<PhotoAngle[] | null>(null);
   const [damageEvidenceMissing, setDamageEvidenceMissing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const photoFiles = useRef(new Map<string, File[]>());
 
   const showFuel = energyType === "ICE" || energyType === "HEV" || energyType === "PHEV";
   const showBattery = energyType === "BEV" || energyType === "PHEV";
@@ -45,11 +46,19 @@ export function ReturnForm({
     setFailedPhotoAngles(null);
     setDamageEvidenceMissing(false);
 
+    // Photos are reported by PhotoCaptureSection via onFileChange (photoFiles ref), not
+    // through the form's own native file inputs — see PhotoCapture.tsx for why. Inject
+    // them into the FormData we were handed before reading anything else out of it.
+    for (const [fieldName, files] of photoFiles.current) {
+      formData.delete(fieldName);
+      for (const file of files) formData.append(fieldName, file);
+    }
+
     // BR-013/ADR-004: external damage requires photo evidence — block before even hitting
     // the server when the obvious case (no file picked at all) is checkable client-side.
     if (hasNewDamage) {
-      const damagePhoto = formData.get("photo_damage");
-      if (!(damagePhoto instanceof File) || damagePhoto.size === 0) {
+      const damagePhotos = (photoFiles.current.get("photo_damage") ?? []).filter((f) => f.size > 0);
+      if (damagePhotos.length === 0) {
         setDamageEvidenceMissing(true);
         return;
       }
@@ -224,7 +233,13 @@ export function ReturnForm({
       {/* Changed per explicit product decision: photos are only requested when "Nova
           avaria identificada" is checked, not on every return as fleet-car-saas.txt §10 /
           ADR-004 originally specified — that doc is now stale on this point. */}
-      {hasNewDamage ? <PhotoCaptureSection dict={dict} includeDamageAngle={hasNewDamage} /> : null}
+      {hasNewDamage ? (
+        <PhotoCaptureSection
+          dict={dict}
+          includeDamageAngle={hasNewDamage}
+          onFileChange={(fieldName, files) => photoFiles.current.set(fieldName, files)}
+        />
+      ) : null}
 
       {error ? (
         <p role="alert" className="text-sm text-signal-red">
