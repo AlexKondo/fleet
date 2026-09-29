@@ -104,6 +104,34 @@ body {
   transform-origin: 50% 20%;
 }
 
+/* CNH photo/PDF "uploading" indicator (account/license/LicenseCaptureForm.tsx) — the
+   document icon slides up and out of its slot in a loop while the request to the vision
+   model is in flight, standing in for an actual thumbnail scan animation. The box it sits
+   in is already overflow-hidden, so the icon clips cleanly instead of spilling out. */
+@keyframes document-upload-slide {
+  0% { transform: translateY(140%); opacity: 0; }
+  20% { opacity: 1; }
+  75% { transform: translateY(-30%); opacity: 1; }
+  100% { transform: translateY(-90%); opacity: 0; }
+}
+.animate-document-upload {
+  animation: document-upload-slide 1.3s ease-in-out infinite;
+}
+
+/* Confetti burst when a freshly-read CNH is still within its validity date
+   (account/license/LicenseCaptureForm.tsx) — an expired read still "succeeds" in the
+   sense that it saved, just isn't worth celebrating, so this only ever fires for the
+   fully-valid outcome. */
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(320px) rotate(540deg); opacity: 0; }
+}
+.animate-confetti-piece {
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

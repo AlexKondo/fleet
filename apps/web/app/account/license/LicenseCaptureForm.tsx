@@ -12,6 +12,15 @@ const READ_FIELD_KEYS = ["fullName", "number", "category", "expirationDate"] as 
 
 const initialState: LicenseUploadState = { status: "idle" };
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const CONFETTI_COLORS = ["#0BC5A8", "#3B82F6", "#F59E0B", "#EC4899", "#84CC16"];
+const CONFETTI_PIECES = Array.from({ length: 28 }, (_, i) => ({
+  id: i,
+  left: Math.round((i / 28) * 100 + (Math.random() * 6 - 3)),
+  delay: Math.random() * 0.35,
+  duration: 1.1 + Math.random() * 0.7,
+  rotate: Math.round(Math.random() * 360),
+  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+}));
 
 /** "2033-06-29" -> "29-06-2033" — dd-mm-aaaa reads naturally in Brazilian Portuguese;
  * the model always returns ISO (parseModelJson enforces the format), so this is a
@@ -36,6 +45,7 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   const [error, setError] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +77,15 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   // regardless of where the simulated bar happened to land.
   const readyForChecklist = showProgress || !!state.read;
   const revealedCount = state.read ? READ_FIELD_KEYS.length : Math.min(3, Math.floor(progress / 25));
+
+  useEffect(() => {
+    // Only when the license is actually still valid (per the user's ask) — an expired
+    // read is still a "successful" confirm, just not a celebration-worthy one.
+    if (state.status !== "success") return;
+    setShowConfetti(true);
+    const timeout = setTimeout(() => setShowConfetti(false), 2200);
+    return () => clearTimeout(timeout);
+  }, [state.status]);
 
   useEffect(() => {
     // A PDF blob URL isn't renderable via <img> — the icon fallback covers it instead
@@ -109,7 +128,25 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
+      {showConfetti ? (
+        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden="true">
+          {CONFETTI_PIECES.map((piece) => (
+            <span
+              key={piece.id}
+              className="animate-confetti-piece absolute top-0 h-2 w-2 rounded-[1px]"
+              style={{
+                left: `${piece.left}%`,
+                backgroundColor: piece.color,
+                animationDelay: `${piece.delay}s`,
+                animationDuration: `${piece.duration}s`,
+                transform: `rotate(${piece.rotate}deg)`,
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
+
       <p className="text-sm text-fog-400">{t.description}</p>
 
       <form ref={formRef} action={handleSubmit} className="flex flex-col gap-4">
@@ -124,7 +161,11 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
         ) : null}
         <div className="flex flex-wrap items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-line-800 bg-panel-800">
-            {previewUrl ? (
+            {pending ? (
+              <span className="animate-document-upload text-2xl" aria-hidden="true">
+                📄
+              </span>
+            ) : previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- local blob: preview
               <img src={previewUrl} alt="" className="h-full w-full object-cover" />
             ) : (
