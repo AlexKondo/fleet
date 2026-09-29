@@ -8,13 +8,16 @@ const nextConfig: NextConfig = {
   // leave it as a plain Node require() at runtime instead of bundling it, which is how
   // native addons are supposed to be loaded in a serverless function anyway.
   serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
-  // pdfjs-dist's standard font glyph data (renderPdfPageToPng.ts) is loaded from disk at
-  // runtime via a plain path string, not a static import/require — Next's file-tracing
+  // pdf.js's standard font glyph data (renderPdfPageToPng.ts) is loaded from disk at
+  // runtime via a computed path string, not a static import/require — Next's file-tracing
   // only bundles files it can see referenced statically, so without this the serverless
-  // function ships without them and PDF rendering fails in production even though it
-  // works locally (where the full node_modules tree is just... there).
+  // function ships without them. Points at lib/domain/pdf-standard-fonts (copied into the
+  // repo) rather than node_modules/pdfjs-dist/standard_fonts specifically because the
+  // latter is a pnpm symlink, which made Vercel's packaging step fail outright ("invalid
+  // deployment package... files in symlinked directories") — plain files in the repo
+  // don't have that problem.
   outputFileTracingIncludes: {
-    "app/account/license/**": ["./node_modules/pdfjs-dist/standard_fonts/**"],
+    "app/account/license/**": ["./lib/domain/pdf-standard-fonts/**"],
   },
   images: {
     // Vehicle photos live in Supabase Storage. Without this allow-list `next/image`

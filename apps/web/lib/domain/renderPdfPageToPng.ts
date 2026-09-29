@@ -1,11 +1,15 @@
 import "server-only";
 import path from "node:path";
-import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { createCanvas } from "@napi-rs/canvas";
 
-const require = createRequire(import.meta.url);
-const STANDARD_FONT_DATA_URL = `${path.dirname(require.resolve("pdfjs-dist/package.json"))}/standard_fonts/`;
+// Copied into the repo (not read from node_modules/pdfjs-dist/standard_fonts) on purpose:
+// Vercel's serverless packaging step fails outright ("invalid deployment package... files
+// in symlinked directories") when an `outputFileTracingIncludes` entry points at a path
+// pnpm resolves through a symlink, which node_modules/pdfjs-dist always is in this
+// monorepo. Plain files living inside the app itself have no such symlink to trip over.
+const STANDARD_FONT_DATA_URL = `${path.join(path.dirname(fileURLToPath(import.meta.url)), "pdf-standard-fonts")}/`;
 
 /**
  * Renders a PDF's first page to a PNG buffer, server-side, at a fixed high resolution —
