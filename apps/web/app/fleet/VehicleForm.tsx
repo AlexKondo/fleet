@@ -8,6 +8,51 @@ import { errorLabel } from "@/lib/i18n/errorLabel";
 
 const initialState: FleetActionState = { status: "idle" };
 
+// Same fix as TripRequestForm.tsx's draft (see its own comment for the full story): a
+// duplicate-plate (or any other) error left every other typed field wiped, forcing a
+// full re-fill just to fix the one field that was wrong. sessionStorage survives
+// whatever causes the remount; cleared only once the vehicle is actually created.
+const DRAFT_STORAGE_KEY = "fleet.vehicle-form-draft.v1";
+const DRAFT_MAX_AGE_MS = 30 * 60 * 1000;
+
+interface VehicleFormDraft {
+  savedAt: number;
+  fields: Record<string, string>;
+}
+
+function readDraft(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return {};
+    const draft = JSON.parse(raw) as VehicleFormDraft;
+    if (Date.now() - draft.savedAt > DRAFT_MAX_AGE_MS) return {};
+    return draft.fields ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function writeDraft(formData: FormData): void {
+  try {
+    const fields: Record<string, string> = {};
+    for (const [key, value] of formData.entries()) {
+      if (typeof value === "string") fields[key] = value;
+    }
+    sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ savedAt: Date.now(), fields }));
+  } catch {
+    // sessionStorage unavailable (private browsing, disabled) — just skip persistence.
+  }
+}
+
+function clearDraft(): void {
+  try {
+    sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function VehicleForm({
   categories,
   locations,
@@ -21,12 +66,15 @@ export function VehicleForm({
 }) {
   const [state, formAction, pending] = useActionState(createVehicle, initialState);
   const formRef = useRef<HTMLFormElement>(null);
-  const [categoryId, setCategoryId] = useState("");
+  // Read once, on mount — restores whatever survived a remount after a failed submit.
+  const [draft] = useState(readDraft);
+  const [categoryId, setCategoryId] = useState(draft.categoryId ?? "");
 
   useEffect(() => {
     if (state.status === "success") {
       formRef.current?.reset();
       setCategoryId("");
+      clearDraft();
       onSaved?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,7 +96,12 @@ export function VehicleForm({
   }
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-4">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={(e) => writeDraft(new FormData(e.currentTarget))}
+      className="flex flex-col gap-4"
+    >
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.plateLabel}</span>
@@ -56,6 +109,7 @@ export function VehicleForm({
             type="text"
             name="plate"
             required
+            defaultValue={draft.plate ?? ""}
             placeholder={dict.fleet.vehicleForm.platePlaceholder}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm uppercase text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
@@ -66,6 +120,7 @@ export function VehicleForm({
           <input
             type="text"
             name="name"
+            defaultValue={draft.name ?? ""}
             placeholder={dict.fleet.vehicleForm.namePlaceholder}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
@@ -75,7 +130,7 @@ export function VehicleForm({
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.colorLabel}</span>
           <select
             name="color"
-            defaultValue=""
+            defaultValue={draft.color ?? ""}
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           >
             <option value="">{dict.common.optional}</option>
@@ -126,8 +181,9 @@ export function VehicleForm({
             name="odometerKm"
             required
             min={0}
-            defaultValue={0}
-            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
+            defaultValue={draft.odometerKm ?? ""}
+            placeholder="0"
+            className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
 
@@ -139,6 +195,7 @@ export function VehicleForm({
             type="number"
             name="nextServiceOdometerKm"
             min={0}
+            defaultValue={draft.nextServiceOdometerKm ?? ""}
             placeholder={dict.common.optional}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
@@ -153,7 +210,7 @@ export function VehicleForm({
             name="estimatedRangeKm"
             required
             min={0}
-            defaultValue={400}
+            defaultValue={draft.estimatedRangeKm ?? 400}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
@@ -165,7 +222,7 @@ export function VehicleForm({
             </span>
             <select
               name="fuelLevelPercent"
-              defaultValue={100}
+              defaultValue={draft.fuelLevelPercent ?? 100}
               className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             >
               {FUEL_LEVEL_OPTIONS.map((opt) => (
@@ -187,7 +244,7 @@ export function VehicleForm({
               name="batteryLevelPercent"
               min={0}
               max={100}
-              defaultValue={100}
+              defaultValue={draft.batteryLevelPercent ?? 100}
               className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
             />
           </label>
@@ -200,6 +257,7 @@ export function VehicleForm({
           <select
             name="locationId"
             required
+            defaultValue={draft.locationId ?? ""}
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           >
             <option value="">{dict.fleet.vehicleForm.selectPlaceholder}</option>
