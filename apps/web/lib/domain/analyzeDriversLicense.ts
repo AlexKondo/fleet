@@ -167,7 +167,9 @@ async function callClaude(
       body: JSON.stringify({
         model: "claude-sonnet-5-5",
         max_tokens: 500,
-        temperature: 0,
+        // No `temperature` here — this model rejects it outright (400: "temperature is
+        // deprecated for this model"), which was silently failing every single reading
+        // before this was caught in the runtime logs.
         system: SYSTEM_PROMPT,
         messages: [
           {
