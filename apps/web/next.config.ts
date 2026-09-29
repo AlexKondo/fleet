@@ -2,6 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@fleet/domain", "@fleet/supabase-client"],
+  experimental: {
+    // Server Actions default to a 1MB request body — silently below the 5MB photo/PDF
+    // limit the CNH upload screen actually advertises (account/license/actions.ts), which
+    // is why a real CNH Digital PDF (routinely 1-3MB) failed with a generic "couldn't
+    // analyze" error instead of ever reaching analyzeDriversLicense.ts. Matches that 5MB
+    // limit with headroom for multipart/base64 overhead.
+    serverActions: {
+      bodySizeLimit: "8mb",
+    },
+  },
   // @napi-rs/canvas ships a compiled native .node addon (renderPdfPageToPng.ts) — without
   // this, webpack tries to parse that binary as a JS module and the build fails outright
   // ("Module parse failed: Unexpected character"). Marking it external tells Next to
