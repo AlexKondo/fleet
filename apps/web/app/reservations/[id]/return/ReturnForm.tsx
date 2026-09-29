@@ -221,9 +221,10 @@ export function ReturnForm({
         {tc.dirtyInterior}
       </label>
 
-      {/* The seven standard angles are routine evidence on every return, damage or not
-          (fleet-car-saas.txt §10) — only the extra damage-specific angle is conditional. */}
-      <PhotoCaptureSection dict={dict} includeDamageAngle={hasNewDamage} />
+      {/* Changed per explicit product decision: photos are only requested when "Nova
+          avaria identificada" is checked, not on every return as fleet-car-saas.txt §10 /
+          ADR-004 originally specified — that doc is now stale on this point. */}
+      {hasNewDamage ? <PhotoCaptureSection dict={dict} includeDamageAngle={hasNewDamage} /> : null}
 
       {error ? (
         <p role="alert" className="text-sm text-signal-red">

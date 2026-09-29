@@ -189,9 +189,10 @@ export function PickupForm({
         {tc.dirtyInterior}
       </label>
 
-      {/* The seven standard angles are routine evidence on every pickup, damage or not
-          (fleet-car-saas.txt §10) — only the extra damage-specific angle is conditional. */}
-      <PhotoCaptureSection dict={dict} includeDamageAngle={hasDamage} />
+      {/* Changed per explicit product decision: photos are only requested when "Avaria
+          identificada" is checked, not on every pickup as fleet-car-saas.txt §10 /
+          ADR-004 originally specified — that doc is now stale on this point. */}
+      {hasDamage ? <PhotoCaptureSection dict={dict} includeDamageAngle={hasDamage} /> : null}
 
       {error ? (
         <p role="alert" className="text-sm text-signal-red">
