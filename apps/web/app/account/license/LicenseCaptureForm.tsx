@@ -8,9 +8,18 @@ import { Button } from "../../ui/Button";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
 
 const DONE_STATUSES: LicenseUploadState["status"][] = ["success", "success_expired"];
+const READ_FIELD_KEYS = ["fullName", "number", "category", "expirationDate"] as const;
 
 const initialState: LicenseUploadState = { status: "idle" };
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+/** "2033-06-29" -> "29-06-2033" — dd-mm-aaaa reads naturally in Brazilian Portuguese;
+ * the model always returns ISO (parseModelJson enforces the format), so this is a
+ * display-only conversion, never touching what's actually stored/compared. */
+function formatDateBR(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-");
+  return `${day}-${month}-${year}`;
+}
 
 export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   const t = dict.account.license;
@@ -45,6 +54,15 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
     const timeout = setTimeout(() => setShowProgress(false), 500);
     return () => clearTimeout(timeout);
   }, [pending]);
+
+  // Drives the checklist below: it's visible (blank) from the moment the bar appears, and
+  // each row's check ticks green as the bar crosses its 25%-wide slice — the reveal tracks
+  // the bar itself rather than a fixed per-row delay, so the two visually move together.
+  // Once the real result is back (isDone), every row is revealed regardless of where the
+  // simulated bar happened to land.
+  const readyForChecklist = showProgress || DONE_STATUSES.includes(state.status);
+  const revealedCount =
+    isDone && state.read ? READ_FIELD_KEYS.length : Math.min(3, Math.floor(progress / 25));
 
   useEffect(() => {
     // A PDF blob URL isn't renderable via <img> — the icon fallback covers it instead
@@ -180,43 +198,33 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
           </p>
         ) : null}
 
-        {isDone && state.read ? (
-          <div
-            className="relative flex flex-col gap-2 overflow-hidden rounded-sm border border-line-800 bg-panel-900/60 bg-[length:180px] bg-[position:right_-1.5rem_bottom_-1.5rem] bg-no-repeat p-3"
-            style={{ backgroundImage: "url(/illustrations/drivers-license.png)" }}
-          >
-            {/* A solid scrim between the illustration and the text — the image is
-                otherwise clearly visible but light enough at the corner to not compete
-                with the field values it sits behind. */}
-            <div className="pointer-events-none absolute inset-0 bg-panel-900/70" aria-hidden="true" />
-            <div className="relative z-10 flex flex-col gap-2">
-              {(
-                [
-                  ["fullName", state.read.fullName],
-                  ["number", state.read.number],
-                  ["category", state.read.category],
-                  ["expirationDate", state.read.expirationDate],
-                ] as const
-              ).map(([key, value], index) => (
-                <div
-                  key={key}
-                  className="animate-license-field-reveal flex items-center justify-between gap-3 text-sm"
-                  style={{ animationDelay: `${index * 180}ms` }}
-                >
+        {readyForChecklist ? (
+          <div className="flex flex-col gap-2 rounded-sm border border-line-800 bg-panel-900/60 p-3">
+            {READ_FIELD_KEYS.map((key, index) => {
+              const revealed = index < revealedCount;
+              const rawValue = state.read?.[key];
+              const value = rawValue
+                ? key === "expirationDate"
+                  ? formatDateBR(rawValue)
+                  : rawValue
+                : null;
+              return (
+                <div key={key} className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-fog-400">{t.readFields[key]}</span>
                   <span className="flex items-center gap-2 font-medium text-paper-50">
-                    {value}
+                    {value ?? <span className="text-fog-600">—</span>}
                     <span
-                      className="animate-license-field-reveal flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-signal-teal text-[10px] text-ink-950"
-                      style={{ animationDelay: `${index * 180 + 120}ms` }}
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] transition-colors duration-300 ${
+                        revealed ? "bg-signal-teal text-ink-950" : "bg-panel-800 text-transparent"
+                      }`}
                       aria-hidden="true"
                     >
                       ✓
                     </span>
                   </span>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         ) : null}
 

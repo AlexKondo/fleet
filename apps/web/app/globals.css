@@ -104,17 +104,6 @@ body {
   transform-origin: 50% 20%;
 }
 
-/* CNH field-by-field reveal (account/license/LicenseCaptureForm.tsx) — each read field
-   (name, number, category, expiration) fades/slides in with its own animation-delay, so
-   the checkmarks appear to tick down the list one at a time instead of all at once. */
-@keyframes license-field-reveal {
-  from { opacity: 0; transform: translateX(-6px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-.animate-license-field-reveal {
-  animation: license-field-reveal 0.35s ease-out both;
-}
-
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
