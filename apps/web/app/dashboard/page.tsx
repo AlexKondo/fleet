@@ -10,6 +10,7 @@ import { AppShell } from "../AppShell";
 import { getAttentionLabels, getStatusMeta } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
+import { BlockVehicleForm } from "../BlockVehicleForm";
 import { StatusBadge } from "../ui/StatusBadge";
 import { RevealAction } from "../ui/RevealAction";
 import {
@@ -722,28 +723,16 @@ export default async function DashboardPage({
                           </ConfirmSubmitButton>
                         </form>
                       ) : (
-                        // The reason is what the requesters' block notification shows, so a
-                        // hardcoded "Bloqueado manualmente pelo gestor" told nobody whether
-                        // it was a flat tire or a recall. Typed inline, localized default.
-                        <form
+                        // The reason is what the requesters' block notification shows, so an
+                        // empty one is no longer allowed to fall through to a generic default
+                        // — the button stays disabled until the manager actually types one.
+                        <BlockVehicleForm
                           action={blockVehicle.bind(null, row.id, t.vehicles.blockReasonDefault)}
-                          className="flex flex-col gap-2"
-                        >
-                          <input
-                            type="text"
-                            name="reason"
-                            maxLength={200}
-                            aria-label={t.vehicles.blockReasonLabel}
-                            placeholder={t.vehicles.blockReasonPlaceholder}
-                            className="w-full rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 placeholder:text-fog-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-red"
-                          />
-                          <ConfirmSubmitButton
-                            confirmMessage={t.vehicles.confirmBlock.replace("{plate}", row.plate)}
-                            className="w-full rounded-sm border border-signal-red px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
-                          >
-                            {t.vehicles.block}
-                          </ConfirmSubmitButton>
-                        </form>
+                          confirmMessage={t.vehicles.confirmBlock.replace("{plate}", row.plate)}
+                          reasonLabel={t.vehicles.blockReasonLabel}
+                          reasonPlaceholder={t.vehicles.blockReasonPlaceholder}
+                          blockLabel={t.vehicles.block}
+                        />
                       )}
                     </div>
                   ) : null}
