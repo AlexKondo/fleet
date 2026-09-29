@@ -125,7 +125,7 @@ export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicense
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             text: { format: { type: "json_object" } },
             temperature: 0,
             input: [
@@ -151,7 +151,7 @@ export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicense
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             response_format: { type: "json_object" },
             temperature: 0,
             messages: [
