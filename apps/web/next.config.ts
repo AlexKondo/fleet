@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@fleet/domain", "@fleet/supabase-client"],
+  // @napi-rs/canvas ships a compiled native .node addon (renderPdfPageToPng.ts) — without
+  // this, webpack tries to parse that binary as a JS module and the build fails outright
+  // ("Module parse failed: Unexpected character"). Marking it external tells Next to
+  // leave it as a plain Node require() at runtime instead of bundling it, which is how
+  // native addons are supposed to be loaded in a serverless function anyway.
+  serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
   // pdfjs-dist's standard font glyph data (renderPdfPageToPng.ts) is loaded from disk at
   // runtime via a plain path string, not a static import/require — Next's file-tracing
   // only bundles files it can see referenced statically, so without this the serverless
