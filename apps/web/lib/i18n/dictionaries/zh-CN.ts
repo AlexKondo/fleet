@@ -686,6 +686,8 @@ const dict: Dictionary = {
       tapToCapture: "点击拍摄",
       captured: "OK",
       capture: "拍摄",
+      upload: "上传文件",
+      fileTooLarge: "文件大于5MB——请选择更小的照片。",
       damageHint: "请拍摄上述描述的损坏部位",
       angles: {
         front: "车头",

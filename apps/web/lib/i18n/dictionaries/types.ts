@@ -730,6 +730,8 @@ export type Dictionary = {
       tapToCapture: string;
       captured: string;
       capture: string;
+      upload: string;
+      fileTooLarge: string;
       damageHint: string;
       angles: {
         front: string;

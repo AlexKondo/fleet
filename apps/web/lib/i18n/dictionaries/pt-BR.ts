@@ -707,6 +707,8 @@ const dict: Dictionary = {
       tapToCapture: "Toque para capturar",
       captured: "OK",
       capture: "Capturar",
+      upload: "Enviar arquivo",
+      fileTooLarge: "Arquivo maior que 5MB — escolha uma foto menor.",
       damageHint: "Fotografe a avaria descrita acima",
       angles: {
         front: "Frente",
