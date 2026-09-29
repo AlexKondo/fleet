@@ -66,6 +66,10 @@ export async function inviteUser(
     email,
     password,
     email_confirm: true,
+    // The admin picks this temporary password, not the member — force them to set their
+    // own on first login. Lives in app_metadata (not profiles) so middleware can read it
+    // straight off the already-fetched auth user with zero extra DB round trip.
+    app_metadata: { must_change_password: true },
   });
   if (authError || !authData.user) {
     const alreadyRegistered = /already.*registl?ered|already exists/i.test(authError?.message ?? "");

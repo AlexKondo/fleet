@@ -155,6 +155,7 @@ export type Dictionary = {
   account: {
     title: string;
     description: string;
+    forcedChangeNotice: string;
     newPasswordLabel: string;
     confirmNewPasswordLabel: string;
     submit: string;

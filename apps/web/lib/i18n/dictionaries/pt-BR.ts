@@ -117,6 +117,7 @@ const dict: Dictionary = {
   account: {
     title: "Minha Conta",
     description: "Altere a senha da sua conta.",
+    forcedChangeNotice: "Por segurança, defina uma senha nova antes de continuar. Você não terá acesso ao resto do sistema até salvar uma nova senha.",
     newPasswordLabel: "Nova senha",
     confirmNewPasswordLabel: "Confirmar nova senha",
     submit: "Salvar nova senha",

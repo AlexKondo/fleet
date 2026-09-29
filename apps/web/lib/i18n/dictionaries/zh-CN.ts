@@ -115,6 +115,7 @@ const dict: Dictionary = {
   account: {
     title: "我的账户",
     description: "修改您的账户密码。",
+    forcedChangeNotice: "出于安全考虑，请先设置新密码再继续。在保存新密码之前，您将无法访问系统的其他部分。",
     newPasswordLabel: "新密码",
     confirmNewPasswordLabel: "确认新密码",
     submit: "保存新密码",

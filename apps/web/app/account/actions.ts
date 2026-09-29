@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getDictionary } from "@/lib/i18n/getLocale";
 
@@ -43,6 +44,13 @@ export async function changePassword(
   if (error) {
     return { status: "error", error: dict.errors.auth.passwordUpdateFailed };
   }
+
+  // Clears the forced-change flag InviteUserForm sets (settings/users/actions.ts). The
+  // user's own session can update auth.users' password but not its app_metadata, hence
+  // the admin client — this only ever clears the acting user's own flag, never sets it.
+  await createSupabaseAdminClient().auth.admin.updateUserById(user.id, {
+    app_metadata: { must_change_password: false },
+  });
 
   return { status: "success" };
 }

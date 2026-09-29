@@ -78,6 +78,17 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     return NextResponse.redirect(loginUrl);
   }
 
+  // Admin-created accounts (InviteUserForm) start with a temporary password the admin
+  // chose, not the member — every route except /account itself redirects there until
+  // they set their own. Read off the JWT's app_metadata (already fetched above by
+  // getUser(), which the client can't forge) instead of a second DB round trip to
+  // profiles for every request.
+  if (user.app_metadata?.must_change_password && !pathname.startsWith("/account")) {
+    const accountUrl = new URL("/account", request.url);
+    accountUrl.searchParams.set("forcePasswordChange", "1");
+    return NextResponse.redirect(accountUrl);
+  }
+
   responseHeaders.set(VERIFIED_USER_ID_HEADER, user.id);
   if (user.email) {
     responseHeaders.set(VERIFIED_USER_EMAIL_HEADER, user.email);
