@@ -54,6 +54,7 @@ export function InviteUserForm({ dict, onSaved }: { dict: Dictionary; onSaved?: 
             name="password"
             required
             minLength={8}
+            defaultValue="123456@fleet"
             placeholder={t.passwordPlaceholder}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
