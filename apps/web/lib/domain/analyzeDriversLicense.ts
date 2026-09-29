@@ -106,12 +106,14 @@ function parseModelJson(content: string):
  * rendering PDFs to a fixed high-resolution PNG ourselves, so the model itself (not just
  * the image pipeline) was switched.
  *
- * A PDF (CNH Digital's export format) is still converted to a PNG ourselves first
- * (renderPdfPageToPng.ts, high resolution, scale 3) and sent through the same image path
- * as a photo upload, for the same reason as before: full control over resolution instead
- * of trusting a provider's internal rasterization. If that local render fails, the raw
- * PDF is sent to Claude directly (Claude has native PDF input support), rather than
- * hard-failing the upload.
+ * A PDF (CNH Digital's export format) is sent to Claude directly first — Claude has
+ * native PDF input support, and unlike OpenAI (whose internal PDF rasterization had no
+ * exposed resolution control and was the likely cause of repeated misreads on a real
+ * PDF), that's untested territory worth trying plain, since the equivalent photo path
+ * already reads correctly. Only if that first attempt comes back unreadable/erroring do
+ * we fall back to the same fixed-resolution local render (renderPdfPageToPng.ts) used
+ * before, sent as a regular image — the more complex path, kept as a safety net rather
+ * than the default.
  */
 export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicenseResult> {
   const apiKey = process.env.API_CLAUDE;
@@ -121,6 +123,13 @@ export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicense
 
   if (photo.type === "application/pdf") {
     const pdfBytes = new Uint8Array(await photo.arrayBuffer());
+
+    const direct = await callClaude(apiKey, {
+      type: "document",
+      source: { type: "base64", media_type: "application/pdf", data: Buffer.from(pdfBytes).toString("base64") },
+    });
+    if (direct.status === "ok") return direct;
+
     try {
       const png = await renderPdfFirstPageToPng(pdfBytes);
       return callClaude(apiKey, {
@@ -128,14 +137,8 @@ export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicense
         source: { type: "base64", media_type: "image/png", data: png.toString("base64") },
       });
     } catch (err) {
-      // Not every PDF renders cleanly with our own pipeline (font-embedding edge cases
-      // hit in testing) — fall back to handing Claude the raw PDF (native document
-      // support) rather than hard-failing the whole upload over it.
-      console.error("analyzeDriversLicense: local PDF render failed, falling back:", err);
-      return callClaude(apiKey, {
-        type: "document",
-        source: { type: "base64", media_type: "application/pdf", data: Buffer.from(pdfBytes).toString("base64") },
-      });
+      console.error("analyzeDriversLicense: local PDF render fallback failed too:", err);
+      return direct;
     }
   }
 
