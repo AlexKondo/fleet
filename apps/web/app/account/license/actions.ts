@@ -8,7 +8,7 @@ import { analyzeDriversLicense } from "@/lib/domain/analyzeDriversLicense";
 import { getDictionary } from "@/lib/i18n/getLocale";
 
 export interface LicenseUploadState {
-  status: "idle" | "success" | "unreadable" | "error";
+  status: "idle" | "success" | "success_expired" | "unreadable" | "error";
   error?: string;
 }
 
@@ -91,5 +91,5 @@ export async function submitLicensePhoto(
 
   revalidatePath("/account/license");
   revalidatePath("/dashboard");
-  return { status: "success" };
+  return { status: isStillValid ? "success" : "success_expired" };
 }

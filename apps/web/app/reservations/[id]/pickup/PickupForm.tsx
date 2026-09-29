@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import type { Database } from "@fleet/supabase-client";
-import { SAFETY_EQUIPMENT_OPTIONS, type PhotoAngle } from "@/lib/domain/checklist";
+import type { PhotoAngle } from "@/lib/domain/checklist";
 import { PhotoCaptureSection } from "../PhotoCapture";
 import { submitPickup } from "./actions";
 import type { Dictionary } from "../../../../lib/i18n/dictionaries";
@@ -14,11 +14,13 @@ export function PickupForm({
   reservationId,
   energyType,
   currentOdometer,
+  equipmentItems,
   dict,
 }: {
   reservationId: string;
   energyType: EnergyType;
   currentOdometer: number;
+  equipmentItems: { id: string; name: string }[];
   dict: Dictionary;
 }) {
   const t = dict.reservations.pickup;
@@ -59,9 +61,11 @@ export function PickupForm({
 
     // Checkboxes ask which equipment is PRESENT (matches how a person actually checks a
     // trunk); record_pickup still stores what's missing, so invert here at the boundary.
-    const missing = SAFETY_EQUIPMENT_OPTIONS.filter(
-      (opt) => formData.get(`equip_${opt.value}`) !== "on",
-    ).map((opt) => opt.value);
+    // missing_safety_equipment is a plain text[] with no FK (0001_init_schema.sql), so the
+    // item's own name is stored directly rather than a ref back to safety_equipment_items.
+    const missing = equipmentItems
+      .filter((item) => formData.get(`equip_${item.id}`) !== "on")
+      .map((item) => item.name);
 
     startTransition(async () => {
       // formData carries both the typed fields read below and the photo_<angle> file
@@ -158,15 +162,15 @@ export function PickupForm({
         <legend className="mb-1 text-xs font-medium uppercase tracking-widest text-fog-400">
           {tc.safetyEquipmentLegend}
         </legend>
-        {SAFETY_EQUIPMENT_OPTIONS.map((opt) => (
-          <label key={opt.value} className="flex items-center gap-2 text-sm text-fog-400">
+        {equipmentItems.map((item) => (
+          <label key={item.id} className="flex items-center gap-2 text-sm text-fog-400">
             <input
               type="checkbox"
-              name={`equip_${opt.value}`}
+              name={`equip_${item.id}`}
               defaultChecked
               className="h-4 w-4"
             />
-            {tc.equipment[opt.value]}
+            {item.name}
           </label>
         ))}
       </fieldset>

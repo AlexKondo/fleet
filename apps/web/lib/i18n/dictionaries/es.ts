@@ -606,6 +606,14 @@ const dict: Dictionary = {
   },
   settings: {
     title: "Configuración",
+    safetyEquipment: {
+      heading: "Ítems del Checklist (Equipamiento de Seguridad)",
+      description:
+        "Ítems verificados en el retiro y la devolución del vehículo. Los predeterminados cubren el kit común de a bordo — agrega más si tu flota lo requiere.",
+      nameLabel: "Nombre del ítem",
+      namePlaceholder: "ej.: Extintor de Incendios",
+      addButton: "+ Agregar Ítem",
+    },
     form: {
       range: {
         heading: "Autonomía y preparación de vehículos",
@@ -777,11 +785,6 @@ const dict: Dictionary = {
       fuelLabel: "Combustible (%)",
       batteryLabel: "Batería (%)",
       safetyEquipmentLegend: "Equipamiento obligatorio presente",
-      equipment: {
-        triangulo: "Triángulo",
-        macaco: "Gato",
-        chave_de_roda: "Llave de ruedas",
-      },
       damageNotesPlaceholder: "Describe el daño",
       dirtyExterior: "Suciedad exterior",
       dirtyInterior: "Suciedad interior",

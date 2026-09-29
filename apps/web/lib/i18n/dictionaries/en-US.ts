@@ -606,6 +606,14 @@ const dict: Dictionary = {
   },
   settings: {
     title: "Settings",
+    safetyEquipment: {
+      heading: "Checklist Items (Safety Equipment)",
+      description:
+        "Items checked at pickup and return. The defaults cover the common trunk kit — add more if your fleet needs them.",
+      nameLabel: "Item name",
+      namePlaceholder: "e.g. Fire Extinguisher",
+      addButton: "+ Add Item",
+    },
     form: {
       range: {
         heading: "Range & Vehicle Readiness",
@@ -777,11 +785,6 @@ const dict: Dictionary = {
       fuelLabel: "Fuel (%)",
       batteryLabel: "Battery (%)",
       safetyEquipmentLegend: "Required equipment present",
-      equipment: {
-        triangulo: "Warning triangle",
-        macaco: "Jack",
-        chave_de_roda: "Lug wrench",
-      },
       damageNotesPlaceholder: "Describe the damage",
       dirtyExterior: "Dirty exterior",
       dirtyInterior: "Dirty interior",

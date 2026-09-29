@@ -19,7 +19,7 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
   // on nothing above it, so it rides along here instead of costing its own round trip
   // after every authorization check has already passed.
   const [{ data: profile }, { data: reservation }, { data: locations }] = await Promise.all([
-    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase.from("profiles").select("role, organization_id").eq("id", user.id).single(),
     supabase
       .from("reservations")
       .select(
@@ -59,6 +59,12 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
   const energyType = vehicle.category?.energy_type ?? "ICE";
   const showElectricRange = energyType === "BEV" || energyType === "PHEV";
 
+  const { data: equipmentItems } = await supabase
+    .from("safety_equipment_items")
+    .select("id, name")
+    .eq("organization_id", profile?.organization_id ?? "")
+    .order("created_at");
+
   return (
     <main className="min-h-dvh px-6 py-8">
       <div className="mx-auto max-w-xl">
@@ -90,6 +96,7 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
             currentOdometer={vehicle.odometer_km}
             locations={locations ?? []}
             homeLocationId={vehicle.home_location_id}
+            equipmentItems={equipmentItems ?? []}
             dict={dict}
             locale={locale}
           />

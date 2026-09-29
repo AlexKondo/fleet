@@ -635,6 +635,13 @@ export type Dictionary = {
   /** Organization settings screen (app/settings). */
   settings: {
     title: string;
+    safetyEquipment: {
+      heading: string;
+      description: string;
+      nameLabel: string;
+      namePlaceholder: string;
+      addButton: string;
+    };
     form: {
       range: {
         heading: string;
@@ -796,11 +803,6 @@ export type Dictionary = {
       fuelLabel: string;
       batteryLabel: string;
       safetyEquipmentLegend: string;
-      equipment: {
-        triangulo: string;
-        macaco: string;
-        chave_de_roda: string;
-      };
       damageNotesPlaceholder: string;
       dirtyExterior: string;
       dirtyInterior: string;

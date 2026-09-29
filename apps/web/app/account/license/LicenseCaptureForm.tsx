@@ -1,17 +1,22 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { submitLicensePhoto, type LicenseUploadState } from "./actions";
 import { CameraCaptureModal } from "../../reservations/[id]/CameraCaptureModal";
 import { Button } from "../../ui/Button";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
+
+const DONE_STATUSES: LicenseUploadState["status"][] = ["success", "success_expired"];
 
 const initialState: LicenseUploadState = { status: "idle" };
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   const t = dict.account.license;
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(submitLicensePhoto, initialState);
+  const isDone = DONE_STATUSES.includes(state.status);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +105,16 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
           />
         </div>
 
+        {pending ? (
+          <div role="status" className="flex items-center gap-3 text-sm text-fog-400">
+            <span
+              className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-line-700 border-t-gwm-accent"
+              aria-hidden="true"
+            />
+            {t.analyzing}
+          </div>
+        ) : null}
+
         {error ? (
           <p role="alert" className="text-sm text-signal-red">
             {error}
@@ -125,9 +140,21 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
           </p>
         ) : null}
 
-        <Button type="submit" disabled={pending || !file} className="self-start">
-          {pending ? t.analyzing : state.status === "unreadable" ? t.unreadableRetry : t.submit}
-        </Button>
+        {state.status === "success_expired" ? (
+          <p role="alert" className="text-sm text-signal-red">
+            {t.successExpired}
+          </p>
+        ) : null}
+
+        {isDone ? (
+          <Button type="button" onClick={() => router.push("/dashboard")} className="self-start">
+            {dict.common.close}
+          </Button>
+        ) : (
+          <Button type="submit" disabled={pending || !file} className="self-start">
+            {pending ? t.analyzing : state.status === "unreadable" ? t.unreadableRetry : t.submit}
+          </Button>
+        )}
       </form>
 
       {showCamera ? (

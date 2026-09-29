@@ -121,3 +121,47 @@ export async function saveOrganizationSettings(
   revalidatePath("/settings");
   return { status: "success" };
 }
+
+export interface EquipmentActionState {
+  status: "idle" | "success" | "error";
+  error?: string;
+}
+
+/** RLS ("fleet managers manage safety equipment items", 0041_safety_equipment_items.sql)
+ * already restricts insert/delete to fleet_manager/administrator on their own
+ * organization — the regular authenticated client is enough, no admin client needed. */
+export async function addSafetyEquipmentItem(
+  _prevState: EquipmentActionState,
+  formData: FormData,
+): Promise<EquipmentActionState> {
+  const supabase = await createSupabaseServerClient();
+  const user = await getCurrentUser(supabase);
+  if (!user) return { status: "error", error: "not_authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", user.id)
+    .single();
+  if (!profile) return { status: "error", error: "not_authenticated" };
+
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { status: "error", error: "invalid_values" };
+
+  const { error } = await supabase
+    .from("safety_equipment_items")
+    .insert({ organization_id: profile.organization_id, name });
+  if (error) return { status: "error", error: error.message };
+
+  revalidatePath("/settings");
+  return { status: "success" };
+}
+
+export async function removeSafetyEquipmentItem(itemId: string): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const user = await getCurrentUser(supabase);
+  if (!user) return;
+
+  await supabase.from("safety_equipment_items").delete().eq("id", itemId);
+  revalidatePath("/settings");
+}

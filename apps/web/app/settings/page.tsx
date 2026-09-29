@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { AppShell } from "../AppShell";
 import { SettingsForm } from "./SettingsForm";
+import { SafetyEquipmentSection } from "./SafetyEquipmentSection";
 import { getDictionary } from "../../lib/i18n/getLocale";
 
 /**
@@ -33,13 +34,20 @@ export default async function SettingsPage() {
     redirect("/dashboard");
   }
 
-  const { data: settings } = await supabase
-    .from("organization_settings")
-    .select(
-      "range_safety_buffer_percent, min_charge_hours_bev, min_refuel_hours_ice_or_phev, min_cleaning_hours, carpool_departure_tolerance_minutes, carpool_return_tolerance_minutes, maintenance_due_soon_days, traffic_restriction_enabled, booking_mode, early_pickup_grace_minutes",
-    )
-    .eq("organization_id", profile.organization_id)
-    .single();
+  const [{ data: settings }, { data: equipmentItems }] = await Promise.all([
+    supabase
+      .from("organization_settings")
+      .select(
+        "range_safety_buffer_percent, min_charge_hours_bev, min_refuel_hours_ice_or_phev, min_cleaning_hours, carpool_departure_tolerance_minutes, carpool_return_tolerance_minutes, maintenance_due_soon_days, traffic_restriction_enabled, booking_mode, early_pickup_grace_minutes",
+      )
+      .eq("organization_id", profile.organization_id)
+      .single(),
+    supabase
+      .from("safety_equipment_items")
+      .select("id, name")
+      .eq("organization_id", profile.organization_id)
+      .order("created_at"),
+  ]);
 
   return (
     <AppShell
@@ -68,6 +76,7 @@ export default async function SettingsPage() {
             earlyPickupGraceMinutes: settings?.early_pickup_grace_minutes ?? 15,
           }}
         />
+        <SafetyEquipmentSection dict={dict} items={equipmentItems ?? []} />
       </section>
     </AppShell>
   );

@@ -588,6 +588,13 @@ const dict: Dictionary = {
   },
   settings: {
     title: "设置",
+    safetyEquipment: {
+      heading: "检查清单项目（安全装备）",
+      description: "取车和还车时检查的项目。默认项目涵盖常见的随车工具——如有需要可以添加更多。",
+      nameLabel: "项目名称",
+      namePlaceholder: "例如：灭火器",
+      addButton: "+ 添加项目",
+    },
     form: {
       range: {
         heading: "续航与车辆准备",
@@ -752,11 +759,6 @@ const dict: Dictionary = {
       fuelLabel: "燃油（%）",
       batteryLabel: "电量（%）",
       safetyEquipmentLegend: "随车必备装备齐全",
-      equipment: {
-        triangulo: "三角警示牌",
-        macaco: "千斤顶",
-        chave_de_roda: "轮胎扳手",
-      },
       damageNotesPlaceholder: "描述损坏情况",
       dirtyExterior: "车外脏污",
       dirtyInterior: "车内脏污",
