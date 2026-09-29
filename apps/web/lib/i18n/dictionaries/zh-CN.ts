@@ -119,6 +119,7 @@ const dict: Dictionary = {
       signOut: "退出登录",
     },
     licensePendingNotice: "尚未上传驾驶证",
+    licenseGateNotice: "请先上传您的驾驶证照片（或 PDF）。在此之前您将无法使用系统的其他功能。",
   },
   account: {
     title: "我的账户",

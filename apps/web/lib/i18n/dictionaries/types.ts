@@ -159,6 +159,7 @@ export type Dictionary = {
       signOut: string;
     };
     licensePendingNotice: string;
+    licenseGateNotice: string;
   };
   /** Self-service "change my password" screen, reachable by any role from the header. */
   account: {

@@ -121,6 +121,7 @@ const dict: Dictionary = {
       signOut: "Sign out",
     },
     licensePendingNotice: "Driver's license not uploaded",
+    licenseGateNotice: "Before continuing, upload a photo (or PDF) of your driver's license. You won't have access to the rest of the system until you do.",
   },
   account: {
     title: "My Account",

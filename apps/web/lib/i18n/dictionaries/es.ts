@@ -121,6 +121,7 @@ const dict: Dictionary = {
       signOut: "Cerrar sesión",
     },
     licensePendingNotice: "Falta subir la licencia de conducir",
+    licenseGateNotice: "Antes de continuar, sube una foto (o PDF) de tu licencia de conducir. No tendrás acceso al resto del sistema hasta hacerlo.",
   },
   account: {
     title: "Mi Cuenta",

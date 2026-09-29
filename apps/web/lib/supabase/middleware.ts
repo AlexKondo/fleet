@@ -89,6 +89,25 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     return NextResponse.redirect(accountUrl);
   }
 
+  // Driver's license gate: a driver who hasn't uploaded their CNH yet must not be able to
+  // reach any other screen just by typing a URL — AppShell hiding the nav links isn't
+  // enough on its own, since the routes themselves were still reachable directly (the
+  // gap the user found: clicking a link the sidebar doesn't even show). Checked here,
+  // same place/pattern as the must_change_password gate above, so it can't be bypassed by
+  // navigating straight to a route AppShell never rendered a link for.
+  // "security" is exempt — gate staff record vehicle movements, they don't drive.
+  if (!pathname.startsWith("/account/license")) {
+    const { data: ownProfile } = await supabase
+      .from("profiles")
+      .select("drivers_license_number, role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (ownProfile && ownProfile.role !== "security" && !ownProfile.drivers_license_number) {
+      const licenseUrl = new URL("/account/license", request.url);
+      return NextResponse.redirect(licenseUrl);
+    }
+  }
+
   responseHeaders.set(VERIFIED_USER_ID_HEADER, user.id);
   if (user.email) {
     responseHeaders.set(VERIFIED_USER_EMAIL_HEADER, user.email);

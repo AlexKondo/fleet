@@ -121,6 +121,7 @@ const dict: Dictionary = {
       signOut: "Sair",
     },
     licensePendingNotice: "Falta de upload da CNH",
+    licenseGateNotice: "Antes de continuar, envie uma foto (ou PDF) da sua CNH. Você não terá acesso ao resto do sistema até fazer esse upload.",
   },
   account: {
     title: "Minha Conta",

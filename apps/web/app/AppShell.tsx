@@ -80,6 +80,13 @@ export async function AppShell({
   // on — including /dashboard — without each page having to opt in.
   const isSecurity = role === "security";
 
+  // The actual navigation block lives in middleware.ts (redirects any other route to
+  // /account/license before it ever renders) — this only decides what the one page that
+  // survives that redirect looks like. Hiding the sidebar/menus here as well, instead of
+  // just relying on there being nothing else to click through to, is what the user asked
+  // for directly: no nav, no user menu, nothing but the upload screen until it's done.
+  const licenseGateActive = licenseMissing && !isSecurity;
+
   const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
     { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: true },
     { key: "trips", href: "/trips", label: dict.nav.trips, icon: TripsIcon, visible: true },
@@ -102,54 +109,58 @@ export async function AppShell({
     <div className="flex min-h-dvh flex-col md:flex-row">
       <InactivityLogout />
       <SessionBackupSync />
-      <MobileNav
-        items={visibleItems.map(({ key, href, label }) => ({ key, href, label }))}
-        active={active}
-        orgName={orgName}
-        userName={userName}
-        role={role}
-        dict={dict}
-        locale={locale}
-      />
-      <aside className="hidden shrink-0 flex-col border-line-800 bg-panel-900/40 px-4 py-4 md:flex md:w-60 md:border-r md:py-5">
-        <div className="px-1 md:mb-6">
-          <p className="font-display text-xl font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-gwm-accent">.</span>
-          </p>
-          <p className="mt-0.5 max-w-[10rem] truncate text-xs uppercase tracking-widest text-fog-600">
-            {orgName}
-          </p>
-        </div>
+      {licenseGateActive ? null : (
+        <MobileNav
+          items={visibleItems.map(({ key, href, label }) => ({ key, href, label }))}
+          active={active}
+          orgName={orgName}
+          userName={userName}
+          role={role}
+          dict={dict}
+          locale={locale}
+        />
+      )}
+      {licenseGateActive ? null : (
+        <aside className="hidden shrink-0 flex-col border-line-800 bg-panel-900/40 px-4 py-4 md:flex md:w-60 md:border-r md:py-5">
+          <div className="px-1 md:mb-6">
+            <p className="font-display text-xl font-extrabold uppercase tracking-tight text-paper-50">
+              Fleet<span className="text-gwm-accent">.</span>
+            </p>
+            <p className="mt-0.5 max-w-[10rem] truncate text-xs uppercase tracking-widest text-fog-600">
+              {orgName}
+            </p>
+          </div>
 
-        <Link
-          href="/trips/new"
-          className="mb-5 flex items-center justify-center gap-2 rounded-sm bg-gwm-accent px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
-        >
-          {dict.chrome.requestTrip}
-        </Link>
+          <Link
+            href="/trips/new"
+            className="mb-5 flex items-center justify-center gap-2 rounded-sm bg-gwm-accent px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
+          >
+            {dict.chrome.requestTrip}
+          </Link>
 
-        <nav className="flex flex-1 flex-col gap-1">
-          {visibleItems.map((item) => {
-            const isActive = item.key === active;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.key}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors ${
-                  isActive
-                    ? "bg-gwm-accent/10 text-gwm-accent"
-                    : "text-fog-400 hover:bg-panel-800 hover:text-paper-50"
-                }`}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
+          <nav className="flex flex-1 flex-col gap-1">
+            {visibleItems.map((item) => {
+              const isActive = item.key === active;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors ${
+                    isActive
+                      ? "bg-gwm-accent/10 text-gwm-accent"
+                      : "text-fog-400 hover:bg-panel-800 hover:text-paper-50"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
+      )}
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex flex-wrap items-center justify-between gap-3 border-y border-line-800 px-6 py-4">
@@ -157,14 +168,18 @@ export async function AppShell({
             {title}
           </p>
           <div className="flex items-center gap-4">
-            {headerActions}
+            {licenseGateActive ? null : headerActions}
             <div className="flex items-center gap-3">
               <LanguageToggle locale={locale} dict={dict} />
               <ThemeToggle dict={dict} />
             </div>
             <div className="hidden items-center gap-4 md:flex">
-              <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
-              <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} dict={dict} />
+              {licenseGateActive ? null : (
+                <>
+                  <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
+                  <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} dict={dict} />
+                </>
+              )}
               <form action={signOut}>
                 <button
                   type="submit"
@@ -177,6 +192,14 @@ export async function AppShell({
             </div>
           </div>
         </header>
+        {licenseGateActive ? (
+          <p
+            role="alert"
+            className="mx-6 mt-4 rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 px-4 py-3 text-sm text-gwm-accent"
+          >
+            {dict.chrome.licenseGateNotice}
+          </p>
+        ) : null}
         <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
