@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import type { Database } from "@fleet/supabase-client";
 import type { PhotoAngle } from "@/lib/domain/checklist";
+import { FUEL_LEVEL_OPTIONS } from "@/lib/domain/vehicleFieldOptions";
 import { PhotoCaptureSection } from "../PhotoCapture";
 import { submitPickup } from "./actions";
 import type { Dictionary } from "../../../../lib/i18n/dictionaries";
@@ -131,14 +132,21 @@ export function PickupForm({
             <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
               {tc.fuelLabel}
             </span>
-            <input
-              type="number"
+            <select
               name="fuelLevelPercent"
-              min={0}
-              max={100}
               required
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
+              defaultValue=""
+              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
+            >
+              <option value="" disabled>
+                {dict.fleet.vehicleForm.selectPlaceholder}
+              </option>
+              {FUEL_LEVEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {dict.fleet.vehicleForm.fuelLevels[`${opt.value}`]}
+                </option>
+              ))}
+            </select>
           </label>
         ) : null}
         {showBattery ? (
