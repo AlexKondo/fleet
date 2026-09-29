@@ -181,33 +181,42 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
         ) : null}
 
         {isDone && state.read ? (
-          <div className="flex flex-col gap-2 rounded-sm border border-line-800 bg-panel-900/60 p-3">
-            {(
-              [
-                ["fullName", state.read.fullName],
-                ["number", state.read.number],
-                ["category", state.read.category],
-                ["expirationDate", state.read.expirationDate],
-              ] as const
-            ).map(([key, value], index) => (
-              <div
-                key={key}
-                className="animate-license-field-reveal flex items-center justify-between gap-3 text-sm"
-                style={{ animationDelay: `${index * 180}ms` }}
-              >
-                <span className="text-fog-400">{t.readFields[key]}</span>
-                <span className="flex items-center gap-2 font-medium text-paper-50">
-                  {value}
-                  <span
-                    className="animate-license-field-reveal flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-signal-teal text-[10px] text-ink-950"
-                    style={{ animationDelay: `${index * 180 + 120}ms` }}
-                    aria-hidden="true"
-                  >
-                    ✓
+          <div
+            className="relative flex flex-col gap-2 overflow-hidden rounded-sm border border-line-800 bg-panel-900/60 bg-[length:180px] bg-[position:right_-1.5rem_bottom_-1.5rem] bg-no-repeat p-3"
+            style={{ backgroundImage: "url(/illustrations/drivers-license.png)" }}
+          >
+            {/* A solid scrim between the illustration and the text — the image is
+                otherwise clearly visible but light enough at the corner to not compete
+                with the field values it sits behind. */}
+            <div className="pointer-events-none absolute inset-0 bg-panel-900/70" aria-hidden="true" />
+            <div className="relative z-10 flex flex-col gap-2">
+              {(
+                [
+                  ["fullName", state.read.fullName],
+                  ["number", state.read.number],
+                  ["category", state.read.category],
+                  ["expirationDate", state.read.expirationDate],
+                ] as const
+              ).map(([key, value], index) => (
+                <div
+                  key={key}
+                  className="animate-license-field-reveal flex items-center justify-between gap-3 text-sm"
+                  style={{ animationDelay: `${index * 180}ms` }}
+                >
+                  <span className="text-fog-400">{t.readFields[key]}</span>
+                  <span className="flex items-center gap-2 font-medium text-paper-50">
+                    {value}
+                    <span
+                      className="animate-license-field-reveal flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-signal-teal text-[10px] text-ink-950"
+                      style={{ animationDelay: `${index * 180 + 120}ms` }}
+                      aria-hidden="true"
+                    >
+                      ✓
+                    </span>
                   </span>
-                </span>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         ) : null}
 
