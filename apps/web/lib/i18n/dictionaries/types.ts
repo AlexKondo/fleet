@@ -650,6 +650,7 @@ export type Dictionary = {
     columns: {
       member: string;
       role: string;
+      authorized: string;
       license: string;
       action: string;
     };
@@ -681,6 +682,7 @@ export type Dictionary = {
     row: {
       you: string;
       savingShort: string;
+      autoSaved: string;
       driverAuthorized: string;
       licenseNumberPlaceholder: string;
       licenseCategoryPlaceholder: string;

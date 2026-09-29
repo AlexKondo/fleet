@@ -630,6 +630,7 @@ const dict: Dictionary = {
     columns: {
       member: "Membro",
       role: "Função",
+      authorized: "Autorizado",
       license: "CNH",
       action: "Ação",
     },
@@ -659,6 +660,7 @@ const dict: Dictionary = {
     row: {
       you: "Você",
       savingShort: "…",
+      autoSaved: "Salvo automaticamente",
       driverAuthorized: "Autorizado a dirigir",
       licenseNumberPlaceholder: "Nº CNH",
       licenseCategoryPlaceholder: "Cat.",

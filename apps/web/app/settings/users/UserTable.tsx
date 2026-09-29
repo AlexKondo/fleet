@@ -57,6 +57,7 @@ export function UserTable({
             <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
               <th className="px-4 py-3 font-medium">{dict.team.columns.member}</th>
               <th className="px-4 py-3 font-medium">{dict.team.columns.role}</th>
+              <th className="px-4 py-3 font-medium">{dict.team.columns.authorized}</th>
               <th className="px-4 py-3 font-medium">{dict.team.columns.license}</th>
               <th className="px-4 py-3 font-medium text-right">{dict.team.columns.action}</th>
             </tr>
@@ -66,7 +67,7 @@ export function UserTable({
               filtered.map((m) => m.node)
             ) : (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-sm text-fog-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-sm text-fog-400">
                   {dict.team.search.noMatches}
                 </td>
               </tr>

@@ -611,6 +611,7 @@ const dict: Dictionary = {
     columns: {
       member: "成员",
       role: "角色",
+      authorized: "已授权",
       license: "驾照",
       action: "操作",
     },
@@ -639,6 +640,7 @@ const dict: Dictionary = {
     row: {
       you: "您",
       savingShort: "…",
+      autoSaved: "已自动保存",
       driverAuthorized: "允许驾驶",
       licenseNumberPlaceholder: "驾照号",
       licenseCategoryPlaceholder: "准驾类型",
