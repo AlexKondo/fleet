@@ -720,7 +720,6 @@ const dict: Dictionary = {
       success: "Usuario creado.",
     },
     row: {
-      you: "Tú",
       savingShort: "…",
       autoSaved: "Guardado automáticamente",
       driverAuthorized: "Autorizado a conducir",

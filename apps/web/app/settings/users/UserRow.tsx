@@ -66,9 +66,6 @@ export function UserRow({
       <td className="min-w-0 px-4 py-3">
         <p className="truncate text-sm text-paper-50">{member.full_name}</p>
         <p className="truncate text-xs text-fog-400">{member.email}</p>
-        {isSelf ? (
-          <span className="text-xs uppercase tracking-widest text-fog-600">{t.you}</span>
-        ) : null}
       </td>
 
       <td className="px-4 py-3">

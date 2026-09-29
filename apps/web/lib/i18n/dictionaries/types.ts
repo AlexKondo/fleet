@@ -737,7 +737,6 @@ export type Dictionary = {
       success: string;
     };
     row: {
-      you: string;
       savingShort: string;
       autoSaved: string;
       driverAuthorized: string;

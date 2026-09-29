@@ -695,7 +695,6 @@ const dict: Dictionary = {
       success: "用户已创建。",
     },
     row: {
-      you: "您",
       savingShort: "…",
       autoSaved: "已自动保存",
       driverAuthorized: "允许驾驶",
