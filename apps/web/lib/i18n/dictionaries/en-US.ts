@@ -147,6 +147,7 @@ const dict: Dictionary = {
       unreadableRetry: "Take another photo",
       unreadableGiveUp:
         "If it still doesn't work after a few tries, ask your Fleet Manager or Administrator to authorize you manually in Settings → Team.",
+      reviewPrompt: "Check the data below before confirming.",
       successValid: "License read and validated — you're authorized to pick up vehicles.",
       successExpired:
         "License read successfully, but the printed expiration date has passed. Ask your Fleet Manager or Administrator to review it in Settings → Team.",

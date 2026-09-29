@@ -147,6 +147,7 @@ const dict: Dictionary = {
       unreadableRetry: "Tirar outra foto",
       unreadableGiveUp:
         "Se não conseguir depois de algumas tentativas, peça ao Gestor de Frota ou Administrador para liberar manualmente em Configurações → Equipe.",
+      reviewPrompt: "Confira os dados abaixo antes de confirmar.",
       successValid:
         "CNH lida e validada com sucesso — você já está liberado para retirar veículos.",
       successExpired:

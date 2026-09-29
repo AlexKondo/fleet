@@ -26,6 +26,11 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(submitLicensePhoto, initialState);
   const isDone = DONE_STATUSES.includes(state.status);
+  // "analyzed" = the model has read the photo and handed back fields, but nothing is
+  // saved yet — driver_authorized/drivers_license_number (what the middleware CNH gate
+  // actually checks) only get written once the confirm phase below runs. Read-but-not-yet-
+  // confirmed is exactly the state that needs the review checklist + checkbox gate.
+  const isAnalyzed = state.status === "analyzed";
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,11 +63,10 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   // Drives the checklist below: it's visible (blank) from the moment the bar appears, and
   // each row's check ticks green as the bar crosses its 25%-wide slice — the reveal tracks
   // the bar itself rather than a fixed per-row delay, so the two visually move together.
-  // Once the real result is back (isDone), every row is revealed regardless of where the
-  // simulated bar happened to land.
-  const readyForChecklist = showProgress || DONE_STATUSES.includes(state.status);
-  const revealedCount =
-    isDone && state.read ? READ_FIELD_KEYS.length : Math.min(3, Math.floor(progress / 25));
+  // Once the real result is back (analyzed, or later confirmed), every row is revealed
+  // regardless of where the simulated bar happened to land.
+  const readyForChecklist = showProgress || !!state.read;
+  const revealedCount = state.read ? READ_FIELD_KEYS.length : Math.min(3, Math.floor(progress / 25));
 
   useEffect(() => {
     // A PDF blob URL isn't renderable via <img> — the icon fallback covers it instead
@@ -91,11 +95,16 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   }
 
   function handleSubmit(formData: FormData) {
-    if (!file) {
-      setError(t.noPhoto);
-      return;
+    // The confirm phase's hidden inputs (rendered below whenever isAnalyzed) already
+    // carry everything the server action needs for that phase — no photo involved the
+    // second time around, since the file was only ever needed to reach the model once.
+    if (!isAnalyzed) {
+      if (!file) {
+        setError(t.noPhoto);
+        return;
+      }
+      formData.set("photo", file);
     }
-    formData.set("photo", file);
     formAction(formData);
   }
 
@@ -104,6 +113,15 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
       <p className="text-sm text-fog-400">{t.description}</p>
 
       <form ref={formRef} action={handleSubmit} className="flex flex-col gap-4">
+        {isAnalyzed && state.read ? (
+          <>
+            <input type="hidden" name="phase" value="confirm" />
+            <input type="hidden" name="fullName" value={state.read.fullName} />
+            <input type="hidden" name="number" value={state.read.number} />
+            <input type="hidden" name="category" value={state.read.category} />
+            <input type="hidden" name="expirationDate" value={state.read.expirationDate} />
+          </>
+        ) : null}
         <div className="flex flex-wrap items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-line-800 bg-panel-800">
             {previewUrl ? (
@@ -186,6 +204,12 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
           </p>
         ) : null}
 
+        {isAnalyzed ? (
+          <p role="status" className="text-sm text-fog-400">
+            {t.reviewPrompt}
+          </p>
+        ) : null}
+
         {state.status === "success" ? (
           <p role="status" className="text-sm text-signal-teal">
             {t.successValid}
@@ -228,7 +252,7 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
           </div>
         ) : null}
 
-        {isDone ? (
+        {isAnalyzed ? (
           <label className="flex items-center gap-2 text-sm text-fog-400">
             <input
               type="checkbox"
@@ -241,16 +265,15 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
         ) : null}
 
         {isDone ? (
-          <Button
-            type="button"
-            onClick={() => router.push("/dashboard")}
-            disabled={!confirmed}
-            className="self-start"
-          >
+          <Button type="button" onClick={() => router.push("/dashboard")} className="self-start">
             {dict.common.close}
           </Button>
         ) : (
-          <Button type="submit" disabled={pending || !file} className="self-start">
+          <Button
+            type="submit"
+            disabled={pending || (isAnalyzed ? !confirmed : !file)}
+            className="self-start"
+          >
             {pending ? t.analyzing : state.status === "unreadable" ? t.unreadableRetry : t.submit}
           </Button>
         )}

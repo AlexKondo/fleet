@@ -147,6 +147,7 @@ const dict: Dictionary = {
       unreadableRetry: "Tomar otra foto",
       unreadableGiveUp:
         "Si no funciona después de varios intentos, pide al Gestor de Flota o Administrador que te autorice manualmente en Configuración → Equipo.",
+      reviewPrompt: "Revisa los datos abajo antes de confirmar.",
       successValid: "Licencia leída y validada — ya estás autorizado para retirar vehículos.",
       successExpired:
         "Licencia leída correctamente, pero la fecha de vencimiento impresa ya pasó. Pide al Gestor de Flota o Administrador que lo revise en Configuración → Equipo.",

@@ -183,6 +183,7 @@ export type Dictionary = {
       unreadable: string;
       unreadableRetry: string;
       unreadableGiveUp: string;
+      reviewPrompt: string;
       successValid: string;
       successExpired: string;
       readFields: {

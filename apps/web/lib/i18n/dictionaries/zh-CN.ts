@@ -142,6 +142,7 @@ const dict: Dictionary = {
       unreadable: "我们无法读取此照片中的所有字段。请在光线充足、无反光的环境下重新拍摄，并确保整个证件都在画面内。",
       unreadableRetry: "重新拍照",
       unreadableGiveUp: "如果多次尝试后仍无法识别，请让车队经理或管理员在 设置 → 团队 中手动授权。",
+      reviewPrompt: "请在确认前核对以下信息。",
       successValid: "驾驶证已读取并验证——您已获得取车授权。",
       successExpired: "驾驶证已成功读取，但印刷的有效期已过期。请让车队经理或管理员在 设置 → 团队 中审核。",
       readFields: {
