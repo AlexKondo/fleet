@@ -137,7 +137,7 @@ const dict: Dictionary = {
       capturePrompt: "Toque para fotografar sua CNH",
       analyzing: "Lendo os dados da CNH…",
       noPhoto: "Tire uma foto ou envie um arquivo da CNH antes de enviar.",
-      notAnImage: "O arquivo precisa ser uma imagem.",
+      notAnImage: "O arquivo precisa ser uma imagem ou um PDF.",
       photoTooLarge: "Arquivo maior que 5MB — escolha uma foto menor.",
       analysisFailed: "Não foi possível analisar a foto agora. Tente novamente em instantes.",
       saveFailed: "Não foi possível salvar os dados da CNH.",

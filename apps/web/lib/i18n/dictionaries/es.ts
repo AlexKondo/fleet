@@ -137,7 +137,7 @@ const dict: Dictionary = {
       capturePrompt: "Toca para fotografiar tu licencia",
       analyzing: "Leyendo los datos de la licencia…",
       noPhoto: "Toma o sube una foto de tu licencia antes de enviar.",
-      notAnImage: "El archivo debe ser una imagen.",
+      notAnImage: "El archivo debe ser una imagen o un PDF.",
       photoTooLarge: "Archivo mayor a 5MB — elige una foto más pequeña.",
       analysisFailed: "No se pudo analizar la foto ahora. Intenta de nuevo en un momento.",
       saveFailed: "No se pudieron guardar los datos de la licencia.",

@@ -26,7 +26,9 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   const uploadInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!file) {
+    // A PDF blob URL isn't renderable via <img> — the icon fallback covers it instead
+    // of showing a broken-image glyph.
+    if (!file || file.type === "application/pdf") {
       setPreviewUrl(null);
       return;
     }
@@ -62,7 +64,7 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
       <p className="text-sm text-fog-400">{t.description}</p>
 
       <form ref={formRef} action={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-line-800 bg-panel-800">
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- local blob: preview
@@ -73,21 +75,23 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
               </span>
             )}
           </span>
-          <span className="flex-1 text-xs text-fog-400">{file ? file.name : t.capturePrompt}</span>
-          <button
-            type="button"
-            onClick={() => setShowCamera(true)}
-            className="shrink-0 rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600"
-          >
-            {dict.reservations.photos.capture}
-          </button>
-          <button
-            type="button"
-            onClick={() => uploadInputRef.current?.click()}
-            className="shrink-0 rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600"
-          >
-            {dict.reservations.photos.upload}
-          </button>
+          <span className="min-w-0 flex-1 text-xs text-fog-400">{file ? file.name : t.capturePrompt}</span>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCamera(true)}
+              className="shrink-0 whitespace-nowrap rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600"
+            >
+              {dict.reservations.photos.capture}
+            </button>
+            <button
+              type="button"
+              onClick={() => uploadInputRef.current?.click()}
+              className="shrink-0 whitespace-nowrap rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600"
+            >
+              {dict.reservations.photos.upload}
+            </button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -99,7 +103,7 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
           <input
             ref={uploadInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,application/pdf"
             className="sr-only"
             onChange={(e) => handlePicked(e.target.files?.[0])}
           />

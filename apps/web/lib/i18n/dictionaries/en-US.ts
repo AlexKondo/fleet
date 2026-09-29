@@ -137,7 +137,7 @@ const dict: Dictionary = {
       capturePrompt: "Tap to photograph your license",
       analyzing: "Reading your license…",
       noPhoto: "Take or upload a photo of your license before submitting.",
-      notAnImage: "The file must be an image.",
+      notAnImage: "The file must be an image or a PDF.",
       photoTooLarge: "File larger than 5MB — choose a smaller photo.",
       analysisFailed: "Couldn't analyze the photo right now. Try again shortly.",
       saveFailed: "Couldn't save the license data.",

@@ -43,24 +43,23 @@ export async function submitLicensePhoto(
   if (!(photo instanceof File) || photo.size === 0) {
     return { status: "error", error: dict.account.license.noPhoto };
   }
-  if (!photo.type.startsWith("image/")) {
+  // CNH Digital (the official app) exports as a PDF, not a photo — accepted alongside
+  // images; analyzeDriversLicense.ts routes a PDF through OpenAI's Responses API instead
+  // of Chat Completions' image-only image_url.
+  if (!photo.type.startsWith("image/") && photo.type !== "application/pdf") {
     return { status: "error", error: dict.account.license.notAnImage };
   }
   if (photo.size > MAX_PHOTO_BYTES) {
     return { status: "error", error: dict.account.license.photoTooLarge };
   }
 
+  // The CNH photo/PDF itself is never stored — it's LGPD-sensitive personal data (an ID
+  // document image), and nothing downstream needs the raw file once the four fields
+  // below are extracted. It's held in memory just long enough to reach the vision model
+  // (analyzeDriversLicense.ts) and then discarded when this request ends; only the
+  // extracted business fields (already-required for driver authorization regardless of
+  // OCR) get persisted, to profiles.
   const admin = createSupabaseAdminClient();
-  const extensionMatch = /\.([a-zA-Z0-9]+)$/.exec(photo.name);
-  const extension = extensionMatch ? extensionMatch[1] : "jpg";
-  const storagePath = `${profile.organization_id}/${user.id}/${Date.now()}.${extension}`;
-  // Own bucket (0039_license_ocr_and_reminders.sql), RLS-scoped to the uploader — the CNH
-  // photo is more sensitive than a vehicle inspection photo, so it doesn't share
-  // vehicle-photos' org-wide-readable policy.
-  await admin.storage
-    .from("driver-licenses")
-    .upload(storagePath, photo, { upsert: true, contentType: photo.type || undefined });
-
   const result = await analyzeDriversLicense(photo);
 
   if (result.status === "error") {

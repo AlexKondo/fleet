@@ -134,7 +134,7 @@ const dict: Dictionary = {
       capturePrompt: "点击拍摄您的驾驶证",
       analyzing: "正在读取驾驶证数据…",
       noPhoto: "请先拍摄或上传驾驶证照片再提交。",
-      notAnImage: "文件必须是图片。",
+      notAnImage: "文件必须是图片或 PDF。",
       photoTooLarge: "文件大于5MB——请选择更小的照片。",
       analysisFailed: "暂时无法分析照片。请稍后重试。",
       saveFailed: "无法保存驾驶证数据。",
