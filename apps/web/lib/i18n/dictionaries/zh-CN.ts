@@ -689,6 +689,11 @@ const dict: Dictionary = {
       upload: "上传文件",
       fileTooLarge: "文件大于5MB——请选择更小的照片。",
       damageHint: "请拍摄上述描述的损坏部位",
+      takePhoto: "拍照",
+      openingCamera: "正在打开摄像头…",
+      cameraPermissionDenied: "无法访问摄像头（权限被拒绝）。您可以改为上传文件。",
+      cameraNotFound: "未在此设备上找到摄像头。您可以改为上传文件。",
+      cameraGenericError: "无法打开摄像头。您可以改为上传文件。",
       angles: {
         front: "车头",
         back: "车尾",

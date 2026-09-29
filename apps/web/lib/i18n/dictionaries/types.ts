@@ -733,6 +733,11 @@ export type Dictionary = {
       upload: string;
       fileTooLarge: string;
       damageHint: string;
+      takePhoto: string;
+      openingCamera: string;
+      cameraPermissionDenied: string;
+      cameraNotFound: string;
+      cameraGenericError: string;
       angles: {
         front: string;
         back: string;

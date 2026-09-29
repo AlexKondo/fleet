@@ -710,6 +710,11 @@ const dict: Dictionary = {
       upload: "Subir archivo",
       fileTooLarge: "Archivo mayor a 5MB — elige una foto más pequeña.",
       damageHint: "Fotografía el daño descrito arriba",
+      takePhoto: "Tomar foto",
+      openingCamera: "Abriendo cámara…",
+      cameraPermissionDenied: "No se pudo acceder a la cámara (permiso denegado). Puedes subir un archivo en su lugar.",
+      cameraNotFound: "No se encontró ninguna cámara en este dispositivo. Puedes subir un archivo en su lugar.",
+      cameraGenericError: "No se pudo abrir la cámara. Puedes subir un archivo en su lugar.",
       angles: {
         front: "Frente",
         back: "Parte trasera",

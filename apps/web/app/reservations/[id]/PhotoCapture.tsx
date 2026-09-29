@@ -3,17 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { DAMAGE_PHOTO_ANGLE, STANDARD_PHOTO_ANGLES } from "@/lib/domain/checklist";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
+import { CameraCaptureModal } from "./CameraCaptureModal";
 
 /**
  * Standardized photo capture for pickup/return checklists (fleet-car-saas.txt §10).
  * Shared between PickupForm and ReturnForm — both require the same seven angles, so
  * one component avoids duplicating the field markup and preview/cleanup logic twice.
  *
- * Two hidden trigger inputs per field — one with `capture="environment"` (opens the
- * device camera directly), one plain (opens the file/gallery picker) — feed a single
- * hidden `<input type="file" name="photo_<angle>">` whose `.files` is set
- * programmatically via DataTransfer, so the enclosing form's FormData still only ever
- * sees one entry per field name no matter which button was used.
+ * "Capturar" opens a live getUserMedia camera modal (CameraCaptureModal) — works the same
+ * on desktop and mobile, unlike `<input capture>` which desktop browsers ignore. The
+ * upload button opens a plain file picker. Both funnel into the same hidden
+ * `<input type="file" name="photo_<angle>">` via a shared DataTransfer, so the enclosing
+ * form's FormData still only ever sees one entry per field name either way.
  */
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -70,8 +71,8 @@ function PhotoCaptureField({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
   const formInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -124,7 +125,7 @@ function PhotoCaptureField({
         </span>
         <button
           type="button"
-          onClick={() => cameraInputRef.current?.click()}
+          onClick={() => setShowCamera(true)}
           className={`shrink-0 rounded-sm border px-2 py-1 text-[11px] font-semibold uppercase tracking-widest ${
             file ? "border-signal-teal text-signal-teal" : "border-line-700 text-fog-400 hover:border-line-600"
           }`}
@@ -142,14 +143,6 @@ function PhotoCaptureField({
         </button>
         <input ref={formInputRef} type="file" name={name} className="sr-only" tabIndex={-1} />
         <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="sr-only"
-          onChange={(e) => handlePicked(e.target.files?.[0])}
-        />
-        <input
           ref={uploadInputRef}
           type="file"
           accept="image/*"
@@ -158,6 +151,9 @@ function PhotoCaptureField({
         />
       </div>
       {error ? <p className="text-[11px] text-signal-red">{error}</p> : null}
+      {showCamera ? (
+        <CameraCaptureModal dict={dict} onCapture={handlePicked} onClose={() => setShowCamera(false)} />
+      ) : null}
     </div>
   );
 }
