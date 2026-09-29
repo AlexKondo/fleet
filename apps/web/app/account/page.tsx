@@ -55,7 +55,7 @@ export default async function AccountPage({
         ) : null}
         <p className="mb-6 text-sm text-fog-400">{dict.account.description}</p>
         <Card>
-          <ChangePasswordForm dict={dict} />
+          <ChangePasswordForm dict={dict} forced={forcePasswordChange === "1"} />
         </Card>
       </section>
     </AppShell>

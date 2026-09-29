@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { PasswordInput } from "../PasswordInput";
 import { Button } from "../ui/Button";
 import { changePassword, type ChangePasswordState } from "./actions";
@@ -8,11 +9,22 @@ import type { Dictionary } from "../../lib/i18n/dictionaries";
 
 const initialState: ChangePasswordState = { status: "idle" };
 
-export function ChangePasswordForm({ dict }: { dict: Dictionary }) {
+/** `forced` = this is the mandatory first-login change (middleware.ts redirected here for
+ * an admin-created account) rather than a voluntary visit to /account. Only then does a
+ * successful save move the user on to the dashboard by itself — someone who came here on
+ * their own to change their password stays put, same as before. */
+export function ChangePasswordForm({ dict, forced }: { dict: Dictionary; forced: boolean }) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(changePassword, initialState);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
+
+  useEffect(() => {
+    if (forced && state.status === "success") {
+      router.push("/dashboard");
+    }
+  }, [forced, state.status, router]);
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-4">
