@@ -150,7 +150,13 @@ const dict: Dictionary = {
       successValid: "License read and validated — you're authorized to pick up vehicles.",
       successExpired:
         "License read successfully, but the printed expiration date has passed. Ask your Fleet Manager or Administrator to review it in Settings → Team.",
-      readSummary: "Read: No. {number} · Category {category} · Expires {expiration}. Check that this is correct.",
+      readFields: {
+        fullName: "Name",
+        number: "License No.",
+        category: "Category",
+        expirationDate: "Expiration date",
+      },
+      confirmReadCheckbox: "I checked the data and it's correct.",
       submit: "Submit",
     },
     profile: {

@@ -185,7 +185,13 @@ export type Dictionary = {
       unreadableGiveUp: string;
       successValid: string;
       successExpired: string;
-      readSummary: string;
+      readFields: {
+        fullName: string;
+        number: string;
+        category: string;
+        expirationDate: string;
+      };
+      confirmReadCheckbox: string;
       submit: string;
     };
     profile: {

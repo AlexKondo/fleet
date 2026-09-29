@@ -13,7 +13,7 @@ export interface LicenseUploadState {
   /** Shown back to the user for both success and success_expired so a misread (e.g. the
    * model confusing "Validade" with "Emissão" or another printed date) is obvious on
    * screen immediately instead of a silent wrong block/approval. */
-  read?: { number: string; category: string; expirationDate: string };
+  read?: { fullName: string; number: string; category: string; expirationDate: string };
 }
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -97,6 +97,7 @@ export async function submitLicensePhoto(
   return {
     status: isStillValid ? "success" : "success_expired",
     read: {
+      fullName: result.data.fullName,
       number: result.data.number,
       category: result.data.category,
       expirationDate: result.data.expirationDate,

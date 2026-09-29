@@ -21,9 +21,30 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  // There's no real progress feed from the vision API — a single request/response, not a
+  // stream — so this climbs toward 90% while `pending` is true (purely to signal "still
+  // working" on what can be a several-second call) and only completes to 100% once the
+  // actual result is back, rather than claiming a precision the process doesn't have.
+  const [progress, setProgress] = useState(0);
+  const [showProgress, setShowProgress] = useState(false);
+  useEffect(() => {
+    if (pending) {
+      setShowProgress(true);
+      setProgress(8);
+      const interval = setInterval(() => {
+        setProgress((p) => (p < 90 ? Math.min(90, p + 4 + Math.random() * 8) : p));
+      }, 220);
+      return () => clearInterval(interval);
+    }
+    setProgress((p) => (p > 0 ? 100 : p));
+    const timeout = setTimeout(() => setShowProgress(false), 500);
+    return () => clearTimeout(timeout);
+  }, [pending]);
 
   useEffect(() => {
     // A PDF blob URL isn't renderable via <img> — the icon fallback covers it instead
@@ -47,6 +68,7 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
       return;
     }
     setError(null);
+    setConfirmed(false);
     setFile(picked);
   }
 
@@ -109,13 +131,21 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
           />
         </div>
 
-        {pending ? (
-          <div role="status" className="flex items-center gap-3 text-sm text-fog-400">
-            <span
-              className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-line-700 border-t-gwm-accent"
-              aria-hidden="true"
-            />
-            {t.analyzing}
+        {showProgress ? (
+          <div role="status" className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3 text-sm text-fog-400">
+              <span
+                className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-line-700 border-t-gwm-accent"
+                aria-hidden="true"
+              />
+              {t.analyzing}
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-panel-800">
+              <div
+                className="h-full rounded-full bg-gwm-accent transition-[width] duration-200 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
         ) : null}
 
@@ -139,39 +169,67 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
         ) : null}
 
         {state.status === "success" ? (
-          <div className="flex flex-col gap-1">
-            <p role="status" className="text-sm text-signal-teal">
-              {t.successValid}
-            </p>
-            {state.read ? (
-              <p className="text-xs text-fog-400">
-                {t.readSummary
-                  .replace("{number}", state.read.number)
-                  .replace("{category}", state.read.category)
-                  .replace("{expiration}", state.read.expirationDate)}
-              </p>
-            ) : null}
-          </div>
+          <p role="status" className="text-sm text-signal-teal">
+            {t.successValid}
+          </p>
         ) : null}
 
         {state.status === "success_expired" ? (
-          <div className="flex flex-col gap-1">
-            <p role="alert" className="text-sm text-signal-red">
-              {t.successExpired}
-            </p>
-            {state.read ? (
-              <p className="text-xs text-fog-400">
-                {t.readSummary
-                  .replace("{number}", state.read.number)
-                  .replace("{category}", state.read.category)
-                  .replace("{expiration}", state.read.expirationDate)}
-              </p>
-            ) : null}
+          <p role="alert" className="text-sm text-signal-red">
+            {t.successExpired}
+          </p>
+        ) : null}
+
+        {isDone && state.read ? (
+          <div className="flex flex-col gap-2 rounded-sm border border-line-800 bg-panel-900/60 p-3">
+            {(
+              [
+                ["fullName", state.read.fullName],
+                ["number", state.read.number],
+                ["category", state.read.category],
+                ["expirationDate", state.read.expirationDate],
+              ] as const
+            ).map(([key, value], index) => (
+              <div
+                key={key}
+                className="animate-license-field-reveal flex items-center justify-between gap-3 text-sm"
+                style={{ animationDelay: `${index * 180}ms` }}
+              >
+                <span className="text-fog-400">{t.readFields[key]}</span>
+                <span className="flex items-center gap-2 font-medium text-paper-50">
+                  {value}
+                  <span
+                    className="animate-license-field-reveal flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-signal-teal text-[10px] text-ink-950"
+                    style={{ animationDelay: `${index * 180 + 120}ms` }}
+                    aria-hidden="true"
+                  >
+                    ✓
+                  </span>
+                </span>
+              </div>
+            ))}
           </div>
         ) : null}
 
         {isDone ? (
-          <Button type="button" onClick={() => router.push("/dashboard")} className="self-start">
+          <label className="flex items-center gap-2 text-sm text-fog-400">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              className="h-4 w-4"
+            />
+            {t.confirmReadCheckbox}
+          </label>
+        ) : null}
+
+        {isDone ? (
+          <Button
+            type="button"
+            onClick={() => router.push("/dashboard")}
+            disabled={!confirmed}
+            className="self-start"
+          >
             {dict.common.close}
           </Button>
         ) : (
