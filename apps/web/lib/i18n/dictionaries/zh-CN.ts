@@ -151,6 +151,7 @@ const dict: Dictionary = {
         category: "类别",
         expirationDate: "有效期至",
       },
+      redo: "重新拍摄",
       confirmReadCheckbox: "我已核对数据，确认无误。",
       submit: "提交",
     },

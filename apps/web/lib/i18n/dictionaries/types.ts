@@ -192,6 +192,7 @@ export type Dictionary = {
         category: string;
         expirationDate: string;
       };
+      redo: string;
       confirmReadCheckbox: string;
       submit: string;
     };

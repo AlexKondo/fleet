@@ -31,6 +31,14 @@ function formatDateBR(isoDate: string): string {
 }
 
 export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
+  // "Refazer" (see below) has to throw away everything — the picked file, the
+  // useActionState result, the confirmed checkbox — rather than patch each piece
+  // individually, so it just remounts this whole subtree under a fresh key.
+  const [attempt, setAttempt] = useState(0);
+  return <LicenseCaptureAttempt key={attempt} dict={dict} onRestart={() => setAttempt((n) => n + 1)} />;
+}
+
+function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestart: () => void }) {
   const t = dict.account.license;
   const router = useRouter();
   const [state, formAction, pending] = useActionState(submitLicensePhoto, initialState);
@@ -291,6 +299,16 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
               );
             })}
           </div>
+        ) : null}
+
+        {isAnalyzed ? (
+          <button
+            type="button"
+            onClick={onRestart}
+            className="self-start rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600"
+          >
+            {t.redo}
+          </button>
         ) : null}
 
         {isAnalyzed ? (

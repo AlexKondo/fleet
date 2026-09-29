@@ -158,6 +158,7 @@ const dict: Dictionary = {
         category: "Categoria",
         expirationDate: "Data de validade",
       },
+      redo: "Refazer",
       confirmReadCheckbox: "Conferi os dados e estão corretos.",
       submit: "Enviar",
     },
