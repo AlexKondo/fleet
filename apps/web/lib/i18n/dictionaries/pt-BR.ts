@@ -490,6 +490,8 @@ const dict: Dictionary = {
       noOptions: "Nenhuma opção de mobilidade atende esta viagem no momento.",
       reservationConflict:
         "Esse veículo acabou de ser reservado por outra pessoa nesse mesmo horário. Busque novamente para ver as opções atualizadas.",
+      planChanged:
+        "A disponibilidade mudou desde a última busca (outro veículo ou carona ficou elegível nesse meio-tempo). Busque novamente para ver a recomendação atualizada.",
       confirmError: "Não foi possível confirmar a reserva ({code}). Tente buscar novamente.",
     },
     reasons: {

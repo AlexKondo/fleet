@@ -359,7 +359,9 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
           <p role="alert" className="mt-4 text-sm text-signal-red">
             {confirmError === "RESERVATION_CONFLICT"
               ? t.reservationConflict
-              : t.confirmError.replace("{code}", confirmError)}
+              : confirmError === "plan_changed"
+                ? t.planChanged
+                : t.confirmError.replace("{code}", confirmError)}
           </p>
         ) : null}
       </div>

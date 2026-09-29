@@ -479,6 +479,7 @@ const dict: Dictionary = {
       choose: "选择",
       noOptions: "目前没有可满足此行程的出行方案。",
       reservationConflict: "该车辆在同一时段刚被他人预约。请重新搜索以查看最新方案。",
+      planChanged: "自上次搜索以来可用性已发生变化（其间有其他车辆或拼车变为可用）。请重新搜索以查看最新推荐。",
       confirmError: "预约确认失败（{code}）。请重新搜索后再试。",
     },
     reasons: {

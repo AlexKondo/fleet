@@ -490,6 +490,8 @@ const dict: Dictionary = {
       noOptions: "No mobility option can cover this trip right now.",
       reservationConflict:
         "This vehicle was just booked by someone else for the same time slot. Search again to see the updated options.",
+      planChanged:
+        "Availability changed since your last search (another vehicle or carpool became eligible in the meantime). Search again to see the updated recommendation.",
       confirmError: "We couldn't confirm the reservation ({code}). Please search again.",
     },
     reasons: {

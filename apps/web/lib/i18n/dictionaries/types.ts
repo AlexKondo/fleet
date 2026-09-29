@@ -523,6 +523,7 @@ export type Dictionary = {
       choose: string;
       noOptions: string;
       reservationConflict: string;
+      planChanged: string;
       confirmError: string;
     };
     /** Mobility Decision Engine reason codes shown under a recommendation. */
