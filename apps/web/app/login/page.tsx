@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 import { LoginRecovery } from "./LoginRecovery";
 import { Card } from "../ui/Card";
@@ -27,12 +26,6 @@ export default async function LoginPage() {
           <Card>
             <LoginForm dict={dict} />
           </Card>
-          <p className="mt-4 text-center text-sm text-fog-400">
-            {dict.login.noAccount}{" "}
-            <Link href="/signup" className="text-gwm-accent hover:underline">
-              {dict.login.createAccount}
-            </Link>
-          </p>
         </div>
       </main>
     </LoginRecovery>
