@@ -234,6 +234,8 @@ const dict: Dictionary = {
       emptyManagerCta: "在“车队”中添加第一辆车",
       emptyEmployeeHint: "请联系车队管理员添加第一辆车。",
       energy: "能源",
+      fuel: "燃油",
+      battery: "电池",
       odometer: "里程表",
       currentLocation: "当前位置",
       batterySuffix: "电量",

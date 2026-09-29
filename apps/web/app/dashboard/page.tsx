@@ -658,14 +658,30 @@ export default async function DashboardPage({
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-line-800 pt-3 text-xs">
-                    <div>
-                      <p className="uppercase tracking-widest text-fog-600">{t.vehicles.energy}</p>
-                      <EnergyGauge
-                        percent={row.category?.energy_type === "BEV" ? row.battery_level_percent : row.fuel_level_percent}
-                        kind={row.category?.energy_type === "BEV" ? "battery" : "fuel"}
-                        dict={dict}
-                      />
-                    </div>
+                    {(() => {
+                      // A PHEV has both a fuel tank and a plug-in battery — mirrors
+                      // VehicleForm.tsx's showFuel/showBattery so the panel doesn't
+                      // silently drop one of the two gauges for hybrids.
+                      const energyType = row.category?.energy_type;
+                      const showFuel = energyType === "ICE" || energyType === "HEV" || energyType === "PHEV";
+                      const showBattery = energyType === "BEV" || energyType === "PHEV";
+                      return (
+                        <>
+                          {showFuel ? (
+                            <div>
+                              <p className="uppercase tracking-widest text-fog-600">{t.vehicles.fuel}</p>
+                              <EnergyGauge percent={row.fuel_level_percent} kind="fuel" dict={dict} />
+                            </div>
+                          ) : null}
+                          {showBattery ? (
+                            <div>
+                              <p className="uppercase tracking-widest text-fog-600">{t.vehicles.battery}</p>
+                              <EnergyGauge percent={row.battery_level_percent} kind="battery" dict={dict} />
+                            </div>
+                          ) : null}
+                        </>
+                      );
+                    })()}
                     <div>
                       <p className="uppercase tracking-widest text-fog-600">{t.vehicles.odometer}</p>
                       <p className="mt-1 font-mono tabular-nums text-fog-400">

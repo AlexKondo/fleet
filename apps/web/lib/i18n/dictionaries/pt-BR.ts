@@ -236,6 +236,8 @@ const dict: Dictionary = {
       emptyManagerCta: "Adicione o primeiro veículo em Frota",
       emptyEmployeeHint: "Peça ao gestor da frota para adicionar o primeiro veículo.",
       energy: "Energia",
+      fuel: "Combustível",
+      battery: "Bateria",
       odometer: "Odômetro",
       currentLocation: "Localização atual",
       batterySuffix: "bat.",

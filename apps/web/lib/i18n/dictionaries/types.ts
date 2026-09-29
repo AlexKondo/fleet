@@ -297,6 +297,8 @@ export type Dictionary = {
       emptyManagerCta: string;
       emptyEmployeeHint: string;
       energy: string;
+      fuel: string;
+      battery: string;
       odometer: string;
       currentLocation: string;
       /** Suffix appended after the percentage for battery-powered vehicles. */
