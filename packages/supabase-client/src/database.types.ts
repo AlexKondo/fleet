@@ -276,7 +276,7 @@ export type Database = {
           carpool_departure_tolerance_minutes: number
           carpool_return_tolerance_minutes: number
           early_pickup_grace_minutes: number
-          maintenance_due_soon_days: number
+          maintenance_due_soon_km: number
           min_charge_hours_bev: number
           min_cleaning_hours: number
           min_refuel_hours_ice_or_phev: number
@@ -289,7 +289,7 @@ export type Database = {
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
           early_pickup_grace_minutes?: number
-          maintenance_due_soon_days?: number
+          maintenance_due_soon_km?: number
           min_charge_hours_bev?: number
           min_cleaning_hours?: number
           min_refuel_hours_ice_or_phev?: number
@@ -302,7 +302,7 @@ export type Database = {
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
           early_pickup_grace_minutes?: number
-          maintenance_due_soon_days?: number
+          maintenance_due_soon_km?: number
           min_charge_hours_bev?: number
           min_cleaning_hours?: number
           min_refuel_hours_ice_or_phev?: number

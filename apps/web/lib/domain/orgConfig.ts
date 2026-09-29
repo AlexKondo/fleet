@@ -6,10 +6,10 @@ export type BookingMode = Database["public"]["Enums"]["booking_mode"];
 export interface OrgConfig {
   readiness: ReadinessConfig;
   carpool: CarpoolMatchConfig;
-  /** §12 Predictive Maintenance — window (days) before the estimated service date at which
-   * a vehicle is flagged "due soon". Organization-configurable via /settings; falls back to
-   * the same default as `defaultMaintenancePredictionConfig` in @fleet/domain. */
-  maintenanceDueSoonDays: number;
+  /** §12 Predictive Maintenance — window (km remaining until the next scheduled service)
+   * at which a vehicle is flagged "due soon". Organization-configurable via /settings;
+   * falls back to the same default as `defaultMaintenancePredictionConfig` in @fleet/domain. */
+  maintenanceDueSoonKm: number;
   /** §15 São Paulo Traffic Restriction Intelligence — whether the trip-planning flow should
    * surface a circulation-restriction warning at all. Organization-configurable via
    * /settings. */
@@ -28,7 +28,7 @@ export async function loadOrgConfig(
   const { data } = await supabase
     .from("organization_settings")
     .select(
-      "range_safety_buffer_percent, min_charge_hours_bev, min_refuel_hours_ice_or_phev, min_cleaning_hours, carpool_departure_tolerance_minutes, carpool_return_tolerance_minutes, maintenance_due_soon_days, traffic_restriction_enabled, booking_mode",
+      "range_safety_buffer_percent, min_charge_hours_bev, min_refuel_hours_ice_or_phev, min_cleaning_hours, carpool_departure_tolerance_minutes, carpool_return_tolerance_minutes, maintenance_due_soon_km, traffic_restriction_enabled, booking_mode",
     )
     .eq("organization_id", organizationId)
     .single();
@@ -44,7 +44,7 @@ export async function loadOrgConfig(
       departureToleranceMinutes: data?.carpool_departure_tolerance_minutes ?? 30,
       returnToleranceMinutes: data?.carpool_return_tolerance_minutes ?? 30,
     },
-    maintenanceDueSoonDays: data?.maintenance_due_soon_days ?? 14,
+    maintenanceDueSoonKm: data?.maintenance_due_soon_km ?? 1000,
     trafficRestrictionEnabled: data?.traffic_restriction_enabled ?? true,
     bookingMode: data?.booking_mode ?? "ai_recommended",
   };

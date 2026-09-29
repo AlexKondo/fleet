@@ -655,7 +655,7 @@ const dict: Dictionary = {
         heading: "Mantenimiento predictivo y restricción de circulación",
         description:
           "Ventana de aviso de revisión (§12) y alerta de restricción vehicular en São Paulo (§15).",
-        dueSoonDaysLabel: 'Ventana de revisión "próxima" (días)',
+        dueSoonKmLabel: 'Ventana de revisión "próxima" (km restantes)',
         trafficRestrictionLabel: "Alertar sobre la restricción vehicular en São Paulo",
       },
       earlyPickup: {

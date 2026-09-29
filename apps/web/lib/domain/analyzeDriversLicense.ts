@@ -56,7 +56,16 @@ function parseModelJson(content: string):
     !parsed.fullName ||
     !parsed.category ||
     !parsed.expirationDate ||
-    !ISO_DATE.test(parsed.expirationDate)
+    !ISO_DATE.test(parsed.expirationDate) ||
+    // issueDate is REQUIRED, not just requested — a response missing it skips the
+    // swap-correction below entirely, which is exactly how the previous version of this
+    // check silently let a mixed-up date through (the model ignored the prompt's request
+    // for issueDate, so `parsed.issueDate` was undefined and the check below never ran).
+    // Refusing to trust expirationDate without a same-response issueDate to cross-check
+    // it against means the safety net can no longer be bypassed by the model simply
+    // omitting a field.
+    !parsed.issueDate ||
+    !ISO_DATE.test(parsed.issueDate)
   ) {
     return { status: "unreadable" };
   }
@@ -64,13 +73,11 @@ function parseModelJson(content: string):
   let expirationDate = parsed.expirationDate;
 
   // Ground-truth check independent of the prompt actually being followed: Validade is
-  // structurally always after Emissão on a real CNH. If the model still swapped the two
-  // adjacent fields (the exact failure mode a real user hit — see the prompt's own note
-  // above), issueDate ends up later than expirationDate, which is physically impossible.
-  // Swapping them back here fixes the common case without needing readable:false and
-  // asking the user to re-upload for what's ultimately our own extraction ordering, not a
-  // genuinely unreadable document.
-  if (parsed.issueDate && ISO_DATE.test(parsed.issueDate) && parsed.issueDate >= expirationDate) {
+  // structurally always after Emissão on a real CNH. If the model swapped the two
+  // adjacent fields (the exact failure mode reported twice now), issueDate ends up later
+  // than expirationDate, which is physically impossible — swap them back rather than
+  // reject a document that was, in substance, fully read correctly.
+  if (parsed.issueDate >= expirationDate) {
     expirationDate = parsed.issueDate;
   }
 
@@ -153,7 +160,14 @@ export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicense
                 role: "user",
                 content: [
                   { type: "text", text: "Read this CNH photo and extract the fields." },
-                  { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+                  {
+                    type: "image_url",
+                    // "high" forces full-resolution tiled processing instead of the
+                    // model's default downscale-for-token-efficiency behavior — the
+                    // 4a/4b date labels are small enough that a lower-detail pass can
+                    // blur past them.
+                    image_url: { url: `data:${mimeType};base64,${base64}`, detail: "high" },
+                  },
                 ],
               },
             ],

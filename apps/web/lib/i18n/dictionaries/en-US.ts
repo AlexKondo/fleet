@@ -655,7 +655,7 @@ const dict: Dictionary = {
         heading: "Predictive Maintenance & Driving Restrictions",
         description:
           "Service warning window (§12) and São Paulo driving restriction alerts (§15).",
-        dueSoonDaysLabel: 'Service "due soon" window (days)',
+        dueSoonKmLabel: 'Service "due soon" window (km remaining)',
         trafficRestrictionLabel: "Alert about São Paulo driving restrictions",
       },
       earlyPickup: {

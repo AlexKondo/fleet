@@ -633,7 +633,7 @@ const dict: Dictionary = {
       maintenance: {
         heading: "预测性维护与限行",
         description: "保养提醒窗口（§12）以及圣保罗车辆限行提醒（§15）。",
-        dueSoonDaysLabel: "保养“即将到期”窗口（天）",
+        dueSoonKmLabel: "保养“即将到期”窗口（剩余公里数）",
         trafficRestrictionLabel: "提醒圣保罗车辆限行",
       },
       earlyPickup: {

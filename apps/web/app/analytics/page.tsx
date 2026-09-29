@@ -120,7 +120,7 @@ export default async function AnalyticsPage() {
         v.next_service_odometer_km,
         odometerHistoryByVehicle.get(v.id) ?? [],
         now,
-        { dueSoonDays: orgConfig.maintenanceDueSoonDays },
+        { dueSoonKm: orgConfig.maintenanceDueSoonKm },
       ),
     }))
     .filter((v) => v.prediction.dueSoon || v.prediction.estimatedServiceDate !== null)

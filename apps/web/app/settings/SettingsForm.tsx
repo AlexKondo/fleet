@@ -11,7 +11,7 @@ export interface SettingsFormValues {
   minCleaningHours: number;
   carpoolDepartureToleranceMinutes: number;
   carpoolReturnToleranceMinutes: number;
-  maintenanceDueSoonDays: number;
+  maintenanceDueSoonKm: number;
   trafficRestrictionEnabled: boolean;
   bookingMode: "ai_recommended" | "user_choice" | "hybrid";
   earlyPickupGraceMinutes: number;
@@ -189,15 +189,15 @@ export function SettingsForm({
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            {t.maintenance.dueSoonDaysLabel}
+            {t.maintenance.dueSoonKmLabel}
           </span>
           <input
             type="number"
-            name="maintenanceDueSoonDays"
+            name="maintenanceDueSoonKm"
             required
             min={0}
-            step={1}
-            defaultValue={initialValues.maintenanceDueSoonDays}
+            step={100}
+            defaultValue={initialValues.maintenanceDueSoonKm}
             className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
         </label>

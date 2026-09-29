@@ -38,7 +38,7 @@ export default async function SettingsPage() {
     supabase
       .from("organization_settings")
       .select(
-        "range_safety_buffer_percent, min_charge_hours_bev, min_refuel_hours_ice_or_phev, min_cleaning_hours, carpool_departure_tolerance_minutes, carpool_return_tolerance_minutes, maintenance_due_soon_days, traffic_restriction_enabled, booking_mode, early_pickup_grace_minutes",
+        "range_safety_buffer_percent, min_charge_hours_bev, min_refuel_hours_ice_or_phev, min_cleaning_hours, carpool_departure_tolerance_minutes, carpool_return_tolerance_minutes, maintenance_due_soon_km, traffic_restriction_enabled, booking_mode, early_pickup_grace_minutes",
       )
       .eq("organization_id", profile.organization_id)
       .single(),
@@ -70,7 +70,7 @@ export default async function SettingsPage() {
             minCleaningHours: settings?.min_cleaning_hours ?? 1,
             carpoolDepartureToleranceMinutes: settings?.carpool_departure_tolerance_minutes ?? 30,
             carpoolReturnToleranceMinutes: settings?.carpool_return_tolerance_minutes ?? 30,
-            maintenanceDueSoonDays: settings?.maintenance_due_soon_days ?? 14,
+            maintenanceDueSoonKm: settings?.maintenance_due_soon_km ?? 1000,
             trafficRestrictionEnabled: settings?.traffic_restriction_enabled ?? true,
             bookingMode: settings?.booking_mode ?? "ai_recommended",
             earlyPickupGraceMinutes: settings?.early_pickup_grace_minutes ?? 15,

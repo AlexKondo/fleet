@@ -656,7 +656,7 @@ const dict: Dictionary = {
         heading: "Manutenção Preditiva & Restrição de Circulação",
         description:
           "Janela de aviso de revisão (§12) e alerta de rodízio de veículos em São Paulo (§15).",
-        dueSoonDaysLabel: 'Janela de revisão "em breve" (dias)',
+        dueSoonKmLabel: 'Janela de revisão "em breve" (km restantes)',
         trafficRestrictionLabel: "Alertar sobre rodízio de veículos em São Paulo",
       },
       earlyPickup: {

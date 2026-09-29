@@ -670,7 +670,7 @@ export type Dictionary = {
       maintenance: {
         heading: string;
         description: string;
-        dueSoonDaysLabel: string;
+        dueSoonKmLabel: string;
         trafficRestrictionLabel: string;
       };
       earlyPickup: {

@@ -44,7 +44,7 @@ export async function saveOrganizationSettings(
   const minCleaningHours = Number(formData.get("minCleaningHours"));
   const carpoolDepartureToleranceMinutes = Number(formData.get("carpoolDepartureToleranceMinutes"));
   const carpoolReturnToleranceMinutes = Number(formData.get("carpoolReturnToleranceMinutes"));
-  const maintenanceDueSoonDays = Number(formData.get("maintenanceDueSoonDays"));
+  const maintenanceDueSoonKm = Number(formData.get("maintenanceDueSoonKm"));
   const trafficRestrictionEnabled = formData.get("trafficRestrictionEnabled") === "on";
   const earlyPickupGraceMinutes = Number(formData.get("earlyPickupGraceMinutes"));
   const bookingMode = String(formData.get("bookingMode") ?? "");
@@ -65,7 +65,7 @@ export async function saveOrganizationSettings(
     [minCleaningHours, 0, 48],
     [carpoolDepartureToleranceMinutes, 0, 1440],
     [carpoolReturnToleranceMinutes, 0, 1440],
-    [maintenanceDueSoonDays, 0, 365],
+    [maintenanceDueSoonKm, 0, 50_000],
     [earlyPickupGraceMinutes, 0, 1440],
   ];
   const allValid = boundedFields.every(
@@ -84,7 +84,7 @@ export async function saveOrganizationSettings(
       min_cleaning_hours: minCleaningHours,
       carpool_departure_tolerance_minutes: carpoolDepartureToleranceMinutes,
       carpool_return_tolerance_minutes: carpoolReturnToleranceMinutes,
-      maintenance_due_soon_days: maintenanceDueSoonDays,
+      maintenance_due_soon_km: maintenanceDueSoonKm,
       traffic_restriction_enabled: trafficRestrictionEnabled,
       booking_mode: bookingMode as "ai_recommended" | "user_choice" | "hybrid",
       early_pickup_grace_minutes: earlyPickupGraceMinutes,
@@ -111,7 +111,7 @@ export async function saveOrganizationSettings(
       min_cleaning_hours: minCleaningHours,
       carpool_departure_tolerance_minutes: carpoolDepartureToleranceMinutes,
       carpool_return_tolerance_minutes: carpoolReturnToleranceMinutes,
-      maintenance_due_soon_days: maintenanceDueSoonDays,
+      maintenance_due_soon_km: maintenanceDueSoonKm,
       traffic_restriction_enabled: trafficRestrictionEnabled,
       booking_mode: bookingMode,
       early_pickup_grace_minutes: earlyPickupGraceMinutes,
