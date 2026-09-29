@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@fleet/domain", "@fleet/supabase-client"],
+  // pdfjs-dist's standard font glyph data (renderPdfPageToPng.ts) is loaded from disk at
+  // runtime via a plain path string, not a static import/require — Next's file-tracing
+  // only bundles files it can see referenced statically, so without this the serverless
+  // function ships without them and PDF rendering fails in production even though it
+  // works locally (where the full node_modules tree is just... there).
+  outputFileTracingIncludes: {
+    "app/account/license/**": ["./node_modules/pdfjs-dist/standard_fonts/**"],
+  },
   images: {
     // Vehicle photos live in Supabase Storage. Without this allow-list `next/image`
     // refuses the URL outright, which is why these were plain `<img>` tags serving the

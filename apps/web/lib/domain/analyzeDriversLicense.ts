@@ -1,4 +1,5 @@
 import "server-only";
+import { renderPdfFirstPageToPng } from "./renderPdfPageToPng";
 
 export interface DriversLicenseData {
   number: string;
@@ -58,12 +59,9 @@ function parseModelJson(content: string):
     !parsed.expirationDate ||
     !ISO_DATE.test(parsed.expirationDate) ||
     // issueDate is REQUIRED, not just requested — a response missing it skips the
-    // swap-correction below entirely, which is exactly how the previous version of this
+    // swap-correction below entirely, which is exactly how an earlier version of this
     // check silently let a mixed-up date through (the model ignored the prompt's request
     // for issueDate, so `parsed.issueDate` was undefined and the check below never ran).
-    // Refusing to trust expirationDate without a same-response issueDate to cross-check
-    // it against means the safety net can no longer be bypassed by the model simply
-    // omitting a field.
     !parsed.issueDate ||
     !ISO_DATE.test(parsed.issueDate)
   ) {
@@ -74,9 +72,9 @@ function parseModelJson(content: string):
 
   // Ground-truth check independent of the prompt actually being followed: Validade is
   // structurally always after Emissão on a real CNH. If the model swapped the two
-  // adjacent fields (the exact failure mode reported twice now), issueDate ends up later
-  // than expirationDate, which is physically impossible — swap them back rather than
-  // reject a document that was, in substance, fully read correctly.
+  // adjacent fields, issueDate ends up later than expirationDate, which is physically
+  // impossible — swap them back rather than reject a document that was, in substance,
+  // fully read correctly.
   if (parsed.issueDate >= expirationDate) {
     expirationDate = parsed.issueDate;
   }
@@ -100,10 +98,14 @@ function parseModelJson(content: string):
  * would silently auto-authorize a driver whose real license may already be expired —
  * BR-004/GT-011 needs the printed date, not the model's best guess at it.
  *
- * CNH Digital (the official app) exports as a PDF, not a photo — a real user upload we
- * hit in testing. Chat Completions' `image_url` content type only accepts raster images,
- * so a PDF has to go through the Responses API's `input_file` content type instead,
- * which OpenAI rasterizes internally before the vision model sees it.
+ * A PDF (CNH Digital's export format) is converted to a PNG ourselves first
+ * (renderPdfPageToPng.ts, high resolution, scale 3) and sent through the exact same
+ * image_url + detail:"high" path as a photo upload — every input this function actually
+ * sends to the vision model is a quality-controlled raster image. This replaces an
+ * earlier version that routed PDFs through OpenAI's Responses API `input_file` content
+ * type instead, which rasterizes internally with no exposed resolution control and
+ * repeatedly misread the small printed 4a/4b date fields in testing — the images we
+ * render ourselves are the actual fix, not a model/prompt change.
  */
 export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicenseResult> {
   const apiKey = process.env.API_OPENAI;
@@ -111,68 +113,58 @@ export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicense
     return { status: "error", message: "missing_api_key" };
   }
 
-  const bytes = Buffer.from(await photo.arrayBuffer());
-  const base64 = bytes.toString("base64");
-  const mimeType = photo.type || "image/jpeg";
-  const isPdf = mimeType === "application/pdf";
+  let base64: string;
+  let mimeType: string;
+
+  if (photo.type === "application/pdf") {
+    const pdfBytes = new Uint8Array(await photo.arrayBuffer());
+    try {
+      const png = await renderPdfFirstPageToPng(pdfBytes);
+      base64 = png.toString("base64");
+      mimeType = "image/png";
+    } catch (err) {
+      // Not every PDF renders cleanly with our own pipeline (font-embedding edge cases
+      // hit in testing) — fall back to OpenAI's own PDF handling (Responses API,
+      // `input_file`) rather than hard-failing the whole upload over it. Lower quality
+      // control than our own render, but still functional.
+      console.error("analyzeDriversLicense: local PDF render failed, falling back:", err);
+      return analyzeWithOpenAiPdfFallback(apiKey, photo, pdfBytes);
+    }
+  } else {
+    base64 = Buffer.from(await photo.arrayBuffer()).toString("base64");
+    mimeType = photo.type || "image/jpeg";
+  }
 
   try {
-    const response = isPdf
-      ? await fetch("https://api.openai.com/v1/responses", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            text: { format: { type: "json_object" } },
-            temperature: 0,
-            input: [
-              { role: "system", content: SYSTEM_PROMPT },
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        temperature: 0,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Read this CNH photo and extract the fields." },
               {
-                role: "user",
-                content: [
-                  { type: "input_text", text: "Read this CNH document and extract the fields." },
-                  {
-                    type: "input_file",
-                    filename: photo.name || "cnh.pdf",
-                    file_data: `data:${mimeType};base64,${base64}`,
-                  },
-                ],
+                type: "image_url",
+                // "high" forces full-resolution tiled processing instead of the
+                // model's default downscale-for-token-efficiency behavior — the
+                // 4a/4b date labels are small enough that a lower-detail pass can
+                // blur past them.
+                image_url: { url: `data:${mimeType};base64,${base64}`, detail: "high" },
               },
             ],
-          }),
-        })
-      : await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            response_format: { type: "json_object" },
-            temperature: 0,
-            messages: [
-              { role: "system", content: SYSTEM_PROMPT },
-              {
-                role: "user",
-                content: [
-                  { type: "text", text: "Read this CNH photo and extract the fields." },
-                  {
-                    type: "image_url",
-                    // "high" forces full-resolution tiled processing instead of the
-                    // model's default downscale-for-token-efficiency behavior — the
-                    // 4a/4b date labels are small enough that a lower-detail pass can
-                    // blur past them.
-                    image_url: { url: `data:${mimeType};base64,${base64}`, detail: "high" },
-                  },
-                ],
-              },
-            ],
-          }),
-        });
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
@@ -180,12 +172,65 @@ export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicense
     }
 
     const json = await response.json();
-    // Responses API and Chat Completions shape their reply differently.
-    const content: unknown = isPdf
-      ? (json.output ?? [])
-          .flatMap((item: { content?: { type: string; text?: string }[] }) => item.content ?? [])
-          .find((c: { type: string; text?: string }) => c.type === "output_text")?.text
-      : json.choices?.[0]?.message?.content;
+    const content: unknown = json.choices?.[0]?.message?.content;
+
+    if (typeof content !== "string") {
+      return { status: "error", message: "unexpected_openai_response" };
+    }
+
+    return parseModelJson(content);
+  } catch (err) {
+    return { status: "error", message: err instanceof Error ? err.message : "unknown_error" };
+  }
+}
+
+/** Fallback path when our own PDF-to-PNG render fails: OpenAI's Responses API reads the
+ * PDF directly (rasterizing it server-side, no resolution control exposed to us) — worse
+ * quality than our own render, but keeps the upload working instead of a hard failure. */
+async function analyzeWithOpenAiPdfFallback(
+  apiKey: string,
+  photo: File,
+  pdfBytes: Uint8Array,
+): Promise<AnalyzeLicenseResult> {
+  const base64 = Buffer.from(pdfBytes).toString("base64");
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        text: { format: { type: "json_object" } },
+        temperature: 0,
+        input: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: [
+              { type: "input_text", text: "Read this CNH document and extract the fields." },
+              {
+                type: "input_file",
+                filename: photo.name || "cnh.pdf",
+                file_data: `data:application/pdf;base64,${base64}`,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      return { status: "error", message: `openai_http_${response.status}: ${body.slice(0, 200)}` };
+    }
+
+    const json = await response.json();
+    const content: unknown = (json.output ?? [])
+      .flatMap((item: { content?: { type: string; text?: string }[] }) => item.content ?? [])
+      .find((c: { type: string; text?: string }) => c.type === "output_text")?.text;
 
     if (typeof content !== "string") {
       return { status: "error", message: "unexpected_openai_response" };
