@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { VehicleForm } from "./VehicleForm";
+import { SafetyEquipmentSection } from "../settings/SafetyEquipmentSection";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 /**
@@ -12,14 +13,20 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
  * pass a function prop to a Client Component — only plain, serializable data — so the
  * toggle-open state and the onSaved-closes-it wiring both have to live in one client
  * component that owns VehicleForm directly.
+ *
+ * The checklist (safety equipment) items are shown right alongside the vehicle form —
+ * a fleet manager registering a vehicle is exactly the moment they'd want to check or
+ * extend the standard kit, not a separate trip to Settings for it.
  */
 export function AddVehicleSection({
   categories,
   locations,
+  equipmentItems,
   dict,
 }: {
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
+  equipmentItems: { id: string; name: string }[];
   dict: Dictionary;
 }) {
   const [open, setOpen] = useState(false);
@@ -56,6 +63,7 @@ export function AddVehicleSection({
         dict={dict}
         onSaved={() => setOpen(false)}
       />
+      <SafetyEquipmentSection dict={dict} items={equipmentItems} />
     </div>
   );
 }

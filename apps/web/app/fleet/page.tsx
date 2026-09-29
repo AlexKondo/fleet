@@ -46,7 +46,7 @@ export default async function FleetPage() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, role, organization:organizations(name)")
+      .select("full_name, role, organization_id, organization:organizations(name)")
       .eq("id", user.id)
       .single(),
     supabase.from("vehicle_locations").select("id, name").order("name"),
@@ -58,6 +58,17 @@ export default async function FleetPage() {
       )
       .order("plate"),
   ]);
+
+  // Checklist items (0041_safety_equipment_items.sql) shown right here — a fleet manager
+  // registering a vehicle is exactly the moment they'd notice the standard kit is
+  // missing something, not just tucked away in a separate Settings page.
+  const { data: equipmentItems } = profile?.organization_id
+    ? await supabase
+        .from("safety_equipment_items")
+        .select("id, name")
+        .eq("organization_id", profile.organization_id)
+        .order("created_at")
+    : { data: [] as { id: string; name: string }[] };
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
@@ -166,6 +177,7 @@ export default async function FleetPage() {
                   <AddVehicleSection
                     categories={categoriesForVehicleForms}
                     locations={locations ?? []}
+                    equipmentItems={equipmentItems ?? []}
                     dict={dict}
                   />
                 </div>
