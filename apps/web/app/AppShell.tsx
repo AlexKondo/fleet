@@ -4,10 +4,13 @@ import { InactivityLogout } from "./InactivityLogout";
 import { SessionBackupSync } from "./SessionBackupSync";
 import { MobileNav } from "./MobileNav";
 import { NotificationBell } from "./dashboard/NotificationBell";
+import { UserMenu } from "./UserMenu";
 import { getRoleLabels } from "./settings/users/ROLE_LABELS";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { LanguageToggle } from "./ui/LanguageToggle";
 import { getLocale, getDictionary } from "../lib/i18n/getLocale";
+import { getCurrentUser } from "../lib/auth/currentUser";
+import { createSupabaseServerClient } from "../lib/supabase/server";
 import {
   AnalyticsIcon,
   DashboardIcon,
@@ -56,6 +59,21 @@ export async function AppShell({
   const locale = await getLocale();
   const dict = await getDictionary();
   const roleLabels = getRoleLabels(dict);
+
+  // Drives the bell's shake animation + the injected "CNH not uploaded" notice
+  // (dashboard/NotificationBell.tsx) — fetched here, once, so every page using this
+  // shell gets it for free instead of each page.tsx adding its own query for it.
+  const supabase = await createSupabaseServerClient();
+  const currentUser = await getCurrentUser(supabase);
+  let licenseMissing = false;
+  if (currentUser) {
+    const { data: ownProfile } = await supabase
+      .from("profiles")
+      .select("drivers_license_number")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+    licenseMissing = !ownProfile?.drivers_license_number;
+  }
 
   // Derived from `role` (which every caller already passes) rather than taken as another
   // prop: the gatehouse nav item has to appear on every screen a security user can land
@@ -145,17 +163,8 @@ export async function AppShell({
               <ThemeToggle dict={dict} />
             </div>
             <div className="hidden items-center gap-4 md:flex">
-              <NotificationBell align="right" dict={dict} locale={locale} />
-              <Link
-                href="/account"
-                className="hidden text-right lg:block"
-                title={dict.chrome.accountLink}
-              >
-                <p className="truncate text-sm text-paper-50 hover:text-gwm-accent">{userName}</p>
-                <p className="text-xs uppercase tracking-widest text-fog-600">
-                  {roleLabels[role] ?? role}
-                </p>
-              </Link>
+              <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
+              <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} dict={dict} />
               <form action={signOut}>
                 <button
                   type="submit"

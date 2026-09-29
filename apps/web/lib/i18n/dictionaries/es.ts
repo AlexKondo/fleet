@@ -113,6 +113,14 @@ const dict: Dictionary = {
     appTitle: "Fleet — Panel de Flota",
     appDescription: "Right Vehicle. Right Trip. Right Time. Ready to Go.",
     accountLink: "Mi cuenta",
+    userMenu: {
+      label: "Menú de la cuenta",
+      changePassword: "Cambiar contraseña",
+      personalData: "Datos personales",
+      license: "Licencia de conducir",
+      signOut: "Cerrar sesión",
+    },
+    licensePendingNotice: "Falta subir la licencia de conducir",
   },
   account: {
     title: "Mi Cuenta",
@@ -122,6 +130,37 @@ const dict: Dictionary = {
     confirmNewPasswordLabel: "Confirmar nueva contraseña",
     submit: "Guardar nueva contraseña",
     success: "Contraseña actualizada con éxito.",
+    license: {
+      title: "Licencia de conducir",
+      description:
+        "Toma una foto de tu licencia (o sube un archivo) — leemos los datos automáticamente y, si sigue vigente, ya quedas autorizado para retirar vehículos.",
+      capturePrompt: "Toca para fotografiar tu licencia",
+      analyzing: "Leyendo los datos de la licencia…",
+      noPhoto: "Toma o sube una foto de tu licencia antes de enviar.",
+      notAnImage: "El archivo debe ser una imagen.",
+      photoTooLarge: "Archivo mayor a 5MB — elige una foto más pequeña.",
+      analysisFailed: "No se pudo analizar la foto ahora. Intenta de nuevo en un momento.",
+      saveFailed: "No se pudieron guardar los datos de la licencia.",
+      unreadable:
+        "No pudimos leer todos los datos en esta foto. Toma otra en un lugar bien iluminado, sin reflejos, con el documento completo en el encuadre.",
+      unreadableRetry: "Tomar otra foto",
+      unreadableGiveUp:
+        "Si no funciona después de varios intentos, pide al Gestor de Flota o Administrador que te autorice manualmente en Configuración → Equipo.",
+      successValid: "Licencia leída y validada — ya estás autorizado para retirar vehículos.",
+      successExpired:
+        "Licencia leída correctamente, pero la fecha de vencimiento impresa ya pasó. Pide al Gestor de Flota o Administrador que lo revise en Configuración → Equipo.",
+      submit: "Enviar",
+    },
+    profile: {
+      title: "Datos Personales",
+      nameLabel: "Nombre completo",
+      emailLabel: "Correo electrónico",
+      emailImmutableHint: "El correo no se puede cambiar aquí.",
+      nameRequired: "Ingresa tu nombre.",
+      saveFailed: "No se pudieron guardar tus datos.",
+      success: "Datos actualizados con éxito.",
+      submit: "Guardar",
+    },
   },
   login: {
     tagline: "Right Vehicle. Right Trip. Ready to Go.",
@@ -254,6 +293,9 @@ const dict: Dictionary = {
   notifications: {
     label: "Notificaciones",
     ariaUnread: "Notificaciones, {count} sin leer",
+    licensePendingAria: "Falta subir la licencia de conducir",
+    licensePendingTitle: "Falta subir la licencia de conducir",
+    licensePendingBody: "Toca para subir la foto de tu licencia y quedar autorizado para retirar vehículos.",
     markAllRead: "Marcar todas como leídas",
     loadError: "No fue posible cargar las notificaciones ahora.",
     empty: "No hay notificaciones por aquí.",
@@ -265,6 +307,7 @@ const dict: Dictionary = {
     },
     knownTitles: {
       "Nova reserva aguardando aprovação": "Nueva reserva pendiente de aprobación",
+      "Nova mensagem na reserva": "Nuevo mensaje en la reserva",
       "Reserva aprovada": "Reserva aprobada",
       "Reserva cancelada": "Reserva cancelada",
       "Novas tarefas operacionais": "Nuevas tareas operativas",

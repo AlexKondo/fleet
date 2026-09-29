@@ -31,7 +31,8 @@ export type KnownNotificationTitle =
   | "Seu pedido de veículo não pôde ser atendido"
   | "Pedido de carona na sua viagem"
   | "Carona aceita"
-  | "Carona recusada";
+  | "Carona recusada"
+  | "Nova mensagem na reserva";
 
 /** Exact pt-BR `notifications.body` literals that carry no interpolated data. */
 export type KnownNotificationBody =
@@ -150,6 +151,14 @@ export type Dictionary = {
     appDescription: string;
     /** Title/hover text on the user name block in the header, linking to /account. */
     accountLink: string;
+    userMenu: {
+      label: string;
+      changePassword: string;
+      personalData: string;
+      license: string;
+      signOut: string;
+    };
+    licensePendingNotice: string;
   };
   /** Self-service "change my password" screen, reachable by any role from the header. */
   account: {
@@ -160,6 +169,33 @@ export type Dictionary = {
     confirmNewPasswordLabel: string;
     submit: string;
     success: string;
+    license: {
+      title: string;
+      description: string;
+      capturePrompt: string;
+      analyzing: string;
+      noPhoto: string;
+      notAnImage: string;
+      photoTooLarge: string;
+      analysisFailed: string;
+      saveFailed: string;
+      unreadable: string;
+      unreadableRetry: string;
+      unreadableGiveUp: string;
+      successValid: string;
+      successExpired: string;
+      submit: string;
+    };
+    profile: {
+      title: string;
+      nameLabel: string;
+      emailLabel: string;
+      emailImmutableHint: string;
+      nameRequired: string;
+      saveFailed: string;
+      success: string;
+      submit: string;
+    };
   };
   login: {
     tagline: string;
@@ -320,6 +356,9 @@ export type Dictionary = {
     label: string;
     /** {count} — number of unread notifications. */
     ariaUnread: string;
+    licensePendingAria: string;
+    licensePendingTitle: string;
+    licensePendingBody: string;
     markAllRead: string;
     loadError: string;
     empty: string;

@@ -17,7 +17,7 @@ import { markAllNotificationsRead, markNotificationRead } from "./notificationAc
  */
 type NotificationRow = Pick<
   Database["public"]["Tables"]["notifications"]["Row"],
-  "id" | "title" | "body" | "read_at" | "created_at"
+  "id" | "title" | "body" | "read_at" | "created_at" | "entity_type" | "entity_id"
 >;
 
 // Self-contained: reads notifications directly with the browser Supabase client (RLS —
@@ -83,7 +83,7 @@ async function refreshStore(): Promise<void> {
   const [{ data: list, error: listError }, { count, error: countError }] = await Promise.all([
     supabase
       .from("notifications")
-      .select("id,title,body,read_at,created_at")
+      .select("id,title,body,read_at,created_at,entity_type,entity_id")
       .order("created_at", { ascending: false })
       .limit(LIST_LIMIT),
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
@@ -137,15 +137,16 @@ function translateTitle(t: Dictionary["notifications"], title: string): string {
 const TITLE_NEW_RESERVATION_AWAITING_APPROVAL = "Nova reserva aguardando aprovação";
 
 /**
- * Where clicking a notification should take the viewer, keyed by the same raw pt-BR
- * title the RPCs write (see translateTitle above). Only the approval one is wired up for
- * now — a fleet manager/administrator landing on the bell has nowhere to act on it
- * otherwise, since approving happens from the dashboard's pending-reservations list, not
- * from the notification itself. Titles with no obvious single destination (e.g. a
- * cancellation, which just informs) are left unmapped and stay click-to-dismiss only.
+ * Where clicking a notification should take the viewer. `entity_type`/`entity_id`
+ * (0040_message_notifications.sql) cover any notification tied to a specific record —
+ * currently just reservation messages, linking straight to that reservation's thread
+ * instead of the generic dashboard. Titles with no entity and no obvious single
+ * destination (e.g. a cancellation, which just informs) stay unmapped and
+ * click-to-dismiss only.
  */
-function notificationHref(title: string): string | null {
-  if (title === TITLE_NEW_RESERVATION_AWAITING_APPROVAL) return "/dashboard";
+function notificationHref(n: Pick<NotificationRow, "title" | "entity_type" | "entity_id">): string | null {
+  if (n.entity_type === "reservation" && n.entity_id) return `/reservations/${n.entity_id}`;
+  if (n.title === TITLE_NEW_RESERVATION_AWAITING_APPROVAL) return "/dashboard";
   return null;
 }
 
@@ -235,10 +236,16 @@ export function NotificationBell({
   align = "right",
   dict,
   locale,
+  licenseMissing = false,
 }: {
   align?: "left" | "right";
   dict: Dictionary;
   locale: Locale;
+  /** Shakes the bell and pins a "CNH not uploaded" item at the top of the list until the
+   * driver's license is on file (AppShell.tsx computes this once per page load). Not a
+   * real row in `notifications` — it disappears the moment the license is uploaded,
+   * rather than needing to be dismissed like a normal notification. */
+  licenseMissing?: boolean;
 }) {
   const t = dict.notifications;
   const [isOpen, setIsOpen] = useState(false);
@@ -313,8 +320,16 @@ export function NotificationBell({
         onClick={() => setIsOpen((v) => !v)}
         aria-haspopup="true"
         aria-expanded={isOpen}
-        aria-label={unreadCount > 0 ? withCount(t.ariaUnread, unreadCount) : t.label}
-        className="relative flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
+        aria-label={
+          licenseMissing
+            ? t.licensePendingAria
+            : unreadCount > 0
+              ? withCount(t.ariaUnread, unreadCount)
+              : t.label
+        }
+        className={`relative flex h-8 w-8 items-center justify-center rounded-sm border text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent ${
+          licenseMissing ? "animate-bell-shake border-signal-red text-signal-red" : "border-line-800"
+        }`}
       >
         <svg
           width="16"
@@ -330,9 +345,9 @@ export function NotificationBell({
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
-        {unreadCount > 0 ? (
+        {licenseMissing || unreadCount > 0 ? (
           <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-signal-red px-1 font-mono text-[10px] font-semibold leading-none text-paper-50">
-            {unreadCount > 9 ? "9+" : unreadCount}
+            {licenseMissing ? "!" : unreadCount > 9 ? "9+" : unreadCount}
           </span>
         ) : null}
       </button>
@@ -359,17 +374,33 @@ export function NotificationBell({
           </div>
 
           <div className="max-h-80 overflow-y-auto">
+            {licenseMissing ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  router.push("/account/license");
+                }}
+                className="flex w-full items-start gap-2 border-b border-line-800 bg-signal-red/10 px-4 py-3 text-left hover:bg-signal-red/20"
+              >
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-signal-red" aria-hidden="true" />
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="text-sm text-signal-red">{t.licensePendingTitle}</span>
+                  <span className="text-xs text-fog-400">{t.licensePendingBody}</span>
+                </span>
+              </button>
+            ) : null}
             {loadError ? (
               <p className="px-4 py-6 text-center text-sm text-signal-red">
                 {t.loadError}
               </p>
-            ) : notifications.length === 0 ? (
+            ) : notifications.length === 0 && !licenseMissing ? (
               <p className="px-4 py-6 text-center text-sm text-fog-400">{t.empty}</p>
             ) : (
               <ul>
                 {notifications.map((n) => {
                   const isUnread = n.read_at === null;
-                  const href = notificationHref(n.title);
+                  const href = notificationHref(n);
                   return (
                     <li key={n.id} className="border-b border-line-800 last:border-0">
                       <button

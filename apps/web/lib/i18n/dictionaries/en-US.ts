@@ -113,6 +113,14 @@ const dict: Dictionary = {
     appTitle: "Fleet — Fleet Dashboard",
     appDescription: "Right Vehicle. Right Trip. Right Time. Ready to Go.",
     accountLink: "My account",
+    userMenu: {
+      label: "Account menu",
+      changePassword: "Change password",
+      personalData: "Personal data",
+      license: "Driver's license",
+      signOut: "Sign out",
+    },
+    licensePendingNotice: "Driver's license not uploaded",
   },
   account: {
     title: "My Account",
@@ -122,6 +130,37 @@ const dict: Dictionary = {
     confirmNewPasswordLabel: "Confirm new password",
     submit: "Save new password",
     success: "Password updated successfully.",
+    license: {
+      title: "Driver's License",
+      description:
+        "Take a photo of your driver's license (or upload a file) — we read the data automatically and, if it's still valid, authorize you to pick up vehicles right away.",
+      capturePrompt: "Tap to photograph your license",
+      analyzing: "Reading your license…",
+      noPhoto: "Take or upload a photo of your license before submitting.",
+      notAnImage: "The file must be an image.",
+      photoTooLarge: "File larger than 5MB — choose a smaller photo.",
+      analysisFailed: "Couldn't analyze the photo right now. Try again shortly.",
+      saveFailed: "Couldn't save the license data.",
+      unreadable:
+        "We couldn't read all the fields on this photo. Take another one somewhere well-lit, without glare, with the whole document in frame.",
+      unreadableRetry: "Take another photo",
+      unreadableGiveUp:
+        "If it still doesn't work after a few tries, ask your Fleet Manager or Administrator to authorize you manually in Settings → Team.",
+      successValid: "License read and validated — you're authorized to pick up vehicles.",
+      successExpired:
+        "License read successfully, but the printed expiration date has passed. Ask your Fleet Manager or Administrator to review it in Settings → Team.",
+      submit: "Submit",
+    },
+    profile: {
+      title: "Personal Data",
+      nameLabel: "Full name",
+      emailLabel: "Email",
+      emailImmutableHint: "Email can't be changed here.",
+      nameRequired: "Enter your name.",
+      saveFailed: "Couldn't save your data.",
+      success: "Data updated successfully.",
+      submit: "Save",
+    },
   },
   login: {
     tagline: "Right Vehicle. Right Trip. Ready to Go.",
@@ -254,6 +293,9 @@ const dict: Dictionary = {
   notifications: {
     label: "Notifications",
     ariaUnread: "Notifications, {count} unread",
+    licensePendingAria: "Driver's license not uploaded",
+    licensePendingTitle: "Driver's license not uploaded",
+    licensePendingBody: "Tap to upload a photo of your license and get authorized to pick up vehicles.",
     markAllRead: "Mark all as read",
     loadError: "We couldn't load notifications right now.",
     empty: "No notifications here.",
@@ -265,6 +307,7 @@ const dict: Dictionary = {
     },
     knownTitles: {
       "Nova reserva aguardando aprovação": "New reservation awaiting approval",
+      "Nova mensagem na reserva": "New message on reservation",
       "Reserva aprovada": "Reservation approved",
       "Reserva cancelada": "Reservation cancelled",
       "Novas tarefas operacionais": "New operational tasks",

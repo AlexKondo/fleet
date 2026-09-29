@@ -89,6 +89,21 @@ body {
   border: 2px solid var(--color-signal-red);
 }
 
+/* Bell "shake" while a driver's license upload is pending (NotificationBell.tsx) — brief
+   and infrequent rather than continuous, so it reads as "needs attention" without being
+   distracting on every page load. Respects prefers-reduced-motion via the rule below. */
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70% { transform: rotate(-12deg); }
+  20%, 40%, 60%, 80% { transform: rotate(12deg); }
+  90% { transform: rotate(0deg); }
+}
+.animate-bell-shake {
+  animation: bell-shake 1.8s ease-in-out infinite;
+  animation-delay: 1s;
+  transform-origin: 50% 20%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

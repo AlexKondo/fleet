@@ -113,6 +113,14 @@ const dict: Dictionary = {
     appTitle: "Fleet — Painel de Frota",
     appDescription: "Right Vehicle. Right Trip. Right Time. Ready to Go.",
     accountLink: "Minha conta",
+    userMenu: {
+      label: "Menu da conta",
+      changePassword: "Trocar senha",
+      personalData: "Dados pessoais",
+      license: "CNH",
+      signOut: "Sair",
+    },
+    licensePendingNotice: "Falta de upload da CNH",
   },
   account: {
     title: "Minha Conta",
@@ -122,6 +130,38 @@ const dict: Dictionary = {
     confirmNewPasswordLabel: "Confirmar nova senha",
     submit: "Salvar nova senha",
     success: "Senha atualizada com sucesso.",
+    license: {
+      title: "CNH (Carteira de Habilitação)",
+      description:
+        "Tire uma foto da sua CNH (ou envie um arquivo) — nosso sistema lê os dados automaticamente e, se a validade estiver em dia, já libera você para retirar veículos.",
+      capturePrompt: "Toque para fotografar sua CNH",
+      analyzing: "Lendo os dados da CNH…",
+      noPhoto: "Tire uma foto ou envie um arquivo da CNH antes de enviar.",
+      notAnImage: "O arquivo precisa ser uma imagem.",
+      photoTooLarge: "Arquivo maior que 5MB — escolha uma foto menor.",
+      analysisFailed: "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+      saveFailed: "Não foi possível salvar os dados da CNH.",
+      unreadable:
+        "Não conseguimos ler todos os dados da CNH nessa foto. Tire outra foto num ambiente bem iluminado, sem reflexo, enquadrando o documento inteiro.",
+      unreadableRetry: "Tirar outra foto",
+      unreadableGiveUp:
+        "Se não conseguir depois de algumas tentativas, peça ao Gestor de Frota ou Administrador para liberar manualmente em Configurações → Equipe.",
+      successValid:
+        "CNH lida e validada com sucesso — você já está liberado para retirar veículos.",
+      successExpired:
+        "CNH lida com sucesso, mas a validade impressa já está vencida. Peça ao Gestor de Frota ou Administrador para revisar em Configurações → Equipe.",
+      submit: "Enviar",
+    },
+    profile: {
+      title: "Dados Pessoais",
+      nameLabel: "Nome completo",
+      emailLabel: "E-mail",
+      emailImmutableHint: "O e-mail não pode ser alterado por aqui.",
+      nameRequired: "Informe seu nome.",
+      saveFailed: "Não foi possível salvar seus dados.",
+      success: "Dados atualizados com sucesso.",
+      submit: "Salvar",
+    },
   },
   login: {
     tagline: "Right Vehicle. Right Trip. Ready to Go.",
@@ -254,6 +294,9 @@ const dict: Dictionary = {
   notifications: {
     label: "Notificações",
     ariaUnread: "Notificações, {count} não lidas",
+    licensePendingAria: "Falta de upload da CNH",
+    licensePendingTitle: "Falta de upload da CNH",
+    licensePendingBody: "Toque para enviar a foto da sua CNH e liberar a retirada de veículos.",
     markAllRead: "Marcar todas como lidas",
     loadError: "Não foi possível carregar as notificações agora.",
     empty: "Nenhuma notificação por aqui.",
@@ -265,6 +308,7 @@ const dict: Dictionary = {
     },
     knownTitles: {
       "Nova reserva aguardando aprovação": "Nova reserva aguardando aprovação",
+      "Nova mensagem na reserva": "Nova mensagem na reserva",
       "Reserva aprovada": "Reserva aprovada",
       "Reserva cancelada": "Reserva cancelada",
       "Novas tarefas operacionais": "Novas tarefas operacionais",

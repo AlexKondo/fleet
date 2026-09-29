@@ -1,0 +1,142 @@
+"use client";
+
+import { useActionState, useEffect, useRef, useState } from "react";
+import { submitLicensePhoto, type LicenseUploadState } from "./actions";
+import { CameraCaptureModal } from "../../reservations/[id]/CameraCaptureModal";
+import { Button } from "../../ui/Button";
+import type { Dictionary } from "../../../lib/i18n/dictionaries";
+
+const initialState: LicenseUploadState = { status: "idle" };
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
+  const t = dict.account.license;
+  const [state, formAction, pending] = useActionState(submitLicensePhoto, initialState);
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  // Same reasoning as PhotoCapture.tsx: hand the File to the form's action directly
+  // instead of relying on a hidden <input>'s `.files` being synced by JS, which isn't
+  // reliably picked up by native FormData collection on every mobile browser.
+  function handlePicked(picked: File | undefined | null) {
+    if (!picked) return;
+    if (picked.size > MAX_PHOTO_BYTES) {
+      setError(t.photoTooLarge);
+      return;
+    }
+    setError(null);
+    setFile(picked);
+  }
+
+  function handleSubmit(formData: FormData) {
+    if (!file) {
+      setError(t.noPhoto);
+      return;
+    }
+    formData.set("photo", file);
+    formAction(formData);
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-fog-400">{t.description}</p>
+
+      <form ref={formRef} action={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-line-800 bg-panel-800">
+            {previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- local blob: preview
+              <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-2xl text-fog-600" aria-hidden="true">
+                🪪
+              </span>
+            )}
+          </span>
+          <span className="flex-1 text-xs text-fog-400">{file ? file.name : t.capturePrompt}</span>
+          <button
+            type="button"
+            onClick={() => setShowCamera(true)}
+            className="shrink-0 rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600"
+          >
+            {dict.reservations.photos.capture}
+          </button>
+          <button
+            type="button"
+            onClick={() => uploadInputRef.current?.click()}
+            className="shrink-0 rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600"
+          >
+            {dict.reservations.photos.upload}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            name="photo"
+            accept="image/*"
+            className="sr-only"
+            tabIndex={-1}
+          />
+          <input
+            ref={uploadInputRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(e) => handlePicked(e.target.files?.[0])}
+          />
+        </div>
+
+        {error ? (
+          <p role="alert" className="text-sm text-signal-red">
+            {error}
+          </p>
+        ) : null}
+
+        {state.status === "unreadable" ? (
+          <div className="rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-3 text-sm text-gwm-accent">
+            <p>{t.unreadable}</p>
+            <p className="mt-2 text-xs text-fog-400">{t.unreadableGiveUp}</p>
+          </div>
+        ) : null}
+
+        {state.status === "error" ? (
+          <p role="alert" className="text-sm text-signal-red">
+            {state.error}
+          </p>
+        ) : null}
+
+        {state.status === "success" ? (
+          <p role="status" className="text-sm text-signal-teal">
+            {t.successValid}
+          </p>
+        ) : null}
+
+        <Button type="submit" disabled={pending || !file} className="self-start">
+          {pending ? t.analyzing : state.status === "unreadable" ? t.unreadableRetry : t.submit}
+        </Button>
+      </form>
+
+      {showCamera ? (
+        <CameraCaptureModal
+          dict={dict}
+          onCapture={(f) => handlePicked(f)}
+          onClose={() => setShowCamera(false)}
+        />
+      ) : null}
+    </div>
+  );
+}

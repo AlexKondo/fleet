@@ -223,6 +223,8 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          entity_id: string | null
+          entity_type: string | null
           id: string
           organization_id: string
           read_at: string | null
@@ -232,6 +234,8 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           organization_id: string
           read_at?: string | null
@@ -241,6 +245,8 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           organization_id?: string
           read_at?: string | null
@@ -341,6 +347,9 @@ export type Database = {
           drivers_license_number: string | null
           full_name: string
           id: string
+          license_reminder_1mo_sent_at: string | null
+          license_reminder_3mo_sent_at: string | null
+          license_reminder_6mo_sent_at: string | null
           organization_id: string
           role: Database["public"]["Enums"]["user_role"]
         }
@@ -352,6 +361,9 @@ export type Database = {
           drivers_license_number?: string | null
           full_name: string
           id: string
+          license_reminder_1mo_sent_at?: string | null
+          license_reminder_3mo_sent_at?: string | null
+          license_reminder_6mo_sent_at?: string | null
           organization_id: string
           role?: Database["public"]["Enums"]["user_role"]
         }
@@ -363,6 +375,9 @@ export type Database = {
           drivers_license_number?: string | null
           full_name?: string
           id?: string
+          license_reminder_1mo_sent_at?: string | null
+          license_reminder_3mo_sent_at?: string | null
+          license_reminder_6mo_sent_at?: string | null
           organization_id?: string
           role?: Database["public"]["Enums"]["user_role"]
         }
