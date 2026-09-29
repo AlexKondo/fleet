@@ -160,6 +160,7 @@ const dict: Dictionary = {
       },
       redo: "Refazer",
       confirmReadCheckbox: "Conferi os dados e estão corretos.",
+      read: "Ler",
       submit: "Enviar",
     },
     profile: {

@@ -159,6 +159,7 @@ const dict: Dictionary = {
       },
       redo: "Redo",
       confirmReadCheckbox: "I checked the data and it's correct.",
+      read: "Read",
       submit: "Submit",
     },
     profile: {

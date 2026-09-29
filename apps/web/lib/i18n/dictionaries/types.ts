@@ -194,6 +194,7 @@ export type Dictionary = {
       };
       redo: string;
       confirmReadCheckbox: string;
+      read: string;
       submit: string;
     };
     profile: {

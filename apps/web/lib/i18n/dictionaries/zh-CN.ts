@@ -153,6 +153,7 @@ const dict: Dictionary = {
       },
       redo: "重新拍摄",
       confirmReadCheckbox: "我已核对数据，确认无误。",
+      read: "读取",
       submit: "提交",
     },
     profile: {

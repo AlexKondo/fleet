@@ -333,7 +333,13 @@ function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestar
             disabled={pending || (isAnalyzed ? !confirmed : !file)}
             className="self-start"
           >
-            {pending ? t.analyzing : state.status === "unreadable" ? t.unreadableRetry : t.submit}
+            {pending
+              ? t.analyzing
+              : state.status === "unreadable"
+                ? t.unreadableRetry
+                : isAnalyzed
+                  ? t.submit
+                  : t.read}
           </Button>
         )}
       </form>
