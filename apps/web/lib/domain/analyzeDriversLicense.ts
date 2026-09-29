@@ -27,7 +27,7 @@ Ground truth rule, use it as a check even if you read the labels: Validade (4b) 
 If you are not confident which one is 4b/Validade specifically, return readable:false rather than guessing — do not default to whichever date you noticed first.
 
 Extract exactly these fields: the license number ("5 Nº Registro"), the driver's full name ("1/2 Nome"), the category ("9 Cat Hab" — e.g. A, B, AB, C, D, E), the expiration date (field 4b, as defined above), AND the issue date (field 4a) — the issue date is returned too, purely so the caller can sanity-check that 4b is after 4a.
-Respond with ONLY a JSON object, no other text:
+Respond with ONLY a JSON object, no other text, no markdown code fence:
 - If you can clearly read all five fields: {"readable": true, "number": "...", "fullName": "...", "category": "...", "issueDate": "YYYY-MM-DD", "expirationDate": "YYYY-MM-DD"}
 - If the document isn't a CNH, is too blurry/dark/cropped to read reliably, or is missing a required field: {"readable": false}
 Never guess a value you can't actually read — return readable:false instead.`;
@@ -45,8 +45,11 @@ function parseModelJson(content: string):
     issueDate?: string;
     expirationDate?: string;
   };
+  // Claude sometimes wraps JSON in a ```json fence despite being told not to — strip it
+  // before parsing rather than rejecting an otherwise well-formed reading.
+  const cleaned = content.trim().replace(/^```(?:json)?\s*/, "").replace(/```\s*$/, "");
   try {
-    parsed = JSON.parse(content);
+    parsed = JSON.parse(cleaned);
   } catch {
     return { status: "unreadable" };
   }
@@ -98,124 +101,77 @@ function parseModelJson(content: string):
  * would silently auto-authorize a driver whose real license may already be expired —
  * BR-004/GT-011 needs the printed date, not the model's best guess at it.
  *
- * A PDF (CNH Digital's export format) is converted to a PNG ourselves first
- * (renderPdfPageToPng.ts, high resolution, scale 3) and sent through the exact same
- * image_url + detail:"high" path as a photo upload — every input this function actually
- * sends to the vision model is a quality-controlled raster image. This replaces an
- * earlier version that routed PDFs through OpenAI's Responses API `input_file` content
- * type instead, which rasterizes internally with no exposed resolution control and
- * repeatedly misread the small printed 4a/4b date fields in testing — the images we
- * render ourselves are the actual fix, not a model/prompt change.
+ * Runs on Claude (Anthropic Messages API), not OpenAI — OpenAI (gpt-4o-mini, then
+ * gpt-4o) repeatedly misread the small printed 4a/4b date fields in testing even after
+ * rendering PDFs to a fixed high-resolution PNG ourselves, so the model itself (not just
+ * the image pipeline) was switched.
+ *
+ * A PDF (CNH Digital's export format) is still converted to a PNG ourselves first
+ * (renderPdfPageToPng.ts, high resolution, scale 3) and sent through the same image path
+ * as a photo upload, for the same reason as before: full control over resolution instead
+ * of trusting a provider's internal rasterization. If that local render fails, the raw
+ * PDF is sent to Claude directly (Claude has native PDF input support), rather than
+ * hard-failing the upload.
  */
 export async function analyzeDriversLicense(photo: File): Promise<AnalyzeLicenseResult> {
-  const apiKey = process.env.API_OPENAI;
+  const apiKey = process.env.API_CLAUDE;
   if (!apiKey) {
     return { status: "error", message: "missing_api_key" };
   }
-
-  let base64: string;
-  let mimeType: string;
 
   if (photo.type === "application/pdf") {
     const pdfBytes = new Uint8Array(await photo.arrayBuffer());
     try {
       const png = await renderPdfFirstPageToPng(pdfBytes);
-      base64 = png.toString("base64");
-      mimeType = "image/png";
+      return callClaude(apiKey, {
+        type: "image",
+        source: { type: "base64", media_type: "image/png", data: png.toString("base64") },
+      });
     } catch (err) {
       // Not every PDF renders cleanly with our own pipeline (font-embedding edge cases
-      // hit in testing) — fall back to OpenAI's own PDF handling (Responses API,
-      // `input_file`) rather than hard-failing the whole upload over it. Lower quality
-      // control than our own render, but still functional.
+      // hit in testing) — fall back to handing Claude the raw PDF (native document
+      // support) rather than hard-failing the whole upload over it.
       console.error("analyzeDriversLicense: local PDF render failed, falling back:", err);
-      return analyzeWithOpenAiPdfFallback(apiKey, photo, pdfBytes);
+      return callClaude(apiKey, {
+        type: "document",
+        source: { type: "base64", media_type: "application/pdf", data: Buffer.from(pdfBytes).toString("base64") },
+      });
     }
-  } else {
-    base64 = Buffer.from(await photo.arrayBuffer()).toString("base64");
-    mimeType = photo.type || "image/jpeg";
   }
 
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        temperature: 0,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Read this CNH photo and extract the fields." },
-              {
-                type: "image_url",
-                // "high" forces full-resolution tiled processing instead of the
-                // model's default downscale-for-token-efficiency behavior — the
-                // 4a/4b date labels are small enough that a lower-detail pass can
-                // blur past them.
-                image_url: { url: `data:${mimeType};base64,${base64}`, detail: "high" },
-              },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      return { status: "error", message: `openai_http_${response.status}: ${body.slice(0, 200)}` };
-    }
-
-    const json = await response.json();
-    const content: unknown = json.choices?.[0]?.message?.content;
-
-    if (typeof content !== "string") {
-      return { status: "error", message: "unexpected_openai_response" };
-    }
-
-    return parseModelJson(content);
-  } catch (err) {
-    return { status: "error", message: err instanceof Error ? err.message : "unknown_error" };
-  }
+  const base64 = Buffer.from(await photo.arrayBuffer()).toString("base64");
+  const mimeType = photo.type || "image/jpeg";
+  return callClaude(apiKey, {
+    type: "image",
+    source: { type: "base64", media_type: mimeType, data: base64 },
+  });
 }
 
-/** Fallback path when our own PDF-to-PNG render fails: OpenAI's Responses API reads the
- * PDF directly (rasterizing it server-side, no resolution control exposed to us) — worse
- * quality than our own render, but keeps the upload working instead of a hard failure. */
-async function analyzeWithOpenAiPdfFallback(
+async function callClaude(
   apiKey: string,
-  photo: File,
-  pdfBytes: Uint8Array,
+  contentBlock:
+    | { type: "image"; source: { type: "base64"; media_type: string; data: string } }
+    | { type: "document"; source: { type: "base64"; media_type: string; data: string } },
 ): Promise<AnalyzeLicenseResult> {
-  const base64 = Buffer.from(pdfBytes).toString("base64");
-
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        text: { format: { type: "json_object" } },
+        model: "claude-sonnet-5-5",
+        max_tokens: 500,
         temperature: 0,
-        input: [
-          { role: "system", content: SYSTEM_PROMPT },
+        system: SYSTEM_PROMPT,
+        messages: [
           {
             role: "user",
             content: [
-              { type: "input_text", text: "Read this CNH document and extract the fields." },
-              {
-                type: "input_file",
-                filename: photo.name || "cnh.pdf",
-                file_data: `data:application/pdf;base64,${base64}`,
-              },
+              { type: "text", text: "Read this CNH document and extract the fields." },
+              contentBlock,
             ],
           },
         ],
@@ -224,16 +180,16 @@ async function analyzeWithOpenAiPdfFallback(
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
-      return { status: "error", message: `openai_http_${response.status}: ${body.slice(0, 200)}` };
+      return { status: "error", message: `claude_http_${response.status}: ${body.slice(0, 200)}` };
     }
 
     const json = await response.json();
-    const content: unknown = (json.output ?? [])
-      .flatMap((item: { content?: { type: string; text?: string }[] }) => item.content ?? [])
-      .find((c: { type: string; text?: string }) => c.type === "output_text")?.text;
+    const content: unknown = json.content?.find(
+      (block: { type: string; text?: string }) => block.type === "text",
+    )?.text;
 
     if (typeof content !== "string") {
-      return { status: "error", message: "unexpected_openai_response" };
+      return { status: "error", message: "unexpected_claude_response" };
     }
 
     return parseModelJson(content);
