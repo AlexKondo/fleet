@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import type { Database, TypedSupabaseClient } from "@fleet/supabase-client";
 import { formatDate } from "@/lib/formatDateTime";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -133,6 +134,21 @@ function translateTitle(t: Dictionary["notifications"], title: string): string {
   return (t.knownTitles as Record<string, string>)[title] ?? title;
 }
 
+const TITLE_NEW_RESERVATION_AWAITING_APPROVAL = "Nova reserva aguardando aprovação";
+
+/**
+ * Where clicking a notification should take the viewer, keyed by the same raw pt-BR
+ * title the RPCs write (see translateTitle above). Only the approval one is wired up for
+ * now — a fleet manager/administrator landing on the bell has nowhere to act on it
+ * otherwise, since approving happens from the dashboard's pending-reservations list, not
+ * from the notification itself. Titles with no obvious single destination (e.g. a
+ * cancellation, which just informs) are left unmapped and stay click-to-dismiss only.
+ */
+function notificationHref(title: string): string | null {
+  if (title === TITLE_NEW_RESERVATION_AWAITING_APPROVAL) return "/dashboard";
+  return null;
+}
+
 const BODY_NEW_RESERVATION_PREFIX = "Uma nova viagem para ";
 const BODY_NEW_RESERVATION_SUFFIX = " aguarda aprovação.";
 const BODY_BLOCK_REASON_PREFIX = "Motivo: ";
@@ -227,6 +243,7 @@ export function NotificationBell({
   const t = dict.notifications;
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Server snapshot is the empty one: the bell is chrome that hydrates into live data,
   // and the notification list is per-user data this page never server-renders anyway.
@@ -352,13 +369,20 @@ export function NotificationBell({
               <ul>
                 {notifications.map((n) => {
                   const isUnread = n.read_at === null;
+                  const href = notificationHref(n.title);
                   return (
                     <li key={n.id} className="border-b border-line-800 last:border-0">
                       <button
                         type="button"
-                        onClick={() => (isUnread ? handleMarkOne(n.id) : undefined)}
+                        onClick={() => {
+                          if (isUnread) handleMarkOne(n.id);
+                          if (href) {
+                            setIsOpen(false);
+                            router.push(href);
+                          }
+                        }}
                         className={`flex w-full items-start gap-2 px-4 py-3 text-left hover:bg-panel-800 ${
-                          isUnread ? "cursor-pointer" : "cursor-default"
+                          isUnread || href ? "cursor-pointer" : "cursor-default"
                         }`}
                       >
                         <span
