@@ -15,18 +15,23 @@ export type AnalyzeLicenseResult =
 
 const SYSTEM_PROMPT = `You read Brazilian driver's licenses (CNH - Carteira Nacional de Habilitação), either a photo of the physical card or a CNH Digital PDF (the official app's export).
 
-A CNH — physical or digital — shows SEVERAL dates. Do not confuse them:
-- "Data de Nascimento" (date of birth) — NOT what you want.
-- "1ª Habilitação" / "Primeira Habilitação" (date first licensed, often years/decades ago) — NOT what you want.
-- "Emissão" / "Data de Emissão" (issue date of this specific document, more recent) — NOT what you want.
-- "Validade" / "Válida até" / "Data de Validade" (expiration date, always the LATEST/FUTURE-MOST date on the document, usually a few years after Emissão) — THIS is expirationDate.
-If you are not confident which labeled date is "Validade" specifically, return readable:false rather than guessing — do not fall back to "Emissão" or any other date just because "Validade" wasn't clearly labeled.
+Every CNH (physical or digital) follows the same official layout with numbered fields.
+The two fields you must NOT confuse sit RIGHT NEXT TO EACH OTHER, in this exact order, left to right, same row:
+  Field "4a" = "DATA EMISSÃO" (issue date) — NOT what you want.
+  Field "4b" = "VALIDADE" (expiration date) — THIS is expirationDate. It is immediately to the RIGHT of 4a/Emissão, and it is a SMALL RED/colored numeral block on most cards and PDFs.
+Also present elsewhere, also NOT what you want: "3 Data de Nascimento" (birth date, top area) and "1ª Habilitação" (top right, often decades old).
 
-Extract exactly these fields: the license number ("Nº Registro" / "Nº de Registro"), the driver's full name, the category (categoria — e.g. A, B, AB, C, D, E), and the expiration date as defined above.
+Ground truth rule, use it as a check even if you read the labels: Validade (4b) is ALWAYS chronologically LATER than Emissão (4a) — typically 5 to 10 years later. If the two dates you found in that emissão/validade pair are close together or the "later" one looks like the one on the LEFT, you almost certainly swapped them — re-examine and take the field positioned on the RIGHT (4b) as expirationDate, not the one on the left (4a).
+
+If you are not confident which one is 4b/Validade specifically, return readable:false rather than guessing — do not default to whichever date you noticed first.
+
+Extract exactly these fields: the license number ("5 Nº Registro"), the driver's full name ("1/2 Nome"), the category ("9 Cat Hab" — e.g. A, B, AB, C, D, E), the expiration date (field 4b, as defined above), AND the issue date (field 4a) — the issue date is returned too, purely so the caller can sanity-check that 4b is after 4a.
 Respond with ONLY a JSON object, no other text:
-- If you can clearly read all four fields: {"readable": true, "number": "...", "fullName": "...", "category": "...", "expirationDate": "YYYY-MM-DD"}
+- If you can clearly read all five fields: {"readable": true, "number": "...", "fullName": "...", "category": "...", "issueDate": "YYYY-MM-DD", "expirationDate": "YYYY-MM-DD"}
 - If the document isn't a CNH, is too blurry/dark/cropped to read reliably, or is missing a required field: {"readable": false}
 Never guess a value you can't actually read — return readable:false instead.`;
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function parseModelJson(content: string):
   | { status: "ok"; data: DriversLicenseData }
@@ -36,6 +41,7 @@ function parseModelJson(content: string):
     number?: string;
     fullName?: string;
     category?: string;
+    issueDate?: string;
     expirationDate?: string;
   };
   try {
@@ -50,9 +56,22 @@ function parseModelJson(content: string):
     !parsed.fullName ||
     !parsed.category ||
     !parsed.expirationDate ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(parsed.expirationDate)
+    !ISO_DATE.test(parsed.expirationDate)
   ) {
     return { status: "unreadable" };
+  }
+
+  let expirationDate = parsed.expirationDate;
+
+  // Ground-truth check independent of the prompt actually being followed: Validade is
+  // structurally always after Emissão on a real CNH. If the model still swapped the two
+  // adjacent fields (the exact failure mode a real user hit — see the prompt's own note
+  // above), issueDate ends up later than expirationDate, which is physically impossible.
+  // Swapping them back here fixes the common case without needing readable:false and
+  // asking the user to re-upload for what's ultimately our own extraction ordering, not a
+  // genuinely unreadable document.
+  if (parsed.issueDate && ISO_DATE.test(parsed.issueDate) && parsed.issueDate >= expirationDate) {
+    expirationDate = parsed.issueDate;
   }
 
   return {
@@ -61,7 +80,7 @@ function parseModelJson(content: string):
       number: parsed.number,
       fullName: parsed.fullName,
       category: parsed.category,
-      expirationDate: parsed.expirationDate,
+      expirationDate,
     },
   };
 }
