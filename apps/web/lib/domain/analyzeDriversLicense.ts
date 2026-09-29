@@ -13,8 +13,16 @@ export type AnalyzeLicenseResult =
   | { status: "unreadable" }
   | { status: "error"; message: string };
 
-const SYSTEM_PROMPT = `You read Brazilian driver's licenses (CNH - Carteira Nacional de Habilitação) from a photo or PDF (CNH Digital).
-Extract exactly these fields: the license number ("Nº Registro" / "Nº de Registro"), the driver's full name, the category (categoria — e.g. A, B, AB, C, D, E), and the expiration date ("Validade").
+const SYSTEM_PROMPT = `You read Brazilian driver's licenses (CNH - Carteira Nacional de Habilitação), either a photo of the physical card or a CNH Digital PDF (the official app's export).
+
+A CNH — physical or digital — shows SEVERAL dates. Do not confuse them:
+- "Data de Nascimento" (date of birth) — NOT what you want.
+- "1ª Habilitação" / "Primeira Habilitação" (date first licensed, often years/decades ago) — NOT what you want.
+- "Emissão" / "Data de Emissão" (issue date of this specific document, more recent) — NOT what you want.
+- "Validade" / "Válida até" / "Data de Validade" (expiration date, always the LATEST/FUTURE-MOST date on the document, usually a few years after Emissão) — THIS is expirationDate.
+If you are not confident which labeled date is "Validade" specifically, return readable:false rather than guessing — do not fall back to "Emissão" or any other date just because "Validade" wasn't clearly labeled.
+
+Extract exactly these fields: the license number ("Nº Registro" / "Nº de Registro"), the driver's full name, the category (categoria — e.g. A, B, AB, C, D, E), and the expiration date as defined above.
 Respond with ONLY a JSON object, no other text:
 - If you can clearly read all four fields: {"readable": true, "number": "...", "fullName": "...", "category": "...", "expirationDate": "YYYY-MM-DD"}
 - If the document isn't a CNH, is too blurry/dark/cropped to read reliably, or is missing a required field: {"readable": false}

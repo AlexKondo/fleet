@@ -184,6 +184,7 @@ export type Dictionary = {
       unreadableGiveUp: string;
       successValid: string;
       successExpired: string;
+      readSummary: string;
       submit: string;
     };
     profile: {

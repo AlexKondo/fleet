@@ -139,15 +139,35 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
         ) : null}
 
         {state.status === "success" ? (
-          <p role="status" className="text-sm text-signal-teal">
-            {t.successValid}
-          </p>
+          <div className="flex flex-col gap-1">
+            <p role="status" className="text-sm text-signal-teal">
+              {t.successValid}
+            </p>
+            {state.read ? (
+              <p className="text-xs text-fog-400">
+                {t.readSummary
+                  .replace("{number}", state.read.number)
+                  .replace("{category}", state.read.category)
+                  .replace("{expiration}", state.read.expirationDate)}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         {state.status === "success_expired" ? (
-          <p role="alert" className="text-sm text-signal-red">
-            {t.successExpired}
-          </p>
+          <div className="flex flex-col gap-1">
+            <p role="alert" className="text-sm text-signal-red">
+              {t.successExpired}
+            </p>
+            {state.read ? (
+              <p className="text-xs text-fog-400">
+                {t.readSummary
+                  .replace("{number}", state.read.number)
+                  .replace("{category}", state.read.category)
+                  .replace("{expiration}", state.read.expirationDate)}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         {isDone ? (

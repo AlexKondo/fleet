@@ -143,6 +143,7 @@ const dict: Dictionary = {
       unreadableGiveUp: "如果多次尝试后仍无法识别，请让车队经理或管理员在 设置 → 团队 中手动授权。",
       successValid: "驾驶证已读取并验证——您已获得取车授权。",
       successExpired: "驾驶证已成功读取，但印刷的有效期已过期。请让车队经理或管理员在 设置 → 团队 中审核。",
+      readSummary: "识别结果：编号 {number} · 类别 {category} · 有效期至 {expiration}。请核对是否正确。",
       submit: "提交",
     },
     profile: {

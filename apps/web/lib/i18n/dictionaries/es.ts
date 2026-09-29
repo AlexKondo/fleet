@@ -149,6 +149,7 @@ const dict: Dictionary = {
       successValid: "Licencia leída y validada — ya estás autorizado para retirar vehículos.",
       successExpired:
         "Licencia leída correctamente, pero la fecha de vencimiento impresa ya pasó. Pide al Gestor de Flota o Administrador que lo revise en Configuración → Equipo.",
+      readSummary: "Leído: Nº {number} · Categoría {category} · Vence {expiration}. Verifica que sea correcto.",
       submit: "Enviar",
     },
     profile: {

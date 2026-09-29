@@ -150,6 +150,7 @@ const dict: Dictionary = {
         "CNH lida e validada com sucesso — você já está liberado para retirar veículos.",
       successExpired:
         "CNH lida com sucesso, mas a validade impressa já está vencida. Peça ao Gestor de Frota ou Administrador para revisar em Configurações → Equipe.",
+      readSummary: "Lido: Nº {number} · Categoria {category} · Validade {expiration}. Confira se está correto.",
       submit: "Enviar",
     },
     profile: {

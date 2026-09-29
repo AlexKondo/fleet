@@ -10,6 +10,10 @@ import { getDictionary } from "@/lib/i18n/getLocale";
 export interface LicenseUploadState {
   status: "idle" | "success" | "success_expired" | "unreadable" | "error";
   error?: string;
+  /** Shown back to the user for both success and success_expired so a misread (e.g. the
+   * model confusing "Validade" with "Emissão" or another printed date) is obvious on
+   * screen immediately instead of a silent wrong block/approval. */
+  read?: { number: string; category: string; expirationDate: string };
 }
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -90,5 +94,12 @@ export async function submitLicensePhoto(
 
   revalidatePath("/account/license");
   revalidatePath("/dashboard");
-  return { status: isStillValid ? "success" : "success_expired" };
+  return {
+    status: isStillValid ? "success" : "success_expired",
+    read: {
+      number: result.data.number,
+      category: result.data.category,
+      expirationDate: result.data.expirationDate,
+    },
+  };
 }
