@@ -966,7 +966,6 @@ export type Dictionary = {
     micStart: string;
     micStop: string;
     micListening: string;
-    micCaptured: string;
     micPermissionDenied: string;
     micGenericError: string;
     confirmYes: string;

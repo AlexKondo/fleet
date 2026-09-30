@@ -913,7 +913,6 @@ const dict: Dictionary = {
     micStart: "语音输入",
     micStop: "停止",
     micListening: "正在聆听...",
-    micCaptured: "已捕获，请检查后发送",
     micPermissionDenied: "麦克风权限被拒绝，请在浏览器设置中启用。",
     micGenericError: "无法捕获音频，请重试或直接输入消息。",
     confirmYes: "确认",

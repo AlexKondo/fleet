@@ -57,6 +57,12 @@ function parseModelJson(content: string): InterpretResult {
   try {
     parsed = JSON.parse(cleaned);
   } catch {
+    // Logged with the actual (truncated) content — this is the one failure mode that's
+    // otherwise invisible in production: the request itself succeeds (HTTP 200), so
+    // nothing upstream logs anything, and the user just sees a generic error. This is
+    // exactly what caught the max_tokens-truncation bug (stop_reason:"max_tokens" cutting
+    // the JSON off mid-string) that a silent catch here had been hiding.
+    console.error("chatOrchestrator: failed to parse model response as JSON:", cleaned.slice(0, 500));
     return { status: "error", message: "unparseable_response" };
   }
 
@@ -110,7 +116,14 @@ export async function interpretMessage(input: {
       },
       body: JSON.stringify({
         model: "claude-sonnet-5-5",
-        max_tokens: 500,
+        // This model spends a chunk of the max_tokens budget on its own internal
+        // "thinking" before ever writing the JSON reply — confirmed in production: with
+        // the full 14-intent prompt, thinking alone used 300-350+ tokens, leaving too
+        // little headroom at 500 and truncating the JSON mid-object
+        // (stop_reason:"max_tokens", literally cut off mid-string), which
+        // parseModelJson's JSON.parse then failed on. 2000 leaves comfortable room for
+        // both regardless of prompt/conversation length.
+        max_tokens: 2000,
         system: systemPrompt,
         messages: [
           ...input.history.map((turn) => ({ role: turn.role, content: turn.content })),
@@ -121,10 +134,18 @@ export async function interpretMessage(input: {
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
+      console.error(`chatOrchestrator: Claude HTTP ${response.status}:`, body.slice(0, 500));
       return { status: "error", message: `claude_http_${response.status}: ${body.slice(0, 200)}` };
     }
 
     const json = await response.json();
+    if (json.stop_reason === "max_tokens") {
+      // Not necessarily fatal (the text block can still be complete JSON if thinking used
+      // less of the budget this time), but worth a log line — a silent truncation is
+      // exactly what caused this bug in the first place, and this is the earliest point
+      // that can be detected.
+      console.error("chatOrchestrator: response hit max_tokens — may be truncated", { usage: json.usage });
+    }
     const content: unknown = json.content?.find(
       (block: { type: string; text?: string }) => block.type === "text",
     )?.text;

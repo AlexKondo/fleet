@@ -141,7 +141,7 @@ export function ChatPanel({
       role="dialog"
       aria-label={t.panelTitle}
       aria-hidden={!isOpen}
-      className={`fixed bottom-20 right-5 z-40 flex h-[28rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col rounded-md border border-line-800 bg-panel-900 shadow-xl shadow-black/40 ${
+      className={`fixed bottom-20 right-5 z-40 flex h-[31rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col rounded-md border border-line-800 bg-panel-900 shadow-xl shadow-black/40 ${
         isOpen ? "" : "hidden"
       }`}
     >
@@ -204,74 +204,73 @@ export function ChatPanel({
         ) : null}
 
         {pending ? <p className="mt-2 text-xs text-fog-600">{t.thinking}</p> : null}
-        {isListening || interimTranscript ? (
-          <p
-            role="status"
-            className={`mt-2 flex items-center gap-1.5 text-xs ${
-              isListening ? "text-gwm-accent" : "text-signal-teal"
-            }`}
-          >
-            {isListening ? (
-              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-gwm-accent" aria-hidden="true" />
-            ) : (
-              <span aria-hidden="true">✓</span>
-            )}
-            {interimTranscript ? `"${interimTranscript}"` : t.micListening}
-            {!isListening && interimTranscript ? ` — ${t.micCaptured}` : ""}
-          </p>
-        ) : null}
-        {micError ? (
-          <p role="alert" className="mt-2 text-xs text-signal-red">
-            {micError}
-          </p>
-        ) : null}
       </div>
 
       <form
         action={handleSend}
-        className="flex items-center gap-2 border-t border-line-800 p-3"
+        className="flex flex-col gap-2 border-t border-line-800 p-3"
       >
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={t.inputPlaceholder}
-          disabled={pending || state.status === "needs_confirmation"}
-          className="min-w-0 flex-1 rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent disabled:opacity-50"
-        />
-        {micSupported ? (
-          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center">
-            {isListening ? (
-              <span
-                className="animate-mic-pulse pointer-events-none absolute inset-0 rounded-sm bg-gwm-accent/40"
-                aria-hidden="true"
-              />
-            ) : null}
-            <button
-              type="button"
-              onClick={toggleMic}
-              disabled={pending || state.status === "needs_confirmation"}
-              aria-pressed={isListening}
-              aria-label={isListening ? t.micStop : t.micStart}
-              title={isListening ? t.micStop : t.micStart}
-              className={`relative flex h-9 w-9 items-center justify-center rounded-sm border text-fog-400 hover:border-gwm-accent hover:text-gwm-accent disabled:opacity-50 ${
-                isListening ? "border-gwm-accent text-gwm-accent" : "border-line-800"
-              }`}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
-                <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" />
-                <path d="M19 11a7 7 0 0 1-14 0M12 18v3" />
-              </svg>
-            </button>
-          </span>
+        {isListening ? (
+          <p role="status" className="flex items-center gap-1.5 text-xs text-gwm-accent">
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-gwm-accent" aria-hidden="true" />
+            {t.micListening}
+          </p>
         ) : null}
-        <button
-          type="submit"
-          disabled={pending || !draft.trim() || state.status === "needs_confirmation"}
-          className="shrink-0 rounded-sm bg-gwm-accent px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90 disabled:opacity-50"
-        >
-          {t.send}
-        </button>
+        {micError ? (
+          <p role="alert" className="text-xs text-signal-red">
+            {micError}
+          </p>
+        ) : null}
+        <div className="flex items-end gap-2">
+          <textarea
+            rows={3}
+            // While listening, the live transcript is composited straight into the
+            // textarea itself (what's already been said + what's being heard right now)
+            // instead of a separate status line above the input — per feedback, the
+            // transcription should appear where the message is actually being composed,
+            // not off in the conversation window.
+            value={isListening ? `${draft}${draft && interimTranscript ? " " : ""}${interimTranscript}` : draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={t.inputPlaceholder}
+            disabled={pending || state.status === "needs_confirmation"}
+            className="min-w-0 flex-1 resize-none rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent disabled:opacity-50"
+          />
+            <div className="flex shrink-0 flex-col gap-2">
+              {micSupported ? (
+                <span className="relative flex h-9 w-9 shrink-0 items-center justify-center">
+                  {isListening ? (
+                    <span
+                      className="animate-mic-pulse pointer-events-none absolute inset-0 rounded-sm bg-gwm-accent/40"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={toggleMic}
+                    disabled={pending || state.status === "needs_confirmation"}
+                    aria-pressed={isListening}
+                    aria-label={isListening ? t.micStop : t.micStart}
+                    title={isListening ? t.micStop : t.micStart}
+                    className={`relative flex h-9 w-9 items-center justify-center rounded-sm border text-fog-400 hover:border-gwm-accent hover:text-gwm-accent disabled:opacity-50 ${
+                      isListening ? "border-gwm-accent text-gwm-accent" : "border-line-800"
+                    }`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                      <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" />
+                      <path d="M19 11a7 7 0 0 1-14 0M12 18v3" />
+                    </svg>
+                  </button>
+                </span>
+              ) : null}
+              <button
+                type="submit"
+                disabled={pending || !draft.trim() || state.status === "needs_confirmation"}
+                className="shrink-0 rounded-sm bg-gwm-accent px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90 disabled:opacity-50"
+              >
+                {t.send}
+              </button>
+            </div>
+          </div>
       </form>
     </div>
   );
