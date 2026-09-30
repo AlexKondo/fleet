@@ -76,6 +76,13 @@ export function ChatPanel({
     }
   }, [isOpen, isListening]);
 
+  // Sending a message, confirming/cancelling, or picking a vehicle option all end the
+  // current turn of the conversation — the mic should stop with it instead of continuing to
+  // capture (and show its "listening" indicator) into whatever comes next on screen.
+  function stopListeningIfActive() {
+    if (isListening) recognitionRef.current?.stop();
+  }
+
   function toggleMic() {
     const Ctor = getSpeechRecognitionCtor();
     if (!Ctor) return;
@@ -136,6 +143,7 @@ export function ChatPanel({
   }
 
   function handleSend(formData: FormData) {
+    stopListeningIfActive();
     formData.set("phase", "message");
     formData.set("message", draft);
     if (state.conversationId) formData.set("conversationId", state.conversationId);
@@ -145,6 +153,7 @@ export function ChatPanel({
   }
 
   function handleConfirm(confirm: boolean) {
+    stopListeningIfActive();
     const formData = new FormData();
     formData.set("phase", confirm ? "confirm" : "cancel");
     if (state.conversationId) formData.set("conversationId", state.conversationId);
@@ -152,6 +161,7 @@ export function ChatPanel({
   }
 
   function handleSelectVehicle(vehicleId: string) {
+    stopListeningIfActive();
     const formData = new FormData();
     formData.set("phase", "select_vehicle");
     formData.set("vehicleId", vehicleId);
