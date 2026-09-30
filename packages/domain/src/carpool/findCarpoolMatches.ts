@@ -18,7 +18,12 @@ export interface CarpoolMatchConfig {
 
 export const defaultCarpoolMatchConfig: CarpoolMatchConfig = {
   departureToleranceMinutes: 30,
-  returnToleranceMinutes: 30,
+  // Raised from 30 per a live report: "mesma região e diferença de 2hrs no retorno
+  // deveria permitir o aviso de carona" — the app itself always sources this from
+  // organization_settings.carpool_return_tolerance_minutes
+  // (0047_carpool_consent_and_tolerance.sql, same 120 default), this constant is the
+  // fallback for any other caller (tests, tools) that doesn't load org config.
+  returnToleranceMinutes: 120,
 };
 
 export interface CarpoolMatchResult {
@@ -86,6 +91,12 @@ export function findCarpoolMatches(
       blockingReasons.push("destination_mismatch");
     } else {
       positiveReasons.push("destination_match");
+    }
+
+    // Only the host's own explicit opt-out blocks — undefined (older records, or a
+    // caller that never set it) is treated as consent, same as the field's own default.
+    if (candidate.existingTrip.allowCarpool === false) {
+      blockingReasons.push("host_declined_carpool");
     }
 
     const departureDiffMinutes = minutesBetween(request.departureAt, candidate.existingTrip.departureAt);

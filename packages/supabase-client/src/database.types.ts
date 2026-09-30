@@ -702,6 +702,7 @@ export type Database = {
       }
       trip_requests: {
         Row: {
+          allow_carpool: boolean
           created_at: string
           departure_at: string
           destination: string
@@ -716,6 +717,7 @@ export type Database = {
           requires_cargo: boolean
         }
         Insert: {
+          allow_carpool?: boolean
           created_at?: string
           departure_at: string
           destination: string
@@ -730,6 +732,7 @@ export type Database = {
           requires_cargo?: boolean
         }
         Update: {
+          allow_carpool?: boolean
           created_at?: string
           departure_at?: string
           destination?: string
@@ -1049,6 +1052,7 @@ export type Database = {
       }
       create_vehicle_reservation: {
         Args: {
+          p_allow_carpool?: boolean
           p_departure_at: string
           p_destination: string
           p_distance_km: number

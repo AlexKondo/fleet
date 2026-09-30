@@ -84,6 +84,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
       passengerCount: Number(formData.get("passengerCount")),
       requiresCargo: formData.get("requiresCargo") === "on",
       justification: String(formData.get("justification")),
+      allowCarpool: formData.get("allowCarpool") === "on",
     });
     setConfirmError(null);
   }
@@ -206,6 +207,16 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
             className="h-4 w-4"
           />
           {t.cargoLabel}
+        </label>
+
+        <label className="flex items-center gap-2 text-sm text-fog-400">
+          <input
+            type="checkbox"
+            name="allowCarpool"
+            defaultChecked={draft.allowCarpool !== undefined ? draft.allowCarpool === "on" : true}
+            className="h-4 w-4"
+          />
+          {t.allowCarpoolLabel}
         </label>
 
         <label className="flex flex-col gap-1.5">

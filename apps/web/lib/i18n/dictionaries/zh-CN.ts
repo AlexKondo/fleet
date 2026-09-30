@@ -513,6 +513,7 @@ const dict: Dictionary = {
       distanceLabel: "预估里程（公里）",
       passengersLabel: "乘客人数",
       cargoLabel: "本次行程需要载货",
+      allowCarpoolLabel: "我愿意搭载前往同一目的地的其他人",
       justificationLabel: "用车事由",
       submit: "获取推荐方案",
       submitPending: "正在匹配最佳方案…",

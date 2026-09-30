@@ -33,6 +33,12 @@ export interface TripFormInput {
   passengerCount: number;
   requiresCargo: boolean;
   justification: string;
+  /** Whether the requester consents to sharing this vehicle with other travelers headed
+   * the same way, if create_vehicle_reservation ends up being the RPC actually called
+   * (findCarpoolMatches only reads this off an EXISTING trip being considered as a
+   * candidate, so it has no effect on the current search — only on whether THIS booking,
+   * once made, can later be offered to someone else). */
+  allowCarpool: boolean;
 }
 
 export interface PlanTripResult {
@@ -97,7 +103,7 @@ async function buildPlanInputs(input: TripFormInput) {
     .from("reservations")
     .select(
       `id, vehicle_id, end_at,
-       trip_request:trip_requests(id, departure_at, expected_return_at, origin, destination, distance_km, passenger_count, requires_cargo, justification, requester_id, organization_id),
+       trip_request:trip_requests(id, departure_at, expected_return_at, origin, destination, distance_km, passenger_count, requires_cargo, justification, requester_id, organization_id, allow_carpool),
        vehicle:vehicles(plate, category:vehicle_categories(passenger_capacity, supports_cargo))`,
     )
     .in("status", ["pending_approval", "confirmed"])
@@ -162,6 +168,7 @@ async function buildPlanInputs(input: TripFormInput) {
         passengerCount: r.trip_request!.passenger_count,
         requiresCargo: r.trip_request!.requires_cargo,
         justification: r.trip_request!.justification,
+        allowCarpool: r.trip_request!.allow_carpool,
       },
       vehicleCapacity: r.vehicle!.category!.passenger_capacity,
       vehicleSupportsCargo: r.vehicle!.category!.supports_cargo,
@@ -200,6 +207,7 @@ function parseTripFormInput(formData: FormData): TripFormInput {
     passengerCount: Number(formData.get("passengerCount")),
     requiresCargo: formData.get("requiresCargo") === "on",
     justification: String(formData.get("justification")),
+    allowCarpool: formData.get("allowCarpool") === "on",
   };
 }
 
@@ -389,6 +397,7 @@ export async function confirmTrip(
       p_requires_cargo: input.requiresCargo,
       p_justification: input.justification,
       p_vehicle_id: input.targetId,
+      p_allow_carpool: input.allowCarpool,
     });
     if (error) {
       // 23P01 = exclusion_violation — the reservations table's EXCLUDE constraint

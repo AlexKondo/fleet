@@ -527,6 +527,7 @@ const dict: Dictionary = {
       distanceLabel: "Distancia estimada (km)",
       passengersLabel: "Pasajeros",
       cargoLabel: "Este viaje implica transporte de carga",
+      allowCarpoolLabel: "Acepto llevar a otras personas que van al mismo destino",
       justificationLabel: "Justificación",
       submit: "Buscar recomendación",
       submitPending: "Buscando la mejor opción…",

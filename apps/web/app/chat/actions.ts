@@ -224,6 +224,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         passengerCount: Number(slots.passengerCount ?? 1),
         requiresCargo: slots.requiresCargo === "true",
         justification: slots.justification ?? "Solicitado via assistente conversacional",
+        allowCarpool: true,
       };
       const plan = await planTrip(input);
 

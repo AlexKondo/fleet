@@ -132,6 +132,21 @@ describe("findCarpoolMatches (§4 — Corporate Carpooling Intelligence)", () =>
     expect(results[0]?.reasons).toContain("destination_mismatch");
   });
 
+  it("rejects a match when the host explicitly opted out of carpooling", () => {
+    const results = findCarpoolMatches(
+      request(),
+      [candidate({ existingTrip: request({ id: "t2", allowCarpool: false }) })],
+      defaultCarpoolMatchConfig,
+    );
+    expect(results[0]?.compatible).toBe(false);
+    expect(results[0]?.reasons).toContain("host_declined_carpool");
+  });
+
+  it("still matches when allowCarpool is left unset (treated as consent)", () => {
+    const results = findCarpoolMatches(request(), [candidate()], defaultCarpoolMatchConfig);
+    expect(results[0]?.compatible).toBe(true);
+  });
+
   it("ranks compatible matches before incompatible ones, closest departure first", () => {
     const results = findCarpoolMatches(
       request(),

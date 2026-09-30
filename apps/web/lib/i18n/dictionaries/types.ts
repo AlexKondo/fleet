@@ -559,6 +559,7 @@ export type Dictionary = {
       distanceLabel: string;
       passengersLabel: string;
       cargoLabel: string;
+      allowCarpoolLabel: string;
       justificationLabel: string;
       submit: string;
       submitPending: string;
