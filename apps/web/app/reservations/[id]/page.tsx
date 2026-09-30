@@ -146,11 +146,28 @@ export default async function ReservationDetailPage({
               {formatDateTime(reservation.end_at, locale)}
             </p>
           </div>
-          {statusMeta ? (
-            <span className={`shrink-0 rounded-sm border px-2 py-1 text-xs uppercase tracking-widest ${statusMeta.text} border-current/40`}>
-              {statusMeta.label}
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {/* Vehicle status ("Disponível", "Em uso"...) alone left no way to tell a
+                cancelled reservation apart from an active one whose vehicle happened to be
+                free again — this reservation-status badge is the actual answer to "did this
+                get cancelled?". */}
+            <span
+              className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-widest ${
+                reservation.status === "cancelled"
+                  ? "border-signal-red/40 text-signal-red"
+                  : reservation.status === "completed"
+                    ? "border-line-700 text-fog-400"
+                    : "border-gwm-accent/40 text-gwm-accent"
+              }`}
+            >
+              {(dict.trips.statuses as Record<string, string>)[reservation.status] ?? reservation.status}
             </span>
-          ) : null}
+            {statusMeta ? (
+              <span className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-widest ${statusMeta.text} border-current/40`}>
+                {statusMeta.label}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         {canPickup || canReturn || canCancel ? (
