@@ -157,6 +157,34 @@ export default async function DashboardPage({
       : Promise.resolve({ data: [] as never[] }),
   ]);
 
+  // The reservations table's exclusion constraint (0001_init_schema.sql) only stops the
+  // SAME vehicle from double-booking — nothing stops the SAME requester from ending up
+  // with two overlapping reservations on two DIFFERENT vehicles (they obviously can't be
+  // in both places at once). Flagged here for the fleet manager rather than silently
+  // allowed, since neither create_vehicle_reservation nor this dashboard currently checks
+  // across a requester's own reservations.
+  const conflictedReservationIds = new Set<string>();
+  const activeReservationsByRequester = new Map<string, NonNullable<typeof activeReservations>[0][]>();
+  for (const r of activeReservations ?? []) {
+    const requesterId = r.trip_request?.requester_id;
+    if (!requesterId) continue;
+    const bucket = activeReservationsByRequester.get(requesterId) ?? [];
+    bucket.push(r);
+    activeReservationsByRequester.set(requesterId, bucket);
+  }
+  for (const bucket of activeReservationsByRequester.values()) {
+    for (let i = 0; i < bucket.length; i++) {
+      for (let j = i + 1; j < bucket.length; j++) {
+        const a = bucket[i]!;
+        const b = bucket[j]!;
+        if (a.start_at < b.end_at && b.start_at < a.end_at) {
+          conflictedReservationIds.add(a.id);
+          conflictedReservationIds.add(b.id);
+        }
+      }
+    }
+  }
+
   return (
     <AppShell
       active="dashboard"
@@ -355,6 +383,11 @@ export default async function DashboardPage({
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
             {t.activeReservations.heading}
           </h2>
+          {conflictedReservationIds.size > 0 ? (
+            <p role="alert" className="mb-3 text-sm text-signal-red">
+              {t.activeReservations.overlapWarning}
+            </p>
+          ) : null}
           {!activeReservations || activeReservations.length === 0 ? (
             <p className="text-sm text-fog-400">{t.activeReservations.empty}</p>
           ) : (
@@ -366,6 +399,7 @@ export default async function DashboardPage({
                     <th className="px-4 py-3 font-medium">{t.activeReservations.routeColumn}</th>
                     <th className="px-4 py-3 font-medium">{t.activeReservations.requesterColumn}</th>
                     <th className="px-4 py-3 font-medium">{t.activeReservations.departureColumn}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.returnColumn}</th>
                     <th className="px-4 py-3 font-medium">{dict.common.status}</th>
                     <th className="px-4 py-3 font-medium">{t.activeReservations.swapColumn}</th>
                     <th className="px-4 py-3 font-medium">{t.activeReservations.transferColumn}</th>
@@ -394,6 +428,9 @@ export default async function DashboardPage({
                         <td className="px-4 py-3 font-mono text-xs tabular-nums text-fog-400">
                           {formatDateTime(r.start_at, locale)}
                         </td>
+                        <td className="px-4 py-3 font-mono text-xs tabular-nums text-fog-400">
+                          {formatDateTime(r.end_at, locale)}
+                        </td>
                         <td className="px-4 py-3">
                           <span className={r.status === "confirmed" ? "text-signal-blue" : "text-gwm-accent"}>
                             {r.status === "confirmed"
@@ -403,6 +440,14 @@ export default async function DashboardPage({
                           {r.impacted_at ? (
                             <span className="ml-2 text-xs text-signal-yellow">
                               {t.activeReservations.impacted}
+                            </span>
+                          ) : null}
+                          {conflictedReservationIds.has(r.id) ? (
+                            <span
+                              className="ml-2 text-xs text-signal-red"
+                              title={t.activeReservations.overlapWarning}
+                            >
+                              {t.activeReservations.overlapBadge}
                             </span>
                           ) : null}
                           <Link

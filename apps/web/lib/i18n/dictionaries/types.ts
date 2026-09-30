@@ -292,6 +292,9 @@ export type Dictionary = {
       routeColumn: string;
       requesterColumn: string;
       departureColumn: string;
+      returnColumn: string;
+      overlapWarning: string;
+      overlapBadge: string;
       swapColumn: string;
       transferColumn: string;
       statusConfirmed: string;
