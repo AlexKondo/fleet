@@ -168,11 +168,16 @@ function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestar
           </>
         ) : null}
         <div className="flex flex-wrap items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-line-800 bg-panel-800">
+          <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-line-800 bg-panel-800">
             {pending ? (
-              <span className="animate-document-upload text-2xl" aria-hidden="true">
-                📄
-              </span>
+              <>
+                <span className="text-2xl" aria-hidden="true">
+                  📄
+                </span>
+                <span className="animate-magnifier-scan absolute text-xl" aria-hidden="true">
+                  🔍
+                </span>
+              </>
             ) : previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- local blob: preview
               <img src={previewUrl} alt="" className="h-full w-full object-cover" />
