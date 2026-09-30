@@ -1,4 +1,5 @@
 import "server-only";
+import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { planTrip, type TripFormInput } from "@/app/trips/new/actions";
@@ -68,6 +69,13 @@ export async function dispatchIntent(
           p_existing_trip_request_id: target.reservationId,
         });
         if (error) return { success: false, message: error.message };
+        // The form flow (trips/new/actions.ts's confirmTrip) gets this "for free" — a
+        // redirect() to /trips after creating always re-renders with fresh data. Chat
+        // never navigates the page, so without an explicit revalidate the reservation was
+        // real in the database but /trips (already server-rendered before the chat
+        // request) kept showing its stale pre-reservation snapshot until a hard refresh.
+        revalidatePath("/trips");
+        revalidatePath("/dashboard");
         return { success: true, message: `Você entrou na carona no veículo ${target.vehiclePlate}.` };
       }
 
@@ -116,6 +124,8 @@ export async function dispatchIntent(
           }
         }
 
+        revalidatePath("/trips");
+        revalidatePath("/dashboard");
         return { success: true, message: `Reserva criada — veículo ${plan.vehicle.plate}.` };
       }
 
@@ -128,6 +138,8 @@ export async function dispatchIntent(
       if (!reservationId) return { success: false, message: "reservation_not_found" };
       const { error } = await supabase.rpc("cancel_reservation", { p_reservation_id: reservationId });
       if (error) return { success: false, message: error.message };
+      revalidatePath("/trips");
+      revalidatePath("/dashboard");
       return { success: true, message: "Reserva cancelada." };
     }
 
