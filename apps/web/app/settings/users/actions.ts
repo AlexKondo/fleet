@@ -5,6 +5,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getDictionary } from "@/lib/i18n/getLocale";
+import { renderEmail } from "@/lib/email/renderEmail";
+import { sendEmail } from "@/lib/email/sendEmail";
+import { getAppUrl } from "@/lib/getAppUrl";
 
 export interface UserActionState {
   status: "idle" | "success" | "error";
@@ -100,6 +103,32 @@ export async function inviteUser(
     p_entity_id: authData.user.id,
     p_after: { role },
   });
+
+  // The account is created with a temporary password the admin chose (not the member) and
+  // no way for the member to know it otherwise — createUser({email_confirm:true}) creates
+  // the user silently, it does not send Supabase's own invite email. Best-effort: a failed
+  // send here must not undo the account that already exists (the admin can always relay
+  // the password out of band), so this never affects the action's own success result.
+  const { html, text } = renderEmail({
+    heading: "Você foi adicionado ao Fleet",
+    bodyLines: [
+      `Olá, ${fullName}.`,
+      `Uma conta foi criada para você no Fleet, o sistema de gestão de frota da sua empresa.`,
+      `<strong>Login:</strong> ${email}<br><strong>Senha temporária:</strong> ${password}`,
+      `Por segurança, você vai precisar definir uma nova senha no primeiro acesso.`,
+    ],
+    ctaLabel: "Acessar o Fleet",
+    ctaUrl: `${getAppUrl()}/login`,
+  });
+  const emailResult = await sendEmail({
+    to: email,
+    subject: "Você foi adicionado ao Fleet",
+    html,
+    text,
+  });
+  if (!emailResult.success) {
+    console.error("inviteUser: welcome email failed to send:", emailResult.error);
+  }
 
   revalidatePath("/settings/users");
   return { status: "success" };
@@ -235,12 +264,18 @@ export async function removeUser(
 
   const { data: targetProfile } = await admin
     .from("profiles")
-    .select("organization_id, role")
+    .select("organization_id, role, full_name")
     .eq("id", userId)
     .maybeSingle();
   if (!targetProfile || targetProfile.organization_id !== organizationId) {
     return { status: "error", error: dict.errors.users.userNotFound };
   }
+
+  // Fetched before the delete below removes the auth.users row (and the email address
+  // along with it) — needed only for the notification email, so no point holding it if
+  // that lookup itself fails.
+  const { data: targetAuthUser } = await admin.auth.admin.getUserById(userId);
+  const targetEmail = targetAuthUser?.user?.email ?? null;
 
   // lock_and_require_multiple_administrators (0013_atomic_last_administrator_guard.sql)
   // narrows, but cannot fully close, the same last-administrator race updateUserRole has
@@ -284,6 +319,35 @@ export async function removeUser(
     p_entity_id: userId,
     p_before: { role: targetProfile.role },
   });
+
+  // Best-effort, same reasoning as inviteUser's welcome email: the removal itself already
+  // happened and must stand regardless of whether this notification goes out.
+  if (targetEmail) {
+    const { data: actingProfile } = await admin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", actingUserId as string)
+      .maybeSingle();
+    const actorName = actingProfile?.full_name ?? "um administrador do Fleet";
+
+    const { html, text } = renderEmail({
+      heading: "Seu acesso ao Fleet foi removido",
+      bodyLines: [
+        `Olá, ${targetProfile.full_name ?? ""}.`,
+        `Seu acesso ao Fleet foi removido por <strong>${actorName}</strong>.`,
+        `Se isso não era esperado, entre em contato com o gestor de frota ou administrador da sua empresa.`,
+      ],
+    });
+    const emailResult = await sendEmail({
+      to: targetEmail,
+      subject: "Seu acesso ao Fleet foi removido",
+      html,
+      text,
+    });
+    if (!emailResult.success) {
+      console.error("removeUser: removal notice email failed to send:", emailResult.error);
+    }
+  }
 
   revalidatePath("/settings/users");
   return { status: "success" };
