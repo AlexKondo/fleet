@@ -6,10 +6,6 @@ import type { ChatState } from "./chat/actions";
 import type { Dictionary } from "../lib/i18n/dictionaries";
 import type { Locale } from "../lib/i18n/locales";
 
-// sessionStorage (not localStorage): the hint is meant to nudge a first-time-this-session
-// visitor, not be permanently gone forever after one dismissal — a new browser session
-// gets to see it again.
-const HINT_DISMISSED_KEY = "fleet.chat-hint-dismissed";
 const HINT_SHOW_DELAY_MS = 2500;
 const HINT_AUTO_HIDE_MS = 10_000;
 
@@ -40,33 +36,22 @@ export function ChatWidget({
   const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
   const [showHint, setShowHint] = useState(false);
 
+  // Shows on every page load now (per explicit request) — no sessionStorage/dismissal
+  // memory anymore, so it's not something a returning-within-the-same-tab user has to
+  // wonder whether they already saw and lost.
   useEffect(() => {
-    let dismissed = false;
-    try {
-      dismissed = sessionStorage.getItem(HINT_DISMISSED_KEY) === "1";
-    } catch {
-      // Private browsing / storage blocked — just show it every load rather than crash.
-    }
-    if (dismissed) return;
-
     const showTimer = setTimeout(() => setShowHint(true), HINT_SHOW_DELAY_MS);
     return () => clearTimeout(showTimer);
   }, []);
 
   useEffect(() => {
     if (!showHint) return;
-    const hideTimer = setTimeout(() => dismissHint(), HINT_AUTO_HIDE_MS);
+    const hideTimer = setTimeout(() => setShowHint(false), HINT_AUTO_HIDE_MS);
     return () => clearTimeout(hideTimer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- dismissHint is stable (no deps of its own)
   }, [showHint]);
 
   function dismissHint() {
     setShowHint(false);
-    try {
-      sessionStorage.setItem(HINT_DISMISSED_KEY, "1");
-    } catch {
-      // ignore
-    }
   }
 
   function toggle() {
