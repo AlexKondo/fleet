@@ -7,7 +7,6 @@ import type { Dictionary } from "../lib/i18n/dictionaries";
 import type { Locale } from "../lib/i18n/locales";
 
 const HINT_SHOW_DELAY_MS = 2500;
-const HINT_AUTO_HIDE_MS = 10_000;
 
 /**
  * Global floating chat entry point, mounted once in AppShell.tsx (alongside
@@ -44,12 +43,8 @@ export function ChatWidget({
     return () => clearTimeout(showTimer);
   }, []);
 
-  useEffect(() => {
-    if (!showHint) return;
-    const hideTimer = setTimeout(() => setShowHint(false), HINT_AUTO_HIDE_MS);
-    return () => clearTimeout(hideTimer);
-  }, [showHint]);
-
+  // No auto-hide timer, per explicit request — it stays up until dismissed (its own X,
+  // or opening the chat) rather than disappearing on its own after a few seconds.
   function dismissHint() {
     setShowHint(false);
   }

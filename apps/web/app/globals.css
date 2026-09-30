@@ -144,11 +144,11 @@ body {
 /* Voice-hint nudge (ChatWidget.tsx) — the robot bobs gently in a loop to draw the eye
    without being distracting, while its speech bubble pops in once on appearance. */
 @keyframes chat-agent-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-22px) rotate(3deg); }
 }
 .animate-chat-agent-float {
-  animation: chat-agent-float 1.8s ease-in-out infinite;
+  animation: chat-agent-float 1.6s ease-in-out infinite;
 }
 
 @keyframes chat-hint-in {
