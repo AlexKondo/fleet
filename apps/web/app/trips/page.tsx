@@ -139,7 +139,7 @@ export default async function TripsPage({
                   key={r.id}
                   className="flex items-center justify-between rounded-md border border-line-800 bg-panel-900/60 p-4"
                 >
-                  <div>
+                  <Link href={`/reservations/${r.id}`} className="min-w-0 flex-1 hover:opacity-80">
                     <p className="text-sm text-paper-50">
                       {r.trip_request?.origin} → {r.trip_request?.destination}
                     </p>
@@ -152,7 +152,7 @@ export default async function TripsPage({
                         <span className="ml-2 text-signal-yellow">· {dict.trips.list.impactedByDelay}</span>
                       ) : null}
                     </p>
-                  </div>
+                  </Link>
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/reservations/${r.id}`}
@@ -208,7 +208,7 @@ export default async function TripsPage({
                     key={participantId}
                     className="flex items-center justify-between rounded-md border border-line-800 bg-panel-900/60 p-4"
                   >
-                    <div>
+                    <Link href={`/reservations/${r.id}`} className="min-w-0 flex-1 hover:opacity-80">
                       <p className="text-sm text-paper-50">
                         {r.trip_request?.origin} → {r.trip_request?.destination}
                       </p>
@@ -223,7 +223,7 @@ export default async function TripsPage({
                           </span>
                         ) : null}
                       </p>
-                    </div>
+                    </Link>
                     {canLeave ? (
                       <form action={leaveCarpool.bind(null, participantId)}>
                         <ConfirmSubmitButton
