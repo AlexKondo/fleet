@@ -13,7 +13,7 @@ import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { BlockVehicleForm } from "../BlockVehicleForm";
 import { StatusBadge } from "../ui/StatusBadge";
 import { RevealAction } from "../ui/RevealAction";
-import { ReservationGantt } from "./ReservationGantt";
+import { ReservationGantt } from "../ReservationGantt";
 import {
   approveReservation,
   blockVehicle,
@@ -394,9 +394,17 @@ export default async function DashboardPage({
           ) : (
             <>
             <ReservationGantt
-              reservations={activeReservations}
+              bars={activeReservations.map((r) => ({
+                id: r.id,
+                start_at: r.start_at,
+                end_at: r.end_at,
+                status: r.status,
+                rowLabel: r.vehicle?.plate ?? "—",
+                barLabel: r.trip_request?.requester?.full_name ?? t.activeReservations.unknownRequester,
+                tooltipExtra: r.trip_request?.destination,
+              }))}
               locale={locale}
-              unknownRequesterLabel={t.activeReservations.unknownRequester}
+              rowHeading={dict.common.vehicle}
             />
             <div className="overflow-x-auto rounded-md border border-line-800">
               <table className="w-full min-w-[1200px] border-collapse text-sm">

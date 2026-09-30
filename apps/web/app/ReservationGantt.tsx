@@ -2,30 +2,33 @@ import Link from "next/link";
 import { formatDateTime } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
 
-type GanttReservation = {
+export type GanttBar = {
   id: string;
   start_at: string;
   end_at: string;
   status: string;
-  vehicle: { plate: string } | null;
-  trip_request: { destination: string; requester: { full_name: string } | null } | null;
+  rowLabel: string;
+  /** Shown on the bar itself and in its tooltip — e.g. requester name (fleet view) or
+   * destination (driver's own trips view). */
+  barLabel: string;
+  tooltipExtra?: string;
 };
 
 // Plain CSS bars over a fixed time window — no charting library needed for something this
 // small, and it keeps the dashboard's zero-new-dependency footprint.
 export function ReservationGantt({
-  reservations,
+  bars,
   locale,
-  unknownRequesterLabel,
+  rowHeading,
 }: {
-  reservations: GanttReservation[];
+  bars: GanttBar[];
   locale: Locale;
-  unknownRequesterLabel: string;
+  rowHeading: string;
 }) {
-  if (reservations.length === 0) return null;
+  if (bars.length === 0) return null;
 
-  const starts = reservations.map((r) => new Date(r.start_at).getTime());
-  const ends = reservations.map((r) => new Date(r.end_at).getTime());
+  const starts = bars.map((r) => new Date(r.start_at).getTime());
+  const ends = bars.map((r) => new Date(r.end_at).getTime());
   // Pad a little on each side so a bar never touches the edge of the chart, and floor/ceil
   // to whole hours so the day gridlines land on clean boundaries.
   const windowStart = Math.floor(Math.min(...starts) / 3_600_000) * 3_600_000;
@@ -45,14 +48,13 @@ export function ReservationGantt({
     });
   }
 
-  const byVehicle = new Map<string, GanttReservation[]>();
-  for (const r of reservations) {
-    const plate = r.vehicle?.plate ?? "—";
-    const bucket = byVehicle.get(plate) ?? [];
+  const byRow = new Map<string, GanttBar[]>();
+  for (const r of bars) {
+    const bucket = byRow.get(r.rowLabel) ?? [];
     bucket.push(r);
-    byVehicle.set(plate, bucket);
+    byRow.set(r.rowLabel, bucket);
   }
-  const rows = [...byVehicle.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const rows = [...byRow.entries()].sort(([a], [b]) => a.localeCompare(b));
 
   const nowPercent = ((Date.now() - windowStart) / windowMs) * 100;
 
@@ -61,7 +63,7 @@ export function ReservationGantt({
       <div className="min-w-[900px]">
         <div className="relative flex border-b border-line-800 bg-panel-900/60 text-xs text-fog-600">
           <div className="w-28 shrink-0 px-3 py-2 font-medium uppercase tracking-widest">
-            Veículo
+            {rowHeading}
           </div>
           <div className="relative flex-1 py-2">
             {dayTicks.map((tick) => (
@@ -75,10 +77,10 @@ export function ReservationGantt({
             ))}
           </div>
         </div>
-        {rows.map(([plate, rowReservations]) => (
-          <div key={plate} className="flex border-b border-line-800 last:border-0">
+        {rows.map(([rowLabel, rowBars]) => (
+          <div key={rowLabel} className="flex border-b border-line-800 last:border-0">
             <div className="flex w-28 shrink-0 items-center px-3 py-3 font-mono text-sm text-paper-50">
-              {plate}
+              {rowLabel}
             </div>
             <div className="relative flex-1 py-3">
               {dayTicks.map((tick) => (
@@ -95,14 +97,12 @@ export function ReservationGantt({
                   title="Agora"
                 />
               ) : null}
-              {rowReservations.map((r) => {
+              {rowBars.map((r) => {
                 const startMs = new Date(r.start_at).getTime();
                 const endMs = new Date(r.end_at).getTime();
                 const leftPercent = ((startMs - windowStart) / windowMs) * 100;
                 const widthPercent = Math.max(((endMs - startMs) / windowMs) * 100, 1.5);
-                const requesterName =
-                  r.trip_request?.requester?.full_name ?? unknownRequesterLabel;
-                const title = `${requesterName} · ${r.trip_request?.destination ?? "—"} · ${formatDateTime(r.start_at, locale)} → ${formatDateTime(r.end_at, locale)}`;
+                const title = `${r.barLabel}${r.tooltipExtra ? ` · ${r.tooltipExtra}` : ""} · ${formatDateTime(r.start_at, locale)} → ${formatDateTime(r.end_at, locale)}`;
                 return (
                   <Link
                     key={r.id}
@@ -113,7 +113,7 @@ export function ReservationGantt({
                     }`}
                     style={{ left: `${leftPercent}%`, width: `${widthPercent}%` }}
                   >
-                    {requesterName}
+                    {r.barLabel}
                   </Link>
                 );
               })}

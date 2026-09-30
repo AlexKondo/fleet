@@ -7,6 +7,7 @@ import { AppShell } from "../AppShell";
 import { cancelMyReservation, leaveCarpool } from "./actions";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
+import { ReservationGantt } from "../ReservationGantt";
 
 export default async function TripsPage({
   searchParams,
@@ -122,6 +123,30 @@ export default async function TripsPage({
             {dict.trips.list.empty}
           </p>
         ) : (
+          <>
+          <ReservationGantt
+            bars={[
+              ...reservations.map((r) => ({
+                id: r.id,
+                start_at: r.start_at,
+                end_at: r.end_at,
+                status: r.status,
+                rowLabel: r.vehicle?.plate ?? "—",
+                barLabel: r.trip_request?.destination ?? "—",
+              })),
+              ...carpools.map(({ reservation: r }) => ({
+                id: r.id,
+                start_at: r.start_at,
+                end_at: r.end_at,
+                status: r.status,
+                rowLabel: r.vehicle?.plate ?? "—",
+                barLabel: r.trip_request?.destination ?? "—",
+                tooltipExtra: dict.trips.list.carpoolsTitle,
+              })),
+            ]}
+            locale={locale}
+            rowHeading={dict.common.vehicle}
+          />
           <ul className="flex flex-col gap-3">
             {reservations.map((r) => {
               const vehicleStatus = r.vehicle?.status;
@@ -190,6 +215,7 @@ export default async function TripsPage({
               );
             })}
           </ul>
+          </>
         )}
 
         {carpools.length > 0 ? (
