@@ -958,6 +958,7 @@ export type Dictionary = {
    * every authenticated screen. */
   chat: {
     fabLabel: string;
+    voiceHint: string;
     panelTitle: string;
     emptyStateHint: string;
     inputPlaceholder: string;

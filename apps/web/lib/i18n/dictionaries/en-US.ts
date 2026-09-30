@@ -941,6 +941,7 @@ const dict: Dictionary = {
   },
   chat: {
     fabLabel: "Fleet Assistant",
+    voiceHint: "If you'd rather talk than type, tap here to chat with me.",
     panelTitle: "Fleet Assistant",
     emptyStateHint: "Type or speak what you need — e.g. \"book a car tomorrow at 8am to São Paulo\".",
     inputPlaceholder: "Type your message...",

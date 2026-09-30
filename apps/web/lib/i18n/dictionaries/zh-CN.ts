@@ -905,6 +905,7 @@ const dict: Dictionary = {
   },
   chat: {
     fabLabel: "Fleet 助手",
+    voiceHint: "如果您更喜欢说话而不是打字，点这里跟我聊聊吧。",
     panelTitle: "Fleet 助手",
     emptyStateHint: "输入或说出您的需求，例如：“明天早上8点预订一辆去圣保罗的车”。",
     inputPlaceholder: "输入您的消息...",
