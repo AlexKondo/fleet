@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { updateOwnProfile, type UpdateProfileState } from "./actions";
 import { Button } from "../../ui/Button";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
@@ -18,20 +18,49 @@ export function UpdateProfileForm({
   dict,
   fullName,
   email,
+  avatarUrl,
   license,
 }: {
   dict: Dictionary;
   fullName: string;
   email: string;
+  avatarUrl: string | null;
   /** null when no CNH has been read yet (account/license) — nothing to show. */
   license: { number: string; category: string | null; expirationDate: string | null } | null;
 }) {
   const t = dict.account.profile;
   const tl = dict.account.license.readFields;
   const [state, formAction, pending] = useActionState(updateOwnProfile, initialState);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  function handleAvatarPicked(file: File | undefined) {
+    if (!file) return;
+    setPreview(URL.createObjectURL(file));
+  }
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-4">
+      <label className="flex flex-col items-center gap-2 self-center">
+        <span className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-line-800 bg-panel-800 text-lg font-semibold text-paper-50">
+          {preview || avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- user-uploaded avatar, arbitrary origin
+            <img src={preview ?? avatarUrl ?? undefined} alt="" className="h-full w-full object-cover" />
+          ) : (
+            fullName.trim().slice(0, 1).toUpperCase() || "?"
+          )}
+        </span>
+        <input
+          type="file"
+          name="avatar"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => handleAvatarPicked(e.target.files?.[0])}
+        />
+        <span className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:opacity-80">
+          {t.changeAvatar}
+        </span>
+      </label>
+
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.nameLabel}</span>
         <input

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signOut } from "./dashboard/actions";
 import { InactivityLogout } from "./InactivityLogout";
 import { SessionBackupSync } from "./SessionBackupSync";
+import { ChatWidget } from "./ChatWidget";
 import { MobileNav } from "./MobileNav";
 import { NotificationBell } from "./dashboard/NotificationBell";
 import { UserMenu } from "./UserMenu";
@@ -66,13 +67,15 @@ export async function AppShell({
   const supabase = await createSupabaseServerClient();
   const currentUser = await getCurrentUser(supabase);
   let licenseMissing = false;
+  let avatarUrl: string | null = null;
   if (currentUser) {
     const { data: ownProfile } = await supabase
       .from("profiles")
-      .select("drivers_license_number")
+      .select("drivers_license_number, avatar_url")
       .eq("id", currentUser.id)
       .maybeSingle();
     licenseMissing = !ownProfile?.drivers_license_number;
+    avatarUrl = ownProfile?.avatar_url ?? null;
   }
 
   // Derived from `role` (which every caller already passes) rather than taken as another
@@ -109,6 +112,7 @@ export async function AppShell({
     <div className="flex min-h-dvh flex-col md:flex-row">
       <InactivityLogout />
       <SessionBackupSync />
+      {licenseGateActive ? null : <ChatWidget dict={dict} />}
       {licenseGateActive ? null : (
         <MobileNav
           items={visibleItems.map(({ key, href, label }) => ({ key, href, label }))}
@@ -180,7 +184,7 @@ export async function AppShell({
               {licenseGateActive ? null : (
                 <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
               )}
-              <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} dict={dict} />
+              <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} avatarUrl={avatarUrl} dict={dict} />
               <form action={signOut}>
                 <button
                   type="submit"

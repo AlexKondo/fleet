@@ -17,7 +17,7 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, role, organization:organizations(name), drivers_license_number, drivers_license_category, drivers_license_expiration",
+      "full_name, role, avatar_url, organization:organizations(name), drivers_license_number, drivers_license_category, drivers_license_expiration",
     )
     .eq("id", user.id)
     .single();
@@ -42,6 +42,7 @@ export default async function ProfilePage() {
             dict={dict}
             fullName={profile?.full_name ?? ""}
             email={user.email ?? ""}
+            avatarUrl={profile?.avatar_url ?? null}
             license={
               profile?.drivers_license_number
                 ? {

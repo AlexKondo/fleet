@@ -205,6 +205,9 @@ export type Dictionary = {
       emailImmutableHint: string;
       nameRequired: string;
       licenseSectionTitle: string;
+      changeAvatar: string;
+      avatarTooLarge: string;
+      avatarNotAnImage: string;
       saveFailed: string;
       success: string;
       submit: string;
@@ -942,5 +945,20 @@ export type Dictionary = {
     pickupAction: string;
     returnAction: string;
     loadError: string;
+  };
+  /** Global conversational assistant (ChatWidget/ChatPanel) — floating entry point on
+   * every authenticated screen. */
+  chat: {
+    fabLabel: string;
+    panelTitle: string;
+    emptyStateHint: string;
+    inputPlaceholder: string;
+    send: string;
+    micStart: string;
+    micStop: string;
+    confirmYes: string;
+    confirmCancel: string;
+    errorGeneric: string;
+    thinking: string;
   };
 };

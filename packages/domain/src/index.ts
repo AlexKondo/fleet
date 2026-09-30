@@ -11,3 +11,4 @@ export * from "./state-machine/vehicleTransitions";
 export * from "./workflow/deriveReturnOutcome";
 export * from "./maintenance/predictMaintenance";
 export * from "./traffic-restriction/checkTrafficRestriction";
+export * from "./chat/intentCatalog";

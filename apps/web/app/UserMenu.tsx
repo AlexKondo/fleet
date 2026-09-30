@@ -20,10 +20,12 @@ function initials(name: string): string {
 export function UserMenu({
   userName,
   roleLabel,
+  avatarUrl,
   dict,
 }: {
   userName: string;
   roleLabel: string;
+  avatarUrl?: string | null;
   dict: Dictionary;
 }) {
   const t = dict.chrome.userMenu;
@@ -57,9 +59,14 @@ export function UserMenu({
         aria-expanded={isOpen}
         aria-label={t.label}
         title={userName}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-line-800 bg-panel-800 text-xs font-semibold text-paper-50 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
+        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-line-800 bg-panel-800 text-xs font-semibold text-paper-50 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
       >
-        {initials(userName)}
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- user-uploaded avatar, arbitrary origin
+          <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          initials(userName)
+        )}
       </button>
 
       {isOpen ? (
