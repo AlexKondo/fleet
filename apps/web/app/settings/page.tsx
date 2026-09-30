@@ -4,6 +4,9 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { AppShell } from "../AppShell";
 import { SettingsForm } from "./SettingsForm";
 import { SafetyEquipmentSection } from "./SafetyEquipmentSection";
+import { ChatUsageSummary } from "./ChatUsageSummary";
+import { getChatUsageStats } from "../chat/queries";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getDictionary } from "../../lib/i18n/getLocale";
 
 /**
@@ -34,7 +37,7 @@ export default async function SettingsPage() {
     redirect("/dashboard");
   }
 
-  const [{ data: settings }, { data: equipmentItems }] = await Promise.all([
+  const [{ data: settings }, { data: equipmentItems }, chatUsageStats] = await Promise.all([
     supabase
       .from("organization_settings")
       .select(
@@ -47,6 +50,9 @@ export default async function SettingsPage() {
       .select("id, name")
       .eq("organization_id", profile.organization_id)
       .order("created_at"),
+    // RLS on chat_conversations/chat_messages only exposes a user's own rows — this org-wide
+    // rollup needs the admin client, gated on the isFleetManager check already done above.
+    getChatUsageStats(createSupabaseAdminClient(), profile.organization_id),
   ]);
 
   return (
@@ -77,6 +83,7 @@ export default async function SettingsPage() {
           }}
         />
         <SafetyEquipmentSection dict={dict} items={equipmentItems ?? []} />
+        <ChatUsageSummary dict={dict} stats={chatUsageStats} />
       </section>
     </AppShell>
   );

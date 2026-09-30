@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { ChatPanel } from "./ChatPanel";
+import type { ChatState } from "./chat/actions";
 import type { Dictionary } from "../lib/i18n/dictionaries";
+import type { Locale } from "../lib/i18n/locales";
 
 /**
  * Global floating chat entry point, mounted once in AppShell.tsx (alongside
@@ -10,7 +12,18 @@ import type { Dictionary } from "../lib/i18n/dictionaries";
  * between the desktop header and MobileNav the way NotificationBell is — a single FAB
  * fixed to the viewport corner works identically at every breakpoint.
  */
-export function ChatWidget({ dict }: { dict: Dictionary }) {
+export function ChatWidget({
+  dict,
+  locale,
+  initialState,
+}: {
+  dict: Dictionary;
+  locale: Locale;
+  /** The caller's most recent conversation, fetched server-side (AppShell.tsx) — without
+   * this, reloading the page (a fresh React tree, unlike just closing/reopening the panel)
+   * always started a brand new conversation even if the previous one was mid-exchange. */
+  initialState: ChatState;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   // Once the panel has been opened at least once, it stays mounted (just hidden) instead
   // of unmounting on close — ChatPanel's useActionState conversation lives in that
@@ -47,7 +60,13 @@ export function ChatWidget({ dict }: { dict: Dictionary }) {
       </button>
 
       {hasOpenedOnce ? (
-        <ChatPanel dict={dict} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+        <ChatPanel
+          dict={dict}
+          locale={locale}
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          initialState={initialState}
+        />
       ) : null}
     </>
   );

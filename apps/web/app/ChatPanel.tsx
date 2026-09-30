@@ -1,8 +1,20 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { sendChatMessage, initialChatState, type ChatState } from "./chat/actions";
+import { sendChatMessage, type ChatState } from "./chat/actions";
 import type { Dictionary } from "../lib/i18n/dictionaries";
+import type { Locale } from "../lib/i18n/locales";
+
+// Web Speech API's BCP-47 locale tags for the recognizer — matches this app's own locale
+// codes 1:1 except zh-CN, which the API expects with an underscore-free region form it
+// already shares. Previously hardcoded to "pt-BR" regardless of the user's actual
+// language setting, so speaking in any other configured language transcribed badly.
+const SPEECH_RECOGNITION_LANGS: Record<Locale, string> = {
+  "pt-BR": "pt-BR",
+  "en-US": "en-US",
+  es: "es-ES",
+  "zh-CN": "zh-CN",
+};
 
 // Vendor-prefixed on Safari/older Chromium builds; undefined entirely on Firefox and most
 // non-Chromium mobile browsers — feature-detected once so the mic button simply doesn't
@@ -11,8 +23,9 @@ type SpeechRecognitionCtor = new () => {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
   onend: (() => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
   start: () => void;
   stop: () => void;
 };
@@ -28,17 +41,23 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
 
 export function ChatPanel({
   dict,
+  locale,
   isOpen,
   onClose,
+  initialState,
 }: {
   dict: Dictionary;
+  locale: Locale;
   isOpen: boolean;
   onClose: () => void;
+  initialState: ChatState;
 }) {
   const t = dict.chat;
-  const [state, formAction, pending] = useActionState(sendChatMessage, initialChatState);
+  const [state, formAction, pending] = useActionState(sendChatMessage, initialState);
   const [draft, setDraft] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
+  const [micError, setMicError] = useState<string | null>(null);
   const recognitionRef = useRef<InstanceType<SpeechRecognitionCtor> | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const micSupported = getSpeechRecognitionCtor() !== null;
@@ -63,17 +82,35 @@ export function ChatPanel({
       recognitionRef.current?.stop();
       return;
     }
+    setMicError(null);
+    setInterimTranscript("");
     const recognition = new Ctor();
-    recognition.lang = "pt-BR";
+    recognition.lang = SPEECH_RECOGNITION_LANGS[locale];
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map((r) => r[0]?.transcript ?? "")
-        .join(" ");
-      setDraft(transcript);
+      // Interim results are shown live above the input (§ doc requirement: visible
+      // transcription) but only committed to the actual draft once the recognizer marks a
+      // result final — otherwise every partial guess along the way would flicker into the
+      // text box and get overwritten mid-word.
+      let finalTranscript = "";
+      let liveTranscript = "";
+      for (const result of Array.from(event.results)) {
+        const text = result[0]?.transcript ?? "";
+        if (result.isFinal) finalTranscript += text;
+        else liveTranscript += text;
+      }
+      if (finalTranscript) setDraft((prev) => `${prev}${prev ? " " : ""}${finalTranscript}`.trim());
+      setInterimTranscript(liveTranscript);
     };
-    recognition.onend = () => setIsListening(false);
+    recognition.onerror = (event) => {
+      setMicError(event.error === "not-allowed" ? t.micPermissionDenied : t.micGenericError);
+      setIsListening(false);
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+      setInterimTranscript("");
+    };
     recognitionRef.current = recognition;
     setIsListening(true);
     recognition.start();
@@ -165,7 +202,12 @@ export function ChatPanel({
         {isListening ? (
           <p role="status" className="mt-2 flex items-center gap-1.5 text-xs text-gwm-accent">
             <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-gwm-accent" aria-hidden="true" />
-            {t.micListening}
+            {interimTranscript ? `"${interimTranscript}"` : t.micListening}
+          </p>
+        ) : null}
+        {micError ? (
+          <p role="alert" className="mt-2 text-xs text-signal-red">
+            {micError}
           </p>
         ) : null}
       </div>

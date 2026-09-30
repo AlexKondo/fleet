@@ -631,6 +631,14 @@ const dict: Dictionary = {
       namePlaceholder: "ex.: Extintor de Incêndio",
       addButton: "+ Adicionar Item",
     },
+    chatUsage: {
+      title: "Uso do Assistente Fleet",
+      conversations7d: "Conversas (7 dias)",
+      messagesToday: "Mensagens hoje",
+      resolved: "Concluídas",
+      abandoned: "Abandonadas",
+      topIntents: "Solicitações mais comuns",
+    },
     form: {
       range: {
         heading: "Autonomia & Preparação de Veículos",
@@ -942,6 +950,8 @@ const dict: Dictionary = {
     micStart: "Falar",
     micStop: "Parar",
     micListening: "Ouvindo...",
+    micPermissionDenied: "Permissão de microfone negada. Habilite o microfone nas configurações do navegador.",
+    micGenericError: "Não consegui captar o áudio. Tente novamente ou digite sua mensagem.",
     confirmYes: "Confirmar",
     confirmCancel: "Cancelar",
     errorGeneric: "Não consegui processar agora. Use os formulários normalmente.",

@@ -3,6 +3,8 @@ import { signOut } from "./dashboard/actions";
 import { InactivityLogout } from "./InactivityLogout";
 import { SessionBackupSync } from "./SessionBackupSync";
 import { ChatWidget } from "./ChatWidget";
+import { loadLatestChatState } from "./chat/queries";
+import type { ChatState } from "./chat/actions";
 import { MobileNav } from "./MobileNav";
 import { NotificationBell } from "./dashboard/NotificationBell";
 import { UserMenu } from "./UserMenu";
@@ -90,6 +92,10 @@ export async function AppShell({
   // for directly: no nav, no user menu, nothing but the upload screen until it's done.
   const licenseGateActive = licenseMissing && !isSecurity;
 
+  const chatInitialState: ChatState = currentUser
+    ? await loadLatestChatState(supabase, currentUser.id)
+    : { status: "idle", messages: [] };
+
   const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
     { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: true },
     { key: "trips", href: "/trips", label: dict.nav.trips, icon: TripsIcon, visible: true },
@@ -112,7 +118,9 @@ export async function AppShell({
     <div className="flex min-h-dvh flex-col md:flex-row">
       <InactivityLogout />
       <SessionBackupSync />
-      {licenseGateActive ? null : <ChatWidget dict={dict} />}
+      {licenseGateActive ? null : (
+        <ChatWidget dict={dict} locale={locale} initialState={chatInitialState} />
+      )}
       {licenseGateActive ? null : (
         <MobileNav
           items={visibleItems.map(({ key, href, label }) => ({ key, href, label }))}

@@ -611,6 +611,14 @@ const dict: Dictionary = {
       namePlaceholder: "例如：灭火器",
       addButton: "+ 添加项目",
     },
+    chatUsage: {
+      title: "Fleet 助手使用情况",
+      conversations7d: "对话数（7天）",
+      messagesToday: "今日消息数",
+      resolved: "已完成",
+      abandoned: "已放弃",
+      topIntents: "最常见的请求",
+    },
     form: {
       range: {
         heading: "续航与车辆准备",
@@ -904,6 +912,8 @@ const dict: Dictionary = {
     micStart: "语音输入",
     micStop: "停止",
     micListening: "正在聆听...",
+    micPermissionDenied: "麦克风权限被拒绝，请在浏览器设置中启用。",
+    micGenericError: "无法捕获音频，请重试或直接输入消息。",
     confirmYes: "确认",
     confirmCancel: "取消",
     errorGeneric: "暂时无法处理，您可以照常使用表单。",

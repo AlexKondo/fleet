@@ -630,6 +630,14 @@ const dict: Dictionary = {
       namePlaceholder: "e.g. Fire Extinguisher",
       addButton: "+ Add Item",
     },
+    chatUsage: {
+      title: "Fleet Assistant Usage",
+      conversations7d: "Conversations (7d)",
+      messagesToday: "Messages today",
+      resolved: "Resolved",
+      abandoned: "Abandoned",
+      topIntents: "Most common requests",
+    },
     form: {
       range: {
         heading: "Range & Vehicle Readiness",
@@ -940,6 +948,8 @@ const dict: Dictionary = {
     micStart: "Speak",
     micStop: "Stop",
     micListening: "Listening...",
+    micPermissionDenied: "Microphone permission denied. Enable it in your browser settings.",
+    micGenericError: "Couldn't capture audio. Try again or type your message.",
     confirmYes: "Confirm",
     confirmCancel: "Cancel",
     errorGeneric: "Couldn't process that right now. Feel free to use the regular forms.",

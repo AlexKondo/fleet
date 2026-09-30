@@ -10,6 +10,8 @@ import { dispatchIntent } from "./dispatch";
 import { findActiveReservations } from "./queries";
 
 const DAILY_MESSAGE_LIMIT = 60;
+const BURST_MESSAGE_LIMIT = 6;
+const BURST_WINDOW_MS = 30_000;
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -23,8 +25,6 @@ export interface ChatState {
   pendingAction?: { intent: IntentName; slots: Record<string, string>; summary: string };
   error?: string;
 }
-
-export const initialChatState: ChatState = { status: "idle", messages: [] };
 
 // dispatch.ts's DispatchResult.message is a stable internal code on failure (or, for an
 // RPC error with no mapped code, a raw Postgres message) — never shown to the user
@@ -135,18 +135,30 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   const message = String(formData.get("message") ?? "").trim();
   if (!message) return { status: "idle", conversationId, messages: prevState.messages };
 
-  const { count } = await admin
+  // Scoped by user_id across ALL of today's conversations, not just this one — a
+  // per-conversation count would reset to zero every time a conversation resolves and a
+  // fresh one starts, which defeats the point of a daily cap entirely.
+  const { count: dailyCount } = await admin
     .from("chat_messages")
-    .select("id", { count: "exact", head: true })
-    .eq("conversation_id", conversationId)
+    .select("id, chat_conversations!inner(user_id)", { count: "exact", head: true })
+    .eq("role", "user")
+    .eq("chat_conversations.user_id", user.id)
     .gte("created_at", new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString());
-  if ((count ?? 0) >= DAILY_MESSAGE_LIMIT) {
-    return {
-      status: "error",
-      conversationId,
-      messages: prevState.messages,
-      error: "daily_limit_reached",
-    };
+  if ((dailyCount ?? 0) >= DAILY_MESSAGE_LIMIT) {
+    return { status: "error", conversationId, messages: prevState.messages, error: "daily_limit_reached" };
+  }
+
+  // Burst protection: a small, short window cap independent of the daily total — catches
+  // a runaway client loop or someone hammering send far faster than an actual
+  // conversation would ever require, without waiting for the daily count to add up.
+  const { count: burstCount } = await admin
+    .from("chat_messages")
+    .select("id, chat_conversations!inner(user_id)", { count: "exact", head: true })
+    .eq("role", "user")
+    .eq("chat_conversations.user_id", user.id)
+    .gte("created_at", new Date(Date.now() - BURST_WINDOW_MS).toISOString());
+  if ((burstCount ?? 0) >= BURST_MESSAGE_LIMIT) {
+    return { status: "error", conversationId, messages: prevState.messages, error: "rate_limited" };
   }
 
   const userMessage: ChatMessage = { role: "user", content: message };

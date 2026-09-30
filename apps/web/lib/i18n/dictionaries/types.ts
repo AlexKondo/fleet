@@ -658,6 +658,14 @@ export type Dictionary = {
       namePlaceholder: string;
       addButton: string;
     };
+    chatUsage: {
+      title: string;
+      conversations7d: string;
+      messagesToday: string;
+      resolved: string;
+      abandoned: string;
+      topIntents: string;
+    };
     form: {
       range: {
         heading: string;
@@ -957,6 +965,8 @@ export type Dictionary = {
     micStart: string;
     micStop: string;
     micListening: string;
+    micPermissionDenied: string;
+    micGenericError: string;
     confirmYes: string;
     confirmCancel: string;
     errorGeneric: string;
