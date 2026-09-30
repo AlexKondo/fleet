@@ -120,6 +120,13 @@ export async function dispatchIntent(
           p_vehicle_id: chosenVehicleId,
         });
         if (error) {
+          // This RPC error was previously invisible end-to-end: never logged here, and the
+          // user only ever saw the generic friendly fallback (apps/web/app/chat/actions.ts).
+          // Root-caused one real failure class this way already (two overloaded
+          // create_vehicle_reservation signatures after 0047 added a parameter via CREATE
+          // OR REPLACE instead of replacing it — see 0049's migration comment) that was
+          // undiagnosable without this.
+          console.error("dispatchIntent CREATE_RESERVATION (vehicle) failed:", error.code, error.message);
           return {
             success: false,
             message: error.code === "23P01" ? "RESERVATION_CONFLICT" : error.message,
