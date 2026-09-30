@@ -159,8 +159,12 @@ body {
   animation: chat-hint-in 0.3s ease-out both;
 }
 
+/* :not(.animate-chat-agent-float) — the chat robot's float is purely decorative (not
+   a functional/attention-alert animation like bell-shake or mic-pulse), and per explicit,
+   repeated request it should always visibly move regardless of prefers-reduced-motion.
+   Every other animation in this file still respects the preference as normal. */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *:not(.animate-chat-agent-float) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
