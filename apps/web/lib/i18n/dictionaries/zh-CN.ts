@@ -903,6 +903,7 @@ const dict: Dictionary = {
     send: "发送",
     micStart: "语音输入",
     micStop: "停止",
+    micListening: "正在聆听...",
     confirmYes: "确认",
     confirmCancel: "取消",
     errorGeneric: "暂时无法处理，您可以照常使用表单。",

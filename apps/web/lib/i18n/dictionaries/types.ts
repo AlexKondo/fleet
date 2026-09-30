@@ -956,6 +956,7 @@ export type Dictionary = {
     send: string;
     micStart: string;
     micStop: string;
+    micListening: string;
     confirmYes: string;
     confirmCancel: string;
     errorGeneric: string;

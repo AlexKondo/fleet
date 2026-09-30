@@ -941,6 +941,7 @@ const dict: Dictionary = {
     send: "Enviar",
     micStart: "Falar",
     micStop: "Parar",
+    micListening: "Ouvindo...",
     confirmYes: "Confirmar",
     confirmCancel: "Cancelar",
     errorGeneric: "Não consegui processar agora. Use os formulários normalmente.",

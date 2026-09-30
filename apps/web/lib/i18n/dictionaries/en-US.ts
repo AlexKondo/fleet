@@ -939,6 +939,7 @@ const dict: Dictionary = {
     send: "Send",
     micStart: "Speak",
     micStop: "Stop",
+    micListening: "Listening...",
     confirmYes: "Confirm",
     confirmCancel: "Cancel",
     errorGeneric: "Couldn't process that right now. Feel free to use the regular forms.",

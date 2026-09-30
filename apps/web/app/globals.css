@@ -130,6 +130,17 @@ body {
   animation-fill-mode: forwards;
 }
 
+/* Mic "listening" ring (ChatPanel.tsx) — a soft pulsing ring behind the mic button while
+   SpeechRecognition is active, the standard "I'm listening" affordance for a voice input. */
+@keyframes mic-listening-pulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  70% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.animate-mic-pulse {
+  animation: mic-listening-pulse 1.4s ease-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

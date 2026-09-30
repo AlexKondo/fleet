@@ -142,6 +142,12 @@ export function ChatPanel({ dict, onClose }: { dict: Dictionary; onClose: () => 
         ) : null}
 
         {pending ? <p className="mt-2 text-xs text-fog-600">{t.thinking}</p> : null}
+        {isListening ? (
+          <p role="status" className="mt-2 flex items-center gap-1.5 text-xs text-gwm-accent">
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-gwm-accent" aria-hidden="true" />
+            {t.micListening}
+          </p>
+        ) : null}
       </div>
 
       <form
@@ -157,22 +163,30 @@ export function ChatPanel({ dict, onClose }: { dict: Dictionary; onClose: () => 
           className="min-w-0 flex-1 rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent disabled:opacity-50"
         />
         {micSupported ? (
-          <button
-            type="button"
-            onClick={toggleMic}
-            disabled={pending || state.status === "needs_confirmation"}
-            aria-pressed={isListening}
-            aria-label={isListening ? t.micStop : t.micStart}
-            title={isListening ? t.micStop : t.micStart}
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border text-fog-400 hover:border-gwm-accent hover:text-gwm-accent disabled:opacity-50 ${
-              isListening ? "border-gwm-accent text-gwm-accent" : "border-line-800"
-            }`}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
-              <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" />
-              <path d="M19 11a7 7 0 0 1-14 0M12 18v3" />
-            </svg>
-          </button>
+          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center">
+            {isListening ? (
+              <span
+                className="animate-mic-pulse pointer-events-none absolute inset-0 rounded-sm bg-gwm-accent/40"
+                aria-hidden="true"
+              />
+            ) : null}
+            <button
+              type="button"
+              onClick={toggleMic}
+              disabled={pending || state.status === "needs_confirmation"}
+              aria-pressed={isListening}
+              aria-label={isListening ? t.micStop : t.micStart}
+              title={isListening ? t.micStop : t.micStart}
+              className={`relative flex h-9 w-9 items-center justify-center rounded-sm border text-fog-400 hover:border-gwm-accent hover:text-gwm-accent disabled:opacity-50 ${
+                isListening ? "border-gwm-accent text-gwm-accent" : "border-line-800"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" />
+                <path d="M19 11a7 7 0 0 1-14 0M12 18v3" />
+              </svg>
+            </button>
+          </span>
         ) : null}
         <button
           type="submit"

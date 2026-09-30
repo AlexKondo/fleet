@@ -3,6 +3,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { planTrip, type TripFormInput } from "@/app/trips/new/actions";
 import { postReservationMessage } from "@/app/reservations/[id]/actions";
+import { getFleetManagerEmails } from "@/lib/email/recipients";
+import { renderEmail } from "@/lib/email/renderEmail";
+import { sendEmail } from "@/lib/email/sendEmail";
+import { formatDateTime } from "@/lib/formatDateTime";
+import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
+import { getAppUrl } from "@/lib/getAppUrl";
 import type { IntentName } from "@fleet/domain";
 import { findActiveReservations, resolveReservationId } from "./queries";
 
@@ -83,6 +89,33 @@ export async function dispatchIntent(
             message: error.code === "23P01" ? "RESERVATION_CONFLICT" : error.message,
           };
         }
+
+        // Same manager notification confirmTrip sends (apps/web/app/trips/new/actions.ts)
+        // — a reservation created via chat still needs approval like any other, and the
+        // approving fleet manager shouldn't only find out by happening to check the app.
+        // Best-effort: sendEmail never throws, so a delivery failure never undoes the
+        // reservation that was already created.
+        const { data: creatorProfile } = await supabase
+          .from("profiles")
+          .select("organization_id")
+          .eq("id", user.id)
+          .single();
+        if (creatorProfile) {
+          const managerEmails = await getFleetManagerEmails(supabase, creatorProfile.organization_id);
+          if (managerEmails.length > 0) {
+            const { html, text } = renderEmail({
+              heading: "Nova reserva aguardando aprovação",
+              bodyLines: [
+                `Uma nova viagem para <strong>${input.destination}</strong> aguarda aprovação (via assistente conversacional).`,
+                `Origem: ${input.origin} · Saída: ${formatDateTime(input.departureAt, DEFAULT_LOCALE)}`,
+              ],
+              ctaLabel: "Abrir Painel",
+              ctaUrl: `${getAppUrl()}/dashboard`,
+            });
+            await sendEmail({ to: managerEmails, subject: "Nova reserva aguardando aprovação", html, text });
+          }
+        }
+
         return { success: true, message: `Reserva criada — veículo ${plan.vehicle.plate}.` };
       }
 
