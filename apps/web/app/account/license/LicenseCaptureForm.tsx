@@ -48,6 +48,12 @@ function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestar
   // actually checks) only get written once the confirm phase below runs. Read-but-not-yet-
   // confirmed is exactly the state that needs the review checklist + checkbox gate.
   const isAnalyzed = state.status === "analyzed";
+  // At the review step nothing is saved yet, so there's no "success"/"success_expired"
+  // status to key off of (that only exists after confirming) — computed client-side from
+  // the same field the confirm step will check, so the driver isn't only told the CNH is
+  // expired after they've already ticked the checkbox and clicked Enviar a second time.
+  const isReadExpired =
+    isAnalyzed && !!state.read && new Date(`${state.read.expirationDate}T00:00:00`).getTime() < Date.now();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -258,9 +264,15 @@ function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestar
           </p>
         ) : null}
 
-        {isAnalyzed ? (
+        {isAnalyzed && !isReadExpired ? (
           <p role="status" className="text-sm text-fog-400">
             {t.reviewPrompt}
+          </p>
+        ) : null}
+
+        {isReadExpired ? (
+          <p role="alert" className="text-sm text-signal-red">
+            {t.successExpired}
           </p>
         ) : null}
 
