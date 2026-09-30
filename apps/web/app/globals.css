@@ -159,6 +159,24 @@ body {
   animation: chat-hint-in 0.3s ease-out both;
 }
 
+/* ReservationGantt.tsx — the Gantt's own scroll area needs an always-visible scrollbar
+   (not an OS overlay one that only appears while scrolling) since the grid now spans a
+   full year and users need a clear affordance that there's more to scroll to. */
+.gantt-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-700) transparent;
+}
+.gantt-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+.gantt-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gantt-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-line-700);
+  border-radius: 4px;
+}
+
 /* :not(.animate-chat-agent-float) — the chat robot's float is purely decorative (not
    a functional/attention-alert animation like bell-shake or mic-pulse), and per explicit,
    repeated request it should always visibly move regardless of prefers-reduced-motion.

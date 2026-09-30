@@ -23,6 +23,19 @@ export type GanttBar = {
   tooltipExtra?: string;
 };
 
+// One bar per reservation, colored and iconed by where it actually stands — not just
+// pending_approval/confirmed/cancelled/completed, but whether a confirmed one has started
+// yet, since "reserved, not picked up" and "out on the road" look identical otherwise.
+function barVisual(status: string, startMs: number, endMs: number, now: number): { className: string; icon: string } {
+  if (status === "cancelled") return { className: "bg-signal-red/80", icon: "✕" };
+  if (status === "completed") return { className: "bg-line-700", icon: "✓" };
+  if (status === "pending_approval") return { className: "bg-gwm-accent", icon: "?" };
+  // confirmed
+  if (now < startMs) return { className: "bg-fog-600", icon: "🕐" };
+  if (now > endMs) return { className: "bg-signal-blue", icon: "▶" };
+  return { className: "bg-signal-blue", icon: "▶" };
+}
+
 // Pixels-per-day per zoom level — "zoom in" (week) spreads days out for detail, "zoom out"
 // (quarter) compresses them to see more at a glance. The scrollable container (set by the
 // caller with overflow-x-auto) handles anything wider than the viewport.
@@ -57,7 +70,10 @@ export function ReservationGantt({
   // to whole days so the day gridlines land on clean boundaries.
   const windowStart = new Date(Math.min(...starts)).setHours(0, 0, 0, 0);
   const windowEndRaw = new Date(Math.max(...ends)).setHours(0, 0, 0, 0) + 86_400_000;
-  const windowEnd = Math.max(windowEndRaw, windowStart + 86_400_000);
+  // Grid always reaches at least a year out from the earliest reservation, even when every
+  // bar sits in the first few weeks of it — otherwise the gridlines (and the ability to
+  // scroll forward and see "nothing booked yet") stopped dead at the last bar.
+  const windowEnd = Math.max(windowEndRaw, windowStart + 365 * 86_400_000);
   const totalDays = Math.round((windowEnd - windowStart) / 86_400_000);
   const pxPerDay = PX_PER_DAY[zoom];
   const totalWidth = totalDays * pxPerDay;
@@ -109,7 +125,7 @@ export function ReservationGantt({
           +
         </button>
       </div>
-      <div className="overflow-x-auto">
+      <div className="gantt-scroll overflow-x-scroll">
         <div style={{ width: totalWidth + 144 }}>
           <div className="relative flex border-b border-line-800 bg-panel-900/60 text-xs text-fog-600">
             <div className="w-36 shrink-0 px-3 py-2 font-medium uppercase tracking-widest">
@@ -153,18 +169,18 @@ export function ReservationGantt({
                   const endMs = new Date(r.end_at).getTime();
                   const left = ((startMs - windowStart) / 86_400_000) * pxPerDay;
                   const width = Math.max(((endMs - startMs) / 86_400_000) * pxPerDay, 20);
+                  const visual = barVisual(r.status, startMs, endMs, Date.now());
                   const title = `${r.barLabel}${r.tooltipExtra ? ` · ${r.tooltipExtra}` : ""} · ${formatDateTime(r.start_at, locale)} → ${formatDateTime(r.end_at, locale)}`;
                   return (
                     <Link
                       key={r.id}
                       href={`/reservations/${r.id}`}
                       title={title}
-                      className={`absolute top-1/2 h-5 -translate-y-1/2 truncate rounded-sm px-1.5 text-[11px] leading-5 text-ink-950 hover:brightness-110 ${
-                        r.status === "confirmed" ? "bg-signal-blue" : "bg-gwm-accent"
-                      }`}
+                      className={`absolute top-1/2 flex h-5 -translate-y-1/2 items-center gap-1 truncate rounded-sm px-1.5 text-[11px] leading-5 text-ink-950 hover:brightness-110 ${visual.className}`}
                       style={{ left, width }}
                     >
-                      {r.barLabel}
+                      <span aria-hidden="true">{visual.icon}</span>
+                      <span className="truncate">{r.barLabel}</span>
                     </Link>
                   );
                 })}
