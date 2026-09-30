@@ -3,19 +3,23 @@
  * a loading.tsx is the Suspense fallback and can't await getDictionary(), so a localized
  * string would have to be hardcoded in one language. Flat bars, 1px borders, no shadow and
  * no gradient — same visual rules as Card.tsx (gwm-design §1.5).
+ *
+ * Deliberately shape-agnostic (a handful of plain full-width bars), not a card grid — it
+ * used to be a fixed 3-column vehicle-card grid, which matched dashboard/fleet but looked
+ * wrong borrowed by anything else. A route with no loading.tsx of its own inherits its
+ * nearest ANCESTOR's Suspense boundary (e.g. /trips/new had none, so navigating to it
+ * showed /trips's skeleton — a card grid for what's actually a form, and stale on top of
+ * that since /trips itself moved to the Gantt view and no longer looks like this either).
+ * Bars read reasonably as a stand-in for a form, a table, a list or a grid alike, so this
+ * one skeleton works regardless of which page ends up borrowing it.
  */
 export function RouteLoading() {
   return (
     <div role="status" aria-live="polite" className="animate-pulse px-6 py-6">
       <div className="h-4 w-40 rounded-sm bg-panel-800" />
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="rounded-md border border-line-800 bg-panel-900/60 p-4">
-            <div className="h-3 w-24 rounded-sm bg-panel-800" />
-            <div className="mt-3 h-3 w-16 rounded-sm bg-panel-800" />
-            <div className="mt-6 h-3 w-full rounded-sm bg-panel-800" />
-            <div className="mt-2 h-3 w-2/3 rounded-sm bg-panel-800" />
-          </div>
+      <div className="mt-5 flex flex-col gap-3">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-12 rounded-md border border-line-800 bg-panel-900/60" />
         ))}
       </div>
     </div>
