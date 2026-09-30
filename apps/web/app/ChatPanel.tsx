@@ -139,7 +139,19 @@ export function ChatPanel({
     };
     recognitionRef.current = recognition;
     setIsListening(true);
-    recognition.start();
+    try {
+      recognition.start();
+    } catch {
+      // start() throws synchronously (InvalidStateError) when the browser's single global
+      // recognizer hasn't fully released from a just-stopped previous instance yet — e.g.
+      // clicking the mic again right after it auto-stopped on send/confirm. Without this,
+      // isListening stayed stuck true (the "ouvindo" indicator showing forever) even though
+      // recognition never actually started and nothing was ever transcribed — neither
+      // onerror nor onend fires for a synchronous throw here.
+      recognitionRef.current = null;
+      setIsListening(false);
+      setMicError(t.micGenericError);
+    }
   }
 
   function handleSend(formData: FormData) {

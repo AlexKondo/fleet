@@ -235,11 +235,20 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       .update({ status: "resolved", updated_at: new Date().toISOString() })
       .eq("id", conversationId);
 
+    // On success the whole thread that got here (every clarifying question, every
+    // alternative shown) has served its purpose — carrying it forward just cluttered the
+    // next, unrelated request. Clears down to the confirmation itself and drops
+    // conversationId so the next message starts a brand new conversation row rather than
+    // appending to this now-finished one.
+    if (result.success) {
+      return { status: "idle", messages: [assistantMessage] };
+    }
+
     return {
-      status: result.success ? "idle" : "error",
+      status: "error",
       conversationId,
       messages: [...prevState.messages, assistantMessage],
-      error: result.success ? undefined : result.message,
+      error: result.message,
     };
   }
 
