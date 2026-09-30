@@ -12,12 +12,23 @@ import type { Dictionary } from "../lib/i18n/dictionaries";
  */
 export function ChatWidget({ dict }: { dict: Dictionary }) {
   const [isOpen, setIsOpen] = useState(false);
+  // Once the panel has been opened at least once, it stays mounted (just hidden) instead
+  // of unmounting on close — ChatPanel's useActionState conversation lives in that
+  // component's own React state, so an unmount/remount (the previous behavior) silently
+  // threw away the whole conversation the moment someone closed the panel to do something
+  // else and came back.
+  const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
+
+  function toggle() {
+    setIsOpen((v) => !v);
+    setHasOpenedOnce(true);
+  }
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={toggle}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-label={dict.chat.fabLabel}
@@ -35,7 +46,9 @@ export function ChatWidget({ dict }: { dict: Dictionary }) {
         )}
       </button>
 
-      {isOpen ? <ChatPanel dict={dict} onClose={() => setIsOpen(false)} /> : null}
+      {hasOpenedOnce ? (
+        <ChatPanel dict={dict} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      ) : null}
     </>
   );
 }

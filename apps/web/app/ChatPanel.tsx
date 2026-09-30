@@ -26,7 +26,15 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export function ChatPanel({ dict, onClose }: { dict: Dictionary; onClose: () => void }) {
+export function ChatPanel({
+  dict,
+  isOpen,
+  onClose,
+}: {
+  dict: Dictionary;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const t = dict.chat;
   const [state, formAction, pending] = useActionState(sendChatMessage, initialChatState);
   const [draft, setDraft] = useState("");
@@ -38,6 +46,15 @@ export function ChatPanel({ dict, onClose }: { dict: Dictionary; onClose: () => 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [state.messages]);
+
+  useEffect(() => {
+    // The panel now stays mounted-but-hidden when closed (see ChatWidget.tsx) rather than
+    // unmounting — without this, closing the panel mid-capture would leave the browser's
+    // mic indicator on and SpeechRecognition running in the background indefinitely.
+    if (!isOpen && isListening) {
+      recognitionRef.current?.stop();
+    }
+  }, [isOpen, isListening]);
 
   function toggleMic() {
     const Ctor = getSpeechRecognitionCtor();
@@ -81,7 +98,10 @@ export function ChatPanel({ dict, onClose }: { dict: Dictionary; onClose: () => 
     <div
       role="dialog"
       aria-label={t.panelTitle}
-      className="fixed bottom-20 right-5 z-40 flex h-[28rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col rounded-md border border-line-800 bg-panel-900 shadow-xl shadow-black/40"
+      aria-hidden={!isOpen}
+      className={`fixed bottom-20 right-5 z-40 flex h-[28rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col rounded-md border border-line-800 bg-panel-900 shadow-xl shadow-black/40 ${
+        isOpen ? "" : "hidden"
+      }`}
     >
       <div className="flex items-center justify-between border-b border-line-800 px-4 py-3">
         <p className="text-sm font-semibold uppercase tracking-widest text-paper-50">{t.panelTitle}</p>
