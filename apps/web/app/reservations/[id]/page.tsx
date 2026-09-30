@@ -47,7 +47,7 @@ export default async function ReservationDetailPage({
       .from("reservations")
       .select(
         `id, status, start_at, end_at, impacted_at, impacted_reason,
-       vehicle:vehicles(plate, status, category:vehicle_categories(name)),
+       vehicle:vehicles(plate, name, status, category:vehicle_categories(name)),
        trip_request:trip_requests(id, origin, destination, requester_id, justification, requester:profiles(full_name))`,
       )
       .eq("id", id)
@@ -135,7 +135,8 @@ export default async function ReservationDetailPage({
       <header className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="font-mono text-2xl text-paper-50">{reservation.vehicle?.plate ?? "—"}</p>
+            <p className="text-2xl text-paper-50">{reservation.vehicle?.name ?? reservation.vehicle?.plate ?? "—"}</p>
+            <p className="font-mono text-xs text-fog-600">{reservation.vehicle?.plate}</p>
             <p className="mt-1 text-sm text-fog-400">
               {reservation.trip_request.origin} → {reservation.trip_request.destination}
             </p>

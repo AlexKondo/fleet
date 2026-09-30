@@ -44,7 +44,7 @@ export default async function TripsPage({
       .select(
         `id, status, start_at, end_at, impacted_at,
        trip_request:trip_requests!inner(origin, destination, requester_id, justification),
-       vehicle:vehicles(plate, status)`,
+       vehicle:vehicles(plate, name, status)`,
       )
       .eq("trip_request.requester_id", user.id)
       .order("start_at", { ascending: false }),
@@ -63,7 +63,7 @@ export default async function TripsPage({
           .select(
             `id, status, start_at, end_at, trip_request_id,
              trip_request:trip_requests(origin, destination),
-             vehicle:vehicles(plate, status)`,
+             vehicle:vehicles(plate, name, status)`,
           )
           .in("trip_request_id", carpoolTripRequestIds)
       : { data: [] };
@@ -131,7 +131,8 @@ export default async function TripsPage({
                 start_at: r.start_at,
                 end_at: r.end_at,
                 status: r.status,
-                rowLabel: r.vehicle?.plate ?? "—",
+                rowPlate: r.vehicle?.plate ?? "—",
+                rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
                 barLabel: r.trip_request?.destination ?? "—",
               })),
               ...carpools.map(({ reservation: r }) => ({
@@ -139,7 +140,8 @@ export default async function TripsPage({
                 start_at: r.start_at,
                 end_at: r.end_at,
                 status: r.status,
-                rowLabel: r.vehicle?.plate ?? "—",
+                rowPlate: r.vehicle?.plate ?? "—",
+                rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
                 barLabel: r.trip_request?.destination ?? "—",
                 tooltipExtra: dict.trips.list.carpoolsTitle,
               })),

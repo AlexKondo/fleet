@@ -11,7 +11,12 @@ export type GanttBar = {
   start_at: string;
   end_at: string;
   status: string;
-  rowLabel: string;
+  /** Vehicle plate — the row's stable identity (grouping key), always unique per vehicle
+   * even when the name is missing or duplicated. */
+  rowPlate: string;
+  /** Vehicle name/model, shown above the plate — easier to spot in a lot than a plate
+   * alone. Falls back to the plate itself when unset. */
+  rowVehicleName: string;
   /** Shown on the bar itself and in its tooltip — e.g. requester name (fleet view) or
    * destination (driver's own trips view). */
   barLabel: string;
@@ -66,13 +71,13 @@ export function ReservationGantt({
     });
   }
 
-  const byRow = new Map<string, GanttBar[]>();
+  const byRow = new Map<string, { vehicleName: string; plate: string; bars: GanttBar[] }>();
   for (const r of bars) {
-    const bucket = byRow.get(r.rowLabel) ?? [];
-    bucket.push(r);
-    byRow.set(r.rowLabel, bucket);
+    const bucket = byRow.get(r.rowPlate) ?? { vehicleName: r.rowVehicleName, plate: r.rowPlate, bars: [] };
+    bucket.bars.push(r);
+    byRow.set(r.rowPlate, bucket);
   }
-  const rows = [...byRow.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const rows = [...byRow.values()].sort((a, b) => a.vehicleName.localeCompare(b.vehicleName));
 
   const nowLeft = ((Date.now() - windowStart) / 86_400_000) * pxPerDay;
   const zoomIndex = ZOOM_ORDER.indexOf(zoom);
@@ -105,9 +110,9 @@ export function ReservationGantt({
         </button>
       </div>
       <div className="overflow-x-auto">
-        <div style={{ width: totalWidth + 112 }}>
+        <div style={{ width: totalWidth + 144 }}>
           <div className="relative flex border-b border-line-800 bg-panel-900/60 text-xs text-fog-600">
-            <div className="w-28 shrink-0 px-3 py-2 font-medium uppercase tracking-widest">
+            <div className="w-36 shrink-0 px-3 py-2 font-medium uppercase tracking-widest">
               {rowHeading}
             </div>
             <div className="relative py-2" style={{ width: totalWidth }}>
@@ -122,10 +127,11 @@ export function ReservationGantt({
               ))}
             </div>
           </div>
-          {rows.map(([rowLabel, rowBars]) => (
-            <div key={rowLabel} className="flex border-b border-line-800 last:border-0">
-              <div className="flex w-28 shrink-0 items-center px-3 py-3 font-mono text-sm text-paper-50">
-                {rowLabel}
+          {rows.map(({ vehicleName, plate, bars: rowBars }) => (
+            <div key={plate} className="flex border-b border-line-800 last:border-0">
+              <div className="flex w-36 shrink-0 flex-col justify-center px-3 py-3">
+                <span className="truncate text-sm text-paper-50">{vehicleName}</span>
+                <span className="font-mono text-xs text-fog-600">{plate}</span>
               </div>
               <div className="relative py-3" style={{ width: totalWidth }}>
                 {dayTicks.map((tick) => (

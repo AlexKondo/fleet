@@ -147,7 +147,7 @@ export default async function DashboardPage({
           .from("reservations")
           .select(
             `id, start_at, end_at, status, impacted_at,
-             vehicle:vehicles(id, plate),
+             vehicle:vehicles(id, plate, name),
              trip_request:trip_requests(origin, destination, requester_id, requester:profiles(full_name))`,
           )
           .in("status", ["pending_approval", "confirmed"])
@@ -400,7 +400,8 @@ export default async function DashboardPage({
                 start_at: r.start_at,
                 end_at: r.end_at,
                 status: r.status,
-                rowLabel: r.vehicle?.plate ?? "—",
+                rowPlate: r.vehicle?.plate ?? "—",
+                rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
                 barLabel: r.trip_request?.requester?.full_name ?? t.activeReservations.unknownRequester,
                 tooltipExtra: r.trip_request?.destination,
               }))}
