@@ -125,6 +125,26 @@ export async function dispatchIntent(
       return { success: true, message: "Registrado na reserva." };
     }
 
+    case "EXTEND_RESERVATION": {
+      // Reuses the exact same RPC path as the Communication Hub's "return_time_change"
+      // message (apps/web/app/reservations/[id]/actions.ts): post_reservation_message
+      // updates the reservation's expected return time and runs its own delay-impact/
+      // automatic-reassignment side effects atomically — nothing new to implement here.
+      const active = await findActiveReservations(supabase, user.id);
+      const reservationId = resolveReservationId(slots.reservationId, active);
+      if (!reservationId) return { success: false, message: "reservation_not_found" };
+      if (!slots.newExpectedReturnAt) return { success: false, message: "missing_new_return_time" };
+
+      const formData = new FormData();
+      formData.set("reservationId", reservationId);
+      formData.set("messageType", "return_time_change");
+      formData.set("newExpectedReturnAt", slots.newExpectedReturnAt);
+      formData.set("body", `Novo horário de retorno solicitado: ${slots.newExpectedReturnAt}.`);
+      const result = await postReservationMessage({ status: "idle" }, formData);
+      if (result.status === "error") return { success: false, message: result.error ?? "unknown_error" };
+      return { success: true, message: "Horário de retorno atualizado." };
+    }
+
     case "CHECK_AVAILABILITY":
     case "CHECK_RANGE": {
       const input: TripFormInput = {
@@ -156,7 +176,6 @@ export async function dispatchIntent(
     // apps/web/app/chat/actions.ts before ever reaching dispatch for these; kept here only
     // so the switch is exhaustive over every catalog intent.
     case "CHANGE_RESERVATION":
-    case "EXTEND_RESERVATION":
     case "REQUEST_DIFFERENT_VEHICLE":
     case "START_TRIP":
     case "END_TRIP":

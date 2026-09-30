@@ -31,7 +31,6 @@ export const initialChatState: ChatState = { status: "idle", messages: [] };
 // see dispatch.ts's file comment for the reasoning.
 const NOT_AUTOMATED: Partial<Record<IntentName, string>> = {
   CHANGE_RESERVATION: "Para alterar detalhes de uma reserva, acesse a reserva em Minhas Viagens.",
-  EXTEND_RESERVATION: "Para estender o retorno, envie uma mensagem na própria reserva em Minhas Viagens.",
   REQUEST_DIFFERENT_VEHICLE: "Para trocar de veículo, use o botão \"Trocar\" no Painel.",
   START_TRIP: "Para retirar o veículo, abra a reserva e use o checklist de retirada — ele exige fotos do veículo.",
   END_TRIP: "Para devolver o veículo, abra a reserva e use o checklist de devolução — ele exige fotos do veículo.",
