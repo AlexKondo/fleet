@@ -30,7 +30,7 @@ Ground rules:
 - Never guess a slot value you cannot actually infer from the message or the given context — omit it instead.
 - If required information for an otherwise-clear intent is missing, respond with "needs_clarification" and ONE focused follow-up question (never ask for more than what's actually missing).
 - If the message is ambiguous or you're not confident which intent applies, respond with "low_confidence" rather than guessing.
-- "summary" must be a short, plain-language, first-person-plural confirmation sentence in ${"{{LOCALE_NAME}}"} describing exactly what will happen (e.g. "Vou reservar um carro para amanhã às 8h, retorno às 17h, destino São Paulo.") — this is shown to the user before anything is executed, so it must be accurate and complete.
+- "summary" must be in ${"{{LOCALE_NAME}}"}. For every intent EXCEPT ASK_FLEET, it's a short, plain-language, first-person-plural confirmation sentence describing exactly what will happen (e.g. "Vou reservar um carro para amanhã às 8h, retorno às 17h, destino São Paulo.") — this is shown to the user before anything is executed, so it must be accurate and complete. For ASK_FLEET specifically, "summary" is instead the actual answer to the user's question (nothing gets executed for this intent, so there's nothing to confirm).
 - Respond with ONLY a JSON object, no other text, no markdown code fence:
   {"status": "ok", "intent": "<name>", "slots": {...}, "summary": "..."}
   {"status": "needs_clarification", "question": "..."}

@@ -26,6 +26,22 @@ export interface ChatState {
 
 export const initialChatState: ChatState = { status: "idle", messages: [] };
 
+// dispatch.ts's DispatchResult.message is a stable internal code on failure (or, for an
+// RPC error with no mapped code, a raw Postgres message) — never shown to the user
+// directly (the doc explicitly forbids exposing raw technical errors). Anything not
+// listed here falls back to a generic message instead of leaking internals.
+const FRIENDLY_DISPATCH_ERRORS: Record<string, string> = {
+  reservation_not_found: "Não encontrei essa reserva. Pode informar qual?",
+  RESERVATION_CONFLICT: "Esse veículo acabou de ser reservado por outra pessoa. Tente outro horário.",
+  not_authenticated: "Sua sessão expirou. Faça login novamente.",
+  missing_new_return_time: "Não entendi o novo horário de retorno. Pode informar de novo?",
+  not_supported_via_chat: "Essa ação ainda não é feita por aqui.",
+};
+
+function friendlyDispatchError(code: string): string {
+  return FRIENDLY_DISPATCH_ERRORS[code] ?? "Não consegui concluir essa ação agora. Tente novamente em instantes.";
+}
+
 // Intents the doc scopes to "point at the right screen" instead of full chat automation
 // (pickup/return need photo evidence; vehicle-swap is a dashboard/fleet-manager action) —
 // see dispatch.ts's file comment for the reasoning.
@@ -91,11 +107,14 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     const result = notAutomatedMessage
       ? { success: true, message: notAutomatedMessage }
       : await dispatchIntent(pending.intent, pending.slots);
+    const displayMessage = result.success ? result.message : friendlyDispatchError(result.message);
 
-    const assistantMessage: ChatMessage = { role: "assistant", content: result.message };
+    const assistantMessage: ChatMessage = { role: "assistant", content: displayMessage };
     await admin.from("chat_messages").insert({
       conversation_id: conversationId,
       role: "assistant",
+      // The raw code is kept in the DB row (not the friendly text shown to the user) —
+      // useful for debugging/telemetry without being what anyone actually reads.
       content: result.message,
       intent: pending.intent,
       slots: pending.slots,
@@ -152,7 +171,13 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
 
   if (interpretation.status === "ok") {
     const notAutomatedMessage = NOT_AUTOMATED[interpretation.intent];
-    if (notAutomatedMessage) {
+    if (interpretation.intent === "ASK_FLEET") {
+      // Purely informational — there's nothing for dispatch.ts to execute, so the
+      // interpreter's own answer IS the response. Routing this through dispatchIntent
+      // instead (as every other no-confirmation-needed intent does) hit its default
+      // "not_supported_via_chat" case, silently breaking every general question.
+      assistantContent = interpretation.summary;
+    } else if (notAutomatedMessage) {
       assistantContent = notAutomatedMessage;
     } else if (requiresConfirmation(interpretation.intent) === "no") {
       const result = await dispatchIntent(interpretation.intent, interpretation.slots);
