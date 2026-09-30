@@ -14,7 +14,7 @@ Intent catalog (respond with exactly one of these names, or "UNKNOWN" if none fi
 - CREATE_RESERVATION — book a vehicle for a trip. Slots: departureAt, expectedReturnAt (ISO 8601 datetimes, resolved from relative phrases like "amanhã às 8h" using the current date/time given below), destination, origin (optional), passengerCount (optional, default 1), requiresCargo (optional boolean), preferredVehiclePlate (optional — a license plate the user explicitly named, e.g. answering "quero o ABC1234" after being shown a list of vehicle options; carry forward the departureAt/expectedReturnAt/destination already established earlier in the conversation, don't ask for them again).
 - VIEW_RESERVATION — check an existing reservation's details. Slots: reservationId (optional — if absent, means "my current/next trip").
 - CHANGE_RESERVATION — modify an existing reservation. Slots: reservationId.
-- EXTEND_RESERVATION — push back the return time of an active trip. Slots: reservationId (optional if only one is active), newExpectedReturnAt.
+- EXTEND_RESERVATION — push back the return time of an active trip. Slots: reservationId (optional if only one is active), newExpectedReturnAt (same -03:00 offset rule as below).
 - CANCEL_RESERVATION — cancel a reservation. Slots: reservationId (optional if only one is active/upcoming).
 - FIND_MY_VEHICLE — where is my currently assigned/reserved vehicle. Slots: none.
 - CHECK_AVAILABILITY — is a vehicle available for a given window, without booking. Slots: departureAt, expectedReturnAt.
@@ -27,6 +27,7 @@ Intent catalog (respond with exactly one of these names, or "UNKNOWN" if none fi
 - ASK_FLEET — a general question about the fleet/policies that doesn't map to any action above. Slots: none.
 
 Ground rules:
+- Every datetime slot (departureAt, expectedReturnAt, newExpectedReturnAt) MUST be emitted as an ISO 8601 string with the explicit "-03:00" offset (Brazil/São Paulo time, which this whole app always runs in regardless of the user's display language) — e.g. the user saying "amanhã às 7h" is "2026-10-06T07:00:00-03:00", never "...T07:00:00Z" or an offset-less "...T07:00:00". Omitting the offset or using the wrong one silently books the wrong hour (the server parses a bare/Z-suffixed time as UTC, not Brazil time) — this has caused real bookings off by 3 hours. The current date/time given in the context below already models the exact format expected back.
 - Never guess a slot value you cannot actually infer from the message or the given context — omit it instead.
 - If required information for an otherwise-clear intent is missing, respond with "needs_clarification" and ONE focused follow-up question (never ask for more than what's actually missing).
 - If the message is ambiguous or you're not confident which intent applies, respond with "low_confidence" rather than guessing.
@@ -102,7 +103,7 @@ export async function interpretMessage(input: {
   const localeName = LOCALE_NAMES[input.locale] ?? "Portuguese (Brazil)";
   const systemPrompt =
     SYSTEM_PROMPT_TEMPLATE.replaceAll("{{LOCALE_NAME}}", localeName) +
-    `\n\nContext: today is ${input.context.today}. Organization: ${input.context.organizationName}. The user's active/upcoming reservation ids: ${
+    `\n\nContext: the current date/time is ${input.context.today} (Brazil/São Paulo, -03:00 — resolve every relative phrase like "amanhã", "daqui a 2 horas" against this, not against any other timezone). Organization: ${input.context.organizationName}. The user's active/upcoming reservation ids: ${
       input.context.activeReservationIds.length > 0 ? input.context.activeReservationIds.join(", ") : "none"
     }.`;
 

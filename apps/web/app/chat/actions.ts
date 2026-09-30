@@ -123,8 +123,24 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     return { status: "error", messages: prevState.messages, error: "conversation_create_failed" };
   }
 
-  if (phase === "cancel") {
+  if (phase === "edit") {
+    // Drops only the pending confirmation, keeping the conversation history — so a
+    // follow-up like "muda a saída pra 7:00" carries the already-established
+    // destination/return/etc. forward instead of making the driver restate the whole
+    // request from scratch.
     return { status: "idle", conversationId, messages: prevState.messages };
+  }
+
+  if (phase === "cancel") {
+    // Unlike "edit", cancelling a pending action ends the whole thread — every clarifying
+    // question and option shown has nothing to do with whatever the driver asks next.
+    // Marks the conversation abandoned (not left dangling "active") and starts fresh with
+    // no conversationId, same as a successful confirm already does.
+    await admin
+      .from("chat_conversations")
+      .update({ status: "abandoned", updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
+    return { status: "idle", messages: [] };
   }
 
   const locale = await getLocale();
@@ -305,7 +321,11 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     message,
     locale,
     context: {
-      today: new Date().toISOString().slice(0, 10),
+      // Brazil-local "now" (not the server's own UTC clock) with its explicit -03:00
+      // offset spelled out — see chatOrchestrator.ts's system prompt for why this exact
+      // format matters: it's also the model's only example of the offset it must echo back
+      // on every datetime slot it produces.
+      today: new Date().toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" }).replace(" ", "T") + "-03:00",
       organizationName: (profile.organization as unknown as { name: string } | null)?.name ?? "",
       activeReservationIds: active.map((r) => r.reservationId),
     },

@@ -164,10 +164,10 @@ export function ChatPanel({
     formAction(formData);
   }
 
-  function handleConfirm(confirm: boolean) {
+  function handleConfirm(phase: "confirm" | "edit" | "cancel") {
     stopListeningIfActive();
     const formData = new FormData();
-    formData.set("phase", confirm ? "confirm" : "cancel");
+    formData.set("phase", phase);
     if (state.conversationId) formData.set("conversationId", state.conversationId);
     formAction(formData);
   }
@@ -249,7 +249,7 @@ export function ChatPanel({
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => handleConfirm(true)}
+                onClick={() => handleConfirm("confirm")}
                 disabled={pending}
                 className="rounded-sm bg-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90 disabled:opacity-50"
               >
@@ -257,7 +257,15 @@ export function ChatPanel({
               </button>
               <button
                 type="button"
-                onClick={() => handleConfirm(false)}
+                onClick={() => handleConfirm("edit")}
+                disabled={pending}
+                className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600 disabled:opacity-50"
+              >
+                {t.confirmEdit}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConfirm("cancel")}
                 disabled={pending}
                 className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600 disabled:opacity-50"
               >

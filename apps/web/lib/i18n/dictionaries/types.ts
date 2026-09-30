@@ -973,6 +973,7 @@ export type Dictionary = {
     micPermissionDenied: string;
     micGenericError: string;
     confirmYes: string;
+    confirmEdit: string;
     confirmCancel: string;
     errorGeneric: string;
     thinking: string;

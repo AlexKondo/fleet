@@ -920,6 +920,7 @@ const dict: Dictionary = {
     micPermissionDenied: "麦克风权限被拒绝，请在浏览器设置中启用。",
     micGenericError: "无法捕获音频，请重试或直接输入消息。",
     confirmYes: "确认",
+    confirmEdit: "修改",
     confirmCancel: "取消",
     errorGeneric: "暂时无法处理，您可以照常使用表单。",
     thinking: "正在处理...",

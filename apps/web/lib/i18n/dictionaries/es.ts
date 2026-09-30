@@ -956,6 +956,7 @@ const dict: Dictionary = {
     micPermissionDenied: "Permiso de micrófono denegado. Actívalo en la configuración del navegador.",
     micGenericError: "No pude captar el audio. Intenta de nuevo o escribe tu mensaje.",
     confirmYes: "Confirmar",
+    confirmEdit: "Cambiar",
     confirmCancel: "Cancelar",
     errorGeneric: "No pude procesar esto ahora. Puedes usar los formularios normalmente.",
     thinking: "Pensando...",
