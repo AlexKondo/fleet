@@ -174,12 +174,13 @@ export async function AppShell({
               <ThemeToggle dict={dict} />
             </div>
             <div className="hidden items-center gap-4 md:flex">
+              {/* The bell's own "CNH pendente" item just links back to this exact page, so
+                  it stays hidden during the gate — but the user menu is worth keeping: it's
+                  how someone reaches "Trocar senha" without the CNH upload blocking that. */}
               {licenseGateActive ? null : (
-                <>
-                  <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
-                  <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} dict={dict} />
-                </>
+                <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
               )}
+              <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} dict={dict} />
               <form action={signOut}>
                 <button
                   type="submit"

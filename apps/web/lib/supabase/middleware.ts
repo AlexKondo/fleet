@@ -95,8 +95,10 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
   // gap the user found: clicking a link the sidebar doesn't even show). Checked here,
   // same place/pattern as the must_change_password gate above, so it can't be bypassed by
   // navigating straight to a route AppShell never rendered a link for.
-  // "security" is exempt — gate staff record vehicle movements, they don't drive.
-  if (!pathname.startsWith("/account/license")) {
+  // "security" is exempt — gate staff record vehicle movements, they don't drive. /account
+  // (change password, personal data) stays reachable too — the user menu is visible during
+  // this gate specifically so those two screens don't need the CNH uploaded first.
+  if (!pathname.startsWith("/account")) {
     const { data: ownProfile } = await supabase
       .from("profiles")
       .select("drivers_license_number, role")
