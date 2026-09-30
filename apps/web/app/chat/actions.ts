@@ -8,6 +8,8 @@ import { interpretMessage } from "@/lib/domain/chatOrchestrator";
 import { requiresConfirmation, missingRequiredSlots, type IntentName } from "@fleet/domain";
 import { dispatchIntent } from "./dispatch";
 import { findActiveReservations } from "./queries";
+import { planTrip, type TripFormInput } from "@/app/trips/new/actions";
+import { formatDateTime } from "@/lib/formatDateTime";
 
 const DAILY_MESSAGE_LIMIT = 60;
 const BURST_MESSAGE_LIMIT = 6;
@@ -194,6 +196,60 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     } else if (requiresConfirmation(interpretation.intent) === "no") {
       const result = await dispatchIntent(interpretation.intent, interpretation.slots);
       assistantContent = result.message;
+    } else if (interpretation.intent === "CREATE_RESERVATION") {
+      // Previously confirmed straight off the LLM's own (vehicle-blind) summary — the
+      // driver found out which vehicle they'd gotten only after already confirming, with
+      // no way to see or pick from other eligible options first. Now runs the exact same
+      // recommendation engine the form uses (planTrip) before ever asking for
+      // confirmation, so the summary can name the actual vehicle and, when the
+      // organization's booking_mode allows it, list real alternatives by plate.
+      const slots = interpretation.slots;
+      const input: TripFormInput = {
+        departureAt: new Date(slots.departureAt ?? "").toISOString(),
+        expectedReturnAt: new Date(slots.expectedReturnAt ?? "").toISOString(),
+        origin: slots.origin ?? "",
+        destination: slots.destination ?? "",
+        distanceKm: Number(slots.distanceKm ?? 0),
+        passengerCount: Number(slots.passengerCount ?? 1),
+        requiresCargo: slots.requiresCargo === "true",
+        justification: slots.justification ?? "Solicitado via assistente conversacional",
+      };
+      const plan = await planTrip(input);
+
+      if (plan.type === "vehicle" && plan.vehicle) {
+        // A plate the user already named (answering a previous round of alternatives)
+        // resolves against THIS fresh plan — never trusted blindly, only used if it's
+        // still actually eligible right now.
+        const namedPlate = slots.preferredVehiclePlate?.trim().toUpperCase();
+        const namedMatch = namedPlate
+          ? plan.vehicle.plate.toUpperCase() === namedPlate
+            ? { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate }
+            : plan.vehicle.alternatives.find((alt) => alt.plate.toUpperCase() === namedPlate)
+          : undefined;
+        const chosenVehicleId = namedMatch?.vehicleId ?? plan.vehicle.vehicleId;
+        const chosenPlate = namedMatch?.plate ?? plan.vehicle.plate;
+
+        const alternativesLine =
+          plan.vehicle.alternatives.length > 0
+            ? ` Outras opções disponíveis: ${plan.vehicle.alternatives.map((a) => `${a.plate} (${a.categoryName})`).join(", ")} — é só me dizer a placa se preferir uma dessas.`
+            : "";
+        const summary = `Vou reservar o veículo ${chosenPlate} (${plan.vehicle.categoryName}) para ${slots.destination}, saída ${formatDateTime(input.departureAt, locale)}, retorno ${formatDateTime(input.expectedReturnAt, locale)}.${alternativesLine}`;
+
+        assistantContent = summary;
+        pendingAction = {
+          intent: interpretation.intent,
+          slots: { ...slots, preferredVehicleId: chosenVehicleId },
+          summary,
+        };
+        status = "needs_confirmation";
+      } else {
+        // Carpool, or no eligible vehicle at all — nothing to pick between, so the
+        // original (vehicle-blind) confirmation summary is the right one; dispatch.ts
+        // re-runs planTrip itself at confirm time regardless.
+        assistantContent = interpretation.summary;
+        pendingAction = { intent: interpretation.intent, slots, summary: interpretation.summary };
+        status = "needs_confirmation";
+      }
     } else {
       assistantContent = interpretation.summary;
       pendingAction = { intent: interpretation.intent, slots: interpretation.slots, summary: interpretation.summary };

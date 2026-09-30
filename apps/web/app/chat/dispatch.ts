@@ -80,6 +80,24 @@ export async function dispatchIntent(
       }
 
       if (plan.type === "vehicle" && plan.vehicle) {
+        // If the driver picked an alternative earlier in the conversation
+        // (actions.ts stashes it as slots.preferredVehicleId once they name one from the
+        // list shown alongside the recommendation), honor it — but only if it's still
+        // among THIS re-derived eligible set. Never trust a vehicle id that didn't come
+        // out of planTrip/planMobility's own re-validation, and silently fall back to the
+        // recommendation if the preference no longer checks out (already booked since,
+        // no longer eligible, etc.) rather than erroring the whole reservation over it.
+        const preferredId = slots.preferredVehicleId;
+        const preferredIsEligible =
+          preferredId === plan.vehicle.vehicleId ||
+          plan.vehicle.alternatives.some((alt) => alt.vehicleId === preferredId);
+        const chosenVehicleId = preferredIsEligible ? preferredId! : plan.vehicle.vehicleId;
+        const chosenPlate =
+          chosenVehicleId === plan.vehicle.vehicleId
+            ? plan.vehicle.plate
+            : plan.vehicle.alternatives.find((alt) => alt.vehicleId === chosenVehicleId)?.plate ??
+              plan.vehicle.plate;
+
         const { error } = await supabase.rpc("create_vehicle_reservation", {
           p_departure_at: input.departureAt,
           p_expected_return_at: input.expectedReturnAt,
@@ -89,7 +107,7 @@ export async function dispatchIntent(
           p_passenger_count: input.passengerCount,
           p_requires_cargo: input.requiresCargo,
           p_justification: input.justification,
-          p_vehicle_id: plan.vehicle.vehicleId,
+          p_vehicle_id: chosenVehicleId,
         });
         if (error) {
           return {
@@ -126,7 +144,7 @@ export async function dispatchIntent(
 
         revalidatePath("/trips");
         revalidatePath("/dashboard");
-        return { success: true, message: `Reserva criada — veículo ${plan.vehicle.plate}.` };
+        return { success: true, message: `Reserva criada — veículo ${chosenPlate}.` };
       }
 
       return { success: false, message: plan.reasons.join(" ") || "Nenhum veículo elegível encontrado." };
