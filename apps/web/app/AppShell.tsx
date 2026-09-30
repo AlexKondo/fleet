@@ -97,11 +97,12 @@ export async function AppShell({
     : { status: "idle", messages: [] };
 
   const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
-    // "Painel" (fleet-wide approvals/active-reservations/tasks) and "Movimentações" (gate
-    // pickup/return search) are fleet-ops screens — a plain employee has no use for either:
-    // their own reservations are already fully visible (and now actionable) via the Gantt
-    // on "Minhas Viagens", so showing these just added noise with nothing to do on them.
-    { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: isSecurity || isFleetManager },
+    // "Painel" (fleet-wide approvals/active-reservations/tasks) is a plain employee's
+    // nothing-to-do-here screen, same reasoning as hiding it for them — and a security/gate
+    // user's whole job is pickup/return checklists on "Movimentações", nothing on Painel
+    // is theirs to approve or manage either, so it's hidden for pure security too (not for
+    // fleet_manager/administrator, who also carry security's own gate duties sometimes).
+    { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: isFleetManager },
     { key: "trips", href: "/trips", label: dict.nav.trips, icon: TripsIcon, visible: true },
     {
       key: "gate",
