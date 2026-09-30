@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getDictionary } from "../../../lib/i18n/getLocale";
 import { AppShell } from "../../AppShell";
+import { BackButton } from "../../BackButton";
 import { Card } from "../../ui/Card";
 import { UpdateProfileForm } from "./UpdateProfileForm";
 
@@ -15,7 +16,9 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, organization:organizations(name)")
+    .select(
+      "full_name, role, organization:organizations(name), drivers_license_number, drivers_license_category, drivers_license_expiration",
+    )
     .eq("id", user.id)
     .single();
 
@@ -33,8 +36,22 @@ export default async function ProfilePage() {
       title={dict.account.profile.title}
     >
       <section className="mx-auto max-w-md px-6 py-8">
+        <BackButton dict={dict} />
         <Card>
-          <UpdateProfileForm dict={dict} fullName={profile?.full_name ?? ""} email={user.email ?? ""} />
+          <UpdateProfileForm
+            dict={dict}
+            fullName={profile?.full_name ?? ""}
+            email={user.email ?? ""}
+            license={
+              profile?.drivers_license_number
+                ? {
+                    number: profile.drivers_license_number,
+                    category: profile.drivers_license_category,
+                    expirationDate: profile.drivers_license_expiration,
+                  }
+                : null
+            }
+          />
         </Card>
       </section>
     </AppShell>

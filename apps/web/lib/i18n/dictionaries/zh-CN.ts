@@ -159,9 +159,11 @@ const dict: Dictionary = {
     profile: {
       title: "个人资料",
       nameLabel: "姓名",
+      nameFromLicenseHint: "已根据您的驾驶证自动填写。",
       emailLabel: "电子邮箱",
       emailImmutableHint: "邮箱无法在此处修改。",
       nameRequired: "请输入您的姓名。",
+      licenseSectionTitle: "已登记的驾驶证",
       saveFailed: "无法保存您的资料。",
       success: "资料已成功更新。",
       submit: "保存",

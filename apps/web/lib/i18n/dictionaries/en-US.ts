@@ -165,9 +165,11 @@ const dict: Dictionary = {
     profile: {
       title: "Personal Data",
       nameLabel: "Full name",
+      nameFromLicenseHint: "Auto-filled from your driver's license.",
       emailLabel: "Email",
       emailImmutableHint: "Email can't be changed here.",
       nameRequired: "Enter your name.",
+      licenseSectionTitle: "Driver's license on file",
       saveFailed: "Couldn't save your data.",
       success: "Data updated successfully.",
       submit: "Save",

@@ -165,9 +165,11 @@ const dict: Dictionary = {
     profile: {
       title: "Datos Personales",
       nameLabel: "Nombre completo",
+      nameFromLicenseHint: "Completado automáticamente con el nombre de tu licencia.",
       emailLabel: "Correo electrónico",
       emailImmutableHint: "El correo no se puede cambiar aquí.",
       nameRequired: "Ingresa tu nombre.",
+      licenseSectionTitle: "Licencia de conducir registrada",
       saveFailed: "No se pudieron guardar tus datos.",
       success: "Datos actualizados con éxito.",
       submit: "Guardar",

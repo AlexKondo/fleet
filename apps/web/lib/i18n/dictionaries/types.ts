@@ -200,9 +200,11 @@ export type Dictionary = {
     profile: {
       title: string;
       nameLabel: string;
+      nameFromLicenseHint: string;
       emailLabel: string;
       emailImmutableHint: string;
       nameRequired: string;
+      licenseSectionTitle: string;
       saveFailed: string;
       success: string;
       submit: string;

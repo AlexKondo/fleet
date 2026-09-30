@@ -62,7 +62,12 @@ export async function submitLicensePhoto(
     const admin = createSupabaseAdminClient();
     const { error } = await admin
       .from("profiles")
+      // The CNH is the authoritative source for the driver's legal name — this overwrites
+      // whatever was in profiles.full_name (self-entered, possibly a nickname/typo) with
+      // exactly what the document says, per the user's explicit request that Dados
+      // Pessoais show the CNH's name rather than the free-typed one.
       .update({
+        full_name: fullName,
         drivers_license_number: number,
         drivers_license_category: category,
         drivers_license_expiration: expirationDate,
@@ -74,6 +79,7 @@ export async function submitLicensePhoto(
     }
 
     revalidatePath("/account/license");
+    revalidatePath("/account/profile");
     revalidatePath("/dashboard");
     return {
       status: isStillValid ? "success" : "success_expired",
