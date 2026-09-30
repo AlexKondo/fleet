@@ -88,5 +88,6 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   if (!signedIn) {
     return { error: messages.signin_after_signup_failed };
   }
-  redirect("/dashboard");
+  // "/" does the role-based routing (fleet ops -> dashboard, plain employee -> trips).
+  redirect("/");
 }

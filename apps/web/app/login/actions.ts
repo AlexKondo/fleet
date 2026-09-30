@@ -36,5 +36,7 @@ export async function signIn(_prevState: SignInState, formData: FormData): Promi
     };
   }
 
-  redirect("/dashboard");
+  // "/" does the role-based routing (fleet ops -> dashboard, plain employee -> trips) —
+  // see page.tsx.
+  redirect("/");
 }

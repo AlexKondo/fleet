@@ -37,8 +37,9 @@ export function LoginRecovery({ dict, children }: { dict: Dictionary; children: 
       .then(({ data, error }) => {
         if (data.session && !error) {
           // Full navigation, not router.push — middleware needs to see the cookie
-          // setSession() just wrote via document.cookie on a fresh request.
-          window.location.href = "/dashboard";
+          // setSession() just wrote via document.cookie on a fresh request. "/" does the
+          // role-based routing (fleet ops -> dashboard, plain employee -> trips).
+          window.location.href = "/";
           return;
         }
         clearSessionBackup();

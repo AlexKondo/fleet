@@ -97,7 +97,11 @@ export async function AppShell({
     : { status: "idle", messages: [] };
 
   const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
-    { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: true },
+    // "Painel" (fleet-wide approvals/active-reservations/tasks) and "Movimentações" (gate
+    // pickup/return search) are fleet-ops screens — a plain employee has no use for either:
+    // their own reservations are already fully visible (and now actionable) via the Gantt
+    // on "Minhas Viagens", so showing these just added noise with nothing to do on them.
+    { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: isSecurity || isFleetManager },
     { key: "trips", href: "/trips", label: dict.nav.trips, icon: TripsIcon, visible: true },
     {
       key: "gate",
