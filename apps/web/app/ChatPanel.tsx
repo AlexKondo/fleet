@@ -189,7 +189,14 @@ export function ChatPanel({
     stopListeningIfActive();
     // Drops only the pending confirmation — the conversation history stays, so a follow-up
     // like "muda a saída pra 7:00" still carries the already-established slots forward.
-    setOverride({ status: "idle", conversationId: state.conversationId, messages: state.messages });
+    // Previously left the driver staring at an empty input with no cue for what to type;
+    // asking explicitly (destination/time/vehicle) is what actually prompts the follow-up
+    // message instead of requiring them to already know the fix-up phrasing.
+    setOverride({
+      status: "idle",
+      conversationId: state.conversationId,
+      messages: [...state.messages, { role: "assistant", content: t.editPrompt }],
+    });
   }
 
   function handleCancel() {

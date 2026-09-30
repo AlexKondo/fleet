@@ -974,6 +974,7 @@ export type Dictionary = {
     micGenericError: string;
     confirmYes: string;
     confirmEdit: string;
+    editPrompt: string;
     confirmCancel: string;
     errorGeneric: string;
     thinking: string;

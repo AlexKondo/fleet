@@ -957,6 +957,7 @@ const dict: Dictionary = {
     micGenericError: "No pude captar el audio. Intenta de nuevo o escribe tu mensaje.",
     confirmYes: "Confirmar",
     confirmEdit: "Cambiar",
+    editPrompt: "Claro, ¿qué te gustaría cambiar? Puedes decirme un nuevo destino, hora de salida, hora de retorno, u otro vehículo.",
     confirmCancel: "Cancelar",
     errorGeneric: "No pude procesar esto ahora. Puedes usar los formularios normalmente.",
     thinking: "Pensando...",

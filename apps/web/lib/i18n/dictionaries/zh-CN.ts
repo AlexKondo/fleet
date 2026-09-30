@@ -921,6 +921,7 @@ const dict: Dictionary = {
     micGenericError: "无法捕获音频，请重试或直接输入消息。",
     confirmYes: "确认",
     confirmEdit: "修改",
+    editPrompt: "好的，您想修改什么？可以告诉我新的目的地、出发时间、返回时间，或者换一辆车。",
     confirmCancel: "取消",
     errorGeneric: "暂时无法处理，您可以照常使用表单。",
     thinking: "正在处理...",
