@@ -36,6 +36,15 @@ function barVisual(status: string, startMs: number, endMs: number, now: number):
   return { className: "bg-signal-blue", icon: "▶" };
 }
 
+// Kept in sync with barVisual() below — one entry per distinct color+icon it can produce.
+const GANTT_LEGEND: { className: string; icon: string; label: string }[] = [
+  { className: "bg-gwm-accent", icon: "?", label: "Aguardando aprovação" },
+  { className: "bg-fog-600", icon: "🕐", label: "Reservado, não retirado" },
+  { className: "bg-signal-blue", icon: "▶", label: "Em andamento" },
+  { className: "bg-line-700", icon: "✓", label: "Concluída" },
+  { className: "bg-signal-red/80", icon: "✕", label: "Cancelada" },
+];
+
 // Pixels-per-day per zoom level — "zoom in" (week) spreads days out for detail, "zoom out"
 // (quarter) compresses them to see more at a glance. The scrollable container (set by the
 // caller with overflow-x-auto) handles anything wider than the viewport.
@@ -100,7 +109,18 @@ export function ReservationGantt({
 
   return (
     <div className="mb-4 rounded-md border border-line-800">
-      <div className="flex items-center justify-end gap-1 border-b border-line-800 bg-panel-900/60 px-2 py-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 border-b border-line-800 bg-panel-900/60 px-2 py-1.5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {GANTT_LEGEND.map((item) => (
+            <span key={item.label} className="flex items-center gap-1 text-[11px] text-fog-400">
+              <span className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm text-[9px] text-ink-950 ${item.className}`}>
+                {item.icon}
+              </span>
+              {item.label}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => changeZoom(ZOOM_ORDER[Math.max(zoomIndex - 1, 0)]!)}
@@ -124,6 +144,7 @@ export function ReservationGantt({
         >
           +
         </button>
+        </div>
       </div>
       <div className="gantt-scroll overflow-x-scroll">
         <div style={{ width: totalWidth + 144 }}>
