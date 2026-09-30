@@ -145,10 +145,10 @@ body {
    without being distracting, while its speech bubble pops in once on appearance. */
 @keyframes chat-agent-float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-12px); }
 }
 .animate-chat-agent-float {
-  animation: chat-agent-float 2.6s ease-in-out infinite;
+  animation: chat-agent-float 1.8s ease-in-out infinite;
 }
 
 @keyframes chat-hint-in {
