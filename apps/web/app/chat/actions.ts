@@ -146,7 +146,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       passengerCount: Number(pending.slots.passengerCount ?? 1),
       requiresCargo: pending.slots.requiresCargo === "true",
       justification: pending.slots.justification ?? "Solicitado via assistente conversacional",
-      allowCarpool: true,
+      allowCarpool: pending.slots.allowCarpool === "true",
     };
     const plan = await planTrip(input);
 
@@ -355,7 +355,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         passengerCount: Number(slots.passengerCount ?? 1),
         requiresCargo: slots.requiresCargo === "true",
         justification: slots.justification ?? "Solicitado via assistente conversacional",
-        allowCarpool: true,
+        allowCarpool: slots.allowCarpool === "true",
       };
       const plan = await planTrip(input);
 

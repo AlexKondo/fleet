@@ -23,13 +23,14 @@ describe("intentCatalog", () => {
   it("reports only the slots still missing, not ones already filled", () => {
     expect(
       missingRequiredSlots("CREATE_RESERVATION", { departureAt: "2026-10-01T08:00:00Z" }),
-    ).toEqual(["expectedReturnAt", "destination"]);
+    ).toEqual(["expectedReturnAt", "destination", "allowCarpool"]);
 
     expect(
       missingRequiredSlots("CREATE_RESERVATION", {
         departureAt: "2026-10-01T08:00:00Z",
         expectedReturnAt: "2026-10-01T17:00:00Z",
         destination: "São Paulo",
+        allowCarpool: "true",
       }),
     ).toEqual([]);
   });

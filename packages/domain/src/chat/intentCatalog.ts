@@ -36,7 +36,7 @@ interface IntentDefinition {
 const INTENT_CATALOG: Record<IntentName, IntentDefinition> = {
   CREATE_RESERVATION: {
     requiresConfirmation: "yes",
-    requiredSlots: ["departureAt", "expectedReturnAt", "destination"],
+    requiredSlots: ["departureAt", "expectedReturnAt", "destination", "allowCarpool"],
   },
   VIEW_RESERVATION: { requiresConfirmation: "no", requiredSlots: [] },
   CHANGE_RESERVATION: { requiresConfirmation: "yes", requiredSlots: ["reservationId"] },

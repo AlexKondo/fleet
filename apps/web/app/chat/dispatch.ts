@@ -58,9 +58,10 @@ export async function dispatchIntent(
         passengerCount: Number(slots.passengerCount ?? 1),
         requiresCargo: slots.requiresCargo === "true",
         justification: slots.justification ?? "Solicitado via assistente conversacional",
-        // Chat doesn't ask this yet (only the self-service form does) — defaults to true,
-        // matching this app's prior behavior before the opt-in existed at all.
-        allowCarpool: true,
+        // Now a required slot (intentCatalog.ts) — the orchestrator always asks for it
+        // explicitly before this intent can even reach confirmation, same opt-in the
+        // self-service form's checkbox has always had.
+        allowCarpool: slots.allowCarpool === "true",
       };
       const plan = await planTrip(input);
       if (plan.error) return { success: false, message: plan.error };
@@ -118,6 +119,7 @@ export async function dispatchIntent(
           p_requires_cargo: input.requiresCargo,
           p_justification: input.justification,
           p_vehicle_id: chosenVehicleId,
+          p_allow_carpool: input.allowCarpool,
         });
         if (error) {
           // This RPC error was previously invisible end-to-end: never logged here, and the
