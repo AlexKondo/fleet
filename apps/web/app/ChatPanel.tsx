@@ -108,8 +108,12 @@ export function ChatPanel({
       setIsListening(false);
     };
     recognition.onend = () => {
+      // Deliberately NOT clearing interimTranscript here — it used to disappear the
+      // instant recognition stopped, which read as "my words vanished" even though the
+      // text had already landed safely in the draft input a moment earlier. Leaving the
+      // "ouvindo" status line up (now showing the final captured phrase) until the next
+      // recording starts or the message is sent makes it visibly clear nothing was lost.
       setIsListening(false);
-      setInterimTranscript("");
     };
     recognitionRef.current = recognition;
     setIsListening(true);
@@ -121,6 +125,7 @@ export function ChatPanel({
     formData.set("message", draft);
     if (state.conversationId) formData.set("conversationId", state.conversationId);
     setDraft("");
+    setInterimTranscript("");
     formAction(formData);
   }
 
@@ -199,10 +204,20 @@ export function ChatPanel({
         ) : null}
 
         {pending ? <p className="mt-2 text-xs text-fog-600">{t.thinking}</p> : null}
-        {isListening ? (
-          <p role="status" className="mt-2 flex items-center gap-1.5 text-xs text-gwm-accent">
-            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-gwm-accent" aria-hidden="true" />
+        {isListening || interimTranscript ? (
+          <p
+            role="status"
+            className={`mt-2 flex items-center gap-1.5 text-xs ${
+              isListening ? "text-gwm-accent" : "text-signal-teal"
+            }`}
+          >
+            {isListening ? (
+              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-gwm-accent" aria-hidden="true" />
+            ) : (
+              <span aria-hidden="true">✓</span>
+            )}
             {interimTranscript ? `"${interimTranscript}"` : t.micListening}
+            {!isListening && interimTranscript ? ` — ${t.micCaptured}` : ""}
           </p>
         ) : null}
         {micError ? (

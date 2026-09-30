@@ -948,6 +948,7 @@ const dict: Dictionary = {
     micStart: "Hablar",
     micStop: "Detener",
     micListening: "Escuchando...",
+    micCaptured: "capturado, revisa y envía",
     micPermissionDenied: "Permiso de micrófono denegado. Actívalo en la configuración del navegador.",
     micGenericError: "No pude captar el audio. Intenta de nuevo o escribe tu mensaje.",
     confirmYes: "Confirmar",
