@@ -427,6 +427,7 @@ export type Database = {
           drivers_license_expiration: string | null
           drivers_license_number: string | null
           full_name: string
+          gantt_zoom_preference: string
           id: string
           license_reminder_1mo_sent_at: string | null
           license_reminder_3mo_sent_at: string | null
@@ -442,6 +443,7 @@ export type Database = {
           drivers_license_expiration?: string | null
           drivers_license_number?: string | null
           full_name: string
+          gantt_zoom_preference?: string
           id: string
           license_reminder_1mo_sent_at?: string | null
           license_reminder_3mo_sent_at?: string | null
@@ -457,6 +459,7 @@ export type Database = {
           drivers_license_expiration?: string | null
           drivers_license_number?: string | null
           full_name?: string
+          gantt_zoom_preference?: string
           id?: string
           license_reminder_1mo_sent_at?: string | null
           license_reminder_3mo_sent_at?: string | null

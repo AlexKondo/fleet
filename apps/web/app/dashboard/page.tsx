@@ -14,6 +14,7 @@ import { BlockVehicleForm } from "../BlockVehicleForm";
 import { StatusBadge } from "../ui/StatusBadge";
 import { RevealAction } from "../ui/RevealAction";
 import { ReservationGantt } from "../ReservationGantt";
+import type { GanttZoomLevel } from "../ganttZoomActions";
 import {
   approveReservation,
   blockVehicle,
@@ -57,7 +58,7 @@ export default async function DashboardPage({
   const [{ data: profile }, { data: vehicleRows, error: vehiclesError }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, role, organization_id, organization:organizations(name)")
+      .select("full_name, role, organization_id, gantt_zoom_preference, organization:organizations(name)")
       .eq("id", user.id)
       .single(),
     supabase
@@ -405,6 +406,7 @@ export default async function DashboardPage({
               }))}
               locale={locale}
               rowHeading={dict.common.vehicle}
+              initialZoom={(profile?.gantt_zoom_preference as GanttZoomLevel) ?? "month"}
             />
             <div className="overflow-x-auto rounded-md border border-line-800">
               <table className="w-full min-w-[1200px] border-collapse text-sm">

@@ -4,10 +4,11 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { AppShell } from "../AppShell";
-import { cancelMyReservation, leaveCarpool } from "./actions";
+import { leaveCarpool } from "./actions";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { ReservationGantt } from "../ReservationGantt";
+import type { GanttZoomLevel } from "../ganttZoomActions";
 
 export default async function TripsPage({
   searchParams,
@@ -35,7 +36,7 @@ export default async function TripsPage({
   const [{ data: profile }, { data: reservations }, { data: participations }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, role, organization:organizations(name)")
+      .select("full_name, role, gantt_zoom_preference, organization:organizations(name)")
       .eq("id", user.id)
       .single(),
     supabase
@@ -123,7 +124,6 @@ export default async function TripsPage({
             {dict.trips.list.empty}
           </p>
         ) : (
-          <>
           <ReservationGantt
             bars={[
               ...reservations.map((r) => ({
@@ -146,76 +146,8 @@ export default async function TripsPage({
             ]}
             locale={locale}
             rowHeading={dict.common.vehicle}
+            initialZoom={(profile?.gantt_zoom_preference as GanttZoomLevel) ?? "month"}
           />
-          <ul className="flex flex-col gap-3">
-            {reservations.map((r) => {
-              const vehicleStatus = r.vehicle?.status;
-              const canPickup = r.status === "confirmed" && (vehicleStatus === "reserved" || vehicleStatus === "awaiting_pickup");
-              const canReturn = r.status === "confirmed" && vehicleStatus === "in_use";
-              // Mirrors cancel_reservation's own guard (0010_cancel_reservation.sql): once
-              // the vehicle is in_use/returning the trip is already underway and can only
-              // be finished via Return, not cancelled. This is a convenience gate — the
-              // RPC re-checks authoritatively regardless.
-              const canCancel =
-                r.status === "pending_approval" ||
-                (r.status === "confirmed" && vehicleStatus !== "in_use" && vehicleStatus !== "returning");
-              return (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between rounded-md border border-line-800 bg-panel-900/60 p-4"
-                >
-                  <Link href={`/reservations/${r.id}`} className="min-w-0 flex-1 hover:opacity-80">
-                    <p className="text-sm text-paper-50">
-                      {r.trip_request?.origin} → {r.trip_request?.destination}
-                    </p>
-                    <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
-                      {r.vehicle?.plate ?? "—"} · {formatDateTime(r.start_at, locale)}
-                    </p>
-                    <p className="mt-1 text-xs text-fog-600">
-                      {reservationStatusLabel(r.status)}
-                      {r.impacted_at ? (
-                        <span className="ml-2 text-signal-yellow">· {dict.trips.list.impactedByDelay}</span>
-                      ) : null}
-                    </p>
-                  </Link>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/reservations/${r.id}`}
-                      className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-gwm-accent hover:text-gwm-accent"
-                    >
-                      {dict.trips.list.messages}
-                    </Link>
-                    {canPickup ? (
-                      <Link
-                        href={`/reservations/${r.id}/pickup`}
-                        className="rounded-sm border border-signal-blue px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
-                      >
-                        {dict.trips.list.startPickup}
-                      </Link>
-                    ) : canReturn ? (
-                      <Link
-                        href={`/reservations/${r.id}/return`}
-                        className="rounded-sm border border-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
-                      >
-                        {dict.trips.list.registerReturn}
-                      </Link>
-                    ) : null}
-                    {canCancel ? (
-                      <form action={cancelMyReservation.bind(null, r.id)}>
-                        <ConfirmSubmitButton
-                          confirmMessage={dict.trips.list.confirmCancel}
-                          className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
-                        >
-                          {dict.common.cancel}
-                        </ConfirmSubmitButton>
-                      </form>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          </>
         )}
 
         {carpools.length > 0 ? (

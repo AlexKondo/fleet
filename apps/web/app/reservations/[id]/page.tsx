@@ -8,6 +8,7 @@ import { getStatusMeta } from "../../dashboard/statusMeta";
 import { getDictionary, getLocale } from "../../../lib/i18n/getLocale";
 import { MessageThread, type ReservationMessage } from "./MessageThread";
 import { respondToCarpoolRequest } from "./actions";
+import { cancelMyReservation } from "../../trips/actions";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
 
 /**
@@ -91,6 +92,23 @@ export default async function ReservationDetailPage({
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
 
+  // Moved here from the /trips list (which used to show these inline per reservation) so
+  // the driver acts on a trip from the same screen where they see its conversation, instead
+  // of a separate row of buttons with no context.
+  const vehicleStatus = reservation.vehicle?.status;
+  const canPickup =
+    isOwnReservation &&
+    reservation.status === "confirmed" &&
+    (vehicleStatus === "reserved" || vehicleStatus === "awaiting_pickup");
+  const canReturn = isOwnReservation && reservation.status === "confirmed" && vehicleStatus === "in_use";
+  // Mirrors cancel_reservation's own guard (0010_cancel_reservation.sql): once the vehicle
+  // is in_use/returning the trip is already underway and can only be finished via Return,
+  // not cancelled. This is a convenience gate — the RPC re-checks authoritatively regardless.
+  const canCancel =
+    isOwnReservation &&
+    (reservation.status === "pending_approval" ||
+      (reservation.status === "confirmed" && vehicleStatus !== "in_use" && vehicleStatus !== "returning"));
+
   return (
     <AppShell
       active="trips"
@@ -133,6 +151,37 @@ export default async function ReservationDetailPage({
             </span>
           ) : null}
         </div>
+
+        {canPickup || canReturn || canCancel ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line-800 pt-4">
+            {canPickup ? (
+              <Link
+                href={`/reservations/${id}/pickup`}
+                className="rounded-sm border border-signal-blue px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
+              >
+                {dict.trips.list.startPickup}
+              </Link>
+            ) : null}
+            {canReturn ? (
+              <Link
+                href={`/reservations/${id}/return`}
+                className="rounded-sm border border-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
+              >
+                {dict.trips.list.registerReturn}
+              </Link>
+            ) : null}
+            {canCancel ? (
+              <form action={cancelMyReservation.bind(null, id)}>
+                <ConfirmSubmitButton
+                  confirmMessage={dict.trips.list.confirmCancel}
+                  className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
+                >
+                  {dict.common.cancel}
+                </ConfirmSubmitButton>
+              </form>
+            ) : null}
+          </div>
+        ) : null}
 
         {reservation.impacted_at ? (
           <div className="mt-4 rounded-sm border border-signal-yellow/40 bg-signal-yellow/10 p-3">

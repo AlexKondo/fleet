@@ -18,6 +18,9 @@ export async function cancelMyReservation(reservationId: string): Promise<void> 
     p_reservation_id: reservationId,
   });
   revalidatePath("/trips");
+  // Also called from the reservation detail page itself (no redirect on success there), so
+  // that page needs to see the fresh status too, not just the /trips list.
+  revalidatePath(`/reservations/${reservationId}`);
   if (error) {
     console.error("cancelMyReservation failed:", error.message);
     redirect("/trips?tripActionError=1");
