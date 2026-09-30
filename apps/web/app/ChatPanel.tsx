@@ -151,6 +151,14 @@ export function ChatPanel({
     formAction(formData);
   }
 
+  function handleSelectVehicle(vehicleId: string) {
+    const formData = new FormData();
+    formData.set("phase", "select_vehicle");
+    formData.set("vehicleId", vehicleId);
+    if (state.conversationId) formData.set("conversationId", state.conversationId);
+    formAction(formData);
+  }
+
   return (
     <div
       role="dialog"
@@ -177,7 +185,7 @@ export function ChatPanel({
           {state.messages.map((message, index) => (
             <div
               key={index}
-              className={`max-w-[85%] rounded-sm px-3 py-2 text-sm ${
+              className={`max-w-[85%] whitespace-pre-line rounded-sm px-3 py-2 text-sm ${
                 message.role === "user"
                   ? "self-end bg-gwm-accent text-ink-950"
                   : "self-start bg-panel-800 text-paper-50"
@@ -190,7 +198,32 @@ export function ChatPanel({
 
         {state.status === "needs_confirmation" && state.pendingAction ? (
           <div className="mt-3 flex flex-col gap-2 rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-3">
-            <p className="text-sm text-gwm-accent">{state.pendingAction.summary}</p>
+            <p className="whitespace-pre-line text-sm text-gwm-accent">{state.pendingAction.summary}</p>
+            {state.pendingAction.vehicleOptions ? (
+              <div className="flex flex-wrap gap-1.5">
+                {state.pendingAction.vehicleOptions.map((option, index) => {
+                  const isChosen = option.vehicleId === state.pendingAction!.slots.preferredVehicleId;
+                  return (
+                    <button
+                      key={option.vehicleId}
+                      type="button"
+                      onClick={() => handleSelectVehicle(option.vehicleId)}
+                      disabled={pending || isChosen}
+                      className={`rounded-sm border px-2.5 py-1 text-xs font-mono disabled:opacity-70 ${
+                        isChosen
+                          ? "border-gwm-accent bg-gwm-accent/20 text-gwm-accent"
+                          : "border-line-700 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent"
+                      }`}
+                    >
+                      {index + 1}. {option.plate}
+                      <span className="ml-1 font-sans text-[10px] uppercase tracking-widest opacity-70">
+                        {option.categoryName}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
             <div className="flex gap-2">
               <button
                 type="button"

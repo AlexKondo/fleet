@@ -13,6 +13,7 @@ import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { BlockVehicleForm } from "../BlockVehicleForm";
 import { StatusBadge } from "../ui/StatusBadge";
 import { RevealAction } from "../ui/RevealAction";
+import { ReservationGantt } from "./ReservationGantt";
 import {
   approveReservation,
   blockVehicle,
@@ -391,6 +392,12 @@ export default async function DashboardPage({
           {!activeReservations || activeReservations.length === 0 ? (
             <p className="text-sm text-fog-400">{t.activeReservations.empty}</p>
           ) : (
+            <>
+            <ReservationGantt
+              reservations={activeReservations}
+              locale={locale}
+              unknownRequesterLabel={t.activeReservations.unknownRequester}
+            />
             <div className="overflow-x-auto rounded-md border border-line-800">
               <table className="w-full min-w-[1200px] border-collapse text-sm">
                 <thead>
@@ -542,6 +549,7 @@ export default async function DashboardPage({
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </section>
       ) : null}

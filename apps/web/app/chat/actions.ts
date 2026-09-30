@@ -24,7 +24,16 @@ export interface ChatState {
   status: "idle" | "needs_confirmation" | "error";
   conversationId?: string;
   messages: ChatMessage[];
-  pendingAction?: { intent: IntentName; slots: Record<string, string>; summary: string };
+  pendingAction?: {
+    intent: IntentName;
+    slots: Record<string, string>;
+    summary: string;
+    /** CREATE_RESERVATION only — the recommended vehicle plus any real alternatives
+     * (already filtered by the org's booking_mode by planTrip itself), so ChatPanel can
+     * render an actual button per option instead of requiring the driver to type a plate
+     * they read out of the summary text. */
+    vehicleOptions?: { vehicleId: string; plate: string; categoryName: string }[];
+  };
   error?: string;
 }
 
@@ -42,6 +51,30 @@ const FRIENDLY_DISPATCH_ERRORS: Record<string, string> = {
 
 function friendlyDispatchError(code: string): string {
   return FRIENDLY_DISPATCH_ERRORS[code] ?? "Não consegui concluir essa ação agora. Tente novamente em instantes.";
+}
+
+type VehicleOption = { vehicleId: string; plate: string; categoryName: string };
+
+// Numbered so the driver can just say/type the number ("2") instead of reading a plate off
+// the screen and typing it back — the buttons in ChatPanel use the same numbering.
+function buildVehicleSummary(
+  chosen: VehicleOption,
+  options: VehicleOption[],
+  destination: string,
+  input: TripFormInput,
+  locale: Awaited<ReturnType<typeof getLocale>>,
+): string {
+  const optionsLine =
+    options.length > 1
+      ? ` Opções disponíveis:\n${options.map((o, i) => `${i + 1}. ${o.plate} (${o.categoryName})`).join("\n")}\nResponda com o número da opção desejada, ou toque em um dos botões abaixo.`
+      : "";
+  return `Vou reservar o veículo ${chosen.plate} (${chosen.categoryName}) para ${destination}, saída ${formatDateTime(input.departureAt, locale)}, retorno ${formatDateTime(input.expectedReturnAt, locale)}.${optionsLine}`;
+}
+
+// Matches a bare number ("2") or a short Portuguese phrasing ("opção 2", "opcao 2", "numero 2").
+function parseOptionNumber(message: string): number | null {
+  const match = message.trim().match(/^(?:op[cç][aã]o|n[uú]mero)?\s*(\d+)\s*$/i);
+  return match ? Number(match[1]) : null;
 }
 
 // Intents the doc scopes to "point at the right screen" instead of full chat automation
@@ -94,6 +127,75 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     return { status: "idle", conversationId, messages: prevState.messages };
   }
 
+  const locale = await getLocale();
+
+  // Shared by the button click (phase=select_vehicle) and by a plain-text numeric reply
+  // ("2", "opção 2") to a pending CREATE_RESERVATION confirmation — either way, re-runs the
+  // exact same recommendation the initial message did (never trusts a client-echoed id
+  // blindly) and rebuilds the confirmation card with a numbered options list, so the driver
+  // never has to type a plate back.
+  async function reselectVehicle(pending: NonNullable<ChatState["pendingAction"]>, chosenVehicleId: string): Promise<ChatState> {
+    const input: TripFormInput = {
+      departureAt: new Date(pending.slots.departureAt ?? "").toISOString(),
+      expectedReturnAt: new Date(pending.slots.expectedReturnAt ?? "").toISOString(),
+      origin: pending.slots.origin ?? "",
+      destination: pending.slots.destination ?? "",
+      distanceKm: Number(pending.slots.distanceKm ?? 0),
+      passengerCount: Number(pending.slots.passengerCount ?? 1),
+      requiresCargo: pending.slots.requiresCargo === "true",
+      justification: pending.slots.justification ?? "Solicitado via assistente conversacional",
+      allowCarpool: true,
+    };
+    const plan = await planTrip(input);
+
+    if (plan.type !== "vehicle" || !plan.vehicle) {
+      // The window's availability genuinely changed between rounds (e.g. everything got
+      // booked up) — surface that instead of silently keeping a stale confirmation card.
+      const message = "Essa opção não está mais disponível. Pode tentar de novo?";
+      const assistantMessage: ChatMessage = { role: "assistant", content: message };
+      await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "assistant", content: message });
+      return { status: "error", conversationId, messages: [...prevState.messages, assistantMessage], error: "vehicle_no_longer_available" };
+    }
+
+    const options = [
+      { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, categoryName: plan.vehicle.categoryName },
+      ...plan.vehicle.alternatives.map((a) => ({ vehicleId: a.vehicleId, plate: a.plate, categoryName: a.categoryName })),
+    ];
+    const chosen = options.find((o) => o.vehicleId === chosenVehicleId) ?? options[0]!;
+
+    const summary = buildVehicleSummary(chosen, options, pending.slots.destination ?? "", input, locale);
+
+    const assistantMessage: ChatMessage = { role: "assistant", content: summary };
+    await admin.from("chat_messages").insert({
+      conversation_id: conversationId,
+      role: "assistant",
+      content: summary,
+      intent: pending.intent,
+      slots: { ...pending.slots, preferredVehicleId: chosen.vehicleId },
+    });
+
+    return {
+      status: "needs_confirmation",
+      conversationId,
+      messages: [...prevState.messages, assistantMessage],
+      pendingAction: {
+        intent: pending.intent,
+        slots: { ...pending.slots, preferredVehicleId: chosen.vehicleId },
+        summary,
+        vehicleOptions: options.length > 1 ? options : undefined,
+      },
+    };
+  }
+
+  if (phase === "select_vehicle") {
+    const pending = prevState.pendingAction;
+    const chosenVehicleId = String(formData.get("vehicleId") ?? "");
+    if (!pending || pending.intent !== "CREATE_RESERVATION" || !chosenVehicleId) {
+      return { status: "idle", conversationId, messages: prevState.messages };
+    }
+    return reselectVehicle(pending, chosenVehicleId);
+  }
+
   if (phase === "confirm") {
     const pending = prevState.pendingAction;
     if (!pending) return { status: "idle", conversationId, messages: prevState.messages };
@@ -144,6 +246,21 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   const message = String(formData.get("message") ?? "").trim();
   if (!message) return { status: "idle", conversationId, messages: prevState.messages };
 
+  // A plain numeric reply to a pending vehicle-choice confirmation ("2") picks that option
+  // directly — no LLM round-trip needed, and it's exactly what was asked for: the driver
+  // just says the number instead of typing a plate back.
+  if (prevState.status === "needs_confirmation" && prevState.pendingAction?.vehicleOptions) {
+    const optionNumber = parseOptionNumber(message);
+    if (optionNumber !== null) {
+      const options = prevState.pendingAction.vehicleOptions;
+      const chosen = options[optionNumber - 1];
+      if (chosen) {
+        await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "user", content: message });
+        return reselectVehicle(prevState.pendingAction, chosen.vehicleId);
+      }
+    }
+  }
+
   // Scoped by user_id across ALL of today's conversations, not just this one — a
   // per-conversation count would reset to zero every time a conversation resolves and a
   // fresh one starts, which defeats the point of a daily cap entirely.
@@ -173,7 +290,6 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   const userMessage: ChatMessage = { role: "user", content: message };
   await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "user", content: message });
 
-  const locale = await getLocale();
   const active = await findActiveReservations(supabase, user.id);
   const interpretation = await interpretMessage({
     history: prevState.messages,
@@ -241,17 +357,28 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         const chosenVehicleId = namedMatch?.vehicleId ?? plan.vehicle.vehicleId;
         const chosenPlate = namedMatch?.plate ?? plan.vehicle.plate;
 
-        const alternativesLine =
-          plan.vehicle.alternatives.length > 0
-            ? ` Outras opções disponíveis: ${plan.vehicle.alternatives.map((a) => `${a.plate} (${a.categoryName})`).join(", ")} — é só me dizer a placa se preferir uma dessas.`
-            : "";
-        const summary = `Vou reservar o veículo ${chosenPlate} (${plan.vehicle.categoryName}) para ${slots.destination}, saída ${formatDateTime(input.departureAt, locale)}, retorno ${formatDateTime(input.expectedReturnAt, locale)}.${alternativesLine}`;
+        const vehicleOptions = [
+          { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, categoryName: plan.vehicle.categoryName },
+          ...plan.vehicle.alternatives.map((a) => ({
+            vehicleId: a.vehicleId,
+            plate: a.plate,
+            categoryName: a.categoryName,
+          })),
+        ];
+        const summary = buildVehicleSummary(
+          { vehicleId: chosenVehicleId, plate: chosenPlate, categoryName: plan.vehicle.categoryName },
+          vehicleOptions,
+          slots.destination ?? "",
+          input,
+          locale,
+        );
 
         assistantContent = summary;
         pendingAction = {
           intent: interpretation.intent,
           slots: { ...slots, preferredVehicleId: chosenVehicleId },
           summary,
+          vehicleOptions: vehicleOptions.length > 1 ? vehicleOptions : undefined,
         };
         status = "needs_confirmation";
       } else {
