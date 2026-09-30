@@ -32,7 +32,7 @@ export interface ChatState {
      * (already filtered by the org's booking_mode by planTrip itself), so ChatPanel can
      * render an actual button per option instead of requiring the driver to type a plate
      * they read out of the summary text. */
-    vehicleOptions?: { vehicleId: string; plate: string; categoryName: string }[];
+    vehicleOptions?: { vehicleId: string; plate: string; vehicleName: string }[];
   };
   error?: string;
 }
@@ -53,10 +53,11 @@ function friendlyDispatchError(code: string): string {
   return FRIENDLY_DISPATCH_ERRORS[code] ?? "Não consegui concluir essa ação agora. Tente novamente em instantes.";
 }
 
-type VehicleOption = { vehicleId: string; plate: string; categoryName: string };
+type VehicleOption = { vehicleId: string; plate: string; vehicleName: string };
 
-// Numbered so the driver can just say/type the number ("2") instead of reading a plate off
-// the screen and typing it back — the buttons in ChatPanel use the same numbering.
+// The numbered list itself lives only in ChatPanel's clickable buttons now (still numbered
+// so the driver can also just say/type the number, e.g. "2") — repeating the same list as
+// plain text here duplicated it right above the buttons for no reason.
 function buildVehicleSummary(
   chosen: VehicleOption,
   options: VehicleOption[],
@@ -64,11 +65,8 @@ function buildVehicleSummary(
   input: TripFormInput,
   locale: Awaited<ReturnType<typeof getLocale>>,
 ): string {
-  const optionsLine =
-    options.length > 1
-      ? ` Opções disponíveis:\n${options.map((o, i) => `${i + 1}. ${o.plate} (${o.categoryName})`).join("\n")}\nResponda com o número da opção desejada, ou toque em um dos botões abaixo.`
-      : "";
-  return `Vou reservar o veículo ${chosen.plate} (${chosen.categoryName}) para ${destination}, saída ${formatDateTime(input.departureAt, locale)}, retorno ${formatDateTime(input.expectedReturnAt, locale)}.${optionsLine}`;
+  const optionsLine = options.length > 1 ? " Escolha uma das opções abaixo, ou diga o número dela." : "";
+  return `Vou reservar o veículo ${chosen.vehicleName} (${chosen.plate}) para ${destination}, saída ${formatDateTime(input.departureAt, locale)}, retorno ${formatDateTime(input.expectedReturnAt, locale)}.${optionsLine}`;
 }
 
 // Matches a bare number ("2") or a short Portuguese phrasing ("opção 2", "opcao 2", "numero 2").
@@ -123,25 +121,13 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     return { status: "error", messages: prevState.messages, error: "conversation_create_failed" };
   }
 
-  if (phase === "edit") {
-    // Drops only the pending confirmation, keeping the conversation history — so a
-    // follow-up like "muda a saída pra 7:00" carries the already-established
-    // destination/return/etc. forward instead of making the driver restate the whole
-    // request from scratch.
-    return { status: "idle", conversationId, messages: prevState.messages };
-  }
-
-  if (phase === "cancel") {
-    // Unlike "edit", cancelling a pending action ends the whole thread — every clarifying
-    // question and option shown has nothing to do with whatever the driver asks next.
-    // Marks the conversation abandoned (not left dangling "active") and starts fresh with
-    // no conversationId, same as a successful confirm already does.
-    await admin
-      .from("chat_conversations")
-      .update({ status: "abandoned", updated_at: new Date().toISOString() })
-      .eq("id", conversationId);
-    return { status: "idle", messages: [] };
-  }
+  // "edit" and "cancel" (dropping/clearing a pending confirmation) are handled entirely
+  // client-side now — see ChatPanel.tsx's handleEdit/handleCancel — since neither needs any
+  // server work (an LLM call, a dispatch, persisted state); routing them through this
+  // Server Action anyway made Next.js revalidate the current route's RSC payload on every
+  // click, visibly flashing whatever table/Gantt sits behind the chat panel for no reason.
+  // "cancel" still persists via a plain Route Handler (app/api/chat/abandon/route.ts),
+  // which has no such revalidation side effect.
 
   const locale = await getLocale();
 
@@ -174,8 +160,8 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     }
 
     const options = [
-      { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, categoryName: plan.vehicle.categoryName },
-      ...plan.vehicle.alternatives.map((a) => ({ vehicleId: a.vehicleId, plate: a.plate, categoryName: a.categoryName })),
+      { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName },
+      ...plan.vehicle.alternatives.map((a) => ({ vehicleId: a.vehicleId, plate: a.plate, vehicleName: a.vehicleName })),
     ];
     const chosen = options.find((o) => o.vehicleId === chosenVehicleId) ?? options[0]!;
 
@@ -380,22 +366,23 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         const namedPlate = slots.preferredVehiclePlate?.trim().toUpperCase();
         const namedMatch = namedPlate
           ? plan.vehicle.plate.toUpperCase() === namedPlate
-            ? { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate }
+            ? { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName }
             : plan.vehicle.alternatives.find((alt) => alt.plate.toUpperCase() === namedPlate)
           : undefined;
         const chosenVehicleId = namedMatch?.vehicleId ?? plan.vehicle.vehicleId;
         const chosenPlate = namedMatch?.plate ?? plan.vehicle.plate;
+        const chosenVehicleName = namedMatch?.vehicleName ?? plan.vehicle.vehicleName;
 
         const vehicleOptions = [
-          { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, categoryName: plan.vehicle.categoryName },
+          { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName },
           ...plan.vehicle.alternatives.map((a) => ({
             vehicleId: a.vehicleId,
             plate: a.plate,
-            categoryName: a.categoryName,
+            vehicleName: a.vehicleName,
           })),
         ];
         const summary = buildVehicleSummary(
-          { vehicleId: chosenVehicleId, plate: chosenPlate, categoryName: plan.vehicle.categoryName },
+          { vehicleId: chosenVehicleId, plate: chosenPlate, vehicleName: chosenVehicleName },
           vehicleOptions,
           slots.destination ?? "",
           input,

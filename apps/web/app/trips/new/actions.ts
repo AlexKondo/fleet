@@ -54,6 +54,7 @@ export interface PlanTripResult {
   vehicle?: {
     vehicleId: string;
     plate: string;
+    vehicleName: string;
     categoryName: string;
     reasons: string[];
     requiredPreparation?: PreparationAction[];
@@ -65,7 +66,7 @@ export interface PlanTripResult {
      * array for 'ai_recommended', which keeps the exact prior single-recommendation
      * behavior). Lets the requester pick a different eligible vehicle instead.
      */
-    alternatives: { vehicleId: string; plate: string; categoryName: string; reasons: string[] }[];
+    alternatives: { vehicleId: string; plate: string; vehicleName: string; categoryName: string; reasons: string[] }[];
   };
   bookingMode: "ai_recommended" | "user_choice" | "hybrid";
   error?: string;
@@ -96,8 +97,14 @@ async function buildPlanInputs(input: TripFormInput) {
 
   const { data: vehicleRows } = await supabase
     .from("vehicles")
-    .select(`${VEHICLE_DOMAIN_COLUMNS}, category:vehicle_categories(${VEHICLE_CATEGORY_DOMAIN_COLUMNS})`)
+    .select(`${VEHICLE_DOMAIN_COLUMNS}, name, category:vehicle_categories(${VEHICLE_CATEGORY_DOMAIN_COLUMNS})`)
     .in("status", ["available", "charging", "cleaning"]);
+
+  // toDomainVehicle deliberately excludes `name` (see VEHICLE_DOMAIN_COLUMNS's comment) —
+  // the recommendation engine has no use for it, but the chat confirmation card does, to
+  // show a driver-friendly name instead of a bare plate. Looked up separately rather than
+  // widening the domain Vehicle type just for this.
+  const vehicleNameByPlate = new Map((vehicleRows ?? []).map((row) => [row.plate, row.name]));
 
   const { data: activeReservations } = await supabase
     .from("reservations")
@@ -177,7 +184,7 @@ async function buildPlanInputs(input: TripFormInput) {
       vehiclePlate: r.vehicle!.plate,
     }));
 
-  return { user, profile, now, config, vehicleCandidates, carpoolCandidates };
+  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate };
 }
 
 /**
@@ -234,7 +241,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   if ("error" in built) {
     return { type: "none", reasons: [], bookingMode: "ai_recommended", error: built.error };
   }
-  const { now, config, vehicleCandidates, carpoolCandidates } = built;
+  const { now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate } = built;
   const trafficRestrictionEnabled = config.trafficRestrictionEnabled;
 
   const tripRequest = {
@@ -287,21 +294,25 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
           .filter((r) => r.vehicleId !== plan.vehicle!.recommendedVehicleId)
           .map((r) => {
             const altCandidate = vehicleCandidates.find((c) => c.vehicle.id === r.vehicleId);
+            const altPlate = altCandidate?.vehicle.plate ?? "";
             return {
               vehicleId: r.vehicleId,
-              plate: altCandidate?.vehicle.plate ?? "",
+              plate: altPlate,
+              vehicleName: vehicleNameByPlate.get(altPlate) ?? altPlate,
               categoryName: altCandidate?.category.name ?? "",
               reasons: filterTrafficRestrictionReasons(r.reasons, trafficRestrictionEnabled),
             };
           })
       : [];
+    const recommendedPlate = candidate?.vehicle.plate ?? "";
     return {
       type: "vehicle",
       reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
       bookingMode: config.bookingMode,
       vehicle: {
         vehicleId: plan.vehicle.recommendedVehicleId,
-        plate: candidate?.vehicle.plate ?? "",
+        plate: recommendedPlate,
+        vehicleName: vehicleNameByPlate.get(recommendedPlate) ?? recommendedPlate,
         categoryName: candidate?.category.name ?? "",
         reasons: filterTrafficRestrictionReasons(plan.vehicle.reasons, trafficRestrictionEnabled),
         requiredPreparation: plan.vehicle.requiredPreparation,

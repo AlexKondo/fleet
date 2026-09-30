@@ -53,7 +53,20 @@ export function ChatPanel({
   initialState: ChatState;
 }) {
   const t = dict.chat;
-  const [state, formAction, pending] = useActionState(sendChatMessage, initialState);
+  const [actionState, formAction, pending] = useActionState(sendChatMessage, initialState);
+  // "Alterar"/"Cancelar" only ever need to change what's on screen (drop the pending
+  // confirmation, or clear the thread) — no LLM call, no dispatch, nothing that needs a
+  // server round trip. Routing them through the Server Action anyway (formAction) made
+  // Next.js refetch/revalidate the current route's RSC payload on every click — visible as
+  // the Gantt table underneath flashing for about a second — for zero actual benefit, since
+  // nothing on the page besides the chat panel changed. This local override lets those two
+  // actions update the visible state directly instead; it's cleared whenever a real
+  // server-driven update (a genuinely new actionState) comes in, so it never masks it.
+  const [override, setOverride] = useState<ChatState | null>(null);
+  const state = override ?? actionState;
+  useEffect(() => {
+    setOverride(null);
+  }, [actionState]);
   const [draft, setDraft] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
@@ -164,12 +177,34 @@ export function ChatPanel({
     formAction(formData);
   }
 
-  function handleConfirm(phase: "confirm" | "edit" | "cancel") {
+  function handleConfirm() {
     stopListeningIfActive();
     const formData = new FormData();
-    formData.set("phase", phase);
+    formData.set("phase", "confirm");
     if (state.conversationId) formData.set("conversationId", state.conversationId);
     formAction(formData);
+  }
+
+  function handleEdit() {
+    stopListeningIfActive();
+    // Drops only the pending confirmation — the conversation history stays, so a follow-up
+    // like "muda a saída pra 7:00" still carries the already-established slots forward.
+    setOverride({ status: "idle", conversationId: state.conversationId, messages: state.messages });
+  }
+
+  function handleCancel() {
+    stopListeningIfActive();
+    const conversationId = state.conversationId;
+    // Unlike Alterar, cancelling ends the whole thread — every clarifying question and
+    // option shown has nothing to do with whatever's asked next.
+    setOverride({ status: "idle", messages: [] });
+    if (conversationId) {
+      fetch("/api/chat/abandon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId }),
+      }).catch(() => {});
+    }
   }
 
   function handleSelectVehicle(vehicleId: string) {
@@ -237,10 +272,8 @@ export function ChatPanel({
                           : "border-line-700 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent"
                       }`}
                     >
-                      {index + 1}. {option.plate}
-                      <span className="ml-1 font-sans text-[10px] uppercase tracking-widest opacity-70">
-                        {option.categoryName}
-                      </span>
+                      {index + 1}. {option.vehicleName}
+                      <span className="ml-1 font-sans text-[10px] opacity-70">({option.plate})</span>
                     </button>
                   );
                 })}
@@ -249,7 +282,7 @@ export function ChatPanel({
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => handleConfirm("confirm")}
+                onClick={handleConfirm}
                 disabled={pending}
                 className="rounded-sm bg-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90 disabled:opacity-50"
               >
@@ -257,7 +290,7 @@ export function ChatPanel({
               </button>
               <button
                 type="button"
-                onClick={() => handleConfirm("edit")}
+                onClick={handleEdit}
                 disabled={pending}
                 className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600 disabled:opacity-50"
               >
@@ -265,7 +298,7 @@ export function ChatPanel({
               </button>
               <button
                 type="button"
-                onClick={() => handleConfirm("cancel")}
+                onClick={handleCancel}
                 disabled={pending}
                 className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600 disabled:opacity-50"
               >
