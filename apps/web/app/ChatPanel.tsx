@@ -59,6 +59,7 @@ export function ChatPanel({
   const [interimTranscript, setInterimTranscript] = useState("");
   const [micError, setMicError] = useState<string | null>(null);
   const recognitionRef = useRef<InstanceType<SpeechRecognitionCtor> | null>(null);
+  const finalizedResultCountRef = useRef(0);
   const listRef = useRef<HTMLDivElement>(null);
   const micSupported = getSpeechRecognitionCtor() !== null;
 
@@ -84,23 +85,37 @@ export function ChatPanel({
     }
     setMicError(null);
     setInterimTranscript("");
+    finalizedResultCountRef.current = 0;
     const recognition = new Ctor();
     recognition.lang = SPEECH_RECOGNITION_LANGS[locale];
-    recognition.continuous = false;
+    // `continuous: false` (the previous setting) stops listening at the FIRST pause it
+    // detects — the recognizer's own silence-timeout, not the user's mic button — which
+    // read as "cut me off mid-sentence" for anything longer than a short phrase.
+    // `continuous: true` keeps listening across pauses until the mic button is clicked
+    // again (or recognition.stop() is called for any other reason), so a normal-length
+    // sentence with natural pauses no longer gets chopped off partway through.
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.onresult = (event) => {
-      // Interim results are shown live above the input (§ doc requirement: visible
-      // transcription) but only committed to the actual draft once the recognizer marks a
-      // result final — otherwise every partial guess along the way would flicker into the
-      // text box and get overwritten mid-word.
-      let finalTranscript = "";
+      // With continuous:true, `event.results` keeps growing across the whole recording
+      // and each onresult event re-lists every result from index 0 — including ones
+      // already marked final in a previous event. Only the results from
+      // finalizedResultCountRef.current onward are new; re-summing everything from
+      // scratch (the old approach, fine when there was ever only one final result) would
+      // append each already-committed phrase to the draft again on every subsequent
+      // pause.
+      const results = Array.from(event.results);
       let liveTranscript = "";
-      for (const result of Array.from(event.results)) {
+      for (let i = finalizedResultCountRef.current; i < results.length; i++) {
+        const result = results[i]!;
         const text = result[0]?.transcript ?? "";
-        if (result.isFinal) finalTranscript += text;
-        else liveTranscript += text;
+        if (result.isFinal) {
+          setDraft((prev) => `${prev}${prev ? " " : ""}${text}`.trim());
+          finalizedResultCountRef.current = i + 1;
+        } else {
+          liveTranscript += text;
+        }
       }
-      if (finalTranscript) setDraft((prev) => `${prev}${prev ? " " : ""}${finalTranscript}`.trim());
       setInterimTranscript(liveTranscript);
     };
     recognition.onerror = (event) => {

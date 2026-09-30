@@ -109,7 +109,14 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     const result = notAutomatedMessage
       ? { success: true, message: notAutomatedMessage }
       : await dispatchIntent(pending.intent, pending.slots);
-    const displayMessage = result.success ? result.message : friendlyDispatchError(result.message);
+    // `reasons`, when present, is already safe human-readable Portuguese (e.g. the
+    // recommendation engine's own explanation for finding no eligible vehicle) — showing
+    // the generic fallback instead would throw away a genuinely useful, specific answer.
+    const displayMessage = result.success
+      ? result.message
+      : "reasons" in result && result.reasons && result.reasons.length > 0
+        ? result.reasons.join(" ")
+        : friendlyDispatchError(result.message);
 
     const assistantMessage: ChatMessage = { role: "assistant", content: displayMessage };
     await admin.from("chat_messages").insert({
@@ -195,7 +202,11 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       assistantContent = notAutomatedMessage;
     } else if (requiresConfirmation(interpretation.intent) === "no") {
       const result = await dispatchIntent(interpretation.intent, interpretation.slots);
-      assistantContent = result.message;
+      assistantContent = result.success
+        ? result.message
+        : result.reasons && result.reasons.length > 0
+          ? result.reasons.join(" ")
+          : friendlyDispatchError(result.message);
     } else if (interpretation.intent === "CREATE_RESERVATION") {
       // Previously confirmed straight off the LLM's own (vehicle-blind) summary — the
       // driver found out which vehicle they'd gotten only after already confirming, with

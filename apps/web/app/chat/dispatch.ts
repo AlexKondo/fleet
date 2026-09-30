@@ -15,7 +15,14 @@ import { findActiveReservations, resolveReservationId } from "./queries";
 
 export interface DispatchResult {
   success: boolean;
+  // On failure, `message` is a stable internal code (or a raw RPC error) — never shown to
+  // the user directly (apps/web/app/chat/actions.ts maps it to a friendly string).
+  // `reasons`, when present, is already human-readable Portuguese explaining WHY (e.g. the
+  // recommendation engine's own reasons for finding no eligible vehicle) and safe to show
+  // as-is — kept separate from `message` specifically so actions.ts never has to guess
+  // whether a given string is an internal code or genuine explanatory prose.
   message: string;
+  reasons?: string[];
 }
 
 /**
@@ -147,7 +154,11 @@ export async function dispatchIntent(
         return { success: true, message: `Reserva criada — veículo ${chosenPlate}.` };
       }
 
-      return { success: false, message: plan.reasons.join(" ") || "Nenhum veículo elegível encontrado." };
+      return {
+        success: false,
+        message: "no_eligible_vehicle",
+        reasons: plan.reasons.length > 0 ? plan.reasons : ["Nenhum veículo elegível encontrado para esse período."],
+      };
     }
 
     case "CANCEL_RESERVATION": {
@@ -184,7 +195,11 @@ export async function dispatchIntent(
       formData.set("messageType", intent === "REPORT_DAMAGE" ? "vehicle_issue" : "delay");
       formData.set("body", slots.damageNotes || slots.delayNotes || "Reportado via assistente conversacional.");
       const result = await postReservationMessage({ status: "idle" }, formData);
-      if (result.status === "error") return { success: false, message: result.error ?? "unknown_error" };
+      // postReservationMessage's `error` already comes from the app's own i18n dictionary
+      // (dict.errors.reservations.*) — genuinely safe human-readable text, not a code.
+      if (result.status === "error") {
+        return { success: false, message: "message_post_failed", reasons: result.error ? [result.error] : undefined };
+      }
       return { success: true, message: "Registrado na reserva." };
     }
 
@@ -204,7 +219,9 @@ export async function dispatchIntent(
       formData.set("newExpectedReturnAt", slots.newExpectedReturnAt);
       formData.set("body", `Novo horário de retorno solicitado: ${slots.newExpectedReturnAt}.`);
       const result = await postReservationMessage({ status: "idle" }, formData);
-      if (result.status === "error") return { success: false, message: result.error ?? "unknown_error" };
+      if (result.status === "error") {
+        return { success: false, message: "message_post_failed", reasons: result.error ? [result.error] : undefined };
+      }
       return { success: true, message: "Horário de retorno atualizado." };
     }
 
