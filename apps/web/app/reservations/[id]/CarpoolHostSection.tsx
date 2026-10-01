@@ -27,14 +27,19 @@ export interface HostRequestView {
   requestedDepartureAt: string;
   detourKm: number | null;
   detourMin: number | null;
+  /** Coarse area while PENDING (street without number + neighbourhood), exact only when ACCEPTED. */
   pickupLabel: string | null;
   dropoffLabel: string | null;
+  placesExact: boolean;
 }
 
 export interface HostParticipantView {
   id: string;
   name: string | null;
   seats: number;
+  /** Exact addresses of an ACCEPTED rider (the host may see them once the request is accepted). */
+  pickupLabel: string | null;
+  dropoffLabel: string | null;
 }
 
 const ghostButton =
@@ -154,6 +159,13 @@ export function CarpoolHostSection({
             <li key={p.id} className="text-sm text-paper-50">
               {p.name ?? "—"}
               <span className="ml-2 text-xs text-fog-600">{fillTemplate(t.requestedSeats, { count: p.seats })}</span>
+              {p.pickupLabel || p.dropoffLabel ? (
+                <p className="mt-0.5 text-xs text-fog-400" data-testid="carpool-participant-places">
+                  {p.pickupLabel ? `${t.pickupLabel}: ${p.pickupLabel}` : null}
+                  {p.pickupLabel && p.dropoffLabel ? " → " : null}
+                  {p.dropoffLabel ? `${t.dropoffLabel}: ${p.dropoffLabel}` : null}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -174,11 +186,14 @@ export function CarpoolHostSection({
                 </span>
               </p>
               {r.pickupLabel || r.dropoffLabel ? (
-                <p className="mt-1 text-xs text-fog-400">
-                  {r.pickupLabel ? `${t.pickupLabel}: ${r.pickupLabel}` : null}
+                <p className="mt-1 text-xs text-fog-400" data-testid="carpool-pending-places">
+                  {r.pickupLabel ? `${r.placesExact ? t.pickupLabel : t.pickupAreaLabel}: ${r.pickupLabel}` : null}
                   {r.pickupLabel && r.dropoffLabel ? " → " : null}
-                  {r.dropoffLabel ? `${t.dropoffLabel}: ${r.dropoffLabel}` : null}
+                  {r.dropoffLabel ? `${r.placesExact ? t.dropoffLabel : t.dropoffAreaLabel}: ${r.dropoffLabel}` : null}
                 </p>
+              ) : null}
+              {!r.placesExact && (r.pickupLabel || r.dropoffLabel) ? (
+                <p className="mt-0.5 text-[11px] text-fog-600">{t.approximateAreaHint}</p>
               ) : null}
               {r.detourKm !== null && r.detourMin !== null ? (
                 <p className="mt-1 text-xs text-fog-600">

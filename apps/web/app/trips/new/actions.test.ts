@@ -17,6 +17,7 @@ const h = vi.hoisted(() => ({
   search: vi.fn(),
   geocode: vi.fn(),
   tables: {} as Record<string, unknown>,
+  busy: [] as { vehicle_id: string; start_at: string; end_at: string; status: string }[],
   redirects: [] as string[],
 }));
 
@@ -87,9 +88,12 @@ function builder(table: string) {
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: async () => ({
     from: (table: string) => builder(table),
-    rpc: (...a: unknown[]) => h.rpc(...a),
+    // 0063: the busy-window read is a definer RPC; everything else goes to the shared rpc mock.
+    rpc: (name: string, ...rest: unknown[]) =>
+      name === "get_vehicle_busy_windows" ? Promise.resolve({ data: h.busy, error: null }) : h.rpc(name, ...rest),
   }),
 }));
+vi.mock("@/lib/carpool/offerCardRows", () => ({ loadOfferCardRows: async () => [] }));
 
 import { confirmTrip, planTrip, planTripAction } from "./actions";
 
@@ -138,6 +142,7 @@ beforeEach(() => {
   h.enable.mockReset().mockResolvedValue({ status: "success", offerId: "o1" });
   h.search.mockReset().mockResolvedValue({ status: "matches", matches: [] });
   h.geocode.mockReset();
+  h.busy = [];
   h.tables = {
     profiles: { organization_id: "org-1" },
     vehicles: [{ id: "v1", plate: "ABC1D23", name: "Car", category: { name: "SUV", passenger_capacity: 5, energy_type: "ICE" } }],
@@ -167,10 +172,24 @@ describe("planTrip gating of the OLD text-matching carpool path", () => {
     expect(carpoolCandidatesPassed()).toEqual([]);
   });
 
-  it("policy carpool_enabled=false => today's behaviour untouched (old candidates still passed)", async () => {
+  it("0063: policy carpool_enabled=false => NO old candidates either (other travelers' trips are not readable; no carpool offered)", async () => {
     h.policyRow = policy({ carpool_enabled: false });
     await planTrip(input);
-    expect(carpoolCandidatesPassed()).toHaveLength(1);
+    expect(carpoolCandidatesPassed()).toEqual([]);
+  });
+
+  it("0063: a vehicle with an active reservation (busy window) is never offered; windows carry no personal data", async () => {
+    h.busy = [{ vehicle_id: "v1", start_at: "2026-10-20T12:00:00Z", end_at: "2099-01-01T00:00:00Z", status: "confirmed" }];
+    await planTrip(input);
+    const candidates = (h.planMobility.mock.calls[0]![0] as { vehicleCandidates: unknown[] }).vehicleCandidates;
+    expect(candidates).toEqual([]);
+  });
+
+  it("0063: planning never reads the reservations / trip_requests / trip_participants tables of other users", async () => {
+    const seen: string[] = [];
+    h.tables = new Proxy(h.tables, { get: (t, p) => { seen.push(String(p)); return (t as Record<string, unknown>)[p as string]; } });
+    await planTrip(input);
+    expect(seen.filter((t) => ["reservations", "trip_requests", "trip_participants"].includes(t.replace(":single", "")))).toEqual([]);
   });
 
   it("no policy row (default policy, carpool on) => new engine owns carpool, old matcher suppressed", async () => {

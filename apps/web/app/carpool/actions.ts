@@ -11,7 +11,7 @@
  * on purpose: every export of a "use server" file is a client-reachable action, and the core
  * takes caller-supplied candidates/policy/provider, so it must not be one.
  *
- * Pipeline: load active offers (RLS-respecting client) -> Stage A prefilter -> deterministic
+ * Pipeline: load active offers (service-role client, after authenticating the caller - 0063) -> Stage A prefilter -> deterministic
  * ordering + cap (`max_candidates_for_precise_routing`) -> geocode host addresses for the
  * shortlist only -> RoutingProvider per candidate -> Stage B `evaluateRouteMatch` -> rank ->
  * return ONLY compatible matches. Provider outage / unresolvable addresses exclude candidates
@@ -26,6 +26,7 @@ import type { GeocodingProvider, LatLng } from "@fleet/domain";
 import { isValidLatLng, isValidSeatCount } from "@fleet/domain";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createGoogleRoutingProvider } from "@/lib/geospatial/googleRoutingProvider";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
@@ -88,7 +89,14 @@ export async function searchCompatibleCarpool(
     return { status: "matches", matches: [] };
   }
 
-  const { data: offerRows, error: offersError } = await supabase
+  // Phase C7 (0063): other people's offers and host trips are no longer readable with the caller's
+  // own RLS context (a coworker's origin/destination is a journey). They are read with the
+  // service-role client NOW - strictly AFTER the session user was authenticated above and scoped to
+  // that user's own organization - and the host trip details stay inside this function: only the
+  // minimal match data (offer id, detour km/min, coordinates the rider already supplied) is ever
+  // returned to the browser.
+  const admin = createSupabaseAdminClient();
+  const { data: offerRows, error: offersError } = await admin
     .from("carpool_offers")
     .select(
       `id, trip_request_id, status, seats_available,
@@ -107,7 +115,7 @@ export async function searchCompatibleCarpool(
   const now = new Date().toISOString();
   const { data: reservationRows } =
     tripRequestIds.length > 0
-      ? await supabase
+      ? await admin
           .from("reservations")
           .select(
             `trip_request_id, end_at, status,

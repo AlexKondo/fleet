@@ -19,6 +19,7 @@ const m = vi.hoisted(() => ({
   requestRide: vi.fn(),
   status: vi.fn(),
 }));
+const store = vi.hoisted(() => ({ cardData: null as null | Record<string, Record<string, unknown>[]> }));
 
 vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 vi.mock("@/lib/i18n/getLocale", () => ({ getLocale: async () => "pt-BR" }));
@@ -36,6 +37,13 @@ vi.mock("@/app/carpool/formActions", () => ({ getMyCarpoolRequestStatus: (...a: 
 vi.mock("@/lib/geospatial/googlePlacesProvider", () => ({ createGooglePlacesProvider: () => ({}) }));
 vi.mock("@/lib/geospatial/corporateMobilityPoints", () => ({
   listCorporateMobilityPoints: async () => ({ status: "ok", data: [] }),
+}));
+vi.mock("@/lib/carpool/offerCardRows", () => ({
+  // 0063: card rows are read with the service-role client in production; here they come from the same fixtures.
+  loadOfferCardRows: async (_org: string, ids: string[]) =>
+    ((store.cardData?.carpool_offers ?? []) as { id: string; seats_available: number; trip_request?: { departure_at?: string } }[])
+      .filter((o) => ids.includes(o.id))
+      .map((o) => ({ id: o.id, seats_available: o.seats_available, hostDepartureAt: o.trip_request?.departure_at ?? null })),
 }));
 vi.mock("@/lib/carpool/resolveLocationText", () => ({ resolveLocationText: (...a: unknown[]) => m.resolve(...a) }));
 
@@ -96,6 +104,7 @@ const dict = dictionaries["pt-BR"];
 const gating = { newEngine: true, carpoolFirst: true, hostStep: true, hostApprovalRequired: true };
 
 function ctxFor(userId: string, data: Rows = rows(), g = gating): ChatCarpoolCtx {
+  store.cardData = data;
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: fakeSupabase(data) as any,

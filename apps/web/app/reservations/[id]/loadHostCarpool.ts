@@ -13,10 +13,32 @@ export interface HostCarpoolData {
   showSection: boolean;
 }
 
-const labelOf = (loc: unknown): string | null => {
-  const label = (loc as { label?: unknown } | null)?.label;
-  return typeof label === "string" && label ? label : null;
-};
+/** One row of host_ride_request_places (0064): coarse while PENDING, exact once ACCEPTED, else null. */
+export interface HostPlaceRow {
+  request_id: string;
+  rider_id: string;
+  status: string;
+  pickup_label: string | null;
+  dropoff_label: string | null;
+  is_exact: boolean;
+}
+
+/**
+ * Pure: the places the HOST may see for a request, decided by the DATABASE function (the browser and
+ * even this server never receive the exact address of a request that is not ACCEPTED - the
+ * definer function returns a coarse label for PENDING). This mapper additionally refuses to show
+ * anything for a status other than PENDING/ACCEPTED, whatever the row says (defence in depth).
+ */
+export function placesForHost(status: string, place: HostPlaceRow | undefined) {
+  if (!place || (status !== "PENDING" && status !== "ACCEPTED")) {
+    return { pickupLabel: null, dropoffLabel: null, placesExact: false };
+  }
+  return {
+    pickupLabel: place.pickup_label,
+    dropoffLabel: place.dropoff_label,
+    placesExact: status === "ACCEPTED" && place.is_exact,
+  };
+}
 
 /**
  * Phase C5: everything the host's carpool section on My Trip needs, read under the HOST's own
@@ -30,7 +52,7 @@ export async function loadHostCarpool(
   organizationId: string,
   tripRequestId: string,
 ): Promise<HostCarpoolData> {
-  const [policyLoad, { data: offerRows }, { data: participantRows }] = await Promise.all([
+  const [policyLoad, { data: offerRows }, { data: participantRows }, { data: placeRows }] = await Promise.all([
     loadLatestPolicy(supabase, organizationId),
     supabase
       .from("carpool_offers")
@@ -39,11 +61,18 @@ export async function loadHostCarpool(
       .order("created_at", { ascending: false }),
     supabase
       .from("trip_participants")
-      .select("id, passenger_count, passenger:profiles(full_name)")
+      .select("id, passenger_id, passenger_count, passenger:profiles(full_name)")
       .eq("trip_request_id", tripRequestId)
       .eq("status", "accepted")
       .order("joined_at", { ascending: true }),
+    // 0064: the rider's pickup/drop-off are NOT directly readable; this definer function answers only for
+    // the host and returns a coarse label while PENDING, the exact one once ACCEPTED.
+    supabase.rpc("host_ride_request_places", { p_trip_request_id: tripRequestId }),
   ]);
+  const placeByRequest = new Map((placeRows ?? []).map((p) => [p.request_id, p as HostPlaceRow]));
+  const acceptedPlaceByRider = new Map(
+    (placeRows ?? []).filter((p) => p.status === "ACCEPTED").map((p) => [p.rider_id, p as HostPlaceRow]),
+  );
 
   const offerIds = (offerRows ?? []).map((o) => o.id);
   const { data: requestRows } =
@@ -51,7 +80,7 @@ export async function loadHostCarpool(
       ? await supabase
           .from("carpool_ride_requests")
           .select(
-            "id, status, status_reason, requested_seats, requested_departure_at, match_additional_distance_km, match_additional_time_min, pickup_location, dropoff_location, updated_at, rider:profiles!rider_id(full_name)",
+            "id, status, status_reason, requested_seats, requested_departure_at, match_additional_distance_km, match_additional_time_min, updated_at, rider:profiles!rider_id(full_name)",
           )
           .in("carpool_offer_id", offerIds)
           .order("created_at", { ascending: true })
@@ -67,8 +96,7 @@ export async function loadHostCarpool(
     requestedDepartureAt: r.requested_departure_at,
     detourKm: r.match_additional_distance_km === null ? null : Number(r.match_additional_distance_km),
     detourMin: r.match_additional_time_min === null ? null : Number(r.match_additional_time_min),
-    pickupLabel: labelOf(r.pickup_location),
-    dropoffLabel: labelOf(r.dropoff_location),
+    ...placesForHost(r.status, placeByRequest.get(r.id)),
   });
 
   const latest = (offerRows ?? [])[0];
@@ -84,11 +112,16 @@ export async function loadHostCarpool(
 
   return {
     offer,
-    participants: (participantRows ?? []).map((p) => ({
-      id: p.id,
-      name: p.passenger?.full_name ?? null,
-      seats: p.passenger_count,
-    })),
+    participants: (participantRows ?? []).map((p) => {
+      const place = acceptedPlaceByRider.get(p.passenger_id);
+      return {
+        id: p.id,
+        name: p.passenger?.full_name ?? null,
+        seats: p.passenger_count,
+        pickupLabel: place?.pickup_label ?? null,
+        dropoffLabel: place?.dropoff_label ?? null,
+      };
+    }),
     pending: all.filter((r) => r.status === "PENDING").map(toView),
     history: all
       .filter((r) => r.status !== "PENDING" && r.status !== "ACCEPTED")

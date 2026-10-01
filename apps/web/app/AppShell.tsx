@@ -13,6 +13,7 @@ import { ThemeToggle } from "./ui/ThemeToggle";
 import { LanguageToggle } from "./ui/LanguageToggle";
 import { getLocale, getDictionary } from "../lib/i18n/getLocale";
 import { getCurrentUser } from "../lib/auth/currentUser";
+import { getOwnLicense } from "../lib/auth/ownLicense";
 import { createSupabaseServerClient } from "../lib/supabase/server";
 import {
   AnalyticsIcon,
@@ -71,12 +72,13 @@ export async function AppShell({
   let licenseMissing = false;
   let avatarUrl: string | null = null;
   if (currentUser) {
-    const { data: ownProfile } = await supabase
-      .from("profiles")
-      .select("drivers_license_number, avatar_url")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-    licenseMissing = !ownProfile?.drivers_license_number;
+    // License columns are not directly readable since 0063: get_my_license() answers for the caller only.
+    const [{ data: ownProfile }, ownLicense] = await Promise.all([
+      supabase.from("profiles").select("avatar_url").eq("id", currentUser.id).maybeSingle(),
+      getOwnLicense(supabase),
+    ]);
+    // null = the read failed: do not lock the UI down on a transient error (the middleware gate fails open too).
+    licenseMissing = ownLicense ? !ownLicense.number : false;
     avatarUrl = ownProfile?.avatar_url ?? null;
   }
 

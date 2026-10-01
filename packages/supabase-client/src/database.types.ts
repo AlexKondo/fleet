@@ -1410,6 +1410,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      // Phase C7 (0063): privacy definer functions.
+      host_ride_request_places: {
+        Args: { p_trip_request_id: string }
+        Returns: {
+          request_id: string
+          rider_id: string
+          status: string
+          pickup_label: string | null
+          dropoff_label: string | null
+          is_exact: boolean
+        }[]
+      }
+      get_my_license: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          drivers_license_number: string | null
+          drivers_license_category: string | null
+          drivers_license_expiration: string | null
+          driver_authorized: boolean
+        }[]
+      }
+      list_member_licenses: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          drivers_license_number: string | null
+          drivers_license_category: string | null
+          drivers_license_expiration: string | null
+          driver_authorized: boolean
+        }[]
+      }
+      get_vehicle_busy_windows: {
+        Args: { p_from?: string }
+        Returns: {
+          vehicle_id: string
+          start_at: string
+          end_at: string
+          status: Database["public"]["Enums"]["reservation_status"]
+        }[]
+      }
       accept_carpool_ride_request: {
         Args: { p_request_id: string }
         Returns: undefined

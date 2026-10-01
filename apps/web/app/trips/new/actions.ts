@@ -33,6 +33,7 @@ import {
   type CarpoolGating,
 } from "@/lib/carpool/carpoolFirst";
 import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
+import { loadOfferCardRows } from "@/lib/carpool/offerCardRows";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
 import { searchCompatibleCarpool } from "@/app/carpool/actions";
@@ -142,29 +143,21 @@ async function buildPlanInputs(input: TripFormInput) {
   // widening the domain Vehicle type just for this.
   const vehicleNameByPlate = new Map((vehicleRows ?? []).map((row) => [row.plate, row.name]));
 
-  const { data: activeReservations } = await supabase
-    .from("reservations")
-    .select(
-      `id, vehicle_id, end_at,
-       trip_request:trip_requests(id, departure_at, expected_return_at, origin, destination, distance_km, passenger_count, requires_cargo, justification, requester_id, organization_id, allow_carpool),
-       vehicle:vehicles(plate, category:vehicle_categories(passenger_capacity, supports_cargo))`,
-    )
-    .in("status", ["pending_approval", "confirmed"])
-    .gt("end_at", now);
-
+  // Phase C7 (0063): an employee's RLS context can no longer read other people's reservations
+  // (they carry origin/destination/justification of coworkers' journeys). What the allocation needs
+  // is only "which vehicles are busy": get_vehicle_busy_windows is an org-scoped definer function
+  // that returns (vehicle_id, start_at, end_at, status) and NOTHING personal.
+  //
   // A vehicle only gets vehicles.status = 'reserved' once its reservation is actually
   // *approved* (approve_reservation, 0015_audit_trail.sql) — a merely pending_approval
   // reservation leaves status untouched, so without this the candidate query above would
-  // still offer that same vehicle to a second, unrelated trip request. Both requests would
-  // then look fully booked-and-confirmed right up until a fleet manager tries to approve
-  // the second one, only to find the vehicle already claimed. record_pickup/record_return
+  // still offer that same vehicle to a second, unrelated trip request. record_pickup/record_return
   // (0004/0006_*.sql) only ever track one reservation "owning" a vehicle's status at a
   // time, so — regardless of whether the two requested time windows actually overlap —
   // a vehicle with any active reservation can't safely be hand out to another one until
   // its current lifecycle (approve → pickup → return) finishes.
-  const vehicleIdsWithActiveReservation = new Set(
-    (activeReservations ?? []).map((r) => r.vehicle_id),
-  );
+  const { data: busyWindows } = await supabase.rpc("get_vehicle_busy_windows", { p_from: now });
+  const vehicleIdsWithActiveReservation = new Set((busyWindows ?? []).map((w) => w.vehicle_id));
 
   const vehicleCandidates: CandidateVehicle[] = (vehicleRows ?? [])
     .filter((row) => row.category && !vehicleIdsWithActiveReservation.has(row.id))
@@ -173,52 +166,13 @@ async function buildPlanInputs(input: TripFormInput) {
       category: toDomainCategory(row.category!),
     }));
 
-  const tripRequestIds = (activeReservations ?? [])
-    .map((r) => r.trip_request?.id)
-    .filter((id): id is string => Boolean(id));
-
-  // Only 'accepted' participants occupy a seat — a 'pending' request hasn't been
-  // approved by the host driver yet (0020_carpool_host_acceptance.sql) and must not
-  // block other carpool matches from being found or double-count against capacity.
-  const { data: participantRows } =
-    tripRequestIds.length > 0
-      ? await supabase
-          .from("trip_participants")
-          .select("trip_request_id, passenger_count")
-          .in("trip_request_id", tripRequestIds)
-          .eq("status", "accepted")
-      : { data: [] };
-
-  const occupancyByTrip = new Map<string, number>();
-  for (const p of participantRows ?? []) {
-    occupancyByTrip.set(p.trip_request_id, (occupancyByTrip.get(p.trip_request_id) ?? 0) + p.passenger_count);
-  }
-
-  const carpoolCandidates: CarpoolCandidateWithPlate[] = (activeReservations ?? [])
-    .filter((r) => r.trip_request && r.vehicle?.category)
-    .map((r) => ({
-      reservationId: r.id,
-      vehicleId: r.vehicle_id,
-      existingTrip: {
-        id: r.trip_request!.id,
-        organizationId: r.trip_request!.organization_id,
-        requesterId: r.trip_request!.requester_id,
-        departureAt: r.trip_request!.departure_at,
-        expectedReturnAt: r.trip_request!.expected_return_at,
-        origin: r.trip_request!.origin,
-        destination: r.trip_request!.destination,
-        distanceKm: Number(r.trip_request!.distance_km),
-        passengerCount: r.trip_request!.passenger_count,
-        requiresCargo: r.trip_request!.requires_cargo,
-        justification: r.trip_request!.justification,
-        allowCarpool: r.trip_request!.allow_carpool,
-      },
-      vehicleCapacity: r.vehicle!.category!.passenger_capacity,
-      vehicleSupportsCargo: r.vehicle!.category!.supports_cargo,
-      currentOccupancy:
-        r.trip_request!.passenger_count + (occupancyByTrip.get(r.trip_request!.id) ?? 0),
-      vehiclePlate: r.vehicle!.plate,
-    }));
+  // Phase C7 (0063): the OLD city-string carpool matcher (planMobility's carpoolCandidates) needs
+  // other travelers' origin/destination/justification, which are no longer readable by the caller
+  // (and must not be loaded with a privileged client either: that would re-create the "directory of
+  // coworkers' journeys" the pack forbids). Carpool is now offered ONLY by the geospatial engine
+  // (searchCompatibleCarpool, which keeps host trip details server-side). An org with carpool
+  // disabled therefore simply gets no carpool offer. findCarpoolMatches itself is untouched.
+  const carpoolCandidates: CarpoolCandidateWithPlate[] = [];
 
   return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, gating };
 }
@@ -299,23 +253,14 @@ export async function planTripAction(
     {
       resolve: (text) => resolveLocationText(text, { points, geocoder, places: geocoder }),
       search: (draft) => searchCompatibleCarpool(draft),
-      loadOfferCards: async (matches) => {
-        const { data: rows } = await supabase
-          .from("carpool_offers")
-          .select("id, seats_available, trip_request:trip_requests(departure_at)")
-          .in(
-            "id",
-            matches.map((m) => m.offerId),
-          );
-        return buildOfferCards(
+      loadOfferCards: async (matches) =>
+        buildOfferCards(
           matches,
-          (rows ?? []).map((r) => ({
-            id: r.id,
-            seats_available: r.seats_available,
-            hostDepartureAt: r.trip_request?.departure_at ?? null,
-          })),
-        );
-      },
+          await loadOfferCardRows(
+            profile.organization_id,
+            matches.map((m) => m.offerId),
+          ),
+        ),
     },
   );
   return { ...plan, carpoolFirst };
@@ -332,7 +277,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   // carpool plan). NOTE: the chat path (chat/actions.ts, chat/dispatch.ts) also goes through
   // planTrip, so chat stops getting old-engine carpool results until Phase C6 wires voice to
   // the new engine. Orgs with carpool disabled by policy keep today's behaviour untouched.
-  const carpoolCandidates = gating.newEngine ? [] : built.carpoolCandidates;
+  const carpoolCandidates = built.carpoolCandidates;
   const trafficRestrictionEnabled = config.trafficRestrictionEnabled;
 
   const tripRequest = {
@@ -442,7 +387,7 @@ export async function confirmTrip(
   }
   const { now, config, vehicleCandidates, gating } = built;
   // Same Phase C5 gating as planTrip (confirmTrip re-derives the plan server-side).
-  const carpoolCandidates = gating.newEngine ? [] : built.carpoolCandidates;
+  const carpoolCandidates = built.carpoolCandidates;
 
   const tripRequest = {
     id: "draft",

@@ -5,6 +5,8 @@ const state = {
   tables: {} as Record<string, TableResult>,
   geocode: vi.fn(),
   evaluateInsertion: vi.fn(),
+  userTables: [] as string[],
+  adminTables: [] as string[],
 };
 
 function builder(result: TableResult) {
@@ -18,7 +20,19 @@ function builder(result: TableResult) {
 
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: async () => ({
-    from: (table: string) => builder(state.tables[table] ?? { data: null, error: null }),
+    from: (table: string) => {
+      state.userTables.push(table);
+      return builder(state.tables[table] ?? { data: null, error: null });
+    },
+  }),
+}));
+// 0063: other people's offers / host trips are read with the service-role client (after auth).
+vi.mock("@/lib/supabase/admin", () => ({
+  createSupabaseAdminClient: () => ({
+    from: (table: string) => {
+      state.adminTables.push(table);
+      return builder(state.tables[table] ?? { data: null, error: null });
+    },
   }),
 }));
 vi.mock("@/lib/auth/currentUser", () => ({ getCurrentUser: async () => ({ id: "user-1" }) }));
@@ -71,6 +85,8 @@ const offerRow = {
 beforeEach(() => {
   state.geocode.mockReset();
   state.evaluateInsertion.mockReset();
+  state.userTables = [];
+  state.adminTables = [];
   state.tables = {
     profiles: { data: { organization_id: "org-1" }, error: null },
     carpool_policy_settings: { data: policyRow, error: null },
@@ -176,6 +192,16 @@ describe("searchCompatibleCarpool (wrapper)", () => {
     state.tables.carpool_offers = { data: null, error: { message: "db down" } };
     const result = await searchCompatibleCarpool(draft);
     expect(result).toEqual({ status: "unavailable", reason: "offers_unavailable" });
+  });
+
+  it("0063: coworkers' offers, host trips and reservations are read with the SERVICE-ROLE client only, never the caller's RLS client", async () => {
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP } });
+    state.evaluateInsertion.mockResolvedValue({ status: "unavailable", reason: "provider_down" });
+    await searchCompatibleCarpool(draft);
+    expect(state.adminTables).toEqual(expect.arrayContaining(["carpool_offers", "reservations"]));
+    expect(state.userTables).not.toContain("carpool_offers");
+    expect(state.userTables).not.toContain("reservations");
+    expect(state.userTables).not.toContain("trip_requests");
   });
 
   it("never geocodes candidates that fail Stage A", async () => {

@@ -1151,6 +1151,9 @@ export type Dictionary = {
       detourLine: string;
       pickupLabel: string;
       dropoffLabel: string;
+      pickupAreaLabel: string;
+      dropoffAreaLabel: string;
+      approximateAreaHint: string;
       accept: string;
       reject: string;
       rejectConfirm: string;

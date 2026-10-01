@@ -38,6 +38,7 @@ import {
   type PlaceCheck,
 } from "@/lib/carpool/carpoolFirst";
 import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
+import { loadOfferCardRows } from "@/lib/carpool/offerCardRows";
 import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
 import { isUuid } from "@/lib/carpool/rpcErrors";
 import { VEHICLE_OPTION_ID } from "./persistedPending";
@@ -323,20 +324,14 @@ async function runRiderSearch(ctx: ChatCarpoolCtx, s: SearchSlots): Promise<Carp
     {
       resolve,
       search: (draft) => searchCompatibleCarpool(draft),
-      loadOfferCards: async (matches) => {
-        const { data: rows } = await ctx.supabase
-          .from("carpool_offers")
-          .select("id, seats_available, trip_request:trip_requests(departure_at)")
-          .in("id", matches.map((m) => m.offerId));
-        return buildOfferCards(
+      loadOfferCards: async (matches) =>
+        buildOfferCards(
           matches,
-          (rows ?? []).map((r) => ({
-            id: r.id,
-            seats_available: r.seats_available,
-            hostDepartureAt: r.trip_request?.departure_at ?? null,
-          })),
-        );
-      },
+          await loadOfferCardRows(
+            ctx.organizationId,
+            matches.map((m) => m.offerId),
+          ),
+        ),
     },
   );
 }

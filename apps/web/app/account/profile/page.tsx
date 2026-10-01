@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getDictionary } from "../../../lib/i18n/getLocale";
 import { AppShell } from "../../AppShell";
 import { BackButton } from "../../BackButton";
+import { getOwnLicense } from "../../../lib/auth/ownLicense";
 import { Card } from "../../ui/Card";
 import { UpdateProfileForm } from "./UpdateProfileForm";
 
@@ -14,13 +15,15 @@ export default async function ProfilePage() {
   const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(
-      "full_name, role, avatar_url, organization:organizations(name), drivers_license_number, drivers_license_category, drivers_license_expiration",
-    )
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, ownLicense] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role, avatar_url, organization:organizations(name)")
+      .eq("id", user.id)
+      .single(),
+    // 0063: license columns are only readable through the own-row definer function.
+    getOwnLicense(supabase),
+  ]);
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
@@ -44,11 +47,11 @@ export default async function ProfilePage() {
             email={user.email ?? ""}
             avatarUrl={profile?.avatar_url ?? null}
             license={
-              profile?.drivers_license_number
+              ownLicense?.number
                 ? {
-                    number: profile.drivers_license_number,
-                    category: profile.drivers_license_category,
-                    expirationDate: profile.drivers_license_expiration,
+                    number: ownLicense.number,
+                    category: ownLicense.category,
+                    expirationDate: ownLicense.expiration,
                   }
                 : null
             }

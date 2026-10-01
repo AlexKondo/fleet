@@ -1,0 +1,125 @@
+
+=== C6 chat walkthrough (http://localhost:3100) org=1c75ce90-8fd2-4976-a5c3-07747608034f ===
+
+PASS - Chat reservation (engine active): the assistant asks the NEW host question (offer seats?) instead of the old consent wording
+    Deseja disponibilizar vagas para carona na sua viagem?
+    screenshot: resultado_de_testes/carpool-c6/01-host-chat-asks-offer-seats-question.png
+PASS - Chat reservation: confirmation card names the actual vehicle + trip, no carpool offers exist yet so NO options (vehicle flow unchanged); states 1 seat will be published
+    Vou reservar o veículo C5C164P (C5C164P) para Aeroporto de Congonhas, São Paulo, saída 02/10/2026, 10:00, retorno 02/10/2026, 18:00. Depois da reserva, vou disponibilizar 1 vaga para carona.
+    screenshot: resultado_de_testes/carpool-c6/02-host-chat-vehicle-confirmation-card.png
+PASS - Chat reservation confirmed -> real reservation (pending approval) AND the 1-seat offer published
+    {"a":"Reserva criada — veículo C5C164P. Vagas de carona publicadas: 1 vaga.","hostTrip":{"trip_id":"18acf563-24a6-4665-b98a-2f6b14e45e33","res_id":"fe097a61-a206-432c-b090-f3f1b5cbf4b3","status":"pending_approval"},"hostOffer0":{"id":"f77edcec-a3c1-4b7f-bb39-c3fe450f8fc6","status":"active","seats_offered":1,"seats_available":1}}
+    screenshot: resultado_de_testes/carpool-c6/03-host-chat-reservation-created.png
+PASS - Chat reservation + carpool-first: host2's route matches host's published offer -> shown as option 1 next to 'Usar um veículo' BEFORE any vehicle card
+    ["1. Saída 10:00 · desvio +0 km / +1 min · 1 vaga","2. Usar um veículo"]
+    screenshot: resultado_de_testes/carpool-c6/04-host2-chat-reservation-carpool-first-options.png
+PASS - Chat reservation with host answer Yes: the card says exactly how many seats will be published afterwards
+    Vou reservar o veículo C5C264P (C5C264P) para Aeroporto de Congonhas, São Paulo, saída 02/10/2026, 10:05, retorno 02/10/2026, 18:00. Depois da reserva, vou disponibilizar 2 vagas para carona.
+    screenshot: resultado_de_testes/carpool-c6/05-host2-chat-reservation-card-offers-2-seats.png
+PASS - Reservation created AND the offer was published through enable_carpool_offer (2 seats, active), message says so
+    {"a":"Reserva criada — veículo C5C264P. Vagas de carona publicadas: 2 vagas.","host2Offer":{"id":"a25d184a-b278-43dd-8e3f-7e020e94cc3a","status":"active","seats_offered":2,"seats_available":2}}
+    screenshot: resultado_de_testes/carpool-c6/06-host2-chat-reservation-created-offer-published.png
+PASS - OFFER_CARPOOL ('duas vagas'): the card says it will CHANGE the existing 1-seat offer to 2 seats on the trip to Congonhas; nothing changes before Confirmar
+    Vou alterar a oferta de carona da sua viagem para Aeroporto de Congonhas, São Paulo (saída 02/10/2026, 10:00) para 2 vagas.
+    screenshot: resultado_de_testes/carpool-c6/07-host-offer-carpool-confirmation-card.png
+PASS - OFFER_CARPOOL confirmed -> the offer is ACTIVE with 2 seats in the DB (update_carpool_offer path)
+    {"a":"Oferta atualizada: 2 vagas na sua viagem para Aeroporto de Congonhas, São Paulo.","hostOffer":{"id":"f77edcec-a3c1-4b7f-bb39-c3fe450f8fc6","status":"active","seats_offered":2,"seats_available":2}}
+    screenshot: resultado_de_testes/carpool-c6/08-host-offer-carpool-done.png
+PASS - My Trip (host) shows the offer made by chat: enabled, 2 seats
+    {"st":"Carona ativa","seatsTxt":"Vagas oferecidas: 2 · Vagas disponíveis: 2"}
+    screenshot: resultado_de_testes/carpool-c6/09-host-my-trip-offer-created-by-chat.png
+PASS - FIND_CARPOOL with the destination missing -> ONE focused clarification (asks the destination), nothing searched
+    Para qual destino você quer ir de carona?
+    screenshot: resultado_de_testes/carpool-c6/10-rider-find-missing-destination-clarification.png
+PASS - FIND_CARPOOL: compatible offers presented as NUMBERED options (departure time, detour, seats only)
+    {"opts":["1. Saída 10:00 · desvio +2.2 km / +5 min · 2 vagas","2. Saída 10:05 · desvio +2.2 km / +5 min · 2 vagas"],"optCard":"Entendi: saindo de “Av. Paulista, 1578 - Bela Vista, São Paulo - SP” para “Av. Washington Luís, 5000 - Jardim Aeroporto, São Paulo - SP”.\nEncontrei caronas compatíveis. Escolha uma pelo botão ou diga o número da opção."}
+PASS - Options expose no host name / address / coordinates
+    ["1. Saída 10:00 · desvio +2.2 km / +5 min · 2 vagas","2. Saída 10:05 · desvio +2.2 km / +5 min · 2 vagas"]
+    screenshot: resultado_de_testes/carpool-c6/11-rider-find-numbered-compatible-options.png
+PASS - Choosing option 1 builds the REQUEST confirmation card: 'Vou solicitar 1 vaga na carona com saída às 10:00, desvio estimado X km' (nothing requested yet)
+    Entendi: saindo de “Av. Paulista, 1578 - Bela Vista, São Paulo - SP” para “Av. Washington Luís, 5000 - Jardim Aeroporto, São Paulo - SP”.
+Vou solicitar 1 vaga na carona com saída às 10:00, desvio estimado de 2.2 km (cerca de 5 min). O motorista precisa aprovar o pedido.
+    screenshot: resultado_de_testes/carpool-c6/12-rider-request-confirmation-card.png
+PASS - REQUEST confirmed -> request PENDING on the 10:00 host's offer; the rider is told it awaits approval
+    {"a":"Pedido enviado. Aguardando a aprovação do motorista.","r1":[{"id":"68b393c0-d17a-43dc-b437-f1b1fe084cfb","status":"PENDING","status_reason":null,"carpool_offer_id":"f77edcec-a3c1-4b7f-bb39-c3fe450f8fc6","requested_seats":1}]}
+    screenshot: resultado_de_testes/carpool-c6/13-rider-request-sent-pending.png
+PASS - City-only destination ('São Paulo') -> asks for a more precise place, NEVER guesses, no options shown
+    “São Paulo” é apenas uma cidade. Informe um endereço completo, um ponto de referência ou um ponto corporativo para o campo destino.
+    screenshot: resultado_de_testes/carpool-c6/14-rider-city-only-needs-precise-place.png
+PASS - After the precise place the same search yields numbered options
+    ["1. Saída 10:00 · desvio +2.2 km / +5 min · 2 vagas","2. Saída 10:05 · desvio +2.2 km / +5 min · 2 vagas"]
+PASS - A bare-number reply ('2') picks option 2 (the 10:05 carpool) and shows its request card
+    Entendi: saindo de “Av. Paulista, 1578 - Bela Vista, São Paulo - SP” para “Av. Washington Luís, 5000 - Jardim Aeroporto, São Paulo - SP”.
+Vou solicitar 1 vaga na carona com saída às 10:05, desvio estimado de 2.2 km (cerca de 5 min). O motorista precisa aprovar o pedido.
+    screenshot: resultado_de_testes/carpool-c6/15-rider2-number-reply-selects-option-2.png
+PASS - 'Alterar' drops the card client-side and asks what to change (no request created)
+PASS - 'Cancelar' discards the card: no request exists
+    screenshot: resultado_de_testes/carpool-c6/16-rider2-cancelled-no-request.png
+PASS - ACCEPT 'a carona da Ana' is AMBIGUOUS (two pending Anas on the host's own offers): asks which, never guesses, no card
+    Há mais de um pedido pendente: C6 Ana Silva (1 vaga, saída 10:00); C6 Ana Costa (1 vaga, saída 10:00). De qual você fala? Diga o nome completo.
+    screenshot: resultado_de_testes/carpool-c6/17-host-accept-ambiguous-ana.png
+PASS - ACCEPT with the full name: confirmation card 'Vou aceitar o pedido de carona de Ana Silva (1 vaga)...'; nothing accepted before Confirmar
+    Vou aceitar o pedido de carona de C6 Ana Silva (1 vaga). As vagas serão reservadas para essa pessoa.
+    screenshot: resultado_de_testes/carpool-c6/18-host-accept-confirmation-card.png
+PASS - ACCEPT confirmed -> request ACCEPTED and the offer's available seats DECREMENTED 2 -> 1
+    {"a":"Pedido de C6 Ana Silva aceito. As vagas da sua carona foram atualizadas.","afterAccept":{"req":{"id":"68b393c0-d17a-43dc-b437-f1b1fe084cfb","status":"ACCEPTED","status_reason":null,"carpool_offer_id":"f77edcec-a3c1-4b7f-bb39-c3fe450f8fc6","requested_seats":1},"offer":{"id":"f77edcec-a3c1-4b7f-bb39-c3fe450f8fc6","status":"active","seats_offered":2,"seats_available":1}}}
+    screenshot: resultado_de_testes/carpool-c6/19-host-accept-done.png
+PASS - REJECT: card 'Vou recusar o pedido de carona de Ana Costa.'
+    Vou recusar o pedido de carona de C6 Ana Costa.
+PASS - REJECT confirmed -> request REJECTED (never deleted), reason stored; seats unchanged
+    {"id":"cd691998-18b1-4926-9a21-d48382ca252f","status":"REJECTED","status_reason":"meu carro está cheio","carpool_offer_id":"f77edcec-a3c1-4b7f-bb39-c3fe450f8fc6","requested_seats":1}
+    screenshot: resultado_de_testes/carpool-c6/20-host-reject-done.png
+    screenshot: resultado_de_testes/carpool-c6/21-host-my-trip-after-accept-and-reject.png
+PASS - CANCEL_CARPOOL_REQUEST: card says the already accepted seat will be released
+    Vou cancelar sua carona já aceita com saída em 02/10/2026, 10:00. A vaga será liberada.
+    screenshot: resultado_de_testes/carpool-c6/22-rider-cancel-confirmation-card.png
+PASS - CANCEL confirmed -> request CANCELLED, seat returned to the offer (1 -> 2)
+    {"a":"Solicitação de carona cancelada."}
+    screenshot: resultado_de_testes/carpool-c6/23-rider-cancel-done.png
+PASS - DISABLE_CARPOOL: card states pending/accepted requests will be invalidated; still active before Confirmar
+    Vou desativar as vagas de carona da sua viagem para Aeroporto de Congonhas, São Paulo (saída 02/10/2026, 10:00). Pedidos pendentes ou aceitos dessa carona serão invalidados.
+    screenshot: resultado_de_testes/carpool-c6/24-host-disable-confirmation-card.png
+PASS - DISABLE confirmed -> offer DISABLED in the DB
+    Carona desativada na sua viagem para Aeroporto de Congonhas, São Paulo.
+    screenshot: resultado_de_testes/carpool-c6/25-host-disable-done.png
+    screenshot: resultado_de_testes/carpool-c6/26-host-my-trip-offer-disabled.png
+PASS - Chat CREATE_RESERVATION with carpool-first: compatible offer shown as option 1 next to 'Usar um veículo' (no vehicle reserved yet)
+    {"cfOpts":["1. Saída 10:05 · desvio +2.2 km / +5 min · 2 vagas","2. Usar um veículo"],"a":"Entendi: saindo de “Av. Paulista, 1578 - Bela Vista, São Paulo - SP” para “Av. Washington Luís, 5000 - Jardim Aeroporto, São Paulo - SP”.\nAntes de reservar um veículo: encontrei caronas compatíveis com a sua viagem. Escolha uma pelo botão (ou diga o número) ou escolha usar um veículo."}
+    screenshot: resultado_de_testes/carpool-c6/27-carla-chat-reservation-carpool-first-options.png
+PASS - Choosing 'Usar um veículo' -> the normal vehicle card (same flow as before)
+    Vou reservar o veículo C6V364P (C6V364P) para Avenida Washington Luís, 5000, São Paulo, saída 02/10/2026, 10:00, retorno 02/10/2026, 18:00.
+    screenshot: resultado_de_testes/carpool-c6/28-carla-use-vehicle-normal-card.png
+PASS - Vehicle reservation by chat completes end to end (reservation exists in the DB)
+    Reserva criada — veículo C6V364P.
+    screenshot: resultado_de_testes/carpool-c6/29-carla-vehicle-reservation-created.png
+PASS - OFFER_CARPOOL on a trip whose offer was disabled: card says it will make 2 seats available (enable path)
+    Vou disponibilizar 2 vagas para carona na sua viagem para Aeroporto de Congonhas, São Paulo (saída 02/10/2026, 10:00).
+    screenshot: resultado_de_testes/carpool-c6/30-host-offer-again-enable-confirmation-card.png
+PASS - Confirmed -> the SAME offer is ACTIVE again with 2 seats
+    {"a":"Pronto: 2 vagas disponíveis para carona na sua viagem para Aeroporto de Congonhas, São Paulo.","reEnabled":{"id":"f77edcec-a3c1-4b7f-bb39-c3fe450f8fc6","status":"active","seats_offered":2,"seats_available":2}}
+    screenshot: resultado_de_testes/carpool-c6/31-host-offer-again-done.png
+PASS - Audit trail has the carpool lifecycle rows produced through the chat (offer enabled x2, accepted, rejected, cancelled, offer disabled, request created)
+    [{"action":"carpool_offer_disabled","c":1},{"action":"carpool_offer_enabled","c":3},{"action":"carpool_offer_updated","c":1},{"action":"carpool_ride_accepted","c":1},{"action":"carpool_ride_cancelled","c":1},{"action":"carpool_ride_rejected","c":1},{"action":"carpool_ride_requested","c":2}]
+PASS - Cleanup: no disposable rows left in the live DB
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"participants":0,"offers":0,"requests":0,"events":0,"policies":0,"quota_rows":0,"notifications":0,"audit":0}
+CLEANUP QUERY:
+select
+      (select count(*) from organizations where name like 'C5UI-ORG-%-mupv464p') orgs,
+      (select count(*) from profiles where id in ('61d46772-aa08-4a2a-a67b-f15272e2db2d','5d14a96e-8b6c-420d-be49-a639897140e3','02e9396d-6131-4f9d-b9d6-19d1e76891f7','960bac9e-8a3a-4c8a-9791-f30974aa5cb9','f9b86bc3-4d00-448a-bdbe-3b88c5da7841','1ef49934-03e2-4c18-b4eb-3e812a68cd10')) profiles,
+      (select count(*) from vehicles where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) vehicles,
+      (select count(*) from trip_requests where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) trips,
+      (select count(*) from trip_participants where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) participants,
+      (select count(*) from carpool_offers where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) offers,
+      (select count(*) from carpool_ride_requests where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) requests,
+      (select count(*) from carpool_events where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) events,
+      (select count(*) from carpool_policy_settings where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) policies,
+      (select count(*) from geo_provider_quota_counters where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) quota_rows,
+      (select count(*) from notifications where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) notifications,
+      (select count(*) from audit_log where organization_id in ('1c75ce90-8fd2-4976-a5c3-07747608034f')) audit
+PASS - Cleanup: no chat rows left
+    {"chat_conversations":0,"chat_messages":0}
+
+=== Summary ===
+
+36/36 checks passed.
+

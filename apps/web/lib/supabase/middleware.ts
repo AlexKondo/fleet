@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@fleet/supabase-client";
 import { getSupabasePublicEnv } from "./env";
 import { VERIFIED_USER_EMAIL_HEADER, VERIFIED_USER_ID_HEADER } from "../auth/headers";
+import { getOwnLicense } from "../auth/ownLicense";
 
 const PUBLIC_ROUTE_PREFIXES = [
   "/login",
@@ -104,12 +105,14 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
   // (change password, personal data) stays reachable too — the user menu is visible during
   // this gate specifically so those two screens don't need the CNH uploaded first.
   if (!pathname.startsWith("/account")) {
-    const { data: ownProfile } = await supabase
-      .from("profiles")
-      .select("drivers_license_number, role")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (ownProfile && ownProfile.role !== "security" && !ownProfile.drivers_license_number) {
+    // 0063: the license columns are revoked from `authenticated`; get_my_license() is the own-row reader.
+    const [{ data: ownProfile }, ownLicense] = await Promise.all([
+      supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+      getOwnLicense(supabase),
+    ]);
+    // ownLicense === null means the read FAILED (not "no license"): fail open like the rest of this
+    // gate (a transient error must not lock every user out), exactly as a missing profile row does.
+    if (ownProfile && ownLicense && ownProfile.role !== "security" && !ownLicense.number) {
       const licenseUrl = new URL("/account/license", request.url);
       return NextResponse.redirect(licenseUrl);
     }

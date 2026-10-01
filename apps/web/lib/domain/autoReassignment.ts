@@ -76,7 +76,12 @@ export async function attemptAutomaticReassignment(
   }[] = [];
 
   for (const reservationId of impactedReservationIds) {
-    const { data: reservation } = await supabase
+    // Phase C7 (0063): the impacted reservation belongs to ANOTHER traveler (the next booking of the
+    // delayed vehicle) and the caller is the delaying employee, whose RLS context can no longer read
+    // someone else's reservation. This read therefore uses the service-role client, still scoped by
+    // the caller's own organization id and by ids returned from the post_reservation_message definer
+    // RPC (never client input).
+    const { data: reservation } = await admin
       .from("reservations")
       .select(
         `id, vehicle_id,

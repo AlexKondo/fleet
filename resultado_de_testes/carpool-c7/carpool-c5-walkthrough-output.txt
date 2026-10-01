@@ -1,0 +1,154 @@
+
+=== C5 walkthrough #1 (http://localhost:3100) org=1fa1dc8e-1057-445a-8da9-8e3ed09788b9 ===
+
+PASS - Host: carpool-first ran and showed the places the system understood (confirm labels)
+    {"origin":"Origem: Av. Paulista, 1578 - Bela Vista, São Paulo - SP, 01310-200, Brazil","destination":"Destino: São Paulo/Congonhas–Deputado Freitas Nobre Arpt (CGH) - Av. Washington Luís, s/n - Campo Belo, São Paulo - SP, 04626-911, Brazil"}
+PASS - Host: vehicle recommended AFTER carpool-first, host question 'Deseja disponibilizar vagas para carona?' shown
+PASS - Host: the OLD allow_carpool consent checkbox is hidden (new Yes/No step is the only carpool question)
+PASS - Host: default answer is No (no seats published unless the host opts in)
+    screenshot: resultado_de_testes/carpool-c5/01-host-vehicle-recommended-offer-step-default-no.png
+PASS - Host: choosing Yes prefills the maximum safe seats (capacity 5 - declared 1 = 4)
+    {"prefilled":"4"}
+    screenshot: resultado_de_testes/carpool-c5/02-host-offer-step-yes-2-seats.png
+    screenshot: resultado_de_testes/carpool-c5/03-host-after-reservation-trips-list.png
+PASS - Reservation created AND offer published for it (2 seats, active)
+    {"id":"efe1bdcb-5531-4899-a8e9-535fca7531ae","status":"active","seats_offered":2,"seats_available":2}
+PASS - My Trip (host): carpool enabled + seats offered/available visible
+    {"st":"Carona ativa","seats":"Vagas oferecidas: 2 · Vagas disponíveis: 2"}
+    screenshot: resultado_de_testes/carpool-c5/04-host-my-trip-offer-active-2-seats.png
+    [console.error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the serv
+PASS - Rider (compatible): carpool card appears BEFORE any vehicle option
+    {"cardCount":1}
+PASS - Card shows host departure time, estimated detour (km/min), seats available and a Request Ride action - nothing else
+    Saída do motorista: 02/10/2026, 10:00Desvio estimado: +2.2 km · +5 min2 vagas disponíveisSolicitar carona
+PASS - Card does NOT expose the host's name, address or coordinates
+PASS - Resolved canonical labels were shown back to the rider to confirm
+    {"origin":"Origem: Av. Paulista, 1578 - Bela Vista, São Paulo - SP, 01310-200, Brazil","destination":"Destino: Av. Washington Luís, 5000 - Jardim Aeroporto, São Paulo - SP, 04626-911, Brazil"}
+    screenshot: resultado_de_testes/carpool-c5/05-rider-compatible-card-with-detour.png
+    screenshot: resultado_de_testes/carpool-c5/06-rider-request-sent-pending-host-approval.png
+PASS - Double-click on Request Ride created exactly ONE request, PENDING (real outcome shown: pending host approval)
+    [{"id":"1bd266f1-5686-4a6a-ab06-faf3a40746fd","status":"PENDING","pl":"Av. Paulista, 1578 - Bela Vista, São Paulo - SP, 01310-200, Brazil","dl":"Av. Washington Luís, 5000 - Jardim Aeroporto, São Paulo - SP, 04626-911, Brazil","d":"2.245000000000001","m":"5"}]
+PASS - Request stores the confirmed pickup/drop-off labels and the server-computed detour
+    {"id":"1bd266f1-5686-4a6a-ab06-faf3a40746fd","status":"PENDING","pl":"Av. Paulista, 1578 - Bela Vista, São Paulo - SP, 01310-200, Brazil","dl":"Av. Washington Luís, 5000 - Jardim Aeroporto, São Paulo - SP, 04626-911, Brazil","d":"2.245000000000001","m":"5"}
+PASS - Incompatible rider (far destination): NO carpool card, no hint of the host's trip; vehicle flow shown
+    screenshot: resultado_de_testes/carpool-c5/07-rider-incompatible-no-offer-vehicle-shown.png
+PASS - Close-by rider whose detour is too long for the policy (+20 min > 10): route-based matching refuses it, NO card
+    screenshot: resultado_de_testes/carpool-c5/08-rider-route-detour-too-long-no-offer.png
+PASS - City-only destination ('São Paulo'): asks for a more precise place, does NOT guess, no carpool search result
+PASS - While clarification is pending the vehicle result is hidden until the rider explicitly continues
+    screenshot: resultado_de_testes/carpool-c5/09-rider-city-only-destination-clarification.png
+PASS - Rider can continue to the normal vehicle flow from the clarification prompt
+    screenshot: resultado_de_testes/carpool-c5/10-rider-clarification-continue-to-vehicle.png
+PASS - Unresolvable address: asks for a precise place and does not guess
+    screenshot: resultado_de_testes/carpool-c5/11-rider-unresolvable-address-clarification.png
+PASS - My Trip (host): pending request shows rider name, seats, COARSE pickup/drop-off area (no street number), detour, Accept/Reject
+    C5UI a rider11 vaga(s) · 02/10/2026, 10:00Região de embarque: Av. Paulista, Bela Vista → Região de desembarque: Av. Washington Luís, Jardim AeroportoApenas a região aproximada. O endereço exato aparece depois que você aceitar.Desvio estimado: +2.2 km · +5 minAceitarRecusar
+    screenshot: resultado_de_testes/carpool-c5/12-host-pending-request-accept-reject.png
+    [console.error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the serv
+PASS - Host accepts: seats decrement 2 -> 1, rider listed as confirmed passenger
+    {"db":{"seats_available":1},"ui":"Vagas oferecidas: 2 · Vagas disponíveis: 1"}
+    screenshot: resultado_de_testes/carpool-c5/13-host-after-accept-seats-1-participant.png
+PASS - Rider status: request shows ACCEPTED (Aceita) on Trips
+    Aceita
+PASS - Accepted rider is listed ONCE: a trip_participants row exists but the legacy 'Caronas' list does not repeat it
+    screenshot: resultado_de_testes/carpool-c5/14-rider-trips-request-accepted.png
+    screenshot: resultado_de_testes/carpool-c5/15-host-reject-with-reason.png
+    [console.error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the serv
+PASS - Host rejects with a reason: request moves to history as Recusada with the reason
+    C5UI a rider2 · Recusada — Sem espaço para bagagem
+PASS - Rider sees REJECTED (Recusada) with the host's reason
+    RecusadaSaída solicitada: 02/10/2026, 10:00Desvio estimado: +2.2 km · +5 minSem espaço para bagagem
+    screenshot: resultado_de_testes/carpool-c5/16-rider-trips-request-rejected-with-reason.png
+PASS - Rejection kept the row (status REJECTED, never deleted)
+    screenshot: resultado_de_testes/carpool-c5/17-rider-trips-pending-request-with-cancel.png
+    screenshot: resultado_de_testes/carpool-c5/18-rider-trips-request-cancelled.png
+PASS - Rider cancels their own pending request: status CANCELLED
+PASS - My Trip shows the new-engine section AND the legacy pending block (transition), the legacy rider exactly once, flagged as 'fluxo anterior'
+    {"legacyCount":1}
+PASS - The legacy pending rider is NOT in the new engine's confirmed passengers or pending list
+    screenshot: resultado_de_testes/carpool-c5/19-host-my-trip-new-engine-and-legacy-pending-blocks.png
+    [console.error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the serv
+PASS - Policy v1 (departure window 15 min): a rider departing +10 min IS offered the carpool
+    screenshot: resultado_de_testes/carpool-c5/20-policy-v1-window-15-plus-10min-card-shown.png
+PASS - Admin screen shows the current policy version (1) and its values
+    Versão em vigor: 1 · O formulário abaixo parte da versão em vigor.
+    screenshot: resultado_de_testes/carpool-c5/21-admin-policy-screen-version-1.png
+    screenshot: resultado_de_testes/carpool-c5/22-admin-policy-published-version-2.png
+PASS - Admin publishes a NEW version (insert-only): v1 untouched, v2 has window 5 / 4.5 km
+    [{"policy_version":1,"departure_window_minutes":15,"max_additional_distance_km":"5"},{"policy_version":2,"departure_window_minutes":5,"max_additional_distance_km":"4.5"}]
+PASS - History lists both versions
+    {"histItems":2}
+    screenshot: resultado_de_testes/carpool-c5/23-admin-policy-invalid-value-refused-server-side.png
+PASS - Invalid value (-3 km) refused server-side: no new version created
+    {"polCount":2}
+PASS - Employee is redirected away from /settings (no policy screen for non-managers)
+    http://localhost:3100/dashboard
+PASS - After publishing v2 (window 5 min) the NEXT search uses it: the +10 min rider no longer gets the carpool
+    screenshot: resultado_de_testes/carpool-c5/24-policy-v2-window-5-plus-10min-no-card.png
+PASS - Host trip cancelled: host sees the accepted rider's request as Invalidada with the reason
+    C5UI a rider1 · Invalidada — O motorista cancelou a viagem.C5UI a rider3 · CanceladaC5UI a rider2 · Recusada — Sem espaço para bagagem
+PASS - Host section shows the offer as disabled
+    screenshot: resultado_de_testes/carpool-c5/25-host-after-trip-cancel-invalidated-with-reason.png
+    [console.error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the serv
+PASS - Accepted rider is told the carpool was invalidated, with the reason (never silently stranded)
+    InvalidadaSaída solicitada: 02/10/2026, 10:00Desvio estimado: +2.2 km · +5 minO motorista cancelou a viagem.
+    screenshot: resultado_de_testes/carpool-c5/26-rider-trips-invalidated-host-cancelled-with-reason.png
+PASS - Rider notified (in-app) about the invalidation
+    {"nCount":1}
+PASS - Publishing failure is NON-FATAL: the reservation stands, no offer exists, and My Trip shows a notice with the retry controls
+    Sua reserva foi criada, mas não foi possível publicar as vagas (Não foi possível concluir a ação. Tente novamente.). Tente novamente abaixo.
+    screenshot: resultado_de_testes/carpool-c5/27-host-publish-failed-reservation-stands-retry-available.png
+PASS - Retry from My Trip publishes the offer (2 seats, active)
+PASS - Host updates seats from My Trip (2 -> 3)
+    screenshot: resultado_de_testes/carpool-c5/28-host-my-trip-update-seats-3.png
+    screenshot: resultado_de_testes/carpool-c5/29-rider-auto-accepted-outcome-confirmed.png
+PASS - Policy hostApprovalRequired=false: request is auto-ACCEPTED (policy v3 recorded), seat consumed, and the UI says 'Carona confirmada'
+    {"r5":{"status":"ACCEPTED","policy_version":3},"o5":{"seats_available":2}}
+PASS - Host turns the carpool off: the accepted rider sees Invalidada with 'O motorista desativou a carona.'
+    InvalidadaSaída solicitada: 02/10/2026, 14:00Desvio estimado: +2.2 km · +5 minO motorista desativou a carona.
+    screenshot: resultado_de_testes/carpool-c5/30-rider-invalidated-offer-disabled-by-host.png
+PASS - Cron route: 401 without the secret, 200 with it (sweep incl. reconcile pass runs)
+    {"noAuth":401,"authed":200,"cronBody":{"expired":0}}
+FAIL - vercel.json schedule for carpool-expiry is still daily
+PASS - Cleanup: no disposable rows left in the live DB
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"participants":0,"offers":0,"requests":0,"events":0,"policies":0,"quota_rows":0,"notifications":0,"audit":0}
+CLEANUP QUERY:
+select
+      (select count(*) from organizations where name like 'C5UI-ORG-%-mupuxz75') orgs,
+      (select count(*) from profiles where id in ('14fb1cef-5382-465b-8277-e5d2819011ba','728a5764-5a54-41ef-ad21-8d6a59bf65be','c3abdccd-541b-441d-8ba5-1c646706489e','5e567817-1cd2-46d9-b491-5244e7469a6e','29c959ac-7d56-47f2-ac3f-963974224170','0ad4ef4a-78ab-4d58-ae54-41f4c70ae767','62fca228-4b2d-47bd-a3ef-15aba5cb3e8a','f87a6f14-dd58-4201-a8ba-6d17cb61a65e')) profiles,
+      (select count(*) from vehicles where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) vehicles,
+      (select count(*) from trip_requests where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) trips,
+      (select count(*) from trip_participants where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) participants,
+      (select count(*) from carpool_offers where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) offers,
+      (select count(*) from carpool_ride_requests where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) requests,
+      (select count(*) from carpool_events where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) events,
+      (select count(*) from carpool_policy_settings where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) policies,
+      (select count(*) from geo_provider_quota_counters where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) quota_rows,
+      (select count(*) from notifications where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) notifications,
+      (select count(*) from audit_log where organization_id in ('1fa1dc8e-1057-445a-8da9-8e3ed09788b9')) audit
+
+=== Summary ===
+FAIL - vercel.json schedule for carpool-expiry is still daily
+
+47/48 checks passed.
+

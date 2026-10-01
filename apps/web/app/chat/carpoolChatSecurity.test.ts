@@ -22,6 +22,7 @@ const m = vi.hoisted(() => ({
   reject: vi.fn(),
   cancel: vi.fn(),
   requestRide: vi.fn(),
+  cardData: null as null | Record<string, Record<string, unknown>[]>,
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -46,6 +47,13 @@ vi.mock("@/app/carpool/requestActions", () => ({
 vi.mock("@/app/carpool/formActions", () => ({ getMyCarpoolRequestStatus: vi.fn() }));
 vi.mock("@/lib/geospatial/googlePlacesProvider", () => ({ createGooglePlacesProvider: () => ({}) }));
 vi.mock("@/lib/geospatial/corporateMobilityPoints", () => ({ listCorporateMobilityPoints: async () => ({ status: "ok", data: [] }) }));
+vi.mock("@/lib/carpool/offerCardRows", () => ({
+  // 0063: card rows come from the service-role client in production; here from the same fixtures.
+  loadOfferCardRows: async (_org: string, ids: string[]) =>
+    ((m.cardData?.carpool_offers ?? []) as { id: string; seats_available: number; trip_request?: { departure_at?: string } }[])
+      .filter((o) => ids.includes(o.id))
+      .map((o) => ({ id: o.id, seats_available: o.seats_available, hostDepartureAt: o.trip_request?.departure_at ?? null })),
+}));
 vi.mock("@/lib/carpool/resolveLocationText", () => ({
   resolveLocationText: async (t: string) => ({
     status: "resolved",
@@ -80,7 +88,9 @@ const domainRows = (): Rows => ({
 
 function setup(userId: string, adminRows: Rows = {}) {
   m.userId = userId;
-  m.db = fakeSupabase(domainRows());
+  const dr = domainRows();
+  m.db = fakeSupabase(dr);
+  m.cardData = dr;
   const admin = fakeSupabase(adminRows);
   m.admin = admin;
   return admin;

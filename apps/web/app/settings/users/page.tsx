@@ -31,13 +31,28 @@ export default async function UsersPage() {
 
   if (!profile || profile.role !== "administrator") redirect("/settings");
 
-  const { data: profiles, error: profilesError } = await supabase
-    .from("profiles")
-    .select(
-      "id, full_name, role, driver_authorized, drivers_license_number, drivers_license_category, drivers_license_expiration",
-    )
-    .eq("organization_id", profile.organization_id)
-    .order("full_name");
+  // 0063: names/roles come from profiles; the license columns are revoked at column level and are
+  // served to fleet_manager/administrator only by the role-checked list_member_licenses() definer
+  // function (merged here by id).
+  const [{ data: baseProfiles, error: profilesError }, { data: licenseRows }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .eq("organization_id", profile.organization_id)
+      .order("full_name"),
+    supabase.rpc("list_member_licenses"),
+  ]);
+  const licenseById = new Map((licenseRows ?? []).map((l) => [l.id, l]));
+  const profiles = (baseProfiles ?? []).map((p) => {
+    const l = licenseById.get(p.id);
+    return {
+      ...p,
+      driver_authorized: l?.driver_authorized ?? false,
+      drivers_license_number: l?.drivers_license_number ?? null,
+      drivers_license_category: l?.drivers_license_category ?? null,
+      drivers_license_expiration: l?.drivers_license_expiration ?? null,
+    };
+  });
 
   // profiles has no email column (0001_init_schema.sql) — email lives on auth.users,
   // which only the service-role client can read for anyone other than yourself.

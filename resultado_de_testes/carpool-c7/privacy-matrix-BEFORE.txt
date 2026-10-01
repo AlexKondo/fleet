@@ -1,0 +1,314 @@
+
+##### READ MATRIX (phase=before) - observed ids per role; "+" = leaked extra, "-" = missing #####
+FAIL - trip_requests as empA: sees exactly ["tA"]
+    {"extra":["tB","tC"],"missing":[]}
+FAIL - trip_requests as empB: sees exactly ["tA","tB"]
+    {"extra":["tC"],"missing":[]}
+FAIL - trip_requests as empC: sees exactly ["tC"]
+    {"extra":["tA","tB"],"missing":[]}
+FAIL - trip_requests as empD: sees exactly []
+    {"extra":["tA","tB","tC"],"missing":[]}
+PASS - trip_requests as sec: sees exactly ["tA","tB","tC"]
+    3 row(s)
+PASS - trip_requests as mgr: sees exactly ["tA","tB","tC"]
+    3 row(s)
+PASS - trip_requests as adm: sees exactly ["tA","tB","tC"]
+    3 row(s)
+FAIL - trip_requests as mnt: sees exactly []
+    {"extra":["tA","tB","tC"],"missing":[]}
+PASS - trip_requests as empX: sees exactly ["tX"]
+    1 row(s)
+FAIL - reservations as empA: sees exactly ["rA"]
+    {"extra":["rB","rC"],"missing":[]}
+FAIL - reservations as empB: sees exactly ["rA","rB"]
+    {"extra":["rC"],"missing":[]}
+FAIL - reservations as empC: sees exactly ["rC"]
+    {"extra":["rA","rB"],"missing":[]}
+FAIL - reservations as empD: sees exactly []
+    {"extra":["rA","rB","rC"],"missing":[]}
+PASS - reservations as sec: sees exactly ["rA","rB","rC"]
+    3 row(s)
+PASS - reservations as mgr: sees exactly ["rA","rB","rC"]
+    3 row(s)
+PASS - reservations as adm: sees exactly ["rA","rB","rC"]
+    3 row(s)
+FAIL - reservations as mnt: sees exactly []
+    {"extra":["rA","rB","rC"],"missing":[]}
+PASS - reservations as empX: sees exactly ["rX"]
+    1 row(s)
+PASS - trip_participants as empA: sees exactly ["tpB"]
+    1 row(s)
+PASS - trip_participants as empB: sees exactly ["tpB"]
+    1 row(s)
+FAIL - trip_participants as empC: sees exactly []
+    {"extra":["tpB"],"missing":[]}
+FAIL - trip_participants as empD: sees exactly []
+    {"extra":["tpB"],"missing":[]}
+PASS - trip_participants as sec: sees exactly ["tpB"]
+    1 row(s)
+PASS - trip_participants as mgr: sees exactly ["tpB"]
+    1 row(s)
+PASS - trip_participants as adm: sees exactly ["tpB"]
+    1 row(s)
+FAIL - trip_participants as mnt: sees exactly []
+    {"extra":["tpB"],"missing":[]}
+PASS - trip_participants as empX: sees exactly []
+    0 row(s)
+PASS - carpool_offers as empA: sees exactly ["oA"]
+    1 row(s)
+PASS - carpool_offers as empB: sees exactly ["oA"]
+    1 row(s)
+FAIL - carpool_offers as empC: sees exactly []
+    {"extra":["oA"],"missing":[]}
+PASS - carpool_offers as empD: sees exactly ["oA"]
+    1 row(s)
+FAIL - carpool_offers as sec: sees exactly []
+    {"extra":["oA"],"missing":[]}
+PASS - carpool_offers as mgr: sees exactly ["oA"]
+    1 row(s)
+PASS - carpool_offers as adm: sees exactly ["oA"]
+    1 row(s)
+FAIL - carpool_offers as mnt: sees exactly []
+    {"extra":["oA"],"missing":[]}
+PASS - carpool_offers as empX: sees exactly ["oX"]
+    1 row(s)
+PASS - carpool_ride_requests as empA: sees exactly ["rrB","rrD"]
+    2 row(s)
+PASS - carpool_ride_requests as empB: sees exactly ["rrB"]
+    1 row(s)
+PASS - carpool_ride_requests as empC: sees exactly []
+    0 row(s)
+PASS - carpool_ride_requests as empD: sees exactly ["rrD"]
+    1 row(s)
+PASS - carpool_ride_requests as sec: sees exactly []
+    0 row(s)
+PASS - carpool_ride_requests as mgr: sees exactly ["rrB","rrD"]
+    2 row(s)
+PASS - carpool_ride_requests as adm: sees exactly ["rrB","rrD"]
+    2 row(s)
+PASS - carpool_ride_requests as mnt: sees exactly []
+    0 row(s)
+PASS - carpool_ride_requests as empX: sees exactly []
+    0 row(s)
+PASS - reservation_messages as empA: sees exactly ["mA","mM"]
+    2 row(s)
+PASS - reservation_messages as empB: sees exactly []
+    0 row(s)
+PASS - reservation_messages as empC: sees exactly []
+    0 row(s)
+PASS - reservation_messages as empD: sees exactly []
+    0 row(s)
+PASS - reservation_messages as sec: sees exactly ["mA","mM"]
+    2 row(s)
+PASS - reservation_messages as mgr: sees exactly ["mA","mM"]
+    2 row(s)
+PASS - reservation_messages as adm: sees exactly ["mA","mM"]
+    2 row(s)
+PASS - reservation_messages as mnt: sees exactly []
+    0 row(s)
+PASS - reservation_messages as empX: sees exactly []
+    0 row(s)
+FAIL - profiles as empA: sees exactly ["P:empA","P:empB","P:empD","P:mgr","P:adm"]
+    {"extra":["P:empC","P:sec","P:mnt"],"missing":[]}
+FAIL - profiles as empB: sees exactly ["P:empB","P:empA","P:mgr","P:adm"]
+    {"extra":["P:empC","P:empD","P:sec","P:mnt"],"missing":[]}
+FAIL - profiles as empC: sees exactly ["P:empC","P:mgr","P:adm"]
+    {"extra":["P:empA","P:empB","P:empD","P:sec","P:mnt"],"missing":[]}
+FAIL - profiles as empD: sees exactly ["P:empD","P:mgr","P:adm"]
+    {"extra":["P:empA","P:empB","P:empC","P:sec","P:mnt"],"missing":[]}
+PASS - profiles as sec: sees exactly ["P:empA","P:empB","P:empC","P:empD","P:sec","P:mgr","P:adm","P:mnt"]
+    8 row(s)
+PASS - profiles as mgr: sees exactly ["P:empA","P:empB","P:empC","P:empD","P:sec","P:mgr","P:adm","P:mnt"]
+    8 row(s)
+PASS - profiles as adm: sees exactly ["P:empA","P:empB","P:empC","P:empD","P:sec","P:mgr","P:adm","P:mnt"]
+    8 row(s)
+PASS - profiles as mnt: sees exactly ["P:empA","P:empB","P:empC","P:empD","P:sec","P:mgr","P:adm","P:mnt"]
+    8 row(s)
+PASS - profiles as empX: sees exactly ["P:empX"]
+    1 row(s)
+PASS - notifications as empA: sees exactly ["N:empA"]
+    1 row(s)
+PASS - notifications as empB: sees exactly ["N:empB"]
+    1 row(s)
+PASS - notifications as empC: sees exactly ["N:empC"]
+    1 row(s)
+PASS - notifications as empD: sees exactly ["N:empD"]
+    1 row(s)
+PASS - notifications as sec: sees exactly ["N:sec"]
+    1 row(s)
+PASS - notifications as mgr: sees exactly ["N:mgr"]
+    1 row(s)
+PASS - notifications as adm: sees exactly ["N:adm"]
+    1 row(s)
+PASS - notifications as mnt: sees exactly ["N:mnt"]
+    1 row(s)
+PASS - notifications as empX: sees exactly ["N:empX"]
+    1 row(s)
+PASS - vehicles as empA: sees exactly ["V1","V2","V3"]
+    3 row(s)
+PASS - vehicles as empB: sees exactly ["V1","V2","V3"]
+    3 row(s)
+PASS - vehicles as empC: sees exactly ["V1","V2","V3"]
+    3 row(s)
+PASS - vehicles as empD: sees exactly ["V1","V2","V3"]
+    3 row(s)
+PASS - vehicles as sec: sees exactly ["V1","V2","V3"]
+    3 row(s)
+PASS - vehicles as mgr: sees exactly ["V1","V2","V3"]
+    3 row(s)
+PASS - vehicles as adm: sees exactly ["V1","V2","V3"]
+    3 row(s)
+PASS - vehicles as mnt: sees exactly ["V1","V2","V3"]
+    3 row(s)
+PASS - vehicles as empX: sees exactly ["VX"]
+    1 row(s)
+PASS - anon key (no session) reads trip_requests: 0 rows
+    status=200
+PASS - anon key (no session) reads reservations: 0 rows
+    status=200
+PASS - anon key (no session) reads trip_participants: 0 rows
+    status=200
+PASS - anon key (no session) reads carpool_offers: 0 rows
+    status=401
+PASS - anon key (no session) reads carpool_ride_requests: 0 rows
+    status=401
+PASS - anon key (no session) reads reservation_messages: 0 rows
+    status=200
+PASS - anon key (no session) reads profiles: 0 rows
+    status=200
+PASS - anon key (no session) reads notifications: 0 rows
+    status=200
+PASS - anon key (no session) reads vehicles: 0 rows
+    status=200
+
+Role x resource matrix (cell = rows observed / rows expected, "!" when different):
+table	empA	empB	empC	empD	sec	mgr	adm	mnt	empX
+trip_requests	3/1!	3/2!	3/1!	3/0!	3/3	3/3	3/3	3/0!	1/1
+reservations	3/1!	3/2!	3/1!	3/0!	3/3	3/3	3/3	3/0!	1/1
+trip_participants	1/1	1/1	1/0!	1/0!	1/1	1/1	1/1	1/0!	0/0
+carpool_offers	1/1	1/1	1/0!	1/1	1/0!	1/1	1/1	1/0!	1/1
+carpool_ride_requests	2/2	1/1	0/0	1/1	0/0	2/2	2/2	0/0	0/0
+reservation_messages	2/2	0/0	0/0	0/0	2/2	2/2	2/2	0/0	0/0
+profiles	8/5!	8/4!	8/3!	8/3!	8/8	8/8	8/8	8/8	1/1
+notifications	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1
+vehicles	3/3	3/3	3/3	3/3	3/3	3/3	3/3	3/3	1/1
+
+##### profiles PII columns #####
+FAIL - license columns via direct select as empA: none readable
+    status=200 rowsWithLicenseNumber=8 (INCLUDES OTHER USERS)
+FAIL - license columns via direct select as empB: none readable
+    status=200 rowsWithLicenseNumber=8 (INCLUDES OTHER USERS)
+FAIL - license columns via direct select as empC: none readable
+    status=200 rowsWithLicenseNumber=8 (INCLUDES OTHER USERS)
+FAIL - license columns via direct select as empD: none readable
+    status=200 rowsWithLicenseNumber=8 (INCLUDES OTHER USERS)
+FAIL - license columns via direct select as sec: none readable
+    status=200 rowsWithLicenseNumber=8 (INCLUDES OTHER USERS)
+FAIL - license columns via direct select as mgr: none readable
+    status=200 rowsWithLicenseNumber=8 (INCLUDES OTHER USERS)
+FAIL - license columns via direct select as adm: none readable
+    status=200 rowsWithLicenseNumber=8 (INCLUDES OTHER USERS)
+FAIL - license columns via direct select as mnt: none readable
+    status=200 rowsWithLicenseNumber=8 (INCLUDES OTHER USERS)
+FAIL - license columns via direct select as empX: none readable
+    status=200 rowsWithLicenseNumber=1
+
+##### attacks (forged ids / enumeration / direct write) #####
+FAIL - unrelated employee C: trip_requests by forged id -> 0 rows
+    status=200 rows=1
+FAIL - unrelated employee C: reservations by forged id -> 0 rows
+    status=200 rows=1
+FAIL - unrelated employee C: reservations embedding the host trip -> 0 rows
+    status=200 rows=1
+FAIL - unrelated employee C: trip_participants enumeration by host trip id -> 0 rows
+    status=200 rows=1
+FAIL - unrelated employee C: carpool_offers by id -> 0 rows
+    status=200 rows=1
+PASS - unrelated employee C: carpool_ride_requests by offer id -> 0 rows
+    status=200 rows=0
+FAIL - unrelated employee C: coworker profile by id -> 0 rows
+    status=200 rows=1
+FAIL - unrelated employee C: org-wide trips by destination search -> 0 rows
+    status=200 rows=3
+FAIL - unrelated employee C: org-wide trips by requester id -> 0 rows
+    status=200 rows=1
+PASS - unrelated employee C: reservation_messages of a coworker thread -> 0 rows
+    status=200 rows=0
+PASS - other-org user: trip of org A -> 0 rows
+    status=200
+PASS - other-org user: reservation of org A -> 0 rows
+    status=200
+PASS - other-org user: profile of org A -> 0 rows
+    status=200
+PASS - other-org user: offer of org A -> 0 rows
+    status=200
+FAIL - unrelated employee C: PATCH trip / DELETE reservation / forged accepted participant leave ground truth unchanged
+    {"before":{"d":"DestA","r":1,"tp":1},"after":{"d":"DestA","r":1,"tp":2},"insertAccepted":403,"insertPending":201}
+PASS - employee cannot self-promote via PATCH profiles
+    patchStatus=200 roleNow=employee
+PASS - employee cannot overwrite own license via PATCH profiles (writes are server-side only)
+    patchStatus=200
+
+##### positives #####
+FAIL - host A reads riders on own trip WITH their names
+    [{"id":"09cbe7be-2791-47fd-8052-125fee16b5ee","passenger":{"full_name":"C7 A empB"}},{"id":"6a9a9bca-907b-4784-827a-8b54d7b22a0a","passenger":{"full_name":"C7 A empC"}}]
+PASS - rider B (accepted) reads host trip + reservation joined
+    [{"id":"6b9b1e45-2d92-4fdf-b0eb-ce6d6a79962b","trip_request":{"origin":"Rua Secreta 100, Sao Paulo","destination":"DestA"}}]
+PASS - requester A reads the thread incl. the manager sender NAME
+    [{"id":"2a683f0b-06ef-48da-b448-9503ce04951f","body":"msg do host","sender":{"full_name":"C7 A empA"}},{"id":"cf3ccc97-03fe-4cb7-bb4c-61b1544bbcc0","body":"msg do gestor","sender":{"full_name":"C7 A m
+PASS - security gate query works (route + requester name)
+    [{"id":"6b9b1e45-2d92-4fdf-b0eb-ce6d6a79962b","trip_request":{"origin":"Rua Secreta 100, Sao Paulo","requester":{"full_name":"C7 A empA"},"destination":"DestA"},"vehicle":{"plate":"C7A17WU"}}]
+PASS - manager dashboard pending-approval query works
+    [{"id":"bd539e02-458f-4f06-8cd1-15759581322b","trip_request":{"requester":{"full_name":"C7 A empB"},"destination":"DestB"},"vehicle":{"plate":"C7A27WU"}},{"id":
+PASS - maintenance operator reads tasks WITH assignee name
+    [{"id":"329541ea-7123-4d51-8858-aa4b16659f17","assignee":{"full_name":"C7 A mnt"}}]
+PASS - employee create_vehicle_reservation still works AND managers get the notification (invoker function reads manager profiles)
+    {"status":200,"managersNotified":2}
+PASS - employee sees the reservation they just created
+    rows=4
+PASS - C7 cleanup: no disposable rows left
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"offers":0,"chats":0,"notifications":0}
+
+=== Summary (privacy-matrix before) ===
+FAIL - trip_requests as empA: sees exactly ["tA"]
+FAIL - trip_requests as empB: sees exactly ["tA","tB"]
+FAIL - trip_requests as empC: sees exactly ["tC"]
+FAIL - trip_requests as empD: sees exactly []
+FAIL - trip_requests as mnt: sees exactly []
+FAIL - reservations as empA: sees exactly ["rA"]
+FAIL - reservations as empB: sees exactly ["rA","rB"]
+FAIL - reservations as empC: sees exactly ["rC"]
+FAIL - reservations as empD: sees exactly []
+FAIL - reservations as mnt: sees exactly []
+FAIL - trip_participants as empC: sees exactly []
+FAIL - trip_participants as empD: sees exactly []
+FAIL - trip_participants as mnt: sees exactly []
+FAIL - carpool_offers as empC: sees exactly []
+FAIL - carpool_offers as sec: sees exactly []
+FAIL - carpool_offers as mnt: sees exactly []
+FAIL - profiles as empA: sees exactly ["P:empA","P:empB","P:empD","P:mgr","P:adm"]
+FAIL - profiles as empB: sees exactly ["P:empB","P:empA","P:mgr","P:adm"]
+FAIL - profiles as empC: sees exactly ["P:empC","P:mgr","P:adm"]
+FAIL - profiles as empD: sees exactly ["P:empD","P:mgr","P:adm"]
+FAIL - license columns via direct select as empA: none readable
+FAIL - license columns via direct select as empB: none readable
+FAIL - license columns via direct select as empC: none readable
+FAIL - license columns via direct select as empD: none readable
+FAIL - license columns via direct select as sec: none readable
+FAIL - license columns via direct select as mgr: none readable
+FAIL - license columns via direct select as adm: none readable
+FAIL - license columns via direct select as mnt: none readable
+FAIL - license columns via direct select as empX: none readable
+FAIL - unrelated employee C: trip_requests by forged id -> 0 rows
+FAIL - unrelated employee C: reservations by forged id -> 0 rows
+FAIL - unrelated employee C: reservations embedding the host trip -> 0 rows
+FAIL - unrelated employee C: trip_participants enumeration by host trip id -> 0 rows
+FAIL - unrelated employee C: carpool_offers by id -> 0 rows
+FAIL - unrelated employee C: coworker profile by id -> 0 rows
+FAIL - unrelated employee C: org-wide trips by destination search -> 0 rows
+FAIL - unrelated employee C: org-wide trips by requester id -> 0 rows
+FAIL - unrelated employee C: PATCH trip / DELETE reservation / forged accepted participant leave ground truth unchanged
+FAIL - host A reads riders on own trip WITH their names
+
+86/125 checks passed.
+
