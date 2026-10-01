@@ -21,6 +21,16 @@ export const INTENT_NAMES = [
   "START_TRIP",
   "END_TRIP",
   "ASK_FLEET",
+  // Smart Carpool (Phase C6). Every mutating one requires an explicit confirmation and an
+  // anchor slot; none of them is ever executed by the LLM (dispatch.ts calls the same server
+  // services/RPCs the web UI uses).
+  "OFFER_CARPOOL",
+  "DISABLE_CARPOOL",
+  "FIND_CARPOOL",
+  "REQUEST_CARPOOL",
+  "ACCEPT_CARPOOL_REQUEST",
+  "REJECT_CARPOOL_REQUEST",
+  "CANCEL_CARPOOL_REQUEST",
 ] as const;
 
 export type IntentName = (typeof INTENT_NAMES)[number];
@@ -60,7 +70,33 @@ const INTENT_CATALOG: Record<IntentName, IntentDefinition> = {
   START_TRIP: { requiresConfirmation: "yes", requiredSlots: ["reservationId"] },
   END_TRIP: { requiresConfirmation: "yes", requiredSlots: ["reservationId"] },
   ASK_FLEET: { requiresConfirmation: "no", requiredSlots: [] },
+  // Carpool. `seats` comes from the user's words; `offerId` / `requestId` are NEVER produced by
+  // the LLM: the server resolves them from the caller's OWN data (ownership-scoped) before the
+  // confirmation card is built and re-validates them again at confirm time.
+  OFFER_CARPOOL: { requiresConfirmation: "yes", requiredSlots: ["seats"] },
+  DISABLE_CARPOOL: { requiresConfirmation: "yes", requiredSlots: ["offerId"] },
+  // Read-only search: nothing is created, so no confirmation card (the follow-up REQUEST is).
+  FIND_CARPOOL: { requiresConfirmation: "no", requiredSlots: ["destination", "departureAt"] },
+  REQUEST_CARPOOL: { requiresConfirmation: "yes", requiredSlots: ["offerId"] },
+  ACCEPT_CARPOOL_REQUEST: { requiresConfirmation: "yes", requiredSlots: ["requestId"] },
+  REJECT_CARPOOL_REQUEST: { requiresConfirmation: "yes", requiredSlots: ["requestId"] },
+  CANCEL_CARPOOL_REQUEST: { requiresConfirmation: "yes", requiredSlots: ["requestId"] },
 };
+
+/** The carpool intents (Phase C6) - handled by apps/web/app/chat/carpoolChat.ts. */
+export const CARPOOL_INTENT_NAMES = [
+  "OFFER_CARPOOL",
+  "DISABLE_CARPOOL",
+  "FIND_CARPOOL",
+  "REQUEST_CARPOOL",
+  "ACCEPT_CARPOOL_REQUEST",
+  "REJECT_CARPOOL_REQUEST",
+  "CANCEL_CARPOOL_REQUEST",
+] as const satisfies readonly IntentName[];
+
+export function isCarpoolIntent(intent: IntentName): boolean {
+  return (CARPOOL_INTENT_NAMES as readonly string[]).includes(intent);
+}
 
 export function isIntentKnown(name: string): name is IntentName {
   return (INTENT_NAMES as readonly string[]).includes(name);

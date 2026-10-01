@@ -7,7 +7,9 @@ import { SafetyEquipmentSection } from "./SafetyEquipmentSection";
 import { ChatUsageSummary } from "./ChatUsageSummary";
 import { getChatUsageStats } from "../chat/queries";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getDictionary } from "../../lib/i18n/getLocale";
+import { getDictionary, getLocale } from "../../lib/i18n/getLocale";
+import { CarpoolPolicySection, type PolicyVersionView } from "./CarpoolPolicySection";
+import { POLICY_COLUMNS, policyFromRow, type PolicyRow } from "@/lib/carpool/loadPolicy";
 
 /**
  * Organization-level configurability (fleet-car-saas.txt §8 "Range Safety Buffer
@@ -19,6 +21,7 @@ import { getDictionary } from "../../lib/i18n/getLocale";
 export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
+  const locale = await getLocale();
 
   const user = await getCurrentUser(supabase);
   if (!user) {
@@ -37,7 +40,7 @@ export default async function SettingsPage() {
     redirect("/dashboard");
   }
 
-  const [{ data: settings }, { data: equipmentItems }, chatUsageStats] = await Promise.all([
+  const [{ data: settings }, { data: equipmentItems }, chatUsageStats, { data: policyRows }] = await Promise.all([
     supabase
       .from("organization_settings")
       .select(
@@ -53,7 +56,19 @@ export default async function SettingsPage() {
     // RLS on chat_conversations/chat_messages only exposes a user's own rows — this org-wide
     // rollup needs the admin client, gated on the isFleetManager check already done above.
     getChatUsageStats(createSupabaseAdminClient(), profile.organization_id),
+    // Phase C5: carpool policy versions (insert-only table; newest first).
+    supabase
+      .from("carpool_policy_settings")
+      .select(`${POLICY_COLUMNS}, created_at`)
+      .eq("organization_id", profile.organization_id)
+      .order("policy_version", { ascending: false })
+      .limit(10),
   ]);
+  const policyVersions: PolicyVersionView[] = (policyRows ?? []).map((row) => ({
+    version: row.policy_version,
+    createdAt: row.created_at,
+    values: policyFromRow(row as unknown as PolicyRow),
+  }));
 
   return (
     <AppShell
@@ -84,6 +99,16 @@ export default async function SettingsPage() {
         />
         <SafetyEquipmentSection dict={dict} items={equipmentItems ?? []} />
         <ChatUsageSummary dict={dict} stats={chatUsageStats} />
+        <CarpoolPolicySection dict={dict} locale={locale} versions={policyVersions} />
+
+        <div className="mt-8 border-t border-line-800 pt-6">
+          <a
+            href="/settings/mobility-points"
+            className="text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:underline"
+          >
+            {dict.mobilityPoints.title} →
+          </a>
+        </div>
       </section>
     </AppShell>
   );

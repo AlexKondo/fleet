@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/formatDateTime";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/locales";
 import { markAllNotificationsRead, markNotificationRead } from "./notificationActions";
+import { matchCarpoolBody, renderCarpoolBody } from "@/lib/carpool/notificationBodies";
 
 /**
  * Only the columns this bell actually renders. `organization_id`/`user_id` were being
@@ -168,6 +169,12 @@ const BODY_CARPOOL_REJECTED_SUFFIX = " foi recusada pelo motorista.";
 function translateBody(t: Dictionary["notifications"], body: string): string {
   const exact = (t.knownBodies as Record<string, string>)[body];
   if (exact) return exact;
+
+  // Bodies written by the carpool notification subscriber (0058_carpool_event_notifier.sql).
+  const carpoolMatch = matchCarpoolBody(body);
+  if (carpoolMatch) {
+    return renderCarpoolBody(t.bodyTemplates[carpoolMatch.key], carpoolMatch);
+  }
 
   if (body.startsWith(BODY_NEW_RESERVATION_PREFIX) && body.endsWith(BODY_NEW_RESERVATION_SUFFIX)) {
     const destination = body.slice(

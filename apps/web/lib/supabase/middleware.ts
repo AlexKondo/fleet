@@ -13,6 +13,11 @@ const PUBLIC_ROUTE_PREFIXES = [
   // redirects to /forgot-password if it's ever hit without one (reset-password/page.tsx).
   "/reset-password",
   "/auth/callback",
+  // Vercel cron (vercel.json) calls /api/cron/* with NO user session - only an
+  // `Authorization: Bearer $CRON_SECRET` header, which each route handler verifies itself. Without
+  // this entry the session check below redirected every cron request to /login (307), so none of
+  // the cron jobs (license reminders, chat cleanup, carpool expiry + reconcile sweep) ever ran.
+  "/api/cron/",
 ];
 
 /**

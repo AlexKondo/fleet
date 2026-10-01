@@ -1,12 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/license-reminders",
+      "path": "/api/cron/daily",
       "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/cron/chat-cleanup",
-      "schedule": "0 13 * * *"
     }
   ]
 }

@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { AppShell } from "../../AppShell";
 import { TripRequestForm } from "./TripRequestForm";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
+import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
+import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
 
 export default async function NewTripPage() {
   const dict = await getDictionary();
@@ -18,9 +20,15 @@ export default async function NewTripPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, organization:organizations(name)")
+    .select("full_name, role, organization_id, organization:organizations(name)")
     .eq("id", user.id)
     .single();
+
+  // Phase C5: the org policy decides whether the new carpool engine owns carpool (hides the old
+  // consent checkbox, enables carpool-first and the host seat-offer step).
+  const carpoolMode = deriveCarpoolGating(
+    profile ? await loadLatestPolicy(supabase, profile.organization_id) : { ok: false },
+  );
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
@@ -40,7 +48,7 @@ export default async function NewTripPage() {
           <p className="mb-6 text-xs uppercase tracking-widest text-fog-600">
             {dict.trips.request.subtitle}
           </p>
-          <TripRequestForm dict={dict} locale={locale} />
+          <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} />
         </div>
       </div>
     </AppShell>

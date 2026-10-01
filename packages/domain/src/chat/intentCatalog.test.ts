@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  CARPOOL_INTENT_NAMES,
   INTENT_NAMES,
+  isCarpoolIntent,
   isIntentKnown,
   missingRequiredSlots,
   requiredSlotsFor,
@@ -43,6 +45,33 @@ describe("intentCatalog", () => {
     for (const intent of INTENT_NAMES) {
       expect(["yes", "potentially", "no"]).toContain(requiresConfirmation(intent));
       expect(Array.isArray(requiredSlotsFor(intent))).toBe(true);
+    }
+  });
+
+  it("registers the 7 carpool intents with the right confirmation and anchor slots (Phase C6)", () => {
+    expect([...CARPOOL_INTENT_NAMES].sort()).toEqual(
+      [
+        "ACCEPT_CARPOOL_REQUEST",
+        "CANCEL_CARPOOL_REQUEST",
+        "DISABLE_CARPOOL",
+        "FIND_CARPOOL",
+        "OFFER_CARPOOL",
+        "REJECT_CARPOOL_REQUEST",
+        "REQUEST_CARPOOL",
+      ].sort(),
+    );
+    for (const intent of CARPOOL_INTENT_NAMES) {
+      expect(isIntentKnown(intent)).toBe(true);
+      expect(isCarpoolIntent(intent)).toBe(true);
+      // Only the read-only search skips confirmation; every state-changing intent needs it.
+      expect(requiresConfirmation(intent)).toBe(intent === "FIND_CARPOOL" ? "no" : "yes");
+    }
+    expect(isCarpoolIntent("CREATE_RESERVATION")).toBe(false);
+    expect(requiredSlotsFor("OFFER_CARPOOL")).toEqual(["seats"]);
+    expect(requiredSlotsFor("FIND_CARPOOL")).toEqual(["destination", "departureAt"]);
+    expect(missingRequiredSlots("FIND_CARPOOL", { departureAt: "2026-10-02T08:00:00-03:00" })).toEqual(["destination"]);
+    for (const intent of ["ACCEPT_CARPOOL_REQUEST", "REJECT_CARPOOL_REQUEST", "CANCEL_CARPOOL_REQUEST"] as const) {
+      expect(requiredSlotsFor(intent)).toEqual(["requestId"]);
     }
   });
 

@@ -32,6 +32,12 @@ export type KnownNotificationTitle =
   | "Pedido de carona na sua viagem"
   | "Carona aceita"
   | "Carona recusada"
+  | "Solicitação de carona expirada"
+  | "Carona cancelada"
+  | "Carona invalidada"
+  | "Viagem do motorista alterada"
+  | "Viagem com carona cancelada"
+  | "Carona confirmada na sua viagem"
   | "Nova mensagem na reserva";
 
 /** Exact pt-BR `notifications.body` literals that carry no interpolated data. */
@@ -416,6 +422,17 @@ export type Dictionary = {
       carpoolRequestReceived: string;
       carpoolAccepted: string;
       carpoolRejected: string;
+      carpoolRequestsGrouped: string;
+      carpoolRequestExpired: string;
+      carpoolCancelledByRider: string;
+      carpoolCancelledByManagement: string;
+      carpoolInvalidatedHostCancelled: string;
+      carpoolInvalidatedHostChanged: string;
+      carpoolInvalidatedOfferDisabled: string;
+      hostTripChangedForRider: string;
+      hostTripChangedForHost: string;
+      hostTripCancelledForHost: string;
+      carpoolJoinedHostTrip: string;
     };
   };
   /** Fleet setup screens: vehicles, categories, locations and the vehicle schedule. */
@@ -978,5 +995,211 @@ export type Dictionary = {
     confirmCancel: string;
     errorGeneric: string;
     thinking: string;
+    carpool: {
+      askSeats: string;
+      askOrigin: string;
+      noHostTrip: string;
+      chooseTrip: string;
+      tripListItem: string;
+      offerEnableSummary: string;
+      offerUpdateSummary: string;
+      offerEnableDone: string;
+      offerUpdateDone: string;
+      noActiveOffer: string;
+      chooseOffer: string;
+      disableSummary: string;
+      disableDone: string;
+      placesUnderstood: string;
+      findNone: string;
+      findOffers: string;
+      optionLabel: string;
+      noRecentSearch: string;
+      pickOption: string;
+      requestSummary: string;
+      requestApprovalNote: string;
+      noPendingRequests: string;
+      noPendingForName: string;
+      chooseRequest: string;
+      requestListItem: string;
+      acceptSummary: string;
+      rejectSummary: string;
+      acceptDone: string;
+      rejectDone: string;
+      noCancellableRequest: string;
+      chooseCancel: string;
+      cancelListItem: string;
+      cancelSummary: string;
+      cancelSummaryAccepted: string;
+      cancelDone: string;
+      seatsOne: string;
+      seatsOther: string;
+      carpoolFirstIntro: string;
+      useVehicle: string;
+      reservationOfferNote: string;
+      reservationOfferPublished: string;
+      reservationOfferFailed: string;
+      confirmationNotPending: string;
+      optionsGroupLabel: string;
+    };
+  };
+  /** /settings/mobility-points — Corporate Mobility Points admin CRUD (Phase C2). */
+  mobilityPoints: {
+    title: string;
+    description: string;
+    empty: string;
+    inactiveLabel: string;
+    addHeading: string;
+    nameLabel: string;
+    addressLabel: string;
+    latitudeLabel: string;
+    longitudeLabel: string;
+    categoryLabel: string;
+    categoryPlaceholder: string;
+    aliasesLabel: string;
+    aliasesPlaceholder: string;
+    addButton: string;
+    deactivateAction: string;
+  };
+  carpool: {
+    newTrip: {
+      placesTitle: string;
+      originLabel: string;
+      destinationLabel: string;
+      sourceMobilityPoint: string;
+      confirmHint: string;
+      offersTitle: string;
+      offersIntro: string;
+      cardDeparture: string;
+      cardDetour: string;
+      seatsOne: string;
+      seatsOther: string;
+      requestRide: string;
+      requesting: string;
+      outcomePending: string;
+      outcomeAccepted: string;
+      viewMyTrips: string;
+      continueWithVehicle: string;
+      noneFound: string;
+      unavailableBanner: string;
+      needsPrecisionTitle: string;
+      cityLevel: string;
+      stateLevel: string;
+      neighborhoodLevel: string;
+      postalCode: string;
+      notFound: string;
+      empty: string;
+      originField: string;
+      destinationField: string;
+      continueWithoutCarpool: string;
+      hostQuestion: string;
+      yes: string;
+      no: string;
+      seatsLabel: string;
+      hostHint: string;
+      noFreeSeats: string;
+    };
+    errors: {
+      notAuthorized: string;
+      notFound: string;
+      invalidSeats: string;
+      exceedsCapacity: string;
+      disabledByPolicy: string;
+      hostTripInactive: string;
+      hostTripStarted: string;
+      alreadyActive: string;
+      alreadyDisabled: string;
+      cannotReduce: string;
+      noSeats: string;
+      requestNotPending: string;
+      requestExpired: string;
+      notCompatible: string;
+      unavailable: string;
+      alreadyRequested: string;
+      generic: string;
+    };
+    statuses: {
+      PENDING: string;
+      ACCEPTED: string;
+      REJECTED: string;
+      EXPIRED: string;
+      CANCELLED: string;
+      INVALIDATED: string;
+    };
+    reasons: {
+      HOST_TRIP_CANCELLED: string;
+      HOST_SCHEDULE_CHANGED: string;
+      HOST_ROUTE_CHANGED: string;
+      OFFER_DISABLED: string;
+    };
+    host: {
+      sectionTitle: string;
+      stateActive: string;
+      stateDisabled: string;
+      stateNone: string;
+      seatsOffered: string;
+      seatsAvailable: string;
+      seatsInput: string;
+      enable: string;
+      update: string;
+      disable: string;
+      disableConfirm: string;
+      participantsTitle: string;
+      noParticipants: string;
+      pendingTitle: string;
+      noPending: string;
+      requestedSeats: string;
+      detourLine: string;
+      pickupLabel: string;
+      dropoffLabel: string;
+      accept: string;
+      reject: string;
+      rejectConfirm: string;
+      reasonPlaceholder: string;
+      historyTitle: string;
+      publishFailedNotice: string;
+      actionErrorNotice: string;
+      legacyNote: string;
+      cannotOfferHint: string;
+      maxSeatsHint: string;
+    };
+    rider: {
+      myRequestsTitle: string;
+      requestedFor: string;
+      detourLine: string;
+      cancel: string;
+      cancelConfirm: string;
+      viewTrip: string;
+      actionErrorNotice: string;
+    };
+    policy: {
+      title: string;
+      description: string;
+      currentVersion: string;
+      noVersionYet: string;
+      carpoolEnabled: string;
+      carpoolFirstEnabled: string;
+      hostOptInRequired: string;
+      hostApprovalRequired: string;
+      departureWindowMinutes: string;
+      returnWindowMinutes: string;
+      maxAdditionalDistanceKm: string;
+      maxAdditionalTimeMinutes: string;
+      maxCandidatesForPreciseRouting: string;
+      requestExpiryMinutes: string;
+      allowIntermediatePickup: string;
+      allowIntermediateDropoff: string;
+      minimumSeatAvailability: string;
+      publish: string;
+      publishing: string;
+      published: string;
+      invalidValues: string;
+      notAuthorized: string;
+      versionConflict: string;
+      saveFailed: string;
+      historyTitle: string;
+      versionLabel: string;
+      publishedAt: string;
+      newVersionHint: string;
+    };
   };
 };

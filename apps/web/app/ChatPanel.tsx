@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { sendChatMessage, type ChatState } from "./chat/actions";
 import type { Dictionary } from "../lib/i18n/dictionaries";
 import type { Locale } from "../lib/i18n/locales";
@@ -78,7 +78,7 @@ export function ChatPanel({
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
-  }, [state.messages]);
+  }, [state.messages, state.pendingAction]);
 
   useEffect(() => {
     // The panel now stays mounted-but-hidden when closed (see ChatWidget.tsx) rather than
@@ -182,7 +182,9 @@ export function ChatPanel({
     const formData = new FormData();
     formData.set("phase", "confirm");
     if (state.conversationId) formData.set("conversationId", state.conversationId);
-    formAction(formData);
+    // useActionState actions must run inside a transition (otherwise `pending` never turns true
+    // and React logs an error): keeps the buttons disabled and "Pensando..." visible meanwhile.
+    startTransition(() => formAction(formData));
   }
 
   function handleEdit() {
@@ -220,8 +222,32 @@ export function ChatPanel({
     formData.set("phase", "select_vehicle");
     formData.set("vehicleId", vehicleId);
     if (state.conversationId) formData.set("conversationId", state.conversationId);
-    formAction(formData);
+    // useActionState actions must run inside a transition (otherwise `pending` never turns true
+    // and React logs an error): keeps the buttons disabled and "Pensando..." visible meanwhile.
+    startTransition(() => formAction(formData));
   }
+
+  function handleSelectOption(optionId: string) {
+    stopListeningIfActive();
+    const formData = new FormData();
+    formData.set("phase", "select_option");
+    formData.set("optionId", optionId);
+    if (state.conversationId) formData.set("conversationId", state.conversationId);
+    // useActionState actions must run inside a transition (otherwise `pending` never turns true
+    // and React logs an error): keeps the buttons disabled and "Pensando..." visible meanwhile.
+    startTransition(() => formAction(formData));
+  }
+
+  // Numbered options (carpool offers) are answered with a button OR by typing/saying the
+  // number, so the text input must stay usable while they are shown.
+  const hasCarpoolOptions = Boolean(state.pendingAction?.options?.length);
+  // Vehicle options accept the same bare-number reply ("2", "opção 2"), so typing/speaking stays
+  // enabled for both kinds; a plain Confirmar/Cancelar card (no options) still locks the input
+  // so nobody types over it by accident.
+  const hasOptions = hasCarpoolOptions || Boolean(state.pendingAction?.vehicleOptions?.length);
+  // While options are unresolved only Cancelar is offered (there is nothing to confirm yet);
+  // choosing an option leads to its own confirmation card.
+  const showConfirmButtons = !hasCarpoolOptions;
 
   return (
     <div
@@ -286,12 +312,34 @@ export function ChatPanel({
                 })}
               </div>
             ) : null}
-            <div className="flex gap-2">
+            {state.pendingAction.options ? (
+              <div
+                role="group"
+                aria-label={t.carpool.optionsGroupLabel}
+                data-testid="chat-carpool-options"
+                className="flex flex-col gap-1.5"
+              >
+                {state.pendingAction.options.map((option, index) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    data-testid="chat-carpool-option"
+                    onClick={() => handleSelectOption(option.id)}
+                    disabled={pending}
+                    className="rounded-sm border border-line-700 px-2.5 py-1.5 text-left text-xs text-fog-400 hover:border-gwm-accent hover:text-gwm-accent disabled:opacity-70"
+                  >
+                    {index + 1}. {option.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              {showConfirmButtons ? (<>
               <button
                 type="button"
                 onClick={handleConfirm}
                 disabled={pending}
-                className="rounded-sm bg-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90 disabled:opacity-50"
+                className="rounded-sm bg-gwm-accent px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider sm:px-3 sm:text-xs sm:tracking-widest text-ink-950 hover:opacity-90 disabled:opacity-50"
               >
                 {t.confirmYes}
               </button>
@@ -299,15 +347,16 @@ export function ChatPanel({
                 type="button"
                 onClick={handleEdit}
                 disabled={pending}
-                className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600 disabled:opacity-50"
+                className="rounded-sm border border-line-700 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider sm:px-3 sm:text-xs sm:tracking-widest text-fog-400 hover:border-line-600 disabled:opacity-50"
               >
                 {t.confirmEdit}
               </button>
+              </>) : null}
               <button
                 type="button"
                 onClick={handleCancel}
                 disabled={pending}
-                className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-line-600 disabled:opacity-50"
+                className="rounded-sm border border-line-700 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider sm:px-3 sm:text-xs sm:tracking-widest text-fog-400 hover:border-line-600 disabled:opacity-50"
               >
                 {t.confirmCancel}
               </button>
@@ -350,7 +399,7 @@ export function ChatPanel({
             value={isListening ? `${draft}${draft && interimTranscript ? " " : ""}${interimTranscript}` : draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder={t.inputPlaceholder}
-            disabled={pending || state.status === "needs_confirmation"}
+            disabled={pending || (state.status === "needs_confirmation" && !hasOptions)}
             className="min-w-0 flex-1 resize-none rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent disabled:opacity-50"
           />
             <div className="flex shrink-0 flex-col gap-2">
@@ -365,7 +414,7 @@ export function ChatPanel({
                   <button
                     type="button"
                     onClick={toggleMic}
-                    disabled={pending || state.status === "needs_confirmation"}
+                    disabled={pending || (state.status === "needs_confirmation" && !hasOptions)}
                     aria-pressed={isListening}
                     aria-label={isListening ? t.micStop : t.micStart}
                     title={isListening ? t.micStop : t.micStart}
@@ -382,7 +431,7 @@ export function ChatPanel({
               ) : null}
               <button
                 type="submit"
-                disabled={pending || !draft.trim() || state.status === "needs_confirmation"}
+                disabled={pending || !draft.trim() || (state.status === "needs_confirmation" && !hasOptions)}
                 className="shrink-0 rounded-sm bg-gwm-accent px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90 disabled:opacity-50"
               >
                 {t.send}

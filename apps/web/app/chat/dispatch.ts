@@ -10,8 +10,9 @@ import { sendEmail } from "@/lib/email/sendEmail";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import { getAppUrl } from "@/lib/getAppUrl";
-import type { IntentName } from "@fleet/domain";
+import { isCarpoolIntent, type IntentName } from "@fleet/domain";
 import { findActiveReservations, resolveReservationId } from "./queries";
+import { executeCarpoolIntent, loadChatCarpoolCtx, publishOfferForNewReservation } from "./carpoolChat";
 
 export interface DispatchResult {
   success: boolean;
@@ -68,6 +69,9 @@ export async function dispatchIntent(
 
       if (plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0) {
         const target = plan.carpoolOptions[0]!;
+        // reservationId is a RESERVATION id; create_carpool_participation needs the host's
+        // trip_request id (planTrip resolves it from the same candidate, like confirmTrip does).
+        if (!target.tripRequestId) return { success: false, message: "carpool_trip_unresolved" };
         const { error } = await supabase.rpc("create_carpool_participation", {
           p_departure_at: input.departureAt,
           p_expected_return_at: input.expectedReturnAt,
@@ -77,7 +81,7 @@ export async function dispatchIntent(
           p_passenger_count: input.passengerCount,
           p_requires_cargo: input.requiresCargo,
           p_justification: input.justification,
-          p_existing_trip_request_id: target.reservationId,
+          p_existing_trip_request_id: target.tripRequestId,
         });
         if (error) return { success: false, message: error.message };
         // The form flow (trips/new/actions.ts's confirmTrip) gets this "for free" — a
@@ -109,7 +113,7 @@ export async function dispatchIntent(
             : plan.vehicle.alternatives.find((alt) => alt.vehicleId === chosenVehicleId)?.plate ??
               plan.vehicle.plate;
 
-        const { error } = await supabase.rpc("create_vehicle_reservation", {
+        const { data: createdReservationId, error } = await supabase.rpc("create_vehicle_reservation", {
           p_departure_at: input.departureAt,
           p_expected_return_at: input.expectedReturnAt,
           p_origin: input.origin,
@@ -161,9 +165,28 @@ export async function dispatchIntent(
           }
         }
 
+        // Phase C6 host question (parity with confirmTrip): when the org runs the Smart Carpool
+        // engine and the user answered Yes to "offer seats", publish through the same
+        // enable_carpool_offer path AFTER the reservation exists. Never undoes the reservation.
+        let carpoolNote = "";
+        if (input.allowCarpool && typeof createdReservationId === "string") {
+          const carpoolCtx = await loadChatCarpoolCtx(supabase, user.id);
+          if (carpoolCtx?.gating.newEngine) {
+            const chosenMax =
+              chosenVehicleId === plan.vehicle.vehicleId
+                ? plan.vehicle.maxOfferableSeats
+                : plan.vehicle.alternatives.find((alt) => alt.vehicleId === chosenVehicleId)?.maxOfferableSeats ?? 0;
+            carpoolNote = await publishOfferForNewReservation(carpoolCtx, {
+              reservationId: createdReservationId,
+              maxSeats: chosenMax,
+              requestedSeats: slots.offerSeats,
+            });
+          }
+        }
+
         revalidatePath("/trips");
         revalidatePath("/dashboard");
-        return { success: true, message: `Reserva criada — veículo ${chosenPlate}.` };
+        return { success: true, message: `Reserva criada — veículo ${chosenPlate}.${carpoolNote}` };
       }
 
       return {
@@ -263,6 +286,23 @@ export async function dispatchIntent(
             ? `Sim — veículo ${plan.vehicle.plate} disponível. ${plan.vehicle.reasons.join(" ")}`
             : "Há uma opção de carona disponível para essa janela.",
       };
+    }
+
+    // Smart Carpool (Phase C6): every case calls the same server actions/RPCs as the web UI
+    // (apps/web/app/carpool/requestActions.ts) through carpoolChat.ts, which re-resolves every
+    // referenced offer/request among the CALLER'S OWN rows and re-validates it at this point.
+    // Authorization (host vs rider, organization, seats, idempotency) stays in the RPCs.
+    case "OFFER_CARPOOL":
+    case "DISABLE_CARPOOL":
+    case "FIND_CARPOOL":
+    case "REQUEST_CARPOOL":
+    case "ACCEPT_CARPOOL_REQUEST":
+    case "REJECT_CARPOOL_REQUEST":
+    case "CANCEL_CARPOOL_REQUEST": {
+      if (!isCarpoolIntent(intent)) return { success: false, message: "not_supported_via_chat" };
+      const carpoolCtx = await loadChatCarpoolCtx(supabase, user.id);
+      if (!carpoolCtx) return { success: false, message: "not_authenticated" };
+      return executeCarpoolIntent(carpoolCtx, intent, slots);
     }
 
     // Not automated (see file-level comment) — answered informationally by

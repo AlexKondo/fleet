@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fleet/domain": "workspace:*",
@@ -29,6 +30,7 @@
     "@types/react": "^19.2.4",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.1.16",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.9"
   }
 }

@@ -29,3 +29,15 @@ export function formatDayMonth(date: Date, locale: Locale): string {
     timeZone: TIME_ZONE,
   });
 }
+
+/** Same as formatDateTime but without seconds (carpool cards / requests: "02/10/2026, 10:00"). */
+export function formatDateTimeShort(iso: string, locale: Locale): string {
+  return new Date(iso).toLocaleString(locale, {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

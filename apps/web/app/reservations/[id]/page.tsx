@@ -10,6 +10,10 @@ import { MessageThread, type ReservationMessage } from "./MessageThread";
 import { respondToCarpoolRequest } from "./actions";
 import { cancelMyReservation } from "../../trips/actions";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
+import { maxOfferableSeats } from "@fleet/domain";
+import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
+import { CarpoolHostSection } from "./CarpoolHostSection";
+import { loadHostCarpool } from "./loadHostCarpool";
 
 /**
  * Reservation Detail (SCREEN_CATALOG.md) + Communication Hub for this reservation
@@ -26,7 +30,11 @@ export default async function ReservationDetailPage({
 }) {
   const { id } = await params;
   // Set by respondToCarpoolRequest when the accept/reject RPC fails — see actions.ts.
-  const carpoolError = (await searchParams)?.carpoolError === "1";
+  const query = await searchParams;
+  const carpoolError = query?.carpoolError === "1";
+  // Phase C5: stable codes from the form-action wrappers / the New Trip publish step.
+  const carpoolActionErrorCode = typeof query?.carpoolActionError === "string" ? query.carpoolActionError : null;
+  const carpoolPublishCode = typeof query?.carpoolPublish === "string" ? query.carpoolPublish : null;
   const dict = await getDictionary();
   const locale = await getLocale();
   const supabase = await createSupabaseServerClient();
@@ -40,15 +48,15 @@ export default async function ReservationDetailPage({
   const [{ data: profile }, { data: reservation }, { data: messageRows }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, role, organization:organizations(name)")
+      .select("full_name, role, organization_id, organization:organizations(name)")
       .eq("id", user.id)
       .single(),
     supabase
       .from("reservations")
       .select(
         `id, status, start_at, end_at, impacted_at, impacted_reason,
-       vehicle:vehicles(plate, name, status, category:vehicle_categories(name)),
-       trip_request:trip_requests(id, origin, destination, requester_id, justification, requester:profiles(full_name))`,
+       vehicle:vehicles(plate, name, status, category:vehicle_categories(name, passenger_capacity)),
+       trip_request:trip_requests(id, origin, destination, requester_id, justification, passenger_count, departure_at, requester:profiles(full_name))`,
       )
       .eq("id", id)
       .single(),
@@ -80,6 +88,13 @@ export default async function ReservationDetailPage({
         .order("joined_at", { ascending: true })
     : { data: [] };
 
+  // Phase C5 host carpool view (offer, seats, confirmed riders, pending + past requests). Only the
+  // reservation's own host sees it; every row is read under the host's own RLS context.
+  const hostCarpool =
+    isOwnReservation && profile
+      ? await loadHostCarpool(supabase, profile.organization_id, reservation.trip_request.id)
+      : null;
+
   const messages: ReservationMessage[] = (messageRows ?? []).map((m) => ({
     id: m.id,
     message_type: m.message_type,
@@ -108,6 +123,18 @@ export default async function ReservationDetailPage({
     isOwnReservation &&
     (reservation.status === "pending_approval" ||
       (reservation.status === "confirmed" && vehicleStatus !== "in_use" && vehicleStatus !== "returning"));
+  // Phase C5: seats the host may offer = capacity - declared occupants (exactly the DB's rule);
+  // offering is possible only while the reservation is live and the trip has not started.
+  const maxSeats = maxOfferableSeats(
+    reservation.vehicle?.category?.passenger_capacity,
+    reservation.trip_request.passenger_count,
+  );
+  const canOfferCarpool =
+    Boolean(hostCarpool?.policyEnabled) &&
+    (reservation.status === "pending_approval" || reservation.status === "confirmed") &&
+    vehicleStatus !== "in_use" &&
+    vehicleStatus !== "returning" &&
+    new Date(reservation.trip_request.departure_at).getTime() > Date.now();
 
   return (
     <AppShell
@@ -126,6 +153,24 @@ export default async function ReservationDetailPage({
           className="mb-4 rounded-sm border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red"
         >
           {dict.reservations.detail.carpoolActionError}
+        </div>
+      ) : null}
+      {carpoolPublishCode ? (
+        <div
+          role="alert"
+          data-testid="carpool-publish-failed"
+          className="mb-4 rounded-sm border border-signal-yellow/40 bg-signal-yellow/10 px-4 py-3 text-sm text-signal-yellow"
+        >
+          {fillTemplate(dict.carpool.host.publishFailedNotice, { code: carpoolErrorText(dict, carpoolPublishCode) })}
+        </div>
+      ) : null}
+      {carpoolActionErrorCode ? (
+        <div
+          role="alert"
+          data-testid="carpool-action-error"
+          className="mb-4 rounded-sm border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red"
+        >
+          {fillTemplate(dict.carpool.host.actionErrorNotice, { message: carpoolErrorText(dict, carpoolActionErrorCode) })}
         </div>
       ) : null}
       <Link href="/trips" className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent">
@@ -222,11 +267,34 @@ export default async function ReservationDetailPage({
         ) : null}
       </header>
 
+      {isOwnReservation && hostCarpool?.showSection ? (
+        <CarpoolHostSection
+          reservationId={id}
+          tripRequestId={reservation.trip_request.id}
+          dict={dict}
+          locale={locale}
+          offer={hostCarpool.offer}
+          maxSeats={maxSeats}
+          canOffer={canOfferCarpool}
+          participants={hostCarpool.participants}
+          pending={hostCarpool.pending}
+          history={hostCarpool.history}
+        />
+      ) : null}
+
       {isOwnReservation && pendingCarpoolRequests && pendingCarpoolRequests.length > 0 ? (
         <section className="mt-4 rounded-md border border-signal-blue/40 bg-signal-blue/10 p-6">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-signal-blue">
+          <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-signal-blue">
             {dict.reservations.detail.carpoolRequestsTitle}
           </h2>
+          {/* The legacy pending list (trip_participants from the previous carpool flow) can
+              still hold rows during the transition; the new engine's requests are in the
+              section above and never appear here (they are 'accepted' participants only). */}
+          {hostCarpool?.showSection ? (
+            <p className="mb-3 text-xs text-fog-600">{dict.carpool.host.legacyNote}</p>
+          ) : (
+            <div className="mb-2" />
+          )}
           <ul className="flex flex-col gap-3">
             {pendingCarpoolRequests.map((request) => (
               <li

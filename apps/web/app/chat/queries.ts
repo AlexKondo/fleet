@@ -2,6 +2,7 @@ import "server-only";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { requiresConfirmation, type IntentName } from "@fleet/domain";
 import type { ChatMessage, ChatState } from "./actions";
+import { unpackSlots } from "./persistedPending";
 
 export interface ActiveReservationSummary {
   reservationId: string;
@@ -85,21 +86,21 @@ export async function loadLatestChatState(
   // mutating intent, tagged with intent+slots, and the conversation never got marked
   // resolved (sendChatMessage's confirm phase does that) — i.e. the user closed the tab
   // or navigated away right after being asked to confirm, without answering either way.
-  if (
-    last.role === "assistant" &&
-    last.intent &&
-    requiresConfirmation(last.intent as IntentName) !== "no"
-  ) {
-    return {
-      status: "needs_confirmation",
-      conversationId: conversation.id,
-      messages,
-      pendingAction: {
-        intent: last.intent as IntentName,
-        slots: (last.slots as Record<string, string>) ?? {},
-        summary: last.content,
-      },
-    };
+  // Numbered options (carpool offers / carpool-first) are persisted with the message
+  // (persistedPending.ts) and restored here, so the buttons, the bare-number reply and the
+  // "Usar um veículo" choice keep working after a reload. A row WITH options never restores as
+  // a plain confirmation card (that would skip the carpool-first choice); a legacy row without
+  // options behaves exactly as before.
+  if (last.role === "assistant" && last.intent) {
+    const { slots, options } = unpackSlots(last.slots);
+    if (options || requiresConfirmation(last.intent as IntentName) !== "no") {
+      return {
+        status: "needs_confirmation",
+        conversationId: conversation.id,
+        messages,
+        pendingAction: { intent: last.intent as IntentName, slots, summary: last.content, options },
+      };
+    }
   }
 
   return { status: "idle", conversationId: conversation.id, messages };

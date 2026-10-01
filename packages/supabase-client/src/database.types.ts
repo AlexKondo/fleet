@@ -651,6 +651,402 @@ export type Database = {
           },
         ]
       }
+      carpool_events: {
+        Row: {
+          actor_id: string | null
+          carpool_offer_id: string | null
+          carpool_ride_request_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          organization_id: string
+          payload: Json
+          trip_request_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          carpool_offer_id?: string | null
+          carpool_ride_request_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          organization_id: string
+          payload?: Json
+          trip_request_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          carpool_offer_id?: string | null
+          carpool_ride_request_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          organization_id?: string
+          payload?: Json
+          trip_request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carpool_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_events_carpool_offer_id_fkey"
+            columns: ["carpool_offer_id"]
+            isOneToOne: false
+            referencedRelation: "carpool_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_events_carpool_ride_request_id_fkey"
+            columns: ["carpool_ride_request_id"]
+            isOneToOne: false
+            referencedRelation: "carpool_ride_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_events_trip_request_id_fkey"
+            columns: ["trip_request_id"]
+            isOneToOne: false
+            referencedRelation: "trip_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carpool_offers: {
+        Row: {
+          created_at: string
+          host_id: string
+          id: string
+          organization_id: string
+          policy_version: number
+          seats_available: number
+          seats_offered: number
+          status: string
+          trip_request_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          host_id: string
+          id?: string
+          organization_id: string
+          policy_version: number
+          seats_available: number
+          seats_offered: number
+          status?: string
+          trip_request_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          host_id?: string
+          id?: string
+          organization_id?: string
+          policy_version?: number
+          seats_available?: number
+          seats_offered?: number
+          status?: string
+          trip_request_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carpool_offers_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_offers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_offers_trip_request_id_fkey"
+            columns: ["trip_request_id"]
+            isOneToOne: false
+            referencedRelation: "trip_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carpool_policy_settings: {
+        Row: {
+          allow_intermediate_dropoff: boolean
+          allow_intermediate_pickup: boolean
+          carpool_enabled: boolean
+          carpool_first_enabled: boolean
+          created_at: string
+          departure_window_minutes: number
+          host_approval_required: boolean
+          host_opt_in_required: boolean
+          id: string
+          max_additional_distance_km: number
+          max_additional_time_minutes: number
+          max_candidates_for_precise_routing: number
+          minimum_seat_availability: number
+          organization_id: string
+          policy_version: number
+          request_expiry_minutes: number
+          return_window_minutes: number
+        }
+        Insert: {
+          allow_intermediate_dropoff?: boolean
+          allow_intermediate_pickup?: boolean
+          carpool_enabled?: boolean
+          carpool_first_enabled?: boolean
+          created_at?: string
+          departure_window_minutes: number
+          host_approval_required?: boolean
+          host_opt_in_required?: boolean
+          id?: string
+          max_additional_distance_km: number
+          max_additional_time_minutes: number
+          max_candidates_for_precise_routing?: number
+          minimum_seat_availability?: number
+          organization_id: string
+          policy_version: number
+          request_expiry_minutes?: number
+          return_window_minutes: number
+        }
+        Update: {
+          allow_intermediate_dropoff?: boolean
+          allow_intermediate_pickup?: boolean
+          carpool_enabled?: boolean
+          carpool_first_enabled?: boolean
+          created_at?: string
+          departure_window_minutes?: number
+          host_approval_required?: boolean
+          host_opt_in_required?: boolean
+          id?: string
+          max_additional_distance_km?: number
+          max_additional_time_minutes?: number
+          max_candidates_for_precise_routing?: number
+          minimum_seat_availability?: number
+          organization_id?: string
+          policy_version?: number
+          request_expiry_minutes?: number
+          return_window_minutes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carpool_policy_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carpool_ride_requests: {
+        Row: {
+          carpool_offer_id: string
+          client_request_id: string | null
+          created_at: string
+          dropoff_location: Json | null
+          host_destination_snapshot: string | null
+          host_origin_snapshot: string | null
+          id: string
+          match_additional_distance_km: number | null
+          match_additional_time_min: number | null
+          organization_id: string
+          pickup_location: Json | null
+          policy_version: number
+          requested_departure_at: string
+          requested_seats: number
+          responded_at: string | null
+          responded_by: string | null
+          rider_id: string
+          status: string
+          status_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          carpool_offer_id: string
+          client_request_id?: string | null
+          created_at?: string
+          dropoff_location?: Json | null
+          host_destination_snapshot?: string | null
+          host_origin_snapshot?: string | null
+          id?: string
+          match_additional_distance_km?: number | null
+          match_additional_time_min?: number | null
+          organization_id: string
+          pickup_location?: Json | null
+          policy_version: number
+          requested_departure_at: string
+          requested_seats: number
+          responded_at?: string | null
+          responded_by?: string | null
+          rider_id: string
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          carpool_offer_id?: string
+          client_request_id?: string | null
+          created_at?: string
+          dropoff_location?: Json | null
+          host_destination_snapshot?: string | null
+          host_origin_snapshot?: string | null
+          id?: string
+          match_additional_distance_km?: number | null
+          match_additional_time_min?: number | null
+          organization_id?: string
+          pickup_location?: Json | null
+          policy_version?: number
+          requested_departure_at?: string
+          requested_seats?: number
+          responded_at?: string | null
+          responded_by?: string | null
+          rider_id?: string
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carpool_ride_requests_carpool_offer_id_fkey"
+            columns: ["carpool_offer_id"]
+            isOneToOne: false
+            referencedRelation: "carpool_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_ride_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_ride_requests_responded_by_fkey"
+            columns: ["responded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_ride_requests_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      corporate_mobility_points: {
+        Row: {
+          address_label: string
+          aliases: string[]
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          name: string
+          organization_id: string
+          provider_place_ref: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_label: string
+          aliases?: string[]
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude: number
+          longitude: number
+          name: string
+          organization_id: string
+          provider_place_ref?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_label?: string
+          aliases?: string[]
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number
+          longitude?: number
+          name?: string
+          organization_id?: string
+          provider_place_ref?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "corporate_mobility_points_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geo_provider_quota_counters: {
+        Row: {
+          call_count: number
+          circuit_opened_at: string | null
+          circuit_state: string
+          consecutive_failure_count: number
+          day: string
+          id: string
+          organization_id: string
+          provider_call_kind: string
+          updated_at: string
+        }
+        Insert: {
+          call_count?: number
+          circuit_opened_at?: string | null
+          circuit_state?: string
+          consecutive_failure_count?: number
+          day: string
+          id?: string
+          organization_id: string
+          provider_call_kind: string
+          updated_at?: string
+        }
+        Update: {
+          call_count?: number
+          circuit_opened_at?: string | null
+          circuit_state?: string
+          consecutive_failure_count?: number
+          day?: string
+          id?: string
+          organization_id?: string
+          provider_call_kind?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_provider_quota_counters_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_participants: {
         Row: {
           id: string
@@ -1014,6 +1410,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_carpool_ride_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       approve_reservation: {
         Args: { p_reservation_id: string }
         Returns: undefined
@@ -1030,6 +1430,10 @@ export type Database = {
         Args: { p_reason: string; p_vehicle_id: string }
         Returns: undefined
       }
+      cancel_carpool_ride_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       cancel_reservation: {
         Args: { p_reason?: string; p_reservation_id: string }
         Returns: undefined
@@ -1038,6 +1442,32 @@ export type Database = {
       complete_workflow_task: {
         Args: { p_task_id: string }
         Returns: undefined
+      }
+      create_carpool_ride_request_as_rider: {
+        Args: {
+          p_client_request_id: string
+          p_dropoff: Json
+          p_match_additional_distance_km: number
+          p_match_additional_time_min: number
+          p_offer_id: string
+          p_pickup: Json
+          p_requested_departure_at: string
+          p_rider_id: string
+          p_seats: number
+        }
+        Returns: string
+      }
+      disable_carpool_offer: {
+        Args: { p_offer_id: string }
+        Returns: undefined
+      }
+      enable_carpool_offer: {
+        Args: { p_seats: number; p_trip_request_id: string }
+        Returns: string
+      }
+      expire_stale_carpool_requests: {
+        Args: never
+        Returns: number
       }
       create_carpool_participation: {
         Args: {
@@ -1052,6 +1482,14 @@ export type Database = {
           p_requires_cargo: boolean
         }
         Returns: string
+      }
+      increment_geo_provider_quota_counter: {
+        Args: {
+          p_day: string
+          p_organization_id: string
+          p_provider_call_kind: string
+        }
+        Returns: undefined
       }
       create_vehicle_reservation: {
         Args: {
@@ -1108,6 +1546,18 @@ export type Database = {
           p_role: Database["public"]["Enums"]["inspection_role"]
         }
         Returns: string
+      }
+      reject_carpool_ride_request: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: undefined
+      }
+      revalidate_carpool_matches: {
+        Args: { p_trip_request_id: string }
+        Returns: Json
+      }
+      update_carpool_offer: {
+        Args: { p_offer_id: string; p_seats: number }
+        Returns: undefined
       }
       record_return: {
         Args: {

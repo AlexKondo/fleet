@@ -1,10 +1,13 @@
 "use client";
 
-import { useActionState, useState, useTransition, type FormEvent } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { confirmTrip, planTripAction, type PlanTripResult, type TripFormInput } from "./actions";
 import { formatDateTime } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
+import type { CarpoolGating } from "@/lib/carpool/carpoolFirst";
+import { fillTemplate } from "@/lib/carpool/errorText";
+import { CarpoolFirstPanel } from "./CarpoolFirstPanel";
 
 function toLocalInputValue(iso: string): string {
   const d = new Date(iso);
@@ -56,14 +59,26 @@ function clearDraft(): void {
   }
 }
 
-export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Locale }) {
+export function TripRequestForm({
+  dict,
+  locale,
+  carpoolMode,
+}: {
+  dict: Dictionary;
+  locale: Locale;
+  /** Phase C5: org carpool policy as seen by the server (page.tsx). `newEngine` hides the old
+   * allow_carpool checkbox (the Yes/No host step is then the only carpool question). */
+  carpoolMode: CarpoolGating;
+}) {
   const t = dict.trips.request;
+  const ct = dict.carpool.newTrip;
   const reasonLabel = (reason: string): string =>
     (dict.trips.reasons as Record<string, string>)[reason] ?? reason;
   const [plan, planAction, isPlanning] = useActionState<PlanTripResult | null, FormData>(
     planTripAction,
     null,
   );
+  const formRef = useRef<HTMLFormElement>(null);
   const [formInput, setFormInput] = useState<TripFormInput | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [isConfirming, startConfirming] = useTransition();
@@ -71,6 +86,63 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
   // client-side remount losing whatever the user had just typed (matches feedback: form
   // fields reverting to today's date right after clicking "Buscar recomendação").
   const [draft] = useState(readDraft);
+  // Phase C5: UI state that belongs to ONE plan result. React's "adjust state when a prop/value
+  // changes" pattern: whenever a NEW plan arrives the reveal flag and the host's seat choice
+  // reset (no effect, no stale flash).
+  const [trackedPlan, setTrackedPlan] = useState(plan);
+  const [vehicleRevealed, setVehicleRevealed] = useState(false);
+  const [offer, setOffer] = useState<{ choice: "yes" | "no"; seats: string }>({ choice: "no", seats: "" });
+  if (plan !== trackedPlan) {
+    setTrackedPlan(plan);
+    setVehicleRevealed(false);
+    setOffer({ choice: "no", seats: "" });
+  }
+  const carpoolFirst = plan && !plan.error ? plan.carpoolFirst : undefined;
+  // The vehicle result follows automatically unless carpool-first has offers to decide on or is
+  // asking for a more precise place; the rider can always continue with a click.
+  const vehicleVisible =
+    !carpoolFirst ||
+    carpoolFirst.status === "none" ||
+    carpoolFirst.status === "unavailable" ||
+    vehicleRevealed;
+  const hostStepEnabled = Boolean(plan?.carpoolGating?.hostStep);
+
+  // React 19 resets an uncontrolled <form action> to its defaults once the action settles. The
+  // carpool clarification prompt asks the rider to "adjust the field and search again", so after
+  // each result the LAST SUBMITTED values are put back (otherwise every search would wipe the
+  // trip and the rider would have to retype everything). Runs after the reset has been applied.
+  useEffect(() => {
+    const form = formRef.current;
+    if (!plan || !formInput || !form) return;
+    const set = (name: string, value: string) => {
+      const el = form.elements.namedItem(name);
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) el.value = value;
+    };
+    set("departureAt", toLocalInputValue(formInput.departureAt));
+    set("expectedReturnAt", toLocalInputValue(formInput.expectedReturnAt));
+    set("origin", formInput.origin);
+    set("destination", formInput.destination);
+    set("distanceKm", String(formInput.distanceKm));
+    set("passengerCount", String(formInput.passengerCount));
+    set("justification", formInput.justification);
+    const cargo = form.elements.namedItem("requiresCargo");
+    if (cargo instanceof HTMLInputElement) cargo.checked = formInput.requiresCargo;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan]);
+
+  function seatCapFor(targetId: string | undefined): number {
+    if (!plan?.vehicle) return 0;
+    if (!targetId || targetId === plan.vehicle.vehicleId) return plan.vehicle.maxOfferableSeats;
+    return plan.vehicle.alternatives.find((a) => a.vehicleId === targetId)?.maxOfferableSeats ?? 0;
+  }
+
+  function offerSeatsFor(targetId: string | undefined): number | undefined {
+    if (!hostStepEnabled || offer.choice !== "yes") return undefined;
+    const cap = seatCapFor(targetId);
+    if (cap < 1) return undefined;
+    const typed = Math.floor(Number(offer.seats));
+    return Math.min(Math.max(Number.isFinite(typed) && typed > 0 ? typed : cap, 1), cap);
+  }
 
   function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
     const formData = new FormData(e.currentTarget);
@@ -99,6 +171,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
         ...formInput,
         choice: plan.type as "carpool" | "vehicle",
         targetId: resolvedTargetId,
+        offerSeats: plan.type === "vehicle" ? offerSeatsFor(resolvedTargetId) : undefined,
       });
       // On success confirmTrip redirects server-side, so this line is rarely reached —
       // best-effort only, the 5-minute TTL in readDraft is the real backstop.
@@ -119,6 +192,7 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <form
+        ref={formRef}
         action={planAction}
         onSubmit={handleFormSubmit}
         className="flex flex-col gap-4 rounded-md border border-line-800 bg-panel-900/60 p-6"
@@ -209,15 +283,23 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
           {t.cargoLabel}
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-fog-400">
-          <input
-            type="checkbox"
-            name="allowCarpool"
-            defaultChecked={draft.allowCarpool !== undefined ? draft.allowCarpool === "on" : true}
-            className="h-4 w-4"
-          />
-          {t.allowCarpoolLabel}
-        </label>
+        {carpoolMode.newEngine ? (
+          // Phase C5 decision: with the new carpool engine the old consent checkbox would be a
+          // confusing second carpool question. It is hidden; the value stays "on" so the DB
+          // default (allow_carpool = true) and the chat slot semantics are unchanged. The new
+          // Yes/No "offer seats" step (after the vehicle recommendation) is the only question.
+          <input type="hidden" name="allowCarpool" value="on" />
+        ) : (
+          <label className="flex items-center gap-2 text-sm text-fog-400">
+            <input
+              type="checkbox"
+              name="allowCarpool"
+              defaultChecked={draft.allowCarpool !== undefined ? draft.allowCarpool === "on" : true}
+              className="h-4 w-4"
+            />
+            {t.allowCarpoolLabel}
+          </label>
+        )}
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
@@ -246,11 +328,22 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
           {t.recommendationTitle}
         </h2>
 
+        {carpoolFirst ? (
+          <div className="mb-4" data-testid="carpool-first">
+            <CarpoolFirstPanel
+              state={carpoolFirst}
+              dict={dict}
+              locale={locale}
+              onContinue={() => setVehicleRevealed(true)}
+            />
+          </div>
+        ) : null}
+
         {!plan ? (
           <p className="text-sm text-fog-600">{t.emptyState}</p>
         ) : plan.error ? (
           <p className="text-sm text-signal-red">{t.planError}</p>
-        ) : plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0 ? (
+        ) : !vehicleVisible ? null : plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0 ? (
           <div className="flex flex-col gap-4">
             <p className="text-xs uppercase tracking-widest text-signal-teal">
               {plan.carpoolOptions.length > 1
@@ -314,6 +407,64 @@ export function TripRequestForm({ dict, locale }: { dict: Dictionary; locale: Lo
                   {t.trafficRestrictionBody}
                 </p>
               </div>
+            ) : null}
+            {hostStepEnabled ? (
+              <fieldset
+                data-testid="host-offer-step"
+                className="flex flex-col gap-2 rounded-sm border border-line-800 bg-panel-800 p-3"
+              >
+                <legend className="px-1 text-xs font-semibold uppercase tracking-widest text-fog-400">
+                  {ct.hostQuestion}
+                </legend>
+                {plan.vehicle.maxOfferableSeats < 1 ? (
+                  <p className="text-xs text-fog-600">{ct.noFreeSeats}</p>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-4 text-sm text-paper-50">
+                      <label className="flex items-center gap-1.5">
+                        <input
+                          type="radio"
+                          name="offerChoice"
+                          value="yes"
+                          checked={offer.choice === "yes"}
+                          onChange={() =>
+                            setOffer((o) => ({
+                              choice: "yes",
+                              seats: o.seats || String(plan.vehicle!.maxOfferableSeats),
+                            }))
+                          }
+                        />
+                        {ct.yes}
+                      </label>
+                      <label className="flex items-center gap-1.5">
+                        <input
+                          type="radio"
+                          name="offerChoice"
+                          value="no"
+                          checked={offer.choice === "no"}
+                          onChange={() => setOffer((o) => ({ ...o, choice: "no" }))}
+                        />
+                        {ct.no}
+                      </label>
+                    </div>
+                    {offer.choice === "yes" ? (
+                      <label className="flex flex-col gap-1 text-xs text-fog-400">
+                        {fillTemplate(ct.seatsLabel, { max: plan.vehicle.maxOfferableSeats })}
+                        <input
+                          type="number"
+                          name="offerSeats"
+                          min={1}
+                          max={plan.vehicle.maxOfferableSeats}
+                          value={offer.seats}
+                          onChange={(e) => setOffer((o) => ({ ...o, seats: e.target.value }))}
+                          className="w-24 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
+                        />
+                      </label>
+                    ) : null}
+                    <p className="text-xs text-fog-600">{ct.hostHint}</p>
+                  </>
+                )}
+              </fieldset>
             ) : null}
             <button
               onClick={() => handleConfirm(plan.vehicle!.vehicleId)}

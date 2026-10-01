@@ -23,6 +23,20 @@ import { getFleetManagerEmails } from "@/lib/email/recipients";
 import { renderEmail } from "@/lib/email/renderEmail";
 import { sendEmail } from "@/lib/email/sendEmail";
 import { getAppUrl } from "@/lib/getAppUrl";
+import { maxOfferableSeats, validOfferSeats } from "@fleet/domain";
+import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
+import {
+  buildOfferCards,
+  deriveCarpoolGating,
+  runCarpoolFirst,
+  type CarpoolFirstState,
+  type CarpoolGating,
+} from "@/lib/carpool/carpoolFirst";
+import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
+import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
+import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
+import { searchCompatibleCarpool } from "@/app/carpool/actions";
+import { enableCarpoolOffer } from "@/app/carpool/requestActions";
 
 export interface TripFormInput {
   departureAt: string;
@@ -47,6 +61,9 @@ export interface PlanTripResult {
   /** Every compatible existing trip, not just the closest — see planMobility.carpoolOptions. */
   carpoolOptions?: {
     reservationId: string;
+    /** The HOST's trip_request id (what create_carpool_participation's
+     * p_existing_trip_request_id needs) — NOT the same as reservationId. */
+    tripRequestId: string;
     vehiclePlate: string;
     departureAt: string;
     expectedReturnAt: string;
@@ -66,10 +83,26 @@ export interface PlanTripResult {
      * array for 'ai_recommended', which keeps the exact prior single-recommendation
      * behavior). Lets the requester pick a different eligible vehicle instead.
      */
-    alternatives: { vehicleId: string; plate: string; vehicleName: string; categoryName: string; reasons: string[] }[];
+    alternatives: {
+      vehicleId: string;
+      plate: string;
+      vehicleName: string;
+      categoryName: string;
+      reasons: string[];
+      /** Phase C5: seats the host could offer if this vehicle is chosen. */
+      maxOfferableSeats: number;
+    }[];
+    /** Phase C5: capacity - declared occupants, exactly as enable_carpool_offer derives it. */
+    maxOfferableSeats: number;
   };
   bookingMode: "ai_recommended" | "user_choice" | "hybrid";
   error?: string;
+  /** Phase C5: how the org's carpool policy gates this plan (absent on errors). When
+   * `newEngine` is true the old city-string carpool matcher was NOT consulted. */
+  carpoolGating?: CarpoolGating;
+  /** Phase C5: result of the carpool-first search (only from planTripAction, only when the
+   * org policy has carpool + carpool-first enabled). */
+  carpoolFirst?: CarpoolFirstState;
 }
 
 interface CarpoolCandidateWithPlate extends CarpoolCandidate {
@@ -94,6 +127,9 @@ async function buildPlanInputs(input: TripFormInput) {
 
   const now = new Date().toISOString();
   const config = await loadOrgConfig(supabase, profile.organization_id);
+  // Phase C5: the org's latest carpool policy decides whether the NEW geospatial engine owns
+  // carpool (then the old city-string matcher below must not surface offers).
+  const gating = deriveCarpoolGating(await loadLatestPolicy(supabase, profile.organization_id));
 
   const { data: vehicleRows } = await supabase
     .from("vehicles")
@@ -184,7 +220,7 @@ async function buildPlanInputs(input: TripFormInput) {
       vehiclePlate: r.vehicle!.plate,
     }));
 
-  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate };
+  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, gating };
 }
 
 /**
@@ -233,7 +269,56 @@ export async function planTripAction(
   _prevState: PlanTripResult | null,
   formData: FormData,
 ): Promise<PlanTripResult> {
-  return planTrip(parseTripFormInput(formData));
+  const input = parseTripFormInput(formData);
+  const plan = await planTrip(input);
+  if (plan.error || !plan.carpoolGating?.carpoolFirst) return plan;
+
+  // Phase C5 carpool-first: resolve the rider's places and search compatible offers BEFORE the
+  // vehicle result is shown. Everything stays server-side (Cost Guard-wrapped adapters; the
+  // Google key never reaches the browser). The vehicle plan is computed regardless so the
+  // normal flow is always one click away (decline / none / outage / clarification).
+  const supabase = await createSupabaseServerClient();
+  const user = await getCurrentUser(supabase);
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("organization_id").eq("id", user.id).single()
+    : { data: null };
+  if (!profile) return plan;
+
+  const geocoder = createGooglePlacesProvider(profile.organization_id);
+  const pointsResult = await listCorporateMobilityPoints(supabase, profile.organization_id);
+  const points = pointsResult.status === "ok" ? pointsResult.data : [];
+
+  const carpoolFirst = await runCarpoolFirst(
+    {
+      originText: input.origin,
+      destinationText: input.destination,
+      departureAt: input.departureAt,
+      passengerCount: input.passengerCount,
+      requiresCargo: input.requiresCargo,
+    },
+    {
+      resolve: (text) => resolveLocationText(text, { points, geocoder, places: geocoder }),
+      search: (draft) => searchCompatibleCarpool(draft),
+      loadOfferCards: async (matches) => {
+        const { data: rows } = await supabase
+          .from("carpool_offers")
+          .select("id, seats_available, trip_request:trip_requests(departure_at)")
+          .in(
+            "id",
+            matches.map((m) => m.offerId),
+          );
+        return buildOfferCards(
+          matches,
+          (rows ?? []).map((r) => ({
+            id: r.id,
+            seats_available: r.seats_available,
+            hostDepartureAt: r.trip_request?.departure_at ?? null,
+          })),
+        );
+      },
+    },
+  );
+  return { ...plan, carpoolFirst };
 }
 
 export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
@@ -241,7 +326,13 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   if ("error" in built) {
     return { type: "none", reasons: [], bookingMode: "ai_recommended", error: built.error };
   }
-  const { now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate } = built;
+  const { now, config, vehicleCandidates, vehicleNameByPlate, gating } = built;
+  // Phase C5 gating: when the new geospatial engine owns carpool for this org the old
+  // city-string matcher is NOT consulted (empty candidates => planMobility never returns a
+  // carpool plan). NOTE: the chat path (chat/actions.ts, chat/dispatch.ts) also goes through
+  // planTrip, so chat stops getting old-engine carpool results until Phase C6 wires voice to
+  // the new engine. Orgs with carpool disabled by policy keep today's behaviour untouched.
+  const carpoolCandidates = gating.newEngine ? [] : built.carpoolCandidates;
   const trafficRestrictionEnabled = config.trafficRestrictionEnabled;
 
   const tripRequest = {
@@ -272,10 +363,12 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
       type: "carpool",
       reasons: plan.reasons,
       bookingMode: config.bookingMode,
+      carpoolGating: gating,
       carpoolOptions: plan.carpoolOptions.map((option) => {
         const candidate = carpoolCandidates.find((c) => c.reservationId === option.reservationId);
         return {
           reservationId: option.reservationId,
+          tripRequestId: candidate?.existingTrip.id ?? "",
           vehiclePlate: candidate?.vehiclePlate ?? "",
           departureAt: candidate?.existingTrip.departureAt ?? "",
           expectedReturnAt: candidate?.existingTrip.expectedReturnAt ?? "",
@@ -301,6 +394,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
               vehicleName: vehicleNameByPlate.get(altPlate) ?? altPlate,
               categoryName: altCandidate?.category.name ?? "",
               reasons: filterTrafficRestrictionReasons(r.reasons, trafficRestrictionEnabled),
+              maxOfferableSeats: maxOfferableSeats(altCandidate?.category.passengerCapacity, input.passengerCount),
             };
           })
       : [];
@@ -309,7 +403,9 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
       type: "vehicle",
       reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
       bookingMode: config.bookingMode,
+      carpoolGating: gating,
       vehicle: {
+        maxOfferableSeats: maxOfferableSeats(candidate?.category.passengerCapacity, input.passengerCount),
         vehicleId: plan.vehicle.recommendedVehicleId,
         plate: recommendedPlate,
         vehicleName: vehicleNameByPlate.get(recommendedPlate) ?? recommendedPlate,
@@ -326,17 +422,27 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
     type: "none",
     reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
     bookingMode: config.bookingMode,
+    carpoolGating: gating,
   };
 }
 
 export async function confirmTrip(
-  input: TripFormInput & { choice: "carpool" | "vehicle"; targetId: string },
+  input: TripFormInput & {
+    choice: "carpool" | "vehicle";
+    targetId: string;
+    /** Phase C5: seats the host chose to offer (undefined / 0 => "No"). Only honoured when the
+     * org policy has the new carpool engine enabled; re-validated against the chosen vehicle's
+     * capacity here and again by enable_carpool_offer. */
+    offerSeats?: number;
+  },
 ): Promise<{ success: boolean; error?: string }> {
   const built = await buildPlanInputs(input);
   if ("error" in built) {
     return { success: false, error: built.error };
   }
-  const { now, config, vehicleCandidates, carpoolCandidates } = built;
+  const { now, config, vehicleCandidates, gating } = built;
+  // Same Phase C5 gating as planTrip (confirmTrip re-derives the plan server-side).
+  const carpoolCandidates = gating.newEngine ? [] : built.carpoolCandidates;
 
   const tripRequest = {
     id: "draft",
@@ -398,7 +504,7 @@ export async function confirmTrip(
         plan.vehicle.rankedEligible.some((r) => r.vehicleId === input.targetId)));
 
   if (isAcceptableVehicleTarget) {
-    const { error } = await supabase.rpc("create_vehicle_reservation", {
+    const { data: createdReservationId, error } = await supabase.rpc("create_vehicle_reservation", {
       p_departure_at: input.departureAt,
       p_expected_return_at: input.expectedReturnAt,
       p_origin: input.origin,
@@ -435,6 +541,35 @@ export async function confirmTrip(
         ctaUrl: `${getAppUrl()}/dashboard`,
       });
       await sendEmail({ to: managerEmails, subject: "Nova reserva aguardando aprovação", html, text });
+    }
+
+    // Phase C5 host offer step: publish the seats ONLY for the reservation that was just
+    // created, and never let a publishing problem undo it (the reservation stands; the user is
+    // sent to My Trip with a non-fatal notice and the Enable controls to retry).
+    let publishFailure: string | null = null;
+    const wantsOffer = typeof input.offerSeats === "number" && input.offerSeats > 0;
+    if (gating.hostStep && wantsOffer && typeof createdReservationId === "string") {
+      const chosen = vehicleCandidates.find((c) => c.vehicle.id === input.targetId);
+      const maxSeats = maxOfferableSeats(chosen?.category.passengerCapacity, input.passengerCount);
+      const seats = validOfferSeats(input.offerSeats, maxSeats);
+      if (seats === null) {
+        publishFailure = "CARPOOL_INVALID_SEATS";
+      } else {
+        const { data: createdReservation } = await supabase
+          .from("reservations")
+          .select("trip_request_id")
+          .eq("id", createdReservationId)
+          .maybeSingle();
+        if (!createdReservation?.trip_request_id) {
+          publishFailure = "CARPOOL_TRIP_NOT_FOUND";
+        } else {
+          const published = await enableCarpoolOffer(createdReservation.trip_request_id, seats, createdReservationId);
+          if (published.status === "error") publishFailure = published.error;
+        }
+      }
+    }
+    if (publishFailure && typeof createdReservationId === "string") {
+      redirect(`/reservations/${createdReservationId}?carpoolPublish=${encodeURIComponent(publishFailure)}`);
     }
 
     redirect("/trips");
