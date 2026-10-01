@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 /**
  * Phase C5: planTrip / planTripAction / confirmTrip gating around the new carpool engine.
  *  - when the org policy has carpool enabled, the OLD city-string matcher must get NO candidates
- *    (a pack NO-GO) - and when carpool is disabled by policy, today's behaviour is untouched;
+ *    (a pack NO-GO) - and when carpool is disabled by policy NO carpool is offered at all (decision L3: the
+ *    old matcher gets no candidates for any org since 0063, and the legacy join path is refused by RLS);
  *  - confirmTrip publishes seats only after a valid reservation, validates them against the
  *    chosen vehicle's capacity, and a publishing failure never undoes the reservation.
  */
@@ -318,7 +319,7 @@ describe("confirmTrip: host offer step", () => {
     expect(h.enable).not.toHaveBeenCalled();
   });
 
-  it("policy with carpool disabled ignores offerSeats (old behaviour)", async () => {
+  it("policy with carpool disabled ignores offerSeats (nothing is published)", async () => {
     h.policyRow = policy({ carpool_enabled: false });
     await confirm({ offerSeats: 2 });
     expect(h.enable).not.toHaveBeenCalled();

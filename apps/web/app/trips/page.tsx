@@ -225,7 +225,7 @@ export default async function TripsPage({
                         </p>
                       ) : null}
                       {reason && (r.status === "INVALIDATED" || r.status === "REJECTED") ? (
-                        <p data-testid="my-carpool-request-reason" className="mt-1 text-xs text-fog-400">
+                        <p data-testid="my-carpool-request-reason" className="mt-1 text-xs text-fog-400 break-user-text">
                           {reason}
                         </p>
                       ) : null}
@@ -264,7 +264,7 @@ export default async function TripsPage({
                     className="flex items-center justify-between rounded-md border border-line-800 bg-panel-900/60 p-4"
                   >
                     <Link href={`/reservations/${r.id}`} className="min-w-0 flex-1 hover:opacity-80">
-                      <p className="text-sm text-paper-50">
+                      <p className="text-sm text-paper-50 break-user-text">
                         {r.trip_request?.origin} → {r.trip_request?.destination}
                       </p>
                       <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">

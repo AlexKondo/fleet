@@ -90,7 +90,7 @@ describe("googlePlacesProvider", () => {
     it("returns unavailable, never throws, when fetch itself rejects (e.g. timeout)", async () => {
       (fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("timeout"));
       const outcome = await geocodeAddress("org-1", "x");
-      expect(outcome).toEqual({ status: "unavailable", reason: "timeout" });
+      expect(outcome).toEqual({ status: "unavailable", reason: "geocode_network_error" });
     });
   });
 

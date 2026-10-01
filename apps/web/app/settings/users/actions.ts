@@ -8,6 +8,7 @@ import { getDictionary } from "@/lib/i18n/getLocale";
 import { renderEmail } from "@/lib/email/renderEmail";
 import { sendEmail } from "@/lib/email/sendEmail";
 import { getAppUrl } from "@/lib/getAppUrl";
+import { buildDriverUpdate } from "./driverUpdate";
 
 export interface UserActionState {
   status: "idle" | "success" | "error";
@@ -202,11 +203,9 @@ export async function updateDriverAuthorization(
   const userId = String(formData.get("userId") ?? "");
   if (!userId) return { status: "error", error: dict.errors.users.userInvalid };
 
-  const driverAuthorized = formData.get("driverAuthorized") === "on";
-  const licenseNumber = String(formData.get("licenseNumber") ?? "").trim() || null;
-  const licenseCategory = String(formData.get("licenseCategory") ?? "").trim() || null;
-  const licenseExpirationRaw = String(formData.get("licenseExpiration") ?? "").trim();
-  const licenseExpiration = licenseExpirationRaw || null;
+  // M3: each form carries only the fields it edits; a field that is absent is never written (see driverUpdate.ts).
+  const built = buildDriverUpdate(formData);
+  if (!built.ok) return { status: "error", error: dict.errors.users.driverAuthorizationSaveFailed };
 
   const admin = createSupabaseAdminClient();
 
@@ -221,12 +220,7 @@ export async function updateDriverAuthorization(
 
   const { error } = await admin
     .from("profiles")
-    .update({
-      driver_authorized: driverAuthorized,
-      drivers_license_number: licenseNumber,
-      drivers_license_category: licenseCategory,
-      drivers_license_expiration: licenseExpiration,
-    })
+    .update(built.update)
     .eq("id", userId);
   if (error) return { status: "error", error: dict.errors.users.driverAuthorizationSaveFailed };
 
@@ -236,9 +230,12 @@ export async function updateDriverAuthorization(
     p_action: "driver_authorization_changed",
     p_entity_type: "profile",
     p_entity_id: userId,
+    // Never log the license number itself (personal data); log only what the submission changed.
     p_after: {
-      driver_authorized: driverAuthorized,
-      drivers_license_expiration: licenseExpiration,
+      ...("driver_authorized" in built.update ? { driver_authorized: built.update.driver_authorized } : {}),
+      ...("drivers_license_expiration" in built.update
+        ? { drivers_license_expiration: built.update.drivers_license_expiration }
+        : {}),
     },
   });
 

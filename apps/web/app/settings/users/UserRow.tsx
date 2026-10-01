@@ -32,8 +32,11 @@ export function UserRow({
   member,
   isSelf,
   dict,
+  licensesAvailable = true,
 }: {
   dict: Dictionary;
+  /** false when list_member_licenses() failed: license/authorization controls are rendered disabled and carry NO fields. */
+  licensesAvailable?: boolean;
   member: {
     id: string;
     full_name: string;
@@ -97,17 +100,16 @@ export function UserRow({
       <td className="px-4 py-3">
         <form ref={driverFormRef} action={driverAction}>
           <input type="hidden" name="userId" value={member.id} />
-          {/* Submitting this form alone would reset the license fields to empty (the
-              server action writes whatever the form carries) — carry their current
-              values along even though this group only means to toggle authorization. */}
-          <input type="hidden" name="licenseNumber" value={member.drivers_license_number ?? ""} />
-          <input type="hidden" name="licenseCategory" value={member.drivers_license_category ?? ""} />
-          <input type="hidden" name="licenseExpiration" value={member.drivers_license_expiration ?? ""} />
+          {/* M3: this form carries ONLY the authorization field (never the license columns, which a failed
+              license read would have turned into blanks); the server action writes only what it receives. */}
+          <input type="hidden" name="intent" value="authorization" />
+          <input type="hidden" name="authorizationSubmitted" value="1" />
           <label className="flex items-center gap-1.5 text-xs text-fog-400">
             <input
               type="checkbox"
               name="driverAuthorized"
               defaultChecked={member.driver_authorized}
+              disabled={!licensesAvailable}
               onChange={() => driverFormRef.current?.requestSubmit()}
               className="h-3.5 w-3.5"
             />
@@ -126,16 +128,11 @@ export function UserRow({
       <td className="px-4 py-3">
         <form ref={licenseFormRef} action={licenseAction} className="flex items-center gap-1.5">
           <input type="hidden" name="userId" value={member.id} />
-          {/* Same reasoning as the driverAuthorized form above, mirrored: this group
-              only means to edit the license fields, so carry the current authorization
-              value along instead of letting an empty submit clear it. */}
-          <input
-            type="hidden"
-            name="driverAuthorized"
-            value={member.driver_authorized ? "on" : ""}
-          />
+          {/* M3: only the three license fields (never driver_authorized); disabled when the data did not load. */}
+          <input type="hidden" name="intent" value="license" />
           <input
             type="text"
+            disabled={!licensesAvailable}
             name="licenseNumber"
             placeholder={t.licenseNumberPlaceholder}
             defaultValue={member.drivers_license_number ?? ""}
@@ -145,6 +142,7 @@ export function UserRow({
           <input
             type="text"
             name="licenseCategory"
+            disabled={!licensesAvailable}
             placeholder={t.licenseCategoryPlaceholder}
             defaultValue={member.drivers_license_category ?? ""}
             onBlur={() => licenseFormRef.current?.requestSubmit()}
@@ -153,6 +151,7 @@ export function UserRow({
           <input
             type="date"
             name="licenseExpiration"
+            disabled={!licensesAvailable}
             defaultValue={member.drivers_license_expiration ?? ""}
             onChange={() => licenseFormRef.current?.requestSubmit()}
             className="rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"

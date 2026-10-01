@@ -34,7 +34,7 @@ vi.mock("@/lib/email/renderEmail", () => ({ renderEmail: vi.fn() }));
 vi.mock("@/lib/email/sendEmail", () => ({ sendEmail: vi.fn() }));
 vi.mock("@/lib/getAppUrl", () => ({ getAppUrl: () => "http://localhost" }));
 vi.mock("./queries", () => ({ findActiveReservations: vi.fn(async () => []), resolveReservationId: vi.fn() }));
-vi.mock("@/app/carpool/actions", () => ({ searchCompatibleCarpool: (...a: unknown[]) => m.search(...a) }));
+vi.mock("@/app/carpool/actions", () => ({ searchCompatibleCarpool: (...a: unknown[]) => m.search(...a), searchCompatibleCarpoolForChat: (...a: unknown[]) => m.search(...a) }));
 vi.mock("@/app/carpool/requestActions", () => ({
   enableCarpoolOffer: (...a: unknown[]) => m.enable(...a),
   updateCarpoolOffer: (...a: unknown[]) => m.update(...a),
@@ -231,7 +231,7 @@ describe("dispatchIntent CREATE_RESERVATION: host offer step (answer Yes to 'Des
     expect(r.message).toBe("Reserva criada — veículo ABC1D23.");
   });
 
-  it("org with carpool DISABLED by policy: behaviour unchanged, nothing published", async () => {
+  it("org with carpool DISABLED by policy: reservation flow unchanged, no carpool offered or published (L3)", async () => {
     dbWithReservation({
       carpool_policy_settings: [{
         policy_version: 1, carpool_enabled: false, carpool_first_enabled: false, host_opt_in_required: true, host_approval_required: true,

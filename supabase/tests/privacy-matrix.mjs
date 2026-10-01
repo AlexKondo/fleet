@@ -2,7 +2,13 @@
 // Phase C7 privacy regression: role x resource READ matrix + attack checks, over PostgREST with
 // REAL user JWTs against the live project. Disposable orgs/users only (removed in finally).
 //
-//   node supabase/tests/privacy-matrix.mjs [--phase before|after]
+//   node supabase/tests/privacy-matrix.mjs [--phase before|after] [--pending-applied]
+//
+// C7b: cases that are only fixed by the PENDING (tightening) migrations are tagged [M1] (0066: a PENDING
+// carpool rider must not read the host trip) and [M2] (0067: an employee must not notify a coworker). The script
+// detects whether each pending migration is applied on the live DB (override: --pending-applied forces strict).
+// While a pending migration is NOT applied, its cases are reported as KNOWN-OPEN (printed, listed in the summary,
+// not counted as failures); once it is applied they are ordinary checks and must pass.
 //
 // The expected visibility is the POST-migration (0063) design. Running it BEFORE 0063 captures the
 // baseline (the leaks show up as FAIL rows, "extra" ids are the exposed coworker rows); AFTER it
@@ -15,9 +21,29 @@ import {
 
 const PHASE = process.argv.includes('--phase') ? process.argv[process.argv.indexOf('--phase') + 1] : 'after';
 const orgs = [];
+const FORCE_PENDING = process.argv.includes('--pending-applied');
+const PENDING = { M1: FORCE_PENDING, M2: FORCE_PENDING };
+const knownOpen = [];
+/** Pass/fail check tied to a pending migration tag (M1/M2); untagged => ordinary record(). */
+function check(tag, name, pass, details) {
+  if (!tag || pass || PENDING[tag]) return record(name + (tag ? ' [' + tag + ']' : ''), pass, details);
+  knownOpen.push(name);
+  console.log('KNOWN-OPEN - ' + name + ' [' + tag + ': fixed by a pending migration that is not applied yet]');
+  if (details !== undefined) console.log('    ' + (typeof details === 'string' ? details : JSON.stringify(details)));
+}
+async function detectPending() {
+  if (!FORCE_PENDING) {
+    const m2 = await sql("select count(*) c from pg_policies where tablename='notifications' and policyname='members create notifications for self staff or related users'");
+    const m1 = await sql("select (prosrc not ilike '%''PENDING''%') ok from pg_proc where proname='rls_visible_trip_request_ids' and pronamespace='public'::regnamespace");
+    PENDING.M2 = Number(m2[0].c) > 0;
+    PENDING.M1 = m1[0]?.ok === true;
+  }
+  console.log('pending migrations on the live DB: 0066 (M1) ' + (PENDING.M1 ? 'APPLIED' : 'not applied') + ', 0067 (M2) ' + (PENDING.M2 ? 'APPLIED' : 'not applied') + (FORCE_PENDING ? ' (forced strict)' : ''));
+}
 
 async function seed(A, B) {
   const [empA, empB, empC, empD, sec, mgr, adm, mnt] = ['empA', 'empB', 'empC', 'empD', 'sec', 'mgr', 'adm', 'mnt'].map((n) => A.users[n].id);
+  const empE = A.users.empE.id; // PENDING rider (C7b M1)
   const when = (h) => `now() + interval '${h} hours'`;
   const mkTrip = async (org, requester, dest, h) => {
     const [t] = await sql(`insert into trip_requests (organization_id, requester_id, departure_at, expected_return_at, origin, destination, distance_km, passenger_count, requires_cargo, justification, allow_carpool)
@@ -47,6 +73,7 @@ async function seed(A, B) {
   };
   ids.rrB = await mkRr(empB, 'ACCEPTED');
   ids.rrD = await mkRr(empD, 'REJECTED');
+  ids.rrE = await mkRr(empE, 'PENDING');
   const [tp] = await sql(`insert into trip_participants (organization_id, trip_request_id, passenger_id, passenger_count, status) values ('${A.orgId}', '${ids.tA}', '${empB}', 1, 'accepted') returning id`);
   ids.tpB = tp.id;
   const [mA] = await sql(`insert into reservation_messages (organization_id, reservation_id, sender_id, message_type, body) values ('${A.orgId}', '${ids.rA}', '${empA}', 'text', 'msg do host') returning id`);
@@ -63,10 +90,11 @@ async function seed(A, B) {
   return ids;
 }
 
-const ROLE_ORDER = ['empA', 'empB', 'empC', 'empD', 'sec', 'mgr', 'adm', 'mnt', 'empX'];
+const ROLE_ORDER = ['empA', 'empB', 'empC', 'empD', 'empE', 'sec', 'mgr', 'adm', 'mnt', 'empX'];
 
 async function main() {
-  const A = await provisionOrg('A', [['empA', 'employee'], ['empB', 'employee'], ['empC', 'employee'], ['empD', 'employee'], ['sec', 'security'], ['mgr', 'fleet_manager'], ['adm', 'administrator'], ['mnt', 'maintenance_operator']], 3);
+  await detectPending();
+  const A = await provisionOrg('A', [['empA', 'employee'], ['empB', 'employee'], ['empC', 'employee'], ['empD', 'employee'], ['sec', 'security'], ['mgr', 'fleet_manager'], ['adm', 'administrator'], ['mnt', 'maintenance_operator'], ['empE', 'employee']], 3);
   orgs.push(A);
   const B = await provisionOrg('B', [['empX', 'employee']], 1);
   orgs.push(B);
@@ -75,7 +103,7 @@ async function main() {
   const ids = await seed(A, B);
   const label = new Map();
   const put = (id, l) => label.set(id, l);
-  for (const k of ['tA', 'tB', 'tC', 'tX', 'rA', 'rB', 'rC', 'rX', 'oA', 'oX', 'rrB', 'rrD', 'tpB', 'mA', 'mM']) put(ids[k], k);
+  for (const k of ['tA', 'tB', 'tC', 'tX', 'rA', 'rB', 'rC', 'rX', 'oA', 'oX', 'rrB', 'rrD', 'tpB', 'mA', 'mM', 'rrE']) put(ids[k], k);
   for (const [n, u] of Object.entries(U)) put(u.id, 'P:' + n);
   for (const [n, id] of Object.entries(ids.n)) put(id, 'N:' + n);
   A.vehicles.forEach((v, i) => put(v.id, 'V' + (i + 1)));
@@ -84,20 +112,20 @@ async function main() {
 
   const priv = ['sec', 'mgr', 'adm'];
   const mgrs = ['mgr', 'adm'];
-  const allA = ['empA', 'empB', 'empC', 'empD', 'sec', 'mgr', 'adm', 'mnt'].map((n) => 'P:' + n);
+  const allA = ['empA', 'empB', 'empC', 'empD', 'empE', 'sec', 'mgr', 'adm', 'mnt'].map((n) => 'P:' + n);
   const exp = {
-    trip_requests: { empA: ['tA'], empB: ['tA', 'tB'], empC: ['tC'], empD: [], mnt: [], empX: ['tX'], ...Object.fromEntries(priv.map((r) => [r, ['tA', 'tB', 'tC']])) },
-    reservations: { empA: ['rA'], empB: ['rA', 'rB'], empC: ['rC'], empD: [], mnt: [], empX: ['rX'], ...Object.fromEntries(priv.map((r) => [r, ['rA', 'rB', 'rC']])) },
-    trip_participants: { empA: ['tpB'], empB: ['tpB'], empC: [], empD: [], mnt: [], empX: [], ...Object.fromEntries(priv.map((r) => [r, ['tpB']])) },
-    carpool_offers: { empA: ['oA'], empB: ['oA'], empC: [], empD: ['oA'], sec: [], mnt: [], empX: ['oX'], mgr: ['oA'], adm: ['oA'] },
-    carpool_ride_requests: { empA: ['rrB', 'rrD'], empB: ['rrB'], empC: [], empD: ['rrD'], sec: [], mnt: [], empX: [], mgr: ['rrB', 'rrD'], adm: ['rrB', 'rrD'] },
-    reservation_messages: { empA: ['mA', 'mM'], empB: [], empC: [], empD: [], mnt: [], empX: [], ...Object.fromEntries(priv.map((r) => [r, ['mA', 'mM']])) },
+    trip_requests: { empA: ['tA'], empB: ['tA', 'tB'], empC: ['tC'], empD: [], empE: [], mnt: [], empX: ['tX'], ...Object.fromEntries(priv.map((r) => [r, ['tA', 'tB', 'tC']])) },
+    reservations: { empA: ['rA'], empB: ['rA', 'rB'], empC: ['rC'], empD: [], empE: [], mnt: [], empX: ['rX'], ...Object.fromEntries(priv.map((r) => [r, ['rA', 'rB', 'rC']])) },
+    trip_participants: { empA: ['tpB'], empB: ['tpB'], empC: [], empD: [], empE: [], mnt: [], empX: [], ...Object.fromEntries(priv.map((r) => [r, ['tpB']])) },
+    carpool_offers: { empA: ['oA'], empB: ['oA'], empC: [], empD: [], empE: [], sec: [], mnt: [], empX: ['oX'], mgr: ['oA'], adm: ['oA'] },
+    carpool_ride_requests: { empA: ['rrB', 'rrD', 'rrE'], empB: ['rrB'], empC: [], empD: ['rrD'], empE: ['rrE'], sec: [], mnt: [], empX: [], mgr: ['rrB', 'rrD', 'rrE'], adm: ['rrB', 'rrD', 'rrE'] },
+    reservation_messages: { empA: ['mA', 'mM'], empB: [], empC: [], empD: [], empE: [], mnt: [], empX: [], ...Object.fromEntries(priv.map((r) => [r, ['mA', 'mM']])) },
     profiles: {
-      empA: ['P:empA', 'P:empB', 'P:empD', 'P:mgr', 'P:adm'], empB: ['P:empB', 'P:empA', 'P:mgr', 'P:adm'], empC: ['P:empC', 'P:mgr', 'P:adm'], empD: ['P:empD', 'P:mgr', 'P:adm'],
+      empA: ['P:empA', 'P:empB', 'P:empD', 'P:empE', 'P:mgr', 'P:adm'], empE: ['P:empE', 'P:mgr', 'P:adm'], empB: ['P:empB', 'P:empA', 'P:mgr', 'P:adm'], empC: ['P:empC', 'P:mgr', 'P:adm'], empD: ['P:empD', 'P:mgr', 'P:adm'],
       sec: allA, mgr: allA, adm: allA, mnt: allA, empX: ['P:empX'],
     },
     notifications: Object.fromEntries(ROLE_ORDER.map((r) => [r, ['N:' + r]])),
-    vehicles: { ...Object.fromEntries(['empA', 'empB', 'empC', 'empD', 'sec', 'mgr', 'adm', 'mnt'].map((r) => [r, ['V1', 'V2', 'V3']])), empX: ['VX'] },
+    vehicles: { ...Object.fromEntries(['empA', 'empB', 'empC', 'empD', 'empE', 'sec', 'mgr', 'adm', 'mnt'].map((r) => [r, ['V1', 'V2', 'V3']])), empX: ['VX'] },
   };
   const cols = { trip_requests: 'id', reservations: 'id', trip_participants: 'id', carpool_offers: 'id', carpool_ride_requests: 'id', reservation_messages: 'id', profiles: 'id', notifications: 'id', vehicles: 'id' };
 
@@ -112,7 +140,9 @@ async function main() {
       const missing = want.filter((w) => !got.includes(w));
       const pass = extra.length === 0 && missing.length === 0;
       matrix.push({ table, role, got, want, extra, missing, pass });
-      record(`${table} as ${role}: sees exactly ${JSON.stringify(want)}`, pass, pass ? `${got.length} row(s)` : { extra, missing });
+      // M1 (0066): PENDING (empE) and REJECTED (empD) riders no longer read the host trip / offer / host name
+      const tag = (role === 'empE' && ['trip_requests', 'reservations', 'carpool_offers', 'profiles'].includes(table)) || (role === 'empD' && table === 'carpool_offers') ? 'M1' : undefined;
+      check(tag, `${table} as ${role}${role === 'empE' ? ' (PENDING rider)' : ''}: sees exactly ${JSON.stringify(want)}`, pass, pass ? `${got.length} row(s)` : { extra, missing });
     }
   }
   const anonRead = [];
@@ -157,7 +187,7 @@ async function main() {
     for (const role of ROLE_ORDER) {
       const r = await rpc(U[role].token, 'list_member_licenses');
       const allowed = role === 'mgr' || role === 'adm';
-      if (allowed) record(`list_member_licenses as ${role}: org members only (8 rows, no other org)`, r.ok && r.body.length === 8, `rows=${Array.isArray(r.body) ? r.body.length : msg(r)}`);
+      if (allowed) record(`list_member_licenses as ${role}: org members only (9 rows, no other org)`, r.ok && r.body.length === 9, `rows=${Array.isArray(r.body) ? r.body.length : msg(r)}`);
       else record(`list_member_licenses as ${role}: denied`, !r.ok, `status=${r.status}`);
     }
     const an = await rpc(null, 'list_member_licenses');
@@ -214,6 +244,47 @@ async function main() {
   const lic = (await sql(`select drivers_license_number from profiles where id='${U.empC.id}'`))[0].drivers_license_number;
   record('employee cannot overwrite own license via PATCH profiles (writes are server-side only)', lic !== 'FORGED', `patchStatus=${licUpd.status}`);
 
+  // ---- C7b M1: a PENDING rider must not read the host trip / reservation / host name / offer (coarse until accepted)
+  console.log('\n##### M1: PENDING rider (empE) vs the host trip #####');
+  const E = U.empE.token;
+  for (const [what, p] of [
+    ['host trip origin/destination/justification', `trip_requests?id=eq.${ids.tA}&select=id,origin,destination,justification,departure_at`],
+    ['host reservation rows', `reservations?trip_request_id=eq.${ids.tA}&select=id,vehicle_id,status`],
+    ['host reservation embedding the trip', `reservations?id=eq.${ids.rA}&select=id,trip_request:trip_requests(destination,origin,justification)`],
+    ['host profile name', `profiles?id=eq.${U.empA.id}&select=id,full_name`],
+    ['host offer row (host_id, seats)', `carpool_offers?id=eq.${ids.oA}&select=id,host_id,seats_available`],
+    ['trip_participants of the host trip', `trip_participants?trip_request_id=eq.${ids.tA}&select=id`],
+    ['host reservation messages', `reservation_messages?reservation_id=eq.${ids.rA}&select=id,body`],
+  ]) {
+    const r = await rest(E, 'GET', p);
+    const rows = Array.isArray(r.body) ? r.body.length : -1;
+    check(/message|participants/.test(what) ? undefined : 'M1', `PENDING rider: ${what} -> 0 rows`, rows === 0, `status=${r.status} rows=${rows}`);
+  }
+  const ownReq = await rest(E, 'GET', `carpool_ride_requests?rider_id=eq.${U.empE.id}&select=id,status`);
+  record('PENDING rider still reads their OWN request', Array.isArray(ownReq.body) && ownReq.body.length === 1 && ownReq.body[0].status === 'PENDING', JSON.stringify(ownReq.body));
+  const accView = await rest(U.empB.token, 'GET', `trip_requests?id=eq.${ids.tA}&select=id,justification`);
+  record('ACCEPTED rider still reads the host trip (documented: includes justification - accepted residual)', Array.isArray(accView.body) && accView.body.length === 1, JSON.stringify(accView.body));
+
+  // ---- C7b M2: notifications INSERT policy (spoofing)
+  console.log('\n##### M2: employee cannot notify a coworker #####');
+  const notifIns = async (token, userId, title, extra = {}) => rest(token, 'POST', 'notifications', { organization_id: A.orgId, user_id: userId, title, body: 'corpo de teste', ...extra }, { Prefer: 'return=minimal' });
+  const spoof1 = await notifIns(U.empC.token, U.empB.id, 'Seu acesso foi bloqueado - clique aqui');
+  check('M2', 'employee C -> coworker B, arbitrary title: refused', spoof1.status >= 400, `status=${spoof1.status} ${msg(spoof1)}`);
+  const spoof2 = await notifIns(U.empC.token, U.adm.id, 'URGENTE: aprove todas as reservas');
+  check('M2', 'employee C -> administrator, arbitrary title: refused', spoof2.status >= 400, `status=${spoof2.status}`);
+  const spoof3 = await notifIns(U.empC.token, U.adm.id, 'Nova reserva aguardando aprovação', { entity_type: 'reservation', entity_id: ids.rC });
+  check('M2', 'employee C -> administrator, fixed title but forged entity link: refused', spoof3.status >= 400, `status=${spoof3.status}`);
+  const self = await notifIns(U.empC.token, U.empC.id, 'nota para mim');
+  record('employee C -> self: allowed', self.status < 300, `status=${self.status}`);
+  const mnt = await notifIns(U.mnt.token, U.empB.id, 'Qualquer coisa');
+  check('M2', 'maintenance operator -> employee: refused', mnt.status >= 400, `status=${mnt.status}`);
+  const mg = await notifIns(U.mgr.token, U.empB.id, 'Reserva aprovada');
+  record('fleet manager -> employee: allowed (approve / cancel flows)', mg.status < 300, `status=${mg.status}`);
+  const anon = await notifIns(null, U.empB.id, 'x');
+  record('anon -> employee: refused', anon.status >= 400, `status=${anon.status}`);
+  const stray = await sql(`select count(*) c from notifications where organization_id='${A.orgId}' and user_id in ('${U.empB.id}','${U.adm.id}') and title in ('Seu acesso foi bloqueado - clique aqui','URGENTE: aprove todas as reservas')`);
+  check('M2', 'no spoofed notification row exists in the DB', Number(stray[0].c) === 0, `rows=${stray[0].c}`);
+
   // ---- legitimate flows still working for an employee (positives)
   console.log('\n##### positives #####');
   const hostView = await rest(U.empA.token, 'GET', `trip_participants?trip_request_id=eq.${ids.tA}&select=id,passenger:profiles(full_name)`);
@@ -233,7 +304,7 @@ async function main() {
   // employee creates a trip through the real RPC, as before (invoker function; notifies managers)
   const dep = new Date(Date.now() + 72 * 3600e3).toISOString(); const ret = new Date(Date.now() + 76 * 3600e3).toISOString();
   const cr = await rpc(U.empC.token, 'create_vehicle_reservation', { p_departure_at: dep, p_expected_return_at: ret, p_origin: 'O', p_destination: 'D', p_distance_km: 5, p_passenger_count: 1, p_requires_cargo: false, p_justification: 'j', p_vehicle_id: A.vehicles[2].id, p_allow_carpool: true });
-  const notif = await sql(`select count(*) c from notifications where organization_id='${A.orgId}' and title like 'Nova reserva%'`);
+  const notif = await sql(`select count(*) c from notifications where organization_id='${A.orgId}' and title like 'Nova reserva%' and body like 'Uma nova viagem para D %'`);
   record('employee create_vehicle_reservation still works AND managers get the notification (invoker function reads manager profiles)', cr.ok && Number(notif[0].c) === 2, { status: cr.status, managersNotified: notif[0].c, err: cr.ok ? undefined : msg(cr) });
   const own = await rest(U.empC.token, 'GET', `reservations?select=id,trip_request:trip_requests(destination)&trip_request.destination=eq.D`);
   record('employee sees the reservation they just created', Array.isArray(own.body) && own.body.length >= 1, `rows=${Array.isArray(own.body) ? own.body.length : msg(own)}`);
@@ -245,6 +316,7 @@ main()
   .catch((err) => record('FATAL (unexpected exception)', false, String(err && err.stack ? err.stack : err)))
   .finally(async () => {
     await cleanupOrgs(orgs);
+    if (knownOpen.length) { console.log('\nKNOWN-OPEN cases (' + knownOpen.length + ', fixed by the pending migrations 0066/0067 - apply them, then re-run; they must all pass):'); for (const k of knownOpen) console.log('  - ' + k); }
     const fails = summary('privacy-matrix ' + PHASE);
     process.exitCode = fails > 0 ? 1 : 0;
   });

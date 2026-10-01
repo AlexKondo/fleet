@@ -87,6 +87,11 @@ export function selectShortlistOfferIds(
   return survivors.slice(0, cap).map((c) => c.offerId);
 }
 
+/** Telemetry: how many offers pass Stage A (before the precise-routing cap). */
+export function countPrefilterSurvivors(prefilterInputs: PrefilterCandidateOffer[]): number {
+  return prefilterCandidates(prefilterInputs).filter((r) => r.passed).length;
+}
+
 export function toPrefilterInput(
   candidate: Pick<
     CarpoolOfferCandidateRow,

@@ -1,0 +1,44 @@
+PASS - [no-preference] browser reports prefers-reduced-motion: reduce = false
+    {"pref":false}
+  magnifier [no-preference]: samples=6 {"m1":{"x":487,"y":306.8,"animations":[{"name":"magnifier-scan","duration":1100,"iterations":null,"playState":"running"}]},"m2":{"x":495.8,"y":315.5,"animations":[{"name":"magnifier-scan","duration":1100,"iterations":null,"playState":"running"}]},"m3":{"x":492.9,"y":312.7,"animations":[{"name":"magnifier-scan","duration":1100,"iterations":null,"playState":"running"}]}}
+  confetti [no-preference]: {"c1":{"count":28,"visible":28,"tops":[126,126,127,126,126,127,126,125],"animations":[{"name":"confetti-fall","duration":1129.9649406270446,"iterations":1,"playState":"running"}]},"c2":{"count":28,"visible":28,"tops":[122,137,128,126,126,127,117,134],"animations":[{"name":"confetti-fall","duration":1129.9649406270446,"iterations":1,"playState":"running"}]},"c3":{"count":28,"visible":28,"tops":[166,193,176,129,123,127,131,184],"animations":[{"name":"confetti-fall","duration":1129.9649406270446,"iterations":1,"playState":"running"}]}}
+PASS - [no-preference] the real flow reached the valid "analyzed -> confirmed" state (license saved)
+    {"saved":true}
+  bell-shake control [no-preference]: {"name":"bell-shake","duration":1800,"iterations":null,"playState":"running"}
+PASS - [reduce] browser reports prefers-reduced-motion: reduce = true
+    {"pref":true}
+  magnifier [reduce]: samples=6 {"m1":{"x":487,"y":306.8,"animations":[{"name":"magnifier-scan","duration":0.01,"iterations":1,"playState":"running"}]},"m2":{"x":496.3,"y":316,"animations":[]},"m3":{"x":496.3,"y":316,"animations":[]}}
+  confetti [reduce]: {"c1":{"count":28,"visible":28,"tops":[126,126,125,125,127,127,126,127],"animations":[{"name":"confetti-fall","duration":0.01,"iterations":1,"playState":"running"}]},"c2":{"count":28,"visible":5,"tops":[447,447,447,447,447,447,126,447],"animations":[{"name":"confetti-fall","duration":0.01,"iterations":1,"playState":"finished"}]},"c3":{"count":28,"visible":0,"tops":[447,447,447,447,447,447,447,447],"animations":[{"name":"confetti-fall","duration":0.01,"iterations":1,"playState":"finished"}]}}
+PASS - [reduce] the real flow reached the valid "analyzed -> confirmed" state (license saved)
+    {"saved":true}
+  bell-shake control [reduce]: {"name":"bell-shake","duration":0.01,"iterations":1,"playState":"running"}
+PASS - no-preference: magnifier animation RUNS (infinite, 1100ms, in every sample, position changes)
+    {"x":492.9,"y":312.7,"animations":[{"name":"magnifier-scan","duration":1100,"iterations":null,"playState":"running"}]}
+PASS - no-preference: confetti RUNS (pieces visible, falling, running in every sample)
+    {"count":28,"visible":28,"tops":[166,193,176,129,123,127,131,184],"animations":[{"name":"confetti-fall","duration":1129.9649406270446,"iterations":1,"playState":"running"}]}
+PASS - BUG REPRODUCED: reduce suppresses the magnifier (0.01ms, ends at once, glass parked)
+    {"x":496.3,"y":316,"animations":[]}
+PASS - BUG REPRODUCED: reduce suppresses the confetti (0.01ms, already finished, pieces parked/transparent)
+    {"count":28,"visible":0,"tops":[447,447,447,447,447,447,447,447],"animations":[{"name":"confetti-fall","duration":0.01,"iterations":1,"playState":"finished"}]}
+PASS - control: bell-shake runs under no-preference (1800ms infinite)
+    {"name":"bell-shake","duration":1800,"iterations":null,"playState":"running"}
+PASS - control: bell-shake stays SUPPRESSED under reduce (every other animation keeps honoring the preference)
+    {"name":"bell-shake","duration":0.01,"iterations":1,"playState":"running"}
+PASS - Cleanup: no disposable rows left in the live DB
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"participants":0,"offers":0,"requests":0,"events":0,"policies":0,"quota_rows":0,"notifications":0,"audit":0}
+CLEANUP QUERY:
+select
+      (select count(*) from organizations where name like 'C5UI-ORG-%-mupzpzpm') orgs,
+      (select count(*) from profiles where id in ('bc9d413a-c8e2-4c02-87b8-39eeb54e80ba','839b994b-6569-40a9-a997-93152d436de9')) profiles,
+      (select count(*) from vehicles where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) vehicles,
+      (select count(*) from trip_requests where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) trips,
+      (select count(*) from trip_participants where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) participants,
+      (select count(*) from carpool_offers where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) offers,
+      (select count(*) from carpool_ride_requests where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) requests,
+      (select count(*) from carpool_events where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) events,
+      (select count(*) from carpool_policy_settings where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) policies,
+      (select count(*) from geo_provider_quota_counters where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) quota_rows,
+      (select count(*) from notifications where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) notifications,
+      (select count(*) from audit_log where organization_id in ('b8bb70de-0585-4288-828b-354aecd0e9fb')) audit
+
+11/11 checks passed.

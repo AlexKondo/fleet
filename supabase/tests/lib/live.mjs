@@ -1,5 +1,6 @@
 // Shared helpers for the live (real Supabase project) test scripts added in Phase C7.
 // Reads the repo-root .env. Never prints secrets. Disposable data only.
+import './net-retry.mjs';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';

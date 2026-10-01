@@ -7,10 +7,17 @@ const state = {
   evaluateInsertion: vi.fn(),
   userTables: [] as string[],
   adminTables: [] as string[],
+  inserts: [] as { table: string; row: Record<string, unknown> }[],
+  insertThrows: false,
 };
 
-function builder(result: TableResult) {
+function builder(result: TableResult, table = "") {
   const b: Record<string, unknown> = {};
+  b.insert = async (row: Record<string, unknown>) => {
+    if (state.insertThrows) throw new Error("insert exploded");
+    state.inserts.push({ table, row });
+    return { data: null, error: null };
+  };
   for (const m of ["select", "eq", "in", "order", "limit"]) b[m] = () => b;
   b.single = async () => result;
   b.maybeSingle = async () => result;
@@ -31,7 +38,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   createSupabaseAdminClient: () => ({
     from: (table: string) => {
       state.adminTables.push(table);
-      return builder(state.tables[table] ?? { data: null, error: null });
+      return builder(state.tables[table] ?? { data: null, error: null }, table);
     },
   }),
 }));
@@ -43,7 +50,7 @@ vi.mock("@/lib/geospatial/googleRoutingProvider", () => ({
   createGoogleRoutingProvider: () => ({ computeRoute: vi.fn(), evaluateInsertion: state.evaluateInsertion }),
 }));
 
-import { searchCompatibleCarpool } from "./actions";
+import { searchCompatibleCarpool, searchCompatibleCarpoolForChat } from "./actions";
 
 const SP = { lat: -23.55, lng: -46.63 };
 const draft = {
@@ -87,6 +94,8 @@ beforeEach(() => {
   state.evaluateInsertion.mockReset();
   state.userTables = [];
   state.adminTables = [];
+  state.inserts = [];
+  state.insertThrows = false;
   state.tables = {
     profiles: { data: { organization_id: "org-1" }, error: null },
     carpool_policy_settings: { data: policyRow, error: null },
@@ -233,5 +242,57 @@ describe("regression: host answered No at reservation, later enabled an offer (a
     const result = await searchCompatibleCarpool(draft);
     expect(result.status).toBe("matches");
     if (result.status === "matches") expect(result.matches.map((m) => m.offerId)).toEqual(["offer-1"]);
+  });
+});
+
+describe("C7b telemetry: carpool_search_log", () => {
+  const okRoute = {
+    status: "ok",
+    result: {
+      baselineDistanceKm: 10, baselineDurationMin: 10, candidateRouteDistanceKm: 11,
+      candidateRouteDurationMin: 11, additionalDistanceKm: 1, additionalTimeMin: 1,
+    },
+  };
+
+  it("logs counts + outcome + latency for a successful search (web source), with NO route/personal data", async () => {
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP, source: "geocoding_provider" } });
+    state.evaluateInsertion.mockResolvedValue(okRoute);
+    const result = await searchCompatibleCarpool(draft);
+    expect(result.status).toBe("matches");
+    const logged = state.inserts.filter((i) => i.table === "carpool_search_log");
+    const first = logged[0]!.row;
+    expect(logged).toHaveLength(1);
+    expect(first).toMatchObject({
+      organization_id: "org-1", user_id: "user-1", source: "web", offers_evaluated: 1, prefilter_candidates: 1,
+      precise_route_calls: 1, compatible_count: 1, outcome: "matches",
+    });
+    expect(Number.isInteger(first.latency_ms)).toBe(true);
+    expect(Object.keys(first).sort()).toEqual(
+      ["compatible_count", "latency_ms", "offers_evaluated", "organization_id", "outcome", "precise_route_calls", "prefilter_candidates", "source", "user_id"],
+    );
+    expect(JSON.stringify(first)).not.toMatch(/"(lat|lng)"|origin|destination/i);
+  });
+
+  it("chat path logs source=chat; none / unavailable outcomes are distinguished", async () => {
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP } });
+    state.evaluateInsertion.mockResolvedValue({ status: "unavailable", reason: "x" });
+    await searchCompatibleCarpoolForChat(draft);
+    state.tables.carpool_offers = { data: [{ ...offerRow, seats_available: 0 }], error: null };
+    await searchCompatibleCarpoolForChat(draft);
+    const rows = state.inserts.filter((i) => i.table === "carpool_search_log").map((i) => i.row);
+    expect(rows.map((r) => [r.source, r.outcome, r.precise_route_calls])).toEqual([["chat", "unavailable", 1], ["chat", "none", 0]]);
+  });
+
+  it("a failing telemetry insert never changes or fails the search result", async () => {
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP } });
+    state.evaluateInsertion.mockResolvedValue(okRoute);
+    state.insertThrows = true;
+    const result = await searchCompatibleCarpool(draft);
+    expect(result.status).toBe("matches");
+  });
+
+  it("input rejected before the organization is known writes no row", async () => {
+    await searchCompatibleCarpool({ ...draft, requestedSeats: 0 });
+    expect(state.inserts).toHaveLength(0);
   });
 });

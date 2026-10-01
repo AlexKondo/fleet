@@ -12,6 +12,7 @@ import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import { getAppUrl } from "@/lib/getAppUrl";
 import { isCarpoolIntent, type IntentName } from "@fleet/domain";
 import { findActiveReservations, resolveReservationId } from "./queries";
+import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
 import { executeCarpoolIntent, loadChatCarpoolCtx, publishOfferForNewReservation } from "./carpoolChat";
 
 export interface DispatchResult {
@@ -53,12 +54,12 @@ export async function dispatchIntent(
       const input: TripFormInput = {
         departureAt: new Date(slots.departureAt ?? "").toISOString(),
         expectedReturnAt: new Date(slots.expectedReturnAt ?? "").toISOString(),
-        origin: slots.origin ?? "",
-        destination: slots.destination ?? "",
+        origin: clampText(slots.origin ?? "", MAX_LOCATION_TEXT),
+        destination: clampText(slots.destination ?? "", MAX_LOCATION_TEXT),
         distanceKm: Number(slots.distanceKm ?? 0),
         passengerCount: Number(slots.passengerCount ?? 1),
         requiresCargo: slots.requiresCargo === "true",
-        justification: slots.justification ?? "Solicitado via assistente conversacional",
+        justification: clampText(slots.justification ?? "Solicitado via assistente conversacional", MAX_JUSTIFICATION_TEXT),
         // Now a required slot (intentCatalog.ts) — the orchestrator always asks for it
         // explicitly before this intent can even reach confirmation, same opt-in the
         // self-service form's checkbox has always had.

@@ -651,6 +651,63 @@ export type Database = {
           },
         ]
       }
+      carpool_search_log: {
+        Row: {
+          compatible_count: number
+          created_at: string
+          id: string
+          latency_ms: number
+          offers_evaluated: number
+          organization_id: string
+          outcome: string
+          precise_route_calls: number
+          prefilter_candidates: number
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          compatible_count?: number
+          created_at?: string
+          id?: string
+          latency_ms?: number
+          offers_evaluated?: number
+          organization_id: string
+          outcome: string
+          precise_route_calls?: number
+          prefilter_candidates?: number
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          compatible_count?: number
+          created_at?: string
+          id?: string
+          latency_ms?: number
+          offers_evaluated?: number
+          organization_id?: string
+          outcome?: string
+          precise_route_calls?: number
+          prefilter_candidates?: number
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carpool_search_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpool_search_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carpool_events: {
         Row: {
           actor_id: string | null
@@ -1010,9 +1067,11 @@ export type Database = {
           circuit_state: string
           consecutive_failure_count: number
           day: string
+          error_count: number
           id: string
           organization_id: string
           provider_call_kind: string
+          total_latency_ms: number
           updated_at: string
         }
         Insert: {
@@ -1021,9 +1080,11 @@ export type Database = {
           circuit_state?: string
           consecutive_failure_count?: number
           day: string
+          error_count?: number
           id?: string
           organization_id: string
           provider_call_kind: string
+          total_latency_ms?: number
           updated_at?: string
         }
         Update: {
@@ -1032,9 +1093,11 @@ export type Database = {
           circuit_state?: string
           consecutive_failure_count?: number
           day?: string
+          error_count?: number
           id?: string
           organization_id?: string
           provider_call_kind?: string
+          total_latency_ms?: number
           updated_at?: string
         }
         Relationships: [
@@ -1522,6 +1585,16 @@ export type Database = {
           p_requires_cargo: boolean
         }
         Returns: string
+      }
+      record_geo_provider_call_outcome: {
+        Args: {
+          p_day: string
+          p_latency_ms: number
+          p_ok: boolean
+          p_organization_id: string
+          p_provider_call_kind: string
+        }
+        Returns: undefined
       }
       increment_geo_provider_quota_counter: {
         Args: {

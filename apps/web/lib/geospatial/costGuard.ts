@@ -119,8 +119,24 @@ export async function withCostGuard<T>(
     p_day: day,
   });
 
+  const startedAt = Date.now();
   const result = await doCall();
+  const latencyMs = Date.now() - startedAt;
   const succeeded = isSuccess(result);
+
+  // C7b telemetry: errors + total latency per (org, kind, day) next to the call counter, for the KPI
+  // dashboard (provider errors / average latency). Best-effort: a bookkeeping failure never affects the call.
+  try {
+    await admin.rpc("record_geo_provider_call_outcome", {
+      p_organization_id: organizationId,
+      p_provider_call_kind: callKind,
+      p_day: day,
+      p_ok: succeeded,
+      p_latency_ms: latencyMs,
+    });
+  } catch {
+    /* telemetry only */
+  }
 
   if (succeeded) {
     await admin

@@ -290,7 +290,7 @@ export default async function DashboardPage({
                           <Link
                             href={`/reservations/${r.id}`}
                             title={t.pendingReservations.openReservation}
-                            className="text-fog-400 underline-offset-2 hover:text-gwm-accent hover:underline"
+                            className="text-fog-400 underline-offset-2 hover:text-gwm-accent hover:underline break-user-text"
                           >
                             {r.trip_request?.origin} → {r.trip_request?.destination}
                           </Link>{" "}
@@ -437,7 +437,7 @@ export default async function DashboardPage({
                         <td className="px-4 py-3 font-mono tabular-nums text-paper-50">
                           {r.vehicle?.plate ?? "—"}
                         </td>
-                        <td className="px-4 py-3 text-fog-400">
+                        <td className="px-4 py-3 text-fog-400 break-user-text">
                           {r.trip_request?.origin} → {r.trip_request?.destination}
                         </td>
                         <td className="px-4 py-3 text-fog-400">

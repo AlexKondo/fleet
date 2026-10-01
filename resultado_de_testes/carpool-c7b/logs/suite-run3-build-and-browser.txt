@@ -1,0 +1,38 @@
+
+=== next build (apps/web) ===
+
+
+=== secret-leak scan of .next/static + .next/server ===
+11/11 checks passed.
+(node:32780) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+=== browser: per-role regression of every screen (c7a) ===
+71/71 checks passed.
+
+=== browser: C7b checks (XSS inert, L1 zoom, M3, KPI page, vehicleOptions reload) ===
+30/30 checks passed.
+
+=== browser: CNH animations x prefers-reduced-motion ===
+11/11 checks passed.
+
+=== browser: unauthenticated flows make no anon table access (L5) ===
+13/13 checks passed.
+
+=== browser: provider failure never leaks the API key ===
+6/6 checks passed.
+
+================ carpool live suite summary ================
+PASS  next build (apps/web)                                                                                  30s
+PASS  secret-leak scan of .next/static + .next/server                                 11/11 checks           0s
+PASS  browser: per-role regression of every screen (c7a)                              71/71 checks           [1 network retries] 377s
+PASS  browser: C7b checks (XSS inert, L1 zoom, M3, KPI page, vehicleOptions reload)   30/30 checks           129s
+PASS  browser: CNH animations x prefers-reduced-motion                                11/11 checks           56s
+PASS  browser: unauthenticated flows make no anon table access (L5)                   13/13 checks           37s
+PASS  browser: provider failure never leaks the API key                               6/6 checks             28s
+known-open cases (pending migrations), counted from the scripts' output: 0
+  network diagnosis [browser: per-role regression of every screen (c7a)]: NET-RETRY 1/3 POST api.supabase.com after TypeError: fetch failed (cause: UND_ERR_CONNECT_TIMEOUT)
+
+7/7 steps passed.
+exit=0
+ALLDONE

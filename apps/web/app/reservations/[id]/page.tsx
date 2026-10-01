@@ -182,7 +182,7 @@ export default async function ReservationDetailPage({
           <div>
             <p className="text-2xl text-paper-50">{reservation.vehicle?.name ?? reservation.vehicle?.plate ?? "—"}</p>
             <p className="font-mono text-xs text-fog-600">{reservation.vehicle?.plate}</p>
-            <p className="mt-1 text-sm text-fog-400">
+            <p className="mt-1 text-sm text-fog-400 break-user-text">
               {reservation.trip_request.origin} → {reservation.trip_request.destination}
             </p>
             <p className="mt-1 text-xs text-fog-600">

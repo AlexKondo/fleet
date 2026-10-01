@@ -23,7 +23,7 @@ const store = vi.hoisted(() => ({ cardData: null as null | Record<string, Record
 
 vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 vi.mock("@/lib/i18n/getLocale", () => ({ getLocale: async () => "pt-BR" }));
-vi.mock("@/app/carpool/actions", () => ({ searchCompatibleCarpool: (...a: unknown[]) => m.search(...a) }));
+vi.mock("@/app/carpool/actions", () => ({ searchCompatibleCarpool: (...a: unknown[]) => m.search(...a), searchCompatibleCarpoolForChat: (...a: unknown[]) => m.search(...a) }));
 vi.mock("@/app/carpool/requestActions", () => ({
   enableCarpoolOffer: (...a: unknown[]) => m.enable(...a),
   updateCarpoolOffer: (...a: unknown[]) => m.update(...a),

@@ -158,6 +158,10 @@ export async function attemptAutomaticReassignment(
   }
 
   if (notificationRows.length > 0) {
-    await supabase.from("notifications").insert(notificationRows);
+    // M2: these notifications are addressed to OTHER requesters (the people whose reservation a delay impacted),
+    // with fixed server-side text. They are written with the service-role client (the organization comes from the
+    // already-authenticated caller's session), because the notifications INSERT policy no longer lets an employee
+    // JWT address a coworker (supabase/migrations-pending/0067_m2_notifications_insert_policy.sql).
+    await admin.from("notifications").insert(notificationRows);
   }
 }

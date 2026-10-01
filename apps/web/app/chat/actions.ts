@@ -10,7 +10,7 @@ import { dispatchIntent } from "./dispatch";
 import { findActiveReservations } from "./queries";
 import { planTrip, type TripFormInput } from "@/app/trips/new/actions";
 import { formatDateTimeShort } from "@/lib/formatDateTime";
-import { packSlots, unpackSlots } from "./persistedPending";
+import { packSlots, stripReservedSlots, unpackSlots } from "./persistedPending";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
@@ -190,7 +190,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       role: "assistant",
       content,
       intent: pendingAction?.intent,
-      slots: packSlots(slots, pendingAction?.options),
+      slots: packSlots(slots, pendingAction?.options, pendingAction?.vehicleOptions),
     });
     return {
       status: pendingAction ? "needs_confirmation" : "idle",
@@ -573,7 +573,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "user", content: message });
 
   const active = await findActiveReservations(supabase, user.id);
-  const interpretation = await interpretMessage({
+  const rawInterpretation = await interpretMessage({
     history: prevState.messages,
     message,
     locale,
@@ -588,6 +588,11 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       carpoolEngineActive: carpoolCtx?.gating.newEngine ?? false,
     },
   });
+  // C7b hardening: LLM-emitted slots can never carry a reserved ("__*") key into what is persisted / restored.
+  const interpretation =
+    rawInterpretation.status === "ok"
+      ? { ...rawInterpretation, slots: stripReservedSlots(rawInterpretation.slots) }
+      : rawInterpretation;
 
   let assistantContent: string;
   let pendingAction: ChatState["pendingAction"];
@@ -673,7 +678,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     role: "assistant",
     content: assistantContent,
     intent: pendingAction?.intent,
-    slots: packSlots(pendingAction?.slots, pendingAction?.options),
+    slots: packSlots(pendingAction?.slots, pendingAction?.options, pendingAction?.vehicleOptions),
   });
 
   return {

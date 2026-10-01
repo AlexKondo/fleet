@@ -45,7 +45,7 @@ import { VEHICLE_OPTION_ID } from "./persistedPending";
 import type { RiderTripDraft } from "@/lib/carpool/runCarpoolSearch";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
-import { searchCompatibleCarpool } from "@/app/carpool/actions";
+import { searchCompatibleCarpoolForChat } from "@/app/carpool/actions";
 import {
   acceptCarpoolRequest,
   cancelCarpoolRequest,
@@ -323,7 +323,7 @@ async function runRiderSearch(ctx: ChatCarpoolCtx, s: SearchSlots): Promise<Carp
     },
     {
       resolve,
-      search: (draft) => searchCompatibleCarpool(draft),
+      search: (draft) => searchCompatibleCarpoolForChat(draft),
       loadOfferCards: async (matches) =>
         buildOfferCards(
           matches,

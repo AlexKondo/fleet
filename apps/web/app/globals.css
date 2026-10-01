@@ -81,6 +81,14 @@ body {
   font-family: var(--font-body);
 }
 
+/* C7b / F7: user-typed text (destinations, labels, justifications, reasons, notification bodies, chat bubbles) can be one
+   huge unbroken string; it must wrap instead of widening the page (a 5000-char destination made the reservation page and
+   the manager dashboard ~46000px wide). Scoped to the elements that render such text (NOT global, so words inside narrow
+   table / flex cells elsewhere are never split). */
+.break-user-text {
+  overflow-wrap: anywhere;
+}
+
 /*
  * "Needs attention" accent — flat solid border, no gradient (brand rule:
  * no gradients, no 3D effects). Replaces the old diagonal hazard-tape device.
@@ -177,12 +185,17 @@ body {
   border-radius: 4px;
 }
 
-/* :not(.animate-chat-agent-float) — the chat robot's float is purely decorative (not
-   a functional/attention-alert animation like bell-shake or mic-pulse), and per explicit,
-   repeated request it should always visibly move regardless of prefers-reduced-motion.
-   Every other animation in this file still respects the preference as normal. */
+/* Decorative animations that ALWAYS play, regardless of prefers-reduced-motion (explicit, repeated request
+   from the product owner; they are purely decorative, never the only carrier of information):
+     .animate-chat-agent-float  - the chat robot's float (ChatWidget.tsx)
+     .animate-magnifier-scan    - the magnifying glass over the CNH while the vision model reads it
+     .animate-confetti-piece    - the confetti burst when a freshly-read CNH is valid
+   The CNH pair were being collapsed to 0.01ms/1 iteration by the global override below (the confetti then
+   ended at opacity 0 via fill-mode forwards, the magnifier snapped back to its resting spot), so users with the
+   OS "reduce motion" setting never saw them. Exactly these three classes are exempt; every other animation in this
+   file (bell-shake, mic-pulse, hint-in, spinner, transitions...) still honours the preference. */
 @media (prefers-reduced-motion: reduce) {
-  *:not(.animate-chat-agent-float) {
+  *:not(.animate-chat-agent-float):not(.animate-magnifier-scan):not(.animate-confetti-piece) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

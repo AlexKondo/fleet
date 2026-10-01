@@ -1,0 +1,167 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 C:/projects/fleet/apps/web
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > enableCarpoolOffer
+enable_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > enableCarpoolOffer
+enable_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > enableCarpoolOffer
+enable_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > enableCarpoolOffer
+enable_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > enableCarpoolOffer
+enable_carpool_offer failed: CARPOOL_TRIP_NOT_FOUND
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > updateCarpoolOffer
+update_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > updateCarpoolOffer
+update_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > updateCarpoolOffer
+update_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > updateCarpoolOffer
+update_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > updateCarpoolOffer
+update_carpool_offer failed: CARPOOL_OFFER_NOT_FOUND
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > disableCarpoolOffer
+disable_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > disableCarpoolOffer
+disable_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > disableCarpoolOffer
+disable_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > disableCarpoolOffer
+disable_carpool_offer failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > disableCarpoolOffer
+disable_carpool_offer failed: CARPOOL_OFFER_NOT_FOUND
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > revalidateCarpoolMatches
+revalidate_carpool_matches failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > revalidateCarpoolMatches
+revalidate_carpool_matches failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > revalidateCarpoolMatches
+revalidate_carpool_matches failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > revalidateCarpoolMatches
+revalidate_carpool_matches failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > revalidateCarpoolMatches
+revalidate_carpool_matches failed: CARPOOL_TRIP_NOT_FOUND
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > acceptCarpoolRequest
+accept_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > acceptCarpoolRequest
+accept_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > acceptCarpoolRequest
+accept_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > acceptCarpoolRequest
+accept_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > acceptCarpoolRequest
+accept_carpool_ride_request failed: CARPOOL_REQUEST_NOT_FOUND
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > rejectCarpoolRequest
+reject_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > rejectCarpoolRequest
+reject_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > rejectCarpoolRequest
+reject_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > rejectCarpoolRequest
+reject_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > rejectCarpoolRequest
+reject_carpool_ride_request failed: CARPOOL_REQUEST_NOT_FOUND
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > cancelCarpoolRequest
+cancel_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > cancelCarpoolRequest
+cancel_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > cancelCarpoolRequest
+cancel_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > cancelCarpoolRequest
+cancel_carpool_ride_request failed: CARPOOL_NOT_AUTHORIZED
+
+stderr | ../../testing/chat-carpool/rbac-actions.live.test.ts > carpool server actions x roles (live, real RLS + RPCs) > cancelCarpoolRequest
+cancel_carpool_ride_request failed: CARPOOL_REQUEST_NOT_FOUND
+
+stdout | ../../testing/chat-carpool/rbac-actions.live.test.ts
+
+Carpool server-action RBAC matrix (cell = ACTUAL: Y authorised / . refused; '!' = differs from the expectation)
+endpoint                                                                         anon     host     rider    stranger sec      mgr      adm      mnt      other    
+enableCarpoolOffer                                                               .        Y        .        .        .        Y        Y        .        .        
+updateCarpoolOffer                                                               .        Y        .        .        .        Y        Y        .        .        
+disableCarpoolOffer                                                              .        Y        .        .        .        Y        Y        .        .        
+revalidateCarpoolMatches                                                         .        Y        .        .        .        Y        Y        .        .        
+acceptCarpoolRequest                                                             .        Y        .        .        .        Y        Y        .        .        
+rejectCarpoolRequest                                                             .        Y        .        .        .        Y        Y        .        .        
+cancelCarpoolRequest                                                             .        .        Y        .        .        Y        Y        .        .        
+getMyCarpoolRequestStatus (own request only)                                     .        .        Y        .        .        .        .        .        .        
+searchCompatibleCarpool (any signed-in user; no provider call: empty shortlist)  .        Y        Y        Y        Y        Y        Y        Y        Y        
+requestCarpoolRide (needs a session; forged ids refused)                         .        .        .        .        .        .        .        .        .        
+publishCarpoolPolicy (settings)                                                  .        .        .        .        .        Y        Y        .        .        
+createMobilityPoint (settings)                                                   .        .        .        .        .        Y        Y        .        .        
+updateMobilityPoint (settings)                                                   .        .        .        .        .        Y        Y        .        .        
+deactivateMobilityPoint (settings; effect checked in the DB)                     .        .        .        .        .        Y        Y        .        .        
+
+stdout | ../../testing/chat-carpool/rbac-actions.live.test.ts
+PASS - Cleanup: no disposable rows left in the live DB
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"participants":0,"offers":0,"requests":0,"events":0,"policies":0,"quota_rows":0,"notifications":0,"audit":0}
+CLEANUP QUERY:
+select
+      (select count(*) from organizations where name like 'C5UI-ORG-%-mupz6l6n') orgs,
+      (select count(*) from profiles where id in ('3baef8c5-d578-46b4-bd15-233e17efd12e','ded121d7-ff66-4a1a-b665-1df596d20467','cd428a6f-49c0-4525-a278-8bf31ab5191a','6380d62d-358c-4fdf-a9d2-3640e9ced7ab','631e6592-ad56-4ab5-a684-eb4beb20da7a','2d61422d-952e-422e-b9b8-34a23f6564bc','57a72bb2-1a47-4486-b99c-7c905a9c5e10','9365599e-87fc-4232-9a3a-1b3123f27799')) profiles,
+      (select count(*) from vehicles where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) vehicles,
+      (select count(*) from trip_requests where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) trips,
+      (select count(*) from trip_participants where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) participants,
+      (select count(*) from carpool_offers where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) offers,
+      (select count(*) from carpool_ride_requests where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) requests,
+      (select count(*) from carpool_events where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) events,
+      (select count(*) from carpool_policy_settings where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) policies,
+      (select count(*) from geo_provider_quota_counters where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) quota_rows,
+      (select count(*) from notifications where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) notifications,
+      (select count(*) from audit_log where organization_id in ('651d9615-a0e5-4061-a850-09e6b549670c','5259be4f-3c79-4d4f-b8b2-d8b3a9b00ddc')) audit
+
+ ✓ ../../testing/chat-carpool/rbac-actions.live.test.ts (14 tests) 170343ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > enableCarpoolOffer 9691ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > updateCarpoolOffer 9295ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > disableCarpoolOffer 9644ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > revalidateCarpoolMatches 9473ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > acceptCarpoolRequest 9850ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > rejectCarpoolRequest 11837ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > cancelCarpoolRequest 10740ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > getMyCarpoolRequestStatus (own request only) 12507ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > searchCompatibleCarpool (any signed-in user; no provider call: empty shortlist) 8998ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > requestCarpoolRide (needs a session; forged ids refused) 8911ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > publishCarpoolPolicy (settings) 2692ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > createMobilityPoint (settings) 2241ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > updateMobilityPoint (settings) 2252ms
+   ✓ carpool server actions x roles (live, real RLS + RPCs) > deactivateMobilityPoint (settings; effect checked in the DB) 25702ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  17:17:07
+   Duration  170.97s (transform 207ms, setup 0ms, collect 336ms, tests 170.34s, environment 0ms, prepare 81ms)
+

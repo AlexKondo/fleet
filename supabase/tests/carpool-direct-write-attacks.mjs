@@ -10,6 +10,7 @@
 //
 // Usage: node supabase/tests/carpool-direct-write-attacks.mjs   (reads repo-root .env)
 
+import './lib/net-retry.mjs';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';

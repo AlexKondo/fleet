@@ -14,6 +14,13 @@ export interface OwnLicense {
  * read them is this definer function, which answers strictly for auth.uid(). Returns null when the
  * call failed (so callers can distinguish "no license on file" from "could not read").
  */
+/** Parses the middleware-provided LICENSE_MISSING_HEADER; null = not provided (caller must read the license itself). */
+export function licenseMissingFromHeader(value: string | null | undefined): boolean | null {
+  if (value === "1") return true;
+  if (value === "0") return false;
+  return null;
+}
+
 export async function getOwnLicense(supabase: TypedSupabaseClient): Promise<OwnLicense | null> {
   const { data, error } = await supabase.rpc("get_my_license");
   if (error || !data) return null;

@@ -31,6 +31,7 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createGoogleRoutingProvider } from "@/lib/geospatial/googleRoutingProvider";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import {
+  countPrefilterSurvivors,
   runCarpoolSearch,
   selectShortlistOfferIds,
   toPrefilterInput,
@@ -45,8 +46,18 @@ async function resolveAddress(geocoder: GeocodingProvider, address: string): Pro
   return outcome.location.coordinates;
 }
 
-export async function searchCompatibleCarpool(
+/** C7b telemetry counters filled while a search runs (counts only, never route data). */
+interface SearchStats {
+  organizationId?: string;
+  userId?: string;
+  offersEvaluated: number;
+  prefilterCandidates: number;
+  preciseRouteCalls: number;
+}
+
+async function searchInner(
   riderTripDraft: RiderTripDraft,
+  stats: SearchStats,
 ): Promise<SearchCarpoolResult> {
   // Client-supplied input is validated before any DB/provider work (C3 audit carry-overs a/b):
   // positive-integer seats, finite in-range coordinates, parseable departure time.
@@ -79,6 +90,8 @@ export async function searchCompatibleCarpool(
   }
 
   const organizationId = profile.organization_id;
+  stats.organizationId = organizationId;
+  stats.userId = user.id;
   const loaded = await loadLatestPolicy(supabase, organizationId);
   if (!loaded.ok) {
     return { status: "unavailable", reason: "policy_unavailable" };
@@ -143,6 +156,11 @@ export async function searchCompatibleCarpool(
     hostDepartureAt: row.trip_request!.departure_at,
   });
 
+  stats.offersEvaluated = textRows.length;
+  stats.prefilterCandidates = countPrefilterSurvivors(
+    textRows.map((row) => toPrefilterInput(rowToCandidateBase(row), riderTripDraft, policy)),
+  );
+
   // Stage A (no coordinates needed) + deterministic ordering + cap, BEFORE any geocoding.
   const shortlistIds = new Set(
     selectShortlistOfferIds(
@@ -176,5 +194,77 @@ export async function searchCompatibleCarpool(
     return { status: "unavailable", reason: "geocoding_unavailable" };
   }
 
-  return runCarpoolSearch(riderTripDraft, resolved, policy, createGoogleRoutingProvider(organizationId));
+  const routing = createGoogleRoutingProvider(organizationId);
+  const countingRouting: typeof routing = {
+    computeRoute: (a, b) => routing.computeRoute(a, b),
+    evaluateInsertion: (input) => {
+      stats.preciseRouteCalls += 1;
+      return routing.evaluateInsertion(input);
+    },
+  };
+  return runCarpoolSearch(riderTripDraft, resolved, policy, countingRouting);
+}
+
+type SearchSource = "web" | "chat";
+
+/** Never blocks or fails the search: a telemetry write error is swallowed (the dashboard just misses a row). */
+async function recordSearch(
+  stats: SearchStats,
+  source: SearchSource,
+  result: SearchCarpoolResult | null,
+  latencyMs: number,
+): Promise<void> {
+  if (!stats.organizationId) return; // rejected before the caller's organization was known
+  try {
+    const outcome = !result
+      ? "error"
+      : result.status === "matches"
+        ? result.matches.length > 0
+          ? "matches"
+          : "none"
+        : result.status;
+    await createSupabaseAdminClient()
+      .from("carpool_search_log")
+      .insert({
+        organization_id: stats.organizationId,
+        user_id: stats.userId ?? null,
+        source,
+        offers_evaluated: stats.offersEvaluated,
+        prefilter_candidates: stats.prefilterCandidates,
+        precise_route_calls: stats.preciseRouteCalls,
+        compatible_count: result && result.status === "matches" ? result.matches.length : 0,
+        outcome,
+        latency_ms: Math.max(0, Math.round(latencyMs)),
+      });
+  } catch {
+    /* telemetry only */
+  }
+}
+
+async function searchWithTelemetry(riderTripDraft: RiderTripDraft, source: SearchSource): Promise<SearchCarpoolResult> {
+  const started = Date.now();
+  const stats: SearchStats = { offersEvaluated: 0, prefilterCandidates: 0, preciseRouteCalls: 0 };
+  let result: SearchCarpoolResult;
+  try {
+    result = await searchInner(riderTripDraft, stats);
+  } catch (error) {
+    await recordSearch(stats, source, null, Date.now() - started);
+    throw error;
+  }
+  await recordSearch(stats, source, result, Date.now() - started);
+  return result;
+}
+
+/** New Trip / request-creation path (source = web). */
+export async function searchCompatibleCarpool(
+  riderTripDraft: RiderTripDraft,
+): Promise<SearchCarpoolResult> {
+  return searchWithTelemetry(riderTripDraft, "web");
+}
+
+/** Voice/chat path (source = chat): identical pipeline, only the telemetry label differs. */
+export async function searchCompatibleCarpoolForChat(
+  riderTripDraft: RiderTripDraft,
+): Promise<SearchCarpoolResult> {
+  return searchWithTelemetry(riderTripDraft, "chat");
 }

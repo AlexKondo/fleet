@@ -63,7 +63,7 @@ export function MessageThread({
                   </span>
                 </div>
               </div>
-              <p className="mt-1 text-sm text-fog-400">{m.body}</p>
+              <p className="mt-1 text-sm text-fog-400 break-user-text">{m.body}</p>
             </li>
           ))
         )}

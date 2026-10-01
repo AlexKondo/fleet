@@ -14,6 +14,7 @@
 // Env:     SUPABASE_TOKEN (Management API, required; read from repo-root .env if unset),
 //          SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY (read from .env if unset)
 
+import './lib/net-retry.mjs';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';

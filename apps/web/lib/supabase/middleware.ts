@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@fleet/supabase-client";
 import { getSupabasePublicEnv } from "./env";
-import { VERIFIED_USER_EMAIL_HEADER, VERIFIED_USER_ID_HEADER } from "../auth/headers";
+import { LICENSE_MISSING_HEADER, VERIFIED_USER_EMAIL_HEADER, VERIFIED_USER_ID_HEADER } from "../auth/headers";
 import { getOwnLicense } from "../auth/ownLicense";
 
 const PUBLIC_ROUTE_PREFIXES = [
@@ -31,6 +31,7 @@ function sanitizedHeaders(request: NextRequest): Headers {
   const headers = new Headers(request.headers);
   headers.delete(VERIFIED_USER_ID_HEADER);
   headers.delete(VERIFIED_USER_EMAIL_HEADER);
+  headers.delete(LICENSE_MISSING_HEADER);
   return headers;
 }
 
@@ -116,6 +117,8 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
       const licenseUrl = new URL("/account/license", request.url);
       return NextResponse.redirect(licenseUrl);
     }
+    // L6: hand the result to the render so AppShell does not repeat the same RPC for this request.
+    if (ownLicense) responseHeaders.set(LICENSE_MISSING_HEADER, ownLicense.number ? "0" : "1");
   }
 
   responseHeaders.set(VERIFIED_USER_ID_HEADER, user.id);

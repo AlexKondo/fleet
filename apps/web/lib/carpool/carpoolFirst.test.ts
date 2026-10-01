@@ -146,7 +146,7 @@ describe("deriveCarpoolGating (planTrip gating)", () => {
   it("carpool enabled, carpool-first off: old matcher still suppressed, no rider search, host step on", () => {
     expect(deriveCarpoolGating(policy({ carpoolFirstEnabled: false }))).toMatchObject({ newEngine: true, carpoolFirst: false, hostStep: true });
   });
-  it("carpool DISABLED by policy: today's behaviour untouched (old matcher stays, no new UI)", () => {
+  it("carpool DISABLED by policy: no new UI and the new engine is off (L3: no carpool is offered at all, the old matcher is not fed candidates)", () => {
     expect(deriveCarpoolGating(policy({ carpoolEnabled: false }))).toMatchObject({ newEngine: false, carpoolFirst: false, hostStep: false });
   });
   it("policy load failure fails closed on the old matcher and never offers to publish seats", () => {

@@ -433,7 +433,7 @@ export function NotificationBell({
                           <span className={`text-sm ${isUnread ? "text-paper-50" : "text-fog-400"}`}>
                             {translateTitle(t, n.title)}
                           </span>
-                          <span className="text-xs text-fog-400">{translateBody(t, n.body)}</span>
+                          <span className="text-xs text-fog-400 break-user-text">{translateBody(t, n.body)}</span>
                           <span className="font-mono text-xs text-fog-600">
                             {formatRelativeTime(n.created_at, locale, t.relative)}
                           </span>

@@ -34,6 +34,7 @@ import {
 } from "@/lib/carpool/carpoolFirst";
 import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
 import { loadOfferCardRows } from "@/lib/carpool/offerCardRows";
+import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
 import { searchCompatibleCarpool } from "@/app/carpool/actions";
@@ -171,7 +172,10 @@ async function buildPlanInputs(input: TripFormInput) {
   // (and must not be loaded with a privileged client either: that would re-create the "directory of
   // coworkers' journeys" the pack forbids). Carpool is now offered ONLY by the geospatial engine
   // (searchCompatibleCarpool, which keeps host trip details server-side). An org with carpool
-  // disabled therefore simply gets no carpool offer. findCarpoolMatches itself is untouched.
+  // disabled therefore simply gets NO carpool offer at all (decision L3, accepted): "carpool disabled by policy"
+  // no longer keeps the pre-carpool behaviour of listing coworkers' trips, and the legacy
+  // create_carpool_participation path is refused by RLS for coworker trips. findCarpoolMatches itself is untouched
+  // (dead code kept on purpose).
   const carpoolCandidates: CarpoolCandidateWithPlate[] = [];
 
   return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, gating };
@@ -198,12 +202,12 @@ function parseTripFormInput(formData: FormData): TripFormInput {
   return {
     departureAt: new Date(String(formData.get("departureAt"))).toISOString(),
     expectedReturnAt: new Date(String(formData.get("expectedReturnAt"))).toISOString(),
-    origin: String(formData.get("origin")),
-    destination: String(formData.get("destination")),
+    origin: clampText(formData.get("origin"), MAX_LOCATION_TEXT),
+    destination: clampText(formData.get("destination"), MAX_LOCATION_TEXT),
     distanceKm: Number(formData.get("distanceKm")),
     passengerCount: Number(formData.get("passengerCount")),
     requiresCargo: formData.get("requiresCargo") === "on",
-    justification: String(formData.get("justification")),
+    justification: clampText(formData.get("justification"), MAX_JUSTIFICATION_TEXT),
     allowCarpool: formData.get("allowCarpool") === "on",
   };
 }
@@ -276,7 +280,8 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   // city-string matcher is NOT consulted (empty candidates => planMobility never returns a
   // carpool plan). NOTE: the chat path (chat/actions.ts, chat/dispatch.ts) also goes through
   // planTrip, so chat stops getting old-engine carpool results until Phase C6 wires voice to
-  // the new engine. Orgs with carpool disabled by policy keep today's behaviour untouched.
+  // the new engine. Orgs with carpool disabled by policy get no carpool offer and no new UI (decision L3: the
+  // old matcher is no longer fed candidates for ANY org since 0063, so nothing is offered either way).
   const carpoolCandidates = built.carpoolCandidates;
   const trafficRestrictionEnabled = config.trafficRestrictionEnabled;
 

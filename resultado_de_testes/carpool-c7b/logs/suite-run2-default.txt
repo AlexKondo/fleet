@@ -1,0 +1,131 @@
+
+=== lifecycle RPCs (create/accept/reject/cancel/expire, idempotency, races) ===
+118/118 checks passed.
+
+=== direct-write attacks (forged rows, seats, audit) ===
+65/65 checks passed.
+
+=== step-0 follow-ups ===
+33/33 checks passed.
+
+=== places privacy (coarse until accepted) ===
+33/33 checks passed.
+
+=== carpool_coarse_label table test (37 address formats) ===
+37/37 checks passed.
+
+=== chat conversation FK cascade proof (org / profile delete) ===
+4/4 checks passed.
+
+=== privacy matrix (role x resource reads + attacks + M1/M2) ===
+pending migrations on the live DB: 0066 (M1) not applied, 0067 (M2) not applied
+KNOWN-OPEN - trip_requests as empE (PENDING rider): sees exactly [] [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - reservations as empE (PENDING rider): sees exactly [] [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - carpool_offers as empD: sees exactly [] [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - carpool_offers as empE (PENDING rider): sees exactly [] [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - profiles as empE (PENDING rider): sees exactly ["P:empE","P:mgr","P:adm"] [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - PENDING rider: host trip origin/destination/justification -> 0 rows [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - PENDING rider: host reservation rows -> 0 rows [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - PENDING rider: host reservation embedding the trip -> 0 rows [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - PENDING rider: host profile name -> 0 rows [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - PENDING rider: host offer row (host_id, seats) -> 0 rows [M1: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - employee C -> coworker B, arbitrary title: refused [M2: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - employee C -> administrator, arbitrary title: refused [M2: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - employee C -> administrator, fixed title but forged entity link: refused [M2: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - maintenance operator -> employee: refused [M2: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN - no spoofed notification row exists in the DB [M2: fixed by a pending migration that is not applied yet]
+KNOWN-OPEN cases (15, fixed by the pending migrations 0066/0067 - apply them, then re-run; they must all pass):
+180/180 checks passed.
+
+=== RBAC matrix (RPCs + tables x roles, incl. S1 internals) ===
+KNOWN-OPEN - RPC-S1 lock_and_require_multiple_administrators (S1) as adm: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 lock_and_require_multiple_administrators (S1) as mnt: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 lock_and_require_multiple_administrators (S1) as other: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as anon: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as host: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as rider: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as stranger: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as sec: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as mgr: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as adm: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as mnt: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 auto_reassign_reservation_vehicle (S1) as other: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as anon: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as host: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as rider: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as stranger: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as sec: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as mgr: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as adm: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as mnt: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 rls_auto_enable (S1) as other: refused [S1: pending migration not applied]
+KNOWN-OPEN - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as anon: refused [S1: pending migration not applied]
+KNOWN-OPEN - TABLE read carpool_offers as rider: refused [M1: pending migration not applied]
+KNOWN-OPEN cells (differ only until the pending migrations 0066/0068 are applied): 38
+353/353 checks passed.
+
+=== RBAC matrix (server actions x roles) ===
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+
+=== chat confirm-guard attacks + forged ids (chat-security) ===
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+
+=== allow_carpool regression (live) ===
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+
+=== hostile free text through the chat (LLM) path ===
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+
+=== KPI dashboard data function vs a known scenario ===
+1/1 checks passed.
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+
+=== KPI dashboard at volume (1500 rows > PostgREST cap) + error surfacing ===
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+
+=== mutation check: allow_carpool regression tests fail on the old logic ===
+    Test Files  1 passed (1)
+    Tests  1 passed | 23 skipped (24)
+    Test Files  1 failed (1)
+    Tests  1 failed | 23 skipped (24)
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  app/carpool/actions.test.ts > regression: host answered No at reservation, later enabled an offer (allow_carpool=false) > the rider's search still finds the active offer (the offer row is the consent, not the legacy flag)
+    Test Files  1 failed (1)
+    Tests  1 failed | 1 passed (2)
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  ../../testing/chat-carpool/allow-carpool-offer.live.test.ts > allow_carpool=false trip with an enabled offer > a compatible rider's real search returns that offer
+    Test Files  1 passed (1)
+    Tests  1 passed | 23 skipped (24)
+mutation check OK: the regression tests detect the old allow_carpool logic
+
+=== unit: __options tamper / persisted pending / chat guards ===
+ Test Files  6 passed (6)
+      Tests  106 passed (106)
+
+================ carpool live suite summary ================
+PASS  lifecycle RPCs (create/accept/reject/cancel/expire, idempotency, races)   118/118 checks         140s
+PASS  direct-write attacks (forged rows, seats, audit)                          65/65 checks           49s
+PASS  step-0 follow-ups                                                         33/33 checks           77s
+PASS  places privacy (coarse until accepted)                                    33/33 checks           30s
+PASS  carpool_coarse_label table test (37 address formats)                      37/37 checks           1s
+PASS  chat conversation FK cascade proof (org / profile delete)                 4/4 checks             17s
+PASS  privacy matrix (role x resource reads + attacks + M1/M2)                  180/180 checks         (15 known-open: pending migrations) 113s
+PASS  RBAC matrix (RPCs + tables x roles, incl. S1 internals)                   353/353 checks         (39 known-open: pending migrations) 219s
+PASS  RBAC matrix (server actions x roles)                                      14 passed              171s
+PASS  chat confirm-guard attacks + forged ids (chat-security)                   8 passed               51s
+PASS  allow_carpool regression (live)                                           2 passed               29s
+PASS  hostile free text through the chat (LLM) path                             8 passed               27s
+PASS  KPI dashboard data function vs a known scenario                           1/1 checks             46s
+PASS  KPI dashboard at volume (1500 rows > PostgREST cap) + error surfacing     3 passed               12s
+PASS  mutation check: allow_carpool regression tests fail on the old logic      1 passed               28s
+PASS  unit: __options tamper / persisted pending / chat guards                  106 passed             3s
+known-open cases (pending migrations), counted from the scripts' output: 54
+
+16/16 steps passed.
+exit=0

@@ -1,0 +1,59 @@
+   ▲ Next.js 15.5.9
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · serverActions
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 9.1s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/22) ...
+   Generating static pages (5/22) 
+   Generating static pages (10/22) 
+   Generating static pages (16/22) 
+ ✓ Generating static pages (22/22)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      140 B         102 kB
+├ ƒ /_not-found                            996 B         103 kB
+├ ƒ /account                             1.76 kB         117 kB
+├ ƒ /account/license                     3.85 kB         119 kB
+├ ƒ /account/profile                     1.85 kB         117 kB
+├ ƒ /analytics                             215 B         115 kB
+├ ƒ /analytics/carpool                     215 B         115 kB
+├ ƒ /api/chat/abandon                      140 B         102 kB
+├ ƒ /api/cron/carpool-expiry               140 B         102 kB
+├ ƒ /api/cron/chat-cleanup                 140 B         102 kB
+├ ƒ /api/cron/daily                        140 B         102 kB
+├ ƒ /api/cron/license-reminders            140 B         102 kB
+├ ƒ /auth/callback                         140 B         102 kB
+├ ƒ /dashboard                           2.71 kB         118 kB
+├ ƒ /fleet                               12.4 kB         128 kB
+├ ƒ /fleet/vehicles/[id]                   215 B         115 kB
+├ ƒ /forgot-password                     2.26 kB         108 kB
+├ ƒ /gate                                1.31 kB         117 kB
+├ ƒ /login                               3.36 kB         109 kB
+├ ƒ /reservations/[id]                   1.73 kB         117 kB
+├ ƒ /reservations/[id]/pickup            4.12 kB         110 kB
+├ ƒ /reservations/[id]/return            4.24 kB         110 kB
+├ ƒ /reset-password                      2.78 kB         105 kB
+├ ƒ /settings                            3.68 kB         119 kB
+├ ƒ /settings/mobility-points             1.6 kB         117 kB
+├ ƒ /settings/users                      3.28 kB         119 kB
+├ ƒ /signup                              3.01 kB         108 kB
+├ ƒ /trips                               2.33 kB         118 kB
+└ ƒ /trips/new                           5.61 kB         121 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/82560d59-387aa40c96393b07.js  54.2 kB
+  ├ chunks/939-1de327aca8611723.js       45.6 kB
+  └ other shared chunks (total)          2.07 kB
+
+
+ƒ Middleware                             93.5 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (107kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (259kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)

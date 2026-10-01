@@ -1,0 +1,13 @@
+PASS - seeded 2 conversations and 4 messages
+    {"c":2,"m":4}
+PASS - deleting a profile cascades to its chat conversation and messages (the other user's conversation stays)
+    {"c":0,"m":0,"other":1}
+PASS - deleting the organization cascades to chat_conversations and chat_messages (no manual chat cleanup was done)
+    {"c":0,"m":0}
+PASS - chat-cascade cleanup: no disposable rows left
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"offers":0,"chats":0,"notifications":0}
+
+=== Summary (chat-cascade-proof) ===
+
+4/4 checks passed.
+

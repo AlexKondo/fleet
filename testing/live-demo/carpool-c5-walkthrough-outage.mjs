@@ -1,8 +1,9 @@
 // Phase C5 real-browser walk-through #2: run against a `next dev` started with an INVALID
 // GOOGLE_MAPS_API_KEY (provider outage simulation, port 3101) -> the "could not validate
 // carpools now" banner appears and the normal vehicle flow still completes. Also proves that an
-// organization whose policy has carpool DISABLED keeps today's behaviour (old consent checkbox,
-// no carpool-first, no host seat question).
+// organization whose policy has carpool DISABLED keeps the old UI (consent checkbox, no carpool-first, no host
+// seat question); decision L3 (C7b): such an org is offered NO carpool at all and the legacy join path is refused
+// by RLS for coworker trips.
 import { chromium } from "playwright";
 import {
   BASE, record, results, sql, provisionOrg, cleanupOrgs, login, shot, setShotIndex, fillTrip, waitHydrated,

@@ -42,6 +42,7 @@ vi.mock("@/lib/supabase/admin", () => ({
     }),
     rpc: async (name: string, args: unknown) => {
       state.rpcCalls.push({ name, args });
+      if (name !== "increment_geo_provider_quota_counter") return { data: null, error: null };
       if (state.row) state.row.call_count += 1;
       else state.row = { call_count: 1, consecutive_failure_count: 0, circuit_state: "closed", circuit_opened_at: null };
       return { data: null, error: null };
@@ -64,7 +65,23 @@ describe("withCostGuard", () => {
 
     expect(outcome.status).toBe("ok");
     expect(doCall).toHaveBeenCalledTimes(1);
-    expect(state.rpcCalls).toHaveLength(1);
+    // the call counter increment + (C7b) the outcome/latency record
+    expect(state.rpcCalls.map((c) => (c as { name: string }).name)).toEqual([
+      "increment_geo_provider_quota_counter",
+      "record_geo_provider_call_outcome",
+    ]);
+  });
+
+  it("C7b: records the outcome (ok flag + latency) after every call, success or failure", async () => {
+    await withCostGuard("org-1", "routing", async () => ({ status: "ok" as "ok" | "unavailable" }), (r) => r.status === "ok");
+    await withCostGuard("org-1", "routing", async () => ({ status: "unavailable" as "ok" | "unavailable" }), (r) => r.status === "ok");
+    const outcomes = (state.rpcCalls as { name: string; args: { p_ok: boolean; p_latency_ms: number; p_provider_call_kind: string } }[])
+      .filter((c) => c.name === "record_geo_provider_call_outcome")
+      .map((c) => ({ ok: c.args.p_ok, kind: c.args.p_provider_call_kind, latencyIsNumber: Number.isFinite(c.args.p_latency_ms) && c.args.p_latency_ms >= 0 }));
+    expect(outcomes).toEqual([
+      { ok: true, kind: "routing", latencyIsNumber: true },
+      { ok: false, kind: "routing", latencyIsNumber: true },
+    ]);
   });
 
   it("blocks a call once the daily quota is exceeded, and never invokes doCall", async () => {

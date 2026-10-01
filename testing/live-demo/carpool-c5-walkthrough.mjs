@@ -139,7 +139,7 @@ try {
   await host.goto(`${BASE}/reservations/${hostTrip.res_id}`, { waitUntil: "domcontentloaded" });
   await host.waitForSelector('[data-testid="carpool-pending-request"]');
   const pendText = await host.locator('[data-testid="carpool-pending-request"]').textContent();
-  record("My Trip (host): pending request shows rider name, seats, pickup/drop-off, detour, Accept/Reject", pendText.includes(U.rider1.fullName) && /Aceitar/.test(pendText) && /Recusar/.test(pendText) && /Desvio estimado/.test(pendText) && /Embarque/.test(pendText), pendText.replace(/\n/g, " | "));
+  record("My Trip (host): pending request shows rider name, seats, COARSE pickup/drop-off area (no street number), detour, Accept/Reject", pendText.includes(U.rider1.fullName) && /Aceitar/.test(pendText) && /Recusar/.test(pendText) && /Desvio estimado/.test(pendText) && /Região de embarque/.test(pendText) && !/1578/.test(pendText) && /Apenas a região aproximada/.test(pendText), pendText.replace(/\n/g, " | "));
   await shot(host, "host-pending-request-accept-reject");
   await host.click('[data-testid="carpool-pending-request"] button:has-text("Aceitar")');
   await host.waitForSelector('[data-testid="carpool-participants"]');
@@ -329,7 +329,8 @@ try {
   const cronBody = await authed.json();
   record("Cron route: 401 without the secret, 200 with it (sweep incl. reconcile pass runs)", noAuth.status === 401 && authed.status === 200 && typeof cronBody.expired === "number", { noAuth: noAuth.status, authed: authed.status, cronBody });
   const vj = JSON.parse((await import("node:fs")).readFileSync(`${ROOT}/vercel.json`, "utf8"));
-  record("vercel.json schedule for carpool-expiry is still daily", vj.crons.find((c) => c.path === "/api/cron/carpool-expiry")?.schedule === "0 14 * * *", vj.crons.find((c) => c.path === "/api/cron/carpool-expiry"));
+  // (stale assertion fixed in C7a: since the cron consolidation the daily dispatcher /api/cron/daily runs the expiry sweep)
+  record("vercel.json keeps exactly one daily cron (the /api/cron/daily dispatcher)", vj.crons.length === 1 && vj.crons[0].path === "/api/cron/daily" && vj.crons[0].schedule === "0 12 * * *", vj.crons);
 } catch (e) {
   record("FATAL (unexpected exception)", false, String(e && e.stack ? e.stack : e));
   try {

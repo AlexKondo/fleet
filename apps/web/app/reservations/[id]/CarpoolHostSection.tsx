@@ -160,7 +160,7 @@ export function CarpoolHostSection({
               {p.name ?? "—"}
               <span className="ml-2 text-xs text-fog-600">{fillTemplate(t.requestedSeats, { count: p.seats })}</span>
               {p.pickupLabel || p.dropoffLabel ? (
-                <p className="mt-0.5 text-xs text-fog-400" data-testid="carpool-participant-places">
+                <p className="mt-0.5 text-xs text-fog-400 break-user-text" data-testid="carpool-participant-places">
                   {p.pickupLabel ? `${t.pickupLabel}: ${p.pickupLabel}` : null}
                   {p.pickupLabel && p.dropoffLabel ? " → " : null}
                   {p.dropoffLabel ? `${t.dropoffLabel}: ${p.dropoffLabel}` : null}
@@ -186,7 +186,7 @@ export function CarpoolHostSection({
                 </span>
               </p>
               {r.pickupLabel || r.dropoffLabel ? (
-                <p className="mt-1 text-xs text-fog-400" data-testid="carpool-pending-places">
+                <p className="mt-1 text-xs text-fog-400 break-user-text" data-testid="carpool-pending-places">
                   {r.pickupLabel ? `${r.placesExact ? t.pickupLabel : t.pickupAreaLabel}: ${r.pickupLabel}` : null}
                   {r.pickupLabel && r.dropoffLabel ? " → " : null}
                   {r.dropoffLabel ? `${r.placesExact ? t.dropoffLabel : t.dropoffAreaLabel}: ${r.dropoffLabel}` : null}

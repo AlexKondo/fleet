@@ -13,6 +13,7 @@
 // Usage: node supabase/tests/carpool-c5-step0-followups.mjs   (reads repo-root .env)
 //   Run BEFORE applying 0061 to see the attack succeed (FAILs expected), AFTER to see it refused.
 
+import './lib/net-retry.mjs';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -174,9 +175,16 @@ async function main() {
     p_passenger_count: 1, p_requires_cargo: false, p_justification: 'C5S0 legacy', p_existing_trip_request_id: ctx.tripId,
   });
   const legacyRow = (await sql(`select id, status, passenger_count from trip_participants where trip_request_id='${ctx.tripId}' and passenger_id='${U.rider2}'`))[0];
-  record('Legacy create_carpool_participation (authenticated) still works: creates a PENDING participant', legacy.ok && legacyRow?.status === 'pending', { legacy: legacy.status, legacyRow });
-  const legacyAccept = await rpc(tok.host, 'respond_to_carpool_request', { p_participant_id: legacyRow.id, p_accept: true });
-  const legacyAfter = (await sql(`select status from trip_participants where id='${legacyRow.id}'`))[0];
+  // Phase C7 (0063) CHANGE: a rider can no longer read a coworker's trip, so the legacy SECURITY INVOKER
+  // create path (which inserts a participation on someone else's trip) is refused by RLS. That is the
+  // intended consequence (no old city-string carpool, no forging a relationship to a trip you cannot see);
+  // IN-FLIGHT legacy rows (seeded below as SQL, as they would exist from before) can still be answered.
+  record('0063: legacy create_carpool_participation by an unrelated rider is now refused (cannot forge a participation on a trip it cannot read)', !legacy.ok && !legacyRow, { legacy: legacy.status, legacyRow });
+  const seeded = await sql(`insert into trip_participants (organization_id, trip_request_id, passenger_id, passenger_count, status) values ('${ctx.orgA}', '${ctx.tripId}', '${U.rider2}', 1, 'pending') returning id, status`);
+  const legacyAccept = await rpc(tok.host, 'respond_to_carpool_request', { p_participant_id: seeded[0].id, p_accept: true });
+  const legacyRowAfterSeed = seeded[0];
+  void legacyRowAfterSeed;
+  const legacyAfter = (await sql(`select status from trip_participants where id='${seeded[0].id}'`))[0];
   record('Legacy respond_to_carpool_request (host, security definer) still accepts it', legacyAccept.ok && legacyAfter.status === 'accepted', { legacyAccept: legacyAccept.status, status: legacyAfter.status });
   await sql(`delete from trip_participants where trip_request_id='${ctx.tripId}'`);
 
@@ -271,9 +279,13 @@ async function main() {
   const q1 = await createRequest('rider1', off2);
   const q2 = await createRequest('rider2', off2);
   const readReq = async (token, id) => {
-    const res = await fetch(URL_ + '/rest/v1/carpool_ride_requests?id=eq.' + id + '&select=id,pickup_location,rider_id', { headers: { apikey: ANON, Authorization: 'Bearer ' + token } });
+    const res = await fetch(URL_ + '/rest/v1/carpool_ride_requests?id=eq.' + id + '&select=id,status,rider_id', { headers: { apikey: ANON, Authorization: 'Bearer ' + token } });
     return { status: res.status, rows: await res.json() };
   };
+  // 0064: the exact places are not readable by ANY user JWT, not even the rider/host/manager.
+  const pickupDirect = await fetch(URL_ + '/rest/v1/carpool_ride_requests?id=eq.' + q1.body + '&select=id,pickup_location', { headers: { apikey: ANON, Authorization: 'Bearer ' + tok.host } });
+  const snapDirect = await fetch(URL_ + '/rest/v1/carpool_ride_requests?id=eq.' + q1.body + '&select=id,host_origin_snapshot', { headers: { apikey: ANON, Authorization: 'Bearer ' + tok.rider1 } });
+  record('0064: pickup_location / host snapshots are NOT directly readable by host or rider JWTs (column privilege)', pickupDirect.status === 403 && snapDirect.status === 403, { pickup: pickupDirect.status, snapshot: snapDirect.status });
   const own = await readReq(tok.rider1, q1.body);
   record('Rider reads their OWN ride request', own.rows.length === 1, own.rows.length);
   const peer = await readReq(tok.rider2, q1.body);

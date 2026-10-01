@@ -1,0 +1,482 @@
+pending migration 0068 (S1): APPLIED (strict) [--pending-applied: strict]
+pending migration 0066 (M1): APPLIED (strict)
+
+Carpool RBAC matrix (cell = ACTUAL: Y authorised / data, . refused / none; "!" = differs from the expected value; "~" = differs only until the pending migration 0066 is applied)
+group        endpoint                                                anon     host     rider    stranger sec      mgr      adm      mnt      other    svc      
+RPC          enable_carpool_offer                                    .        Y        .        .        .        Y        Y        .        .        .        
+PASS - RPC enable_carpool_offer as anon: refused
+PASS - RPC enable_carpool_offer as host: authorised
+PASS - RPC enable_carpool_offer as rider: refused
+PASS - RPC enable_carpool_offer as stranger: refused
+PASS - RPC enable_carpool_offer as sec: refused
+PASS - RPC enable_carpool_offer as mgr: authorised
+PASS - RPC enable_carpool_offer as adm: authorised
+PASS - RPC enable_carpool_offer as mnt: refused
+PASS - RPC enable_carpool_offer as other: refused
+PASS - RPC enable_carpool_offer as svc: refused
+RPC          update_carpool_offer                                    .        Y        .        .        .        Y        Y        .        .        .        
+PASS - RPC update_carpool_offer as anon: refused
+PASS - RPC update_carpool_offer as host: authorised
+PASS - RPC update_carpool_offer as rider: refused
+PASS - RPC update_carpool_offer as stranger: refused
+PASS - RPC update_carpool_offer as sec: refused
+PASS - RPC update_carpool_offer as mgr: authorised
+PASS - RPC update_carpool_offer as adm: authorised
+PASS - RPC update_carpool_offer as mnt: refused
+PASS - RPC update_carpool_offer as other: refused
+PASS - RPC update_carpool_offer as svc: refused
+RPC          disable_carpool_offer                                   .        Y        .        .        .        Y        Y        .        .        .        
+PASS - RPC disable_carpool_offer as anon: refused
+PASS - RPC disable_carpool_offer as host: authorised
+PASS - RPC disable_carpool_offer as rider: refused
+PASS - RPC disable_carpool_offer as stranger: refused
+PASS - RPC disable_carpool_offer as sec: refused
+PASS - RPC disable_carpool_offer as mgr: authorised
+PASS - RPC disable_carpool_offer as adm: authorised
+PASS - RPC disable_carpool_offer as mnt: refused
+PASS - RPC disable_carpool_offer as other: refused
+PASS - RPC disable_carpool_offer as svc: refused
+RPC          revalidate_carpool_matches                              .        Y        .        .        .        Y        Y        .        .        .        
+PASS - RPC revalidate_carpool_matches as anon: refused
+PASS - RPC revalidate_carpool_matches as host: authorised
+PASS - RPC revalidate_carpool_matches as rider: refused
+PASS - RPC revalidate_carpool_matches as stranger: refused
+PASS - RPC revalidate_carpool_matches as sec: refused
+PASS - RPC revalidate_carpool_matches as mgr: authorised
+PASS - RPC revalidate_carpool_matches as adm: authorised
+PASS - RPC revalidate_carpool_matches as mnt: refused
+PASS - RPC revalidate_carpool_matches as other: refused
+PASS - RPC revalidate_carpool_matches as svc: refused
+RPC          accept_carpool_ride_request                             .        Y        .        .        .        Y        Y        .        .        .        
+PASS - RPC accept_carpool_ride_request as anon: refused
+PASS - RPC accept_carpool_ride_request as host: authorised
+PASS - RPC accept_carpool_ride_request as rider: refused
+PASS - RPC accept_carpool_ride_request as stranger: refused
+PASS - RPC accept_carpool_ride_request as sec: refused
+PASS - RPC accept_carpool_ride_request as mgr: authorised
+PASS - RPC accept_carpool_ride_request as adm: authorised
+PASS - RPC accept_carpool_ride_request as mnt: refused
+PASS - RPC accept_carpool_ride_request as other: refused
+PASS - RPC accept_carpool_ride_request as svc: refused
+RPC          reject_carpool_ride_request                             .        Y        .        .        .        Y        Y        .        .        .        
+PASS - RPC reject_carpool_ride_request as anon: refused
+PASS - RPC reject_carpool_ride_request as host: authorised
+PASS - RPC reject_carpool_ride_request as rider: refused
+PASS - RPC reject_carpool_ride_request as stranger: refused
+PASS - RPC reject_carpool_ride_request as sec: refused
+PASS - RPC reject_carpool_ride_request as mgr: authorised
+PASS - RPC reject_carpool_ride_request as adm: authorised
+PASS - RPC reject_carpool_ride_request as mnt: refused
+PASS - RPC reject_carpool_ride_request as other: refused
+PASS - RPC reject_carpool_ride_request as svc: refused
+RPC          cancel_carpool_ride_request                             .        .        Y        .        .        Y        Y        .        .        .        
+PASS - RPC cancel_carpool_ride_request as anon: refused
+PASS - RPC cancel_carpool_ride_request as host: refused
+PASS - RPC cancel_carpool_ride_request as rider: authorised
+PASS - RPC cancel_carpool_ride_request as stranger: refused
+PASS - RPC cancel_carpool_ride_request as sec: refused
+PASS - RPC cancel_carpool_ride_request as mgr: authorised
+PASS - RPC cancel_carpool_ride_request as adm: authorised
+PASS - RPC cancel_carpool_ride_request as mnt: refused
+PASS - RPC cancel_carpool_ride_request as other: refused
+PASS - RPC cancel_carpool_ride_request as svc: refused
+RPC          host_ride_request_places                                .        Y        .        .        .        .        .        .        .        .        
+PASS - RPC host_ride_request_places as anon: refused
+PASS - RPC host_ride_request_places as host: authorised
+PASS - RPC host_ride_request_places as rider: refused
+PASS - RPC host_ride_request_places as stranger: refused
+PASS - RPC host_ride_request_places as sec: refused
+PASS - RPC host_ride_request_places as mgr: refused
+PASS - RPC host_ride_request_places as adm: refused
+PASS - RPC host_ride_request_places as mnt: refused
+PASS - RPC host_ride_request_places as other: refused
+PASS - RPC host_ride_request_places as svc: refused
+RPC          create_carpool_ride_request_as_rider (server-only)      .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as anon: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as host: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as rider: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as stranger: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as sec: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as mgr: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as adm: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as mnt: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as other: refused
+PASS - RPC create_carpool_ride_request_as_rider (server-only) as svc: authorised
+RPC          expire_stale_carpool_requests (cron, server-only)       .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as anon: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as host: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as rider: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as stranger: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as sec: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as mgr: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as adm: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as mnt: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as other: refused
+PASS - RPC expire_stale_carpool_requests (cron, server-only) as svc: authorised
+RPC          carpool_policy_for_org (internal)                       .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC carpool_policy_for_org (internal) as anon: refused
+PASS - RPC carpool_policy_for_org (internal) as host: refused
+PASS - RPC carpool_policy_for_org (internal) as rider: refused
+PASS - RPC carpool_policy_for_org (internal) as stranger: refused
+PASS - RPC carpool_policy_for_org (internal) as sec: refused
+PASS - RPC carpool_policy_for_org (internal) as mgr: refused
+PASS - RPC carpool_policy_for_org (internal) as adm: refused
+PASS - RPC carpool_policy_for_org (internal) as mnt: refused
+PASS - RPC carpool_policy_for_org (internal) as other: refused
+PASS - RPC carpool_policy_for_org (internal) as svc: authorised
+RPC          carpool_notify_user (internal)                          .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC carpool_notify_user (internal) as anon: refused
+PASS - RPC carpool_notify_user (internal) as host: refused
+PASS - RPC carpool_notify_user (internal) as rider: refused
+PASS - RPC carpool_notify_user (internal) as stranger: refused
+PASS - RPC carpool_notify_user (internal) as sec: refused
+PASS - RPC carpool_notify_user (internal) as mgr: refused
+PASS - RPC carpool_notify_user (internal) as adm: refused
+PASS - RPC carpool_notify_user (internal) as mnt: refused
+PASS - RPC carpool_notify_user (internal) as other: refused
+PASS - RPC carpool_notify_user (internal) as svc: authorised
+RPC          carpool_emit_event (internal)                           .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC carpool_emit_event (internal) as anon: refused
+PASS - RPC carpool_emit_event (internal) as host: refused
+PASS - RPC carpool_emit_event (internal) as rider: refused
+PASS - RPC carpool_emit_event (internal) as stranger: refused
+PASS - RPC carpool_emit_event (internal) as sec: refused
+PASS - RPC carpool_emit_event (internal) as mgr: refused
+PASS - RPC carpool_emit_event (internal) as adm: refused
+PASS - RPC carpool_emit_event (internal) as mnt: refused
+PASS - RPC carpool_emit_event (internal) as other: refused
+PASS - RPC carpool_emit_event (internal) as svc: authorised
+RPC          carpool_revalidate_trip (internal)                      .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC carpool_revalidate_trip (internal) as anon: refused
+PASS - RPC carpool_revalidate_trip (internal) as host: refused
+PASS - RPC carpool_revalidate_trip (internal) as rider: refused
+PASS - RPC carpool_revalidate_trip (internal) as stranger: refused
+PASS - RPC carpool_revalidate_trip (internal) as sec: refused
+PASS - RPC carpool_revalidate_trip (internal) as mgr: refused
+PASS - RPC carpool_revalidate_trip (internal) as adm: refused
+PASS - RPC carpool_revalidate_trip (internal) as mnt: refused
+PASS - RPC carpool_revalidate_trip (internal) as other: refused
+PASS - RPC carpool_revalidate_trip (internal) as svc: authorised
+RPC          carpool_apply_accept (internal)                         .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC carpool_apply_accept (internal) as anon: refused
+PASS - RPC carpool_apply_accept (internal) as host: refused
+PASS - RPC carpool_apply_accept (internal) as rider: refused
+PASS - RPC carpool_apply_accept (internal) as stranger: refused
+PASS - RPC carpool_apply_accept (internal) as sec: refused
+PASS - RPC carpool_apply_accept (internal) as mgr: refused
+PASS - RPC carpool_apply_accept (internal) as adm: refused
+PASS - RPC carpool_apply_accept (internal) as mnt: refused
+PASS - RPC carpool_apply_accept (internal) as other: refused
+PASS - RPC carpool_apply_accept (internal) as svc: authorised
+RPC          carpool_invalidate_request (internal)                   .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC carpool_invalidate_request (internal) as anon: refused
+PASS - RPC carpool_invalidate_request (internal) as host: refused
+PASS - RPC carpool_invalidate_request (internal) as rider: refused
+PASS - RPC carpool_invalidate_request (internal) as stranger: refused
+PASS - RPC carpool_invalidate_request (internal) as sec: refused
+PASS - RPC carpool_invalidate_request (internal) as mgr: refused
+PASS - RPC carpool_invalidate_request (internal) as adm: refused
+PASS - RPC carpool_invalidate_request (internal) as mnt: refused
+PASS - RPC carpool_invalidate_request (internal) as other: refused
+PASS - RPC carpool_invalidate_request (internal) as svc: authorised
+RPC          carpool_recompute_seats (internal)                      .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC carpool_recompute_seats (internal) as anon: refused
+PASS - RPC carpool_recompute_seats (internal) as host: refused
+PASS - RPC carpool_recompute_seats (internal) as rider: refused
+PASS - RPC carpool_recompute_seats (internal) as stranger: refused
+PASS - RPC carpool_recompute_seats (internal) as sec: refused
+PASS - RPC carpool_recompute_seats (internal) as mgr: refused
+PASS - RPC carpool_recompute_seats (internal) as adm: refused
+PASS - RPC carpool_recompute_seats (internal) as mnt: refused
+PASS - RPC carpool_recompute_seats (internal) as other: refused
+PASS - RPC carpool_recompute_seats (internal) as svc: authorised
+RPC          carpool_seats_taken / free_seats / host_trip_is_active (internal).        .        .        .        .        .        .        .        .        Y        
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as anon: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as host: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as rider: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as stranger: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as sec: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as mgr: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as adm: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as mnt: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as other: refused
+PASS - RPC carpool_seats_taken / free_seats / host_trip_is_active (internal) as svc: authorised
+RPC          record_geo_provider_call_outcome (Cost Guard)           .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as anon: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as host: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as rider: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as stranger: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as sec: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as mgr: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as adm: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as mnt: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as other: refused
+PASS - RPC record_geo_provider_call_outcome (Cost Guard) as svc: authorised
+RPC          increment_geo_provider_quota_counter (Cost Guard)       .        .        .        .        .        .        .        .        .        Y        
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as anon: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as host: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as rider: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as stranger: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as sec: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as mgr: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as adm: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as mnt: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as other: refused
+PASS - RPC increment_geo_provider_quota_counter (Cost Guard) as svc: authorised
+RPC-S1       update_member_role (S1)                                 Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y        
+FAIL - RPC-S1 update_member_role (S1) as anon: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as host: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as rider: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as stranger: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as sec: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as mgr: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as adm: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as mnt: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as other: refused [S1]
+PASS - RPC-S1 update_member_role (S1) as svc: authorised [S1]
+RPC-S1       lock_and_require_multiple_administrators (S1)           Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y        
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as anon: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as host: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as rider: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as stranger: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as sec: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as mgr: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as adm: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as mnt: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as other: refused [S1]
+PASS - RPC-S1 lock_and_require_multiple_administrators (S1) as svc: authorised [S1]
+RPC-S1       auto_reassign_reservation_vehicle (S1)                  Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y        
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as anon: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as host: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as rider: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as stranger: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as sec: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as mgr: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as adm: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as mnt: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as other: refused [S1]
+PASS - RPC-S1 auto_reassign_reservation_vehicle (S1) as svc: authorised [S1]
+RPC-S1       rls_auto_enable (S1)                                    Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y!       Y        
+FAIL - RPC-S1 rls_auto_enable (S1) as anon: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as host: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as rider: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as stranger: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as sec: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as mgr: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as adm: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as mnt: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as other: refused [S1]
+PASS - RPC-S1 rls_auto_enable (S1) as svc: authorised [S1]
+RPC-S1       log_audit_event (S1: anon denied, signed-in own org allowed)Y!       Y        Y        Y        Y        Y        Y        Y        .        Y        
+FAIL - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as anon: refused [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as host: authorised [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as rider: authorised [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as stranger: authorised [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as sec: authorised [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as mgr: authorised [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as adm: authorised [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as mnt: authorised [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as other: refused [S1]
+PASS - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as svc: authorised [S1]
+TABLE read   carpool_offers                                          .        Y        Y!       .        .        Y        Y        .        .        Y        
+PASS - TABLE read carpool_offers as anon: refused
+PASS - TABLE read carpool_offers as host: authorised
+FAIL - TABLE read carpool_offers as rider: refused [M1]
+PASS - TABLE read carpool_offers as stranger: refused
+PASS - TABLE read carpool_offers as sec: refused
+PASS - TABLE read carpool_offers as mgr: authorised
+PASS - TABLE read carpool_offers as adm: authorised
+PASS - TABLE read carpool_offers as mnt: refused
+PASS - TABLE read carpool_offers as other: refused
+PASS - TABLE read carpool_offers as svc: authorised
+TABLE read   carpool_ride_requests                                   .        Y        Y        .        .        Y        Y        .        .        Y        
+PASS - TABLE read carpool_ride_requests as anon: refused
+PASS - TABLE read carpool_ride_requests as host: authorised
+PASS - TABLE read carpool_ride_requests as rider: authorised
+PASS - TABLE read carpool_ride_requests as stranger: refused
+PASS - TABLE read carpool_ride_requests as sec: refused
+PASS - TABLE read carpool_ride_requests as mgr: authorised
+PASS - TABLE read carpool_ride_requests as adm: authorised
+PASS - TABLE read carpool_ride_requests as mnt: refused
+PASS - TABLE read carpool_ride_requests as other: refused
+PASS - TABLE read carpool_ride_requests as svc: authorised
+TABLE read   carpool_events                                          .        .        .        .        .        Y        Y        .        .        Y        
+PASS - TABLE read carpool_events as anon: refused
+PASS - TABLE read carpool_events as host: refused
+PASS - TABLE read carpool_events as rider: refused
+PASS - TABLE read carpool_events as stranger: refused
+PASS - TABLE read carpool_events as sec: refused
+PASS - TABLE read carpool_events as mgr: authorised
+PASS - TABLE read carpool_events as adm: authorised
+PASS - TABLE read carpool_events as mnt: refused
+PASS - TABLE read carpool_events as other: refused
+PASS - TABLE read carpool_events as svc: authorised
+TABLE read   carpool_policy_settings                                 .        Y        Y        Y        Y        Y        Y        Y        .        Y        
+PASS - TABLE read carpool_policy_settings as anon: refused
+PASS - TABLE read carpool_policy_settings as host: authorised
+PASS - TABLE read carpool_policy_settings as rider: authorised
+PASS - TABLE read carpool_policy_settings as stranger: authorised
+PASS - TABLE read carpool_policy_settings as sec: authorised
+PASS - TABLE read carpool_policy_settings as mgr: authorised
+PASS - TABLE read carpool_policy_settings as adm: authorised
+PASS - TABLE read carpool_policy_settings as mnt: authorised
+PASS - TABLE read carpool_policy_settings as other: refused
+PASS - TABLE read carpool_policy_settings as svc: authorised
+TABLE read   geo_provider_quota_counters                             .        .        .        .        .        Y        Y        .        .        Y        
+PASS - TABLE read geo_provider_quota_counters as anon: refused
+PASS - TABLE read geo_provider_quota_counters as host: refused
+PASS - TABLE read geo_provider_quota_counters as rider: refused
+PASS - TABLE read geo_provider_quota_counters as stranger: refused
+PASS - TABLE read geo_provider_quota_counters as sec: refused
+PASS - TABLE read geo_provider_quota_counters as mgr: authorised
+PASS - TABLE read geo_provider_quota_counters as adm: authorised
+PASS - TABLE read geo_provider_quota_counters as mnt: refused
+PASS - TABLE read geo_provider_quota_counters as other: refused
+PASS - TABLE read geo_provider_quota_counters as svc: authorised
+TABLE read   carpool_search_log                                      .        .        .        .        .        Y        Y        .        .        Y        
+PASS - TABLE read carpool_search_log as anon: refused
+PASS - TABLE read carpool_search_log as host: refused
+PASS - TABLE read carpool_search_log as rider: refused
+PASS - TABLE read carpool_search_log as stranger: refused
+PASS - TABLE read carpool_search_log as sec: refused
+PASS - TABLE read carpool_search_log as mgr: authorised
+PASS - TABLE read carpool_search_log as adm: authorised
+PASS - TABLE read carpool_search_log as mnt: refused
+PASS - TABLE read carpool_search_log as other: refused
+PASS - TABLE read carpool_search_log as svc: authorised
+TABLE read   corporate_mobility_points                               .        Y        Y        Y        Y        Y        Y        Y        .        Y        
+PASS - TABLE read corporate_mobility_points as anon: refused
+PASS - TABLE read corporate_mobility_points as host: authorised
+PASS - TABLE read corporate_mobility_points as rider: authorised
+PASS - TABLE read corporate_mobility_points as stranger: authorised
+PASS - TABLE read corporate_mobility_points as sec: authorised
+PASS - TABLE read corporate_mobility_points as mgr: authorised
+PASS - TABLE read corporate_mobility_points as adm: authorised
+PASS - TABLE read corporate_mobility_points as mnt: authorised
+PASS - TABLE read corporate_mobility_points as other: refused
+PASS - TABLE read corporate_mobility_points as svc: authorised
+TABLE insert carpool_offers INSERT (publish seats directly)          .        .        .        .        .        .        .        .        .        Y        
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as anon: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as host: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as rider: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as stranger: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as sec: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as mgr: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as adm: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as mnt: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as other: refused
+PASS - TABLE insert carpool_offers INSERT (publish seats directly) as svc: authorised
+TABLE insert carpool_ride_requests INSERT (forge a request)          .        .        .        .        .        .        .        .        .        Y        
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as anon: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as host: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as rider: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as stranger: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as sec: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as mgr: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as adm: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as mnt: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as other: refused
+PASS - TABLE insert carpool_ride_requests INSERT (forge a request) as svc: authorised
+TABLE insert carpool_events INSERT (forge audit event)               .        .        .        .        .        .        .        .        .        Y        
+PASS - TABLE insert carpool_events INSERT (forge audit event) as anon: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as host: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as rider: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as stranger: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as sec: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as mgr: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as adm: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as mnt: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as other: refused
+PASS - TABLE insert carpool_events INSERT (forge audit event) as svc: authorised
+TABLE insert carpool_search_log INSERT (forge telemetry)             .        .        .        .        .        .        .        .        .        Y        
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as anon: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as host: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as rider: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as stranger: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as sec: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as mgr: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as adm: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as mnt: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as other: refused
+PASS - TABLE insert carpool_search_log INSERT (forge telemetry) as svc: authorised
+TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard)  .        .        .        .        .        .        .        .        .        Y        
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as anon: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as host: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as rider: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as stranger: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as sec: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as mgr: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as adm: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as mnt: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as other: refused
+PASS - TABLE insert geo_provider_quota_counters INSERT (tamper Cost Guard) as svc: authorised
+TABLE insert carpool_policy_settings INSERT (publish a policy version).        .        .        .        .        Y        Y        .        .        Y        
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as anon: refused
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as host: refused
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as rider: refused
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as stranger: refused
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as sec: refused
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as mgr: authorised
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as adm: authorised
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as mnt: refused
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as other: refused
+PASS - TABLE insert carpool_policy_settings INSERT (publish a policy version) as svc: authorised
+TABLE insert corporate_mobility_points INSERT                        .        .        .        .        .        Y        Y        .        .        Y        
+PASS - TABLE insert corporate_mobility_points INSERT as anon: refused
+PASS - TABLE insert corporate_mobility_points INSERT as host: refused
+PASS - TABLE insert corporate_mobility_points INSERT as rider: refused
+PASS - TABLE insert corporate_mobility_points INSERT as stranger: refused
+PASS - TABLE insert corporate_mobility_points INSERT as sec: refused
+PASS - TABLE insert corporate_mobility_points INSERT as mgr: authorised
+PASS - TABLE insert corporate_mobility_points INSERT as adm: authorised
+PASS - TABLE insert corporate_mobility_points INSERT as mnt: refused
+PASS - TABLE insert corporate_mobility_points INSERT as other: refused
+PASS - TABLE insert corporate_mobility_points INSERT as svc: authorised
+KNOWN-OPEN cells (differ only until the pending migrations 0066/0068 are applied): 0
+
+39 endpoints x 10 roles = 390 cells, 38 mismatch(es).
+PASS - C7 cleanup: no disposable rows left
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"offers":0,"chats":0,"notifications":0}
+
+=== Summary (carpool-rbac-matrix) ===
+FAIL - RPC-S1 update_member_role (S1) as anon: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as host: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as rider: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as stranger: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as sec: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as mgr: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as adm: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as mnt: refused [S1]
+FAIL - RPC-S1 update_member_role (S1) as other: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as anon: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as host: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as rider: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as stranger: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as sec: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as mgr: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as adm: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as mnt: refused [S1]
+FAIL - RPC-S1 lock_and_require_multiple_administrators (S1) as other: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as anon: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as host: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as rider: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as stranger: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as sec: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as mgr: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as adm: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as mnt: refused [S1]
+FAIL - RPC-S1 auto_reassign_reservation_vehicle (S1) as other: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as anon: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as host: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as rider: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as stranger: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as sec: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as mgr: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as adm: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as mnt: refused [S1]
+FAIL - RPC-S1 rls_auto_enable (S1) as other: refused [S1]
+FAIL - RPC-S1 log_audit_event (S1: anon denied, signed-in own org allowed) as anon: refused [S1]
+FAIL - TABLE read carpool_offers as rider: refused [M1]
+
+353/391 checks passed.
+

@@ -92,13 +92,13 @@ export async function loadLatestChatState(
   // a plain confirmation card (that would skip the carpool-first choice); a legacy row without
   // options behaves exactly as before.
   if (last.role === "assistant" && last.intent) {
-    const { slots, options } = unpackSlots(last.slots);
-    if (options || requiresConfirmation(last.intent as IntentName) !== "no") {
+    const { slots, options, vehicleOptions } = unpackSlots(last.slots);
+    if (options || vehicleOptions || requiresConfirmation(last.intent as IntentName) !== "no") {
       return {
         status: "needs_confirmation",
         conversationId: conversation.id,
         messages,
-        pendingAction: { intent: last.intent as IntentName, slots, summary: last.content, options },
+        pendingAction: { intent: last.intent as IntentName, slots, summary: last.content, options, vehicleOptions },
       };
     }
   }

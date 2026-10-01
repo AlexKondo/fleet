@@ -68,7 +68,7 @@ describe("googleRoutingProvider", () => {
     (fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("timeout"));
     const provider = createGoogleRoutingProvider("org-1");
     const outcome = await provider.computeRoute(SAO_PAULO, CAMPINAS);
-    expect(outcome).toEqual({ status: "unavailable", reason: "timeout" });
+    expect(outcome).toEqual({ status: "unavailable", reason: "routes_network_error" });
   });
 
   it("evaluateRouteInsertion: candidate pickup/dropoff equal to host destination yields ~0 additional distance/time", async () => {

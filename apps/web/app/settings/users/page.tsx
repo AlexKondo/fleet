@@ -34,7 +34,7 @@ export default async function UsersPage() {
   // 0063: names/roles come from profiles; the license columns are revoked at column level and are
   // served to fleet_manager/administrator only by the role-checked list_member_licenses() definer
   // function (merged here by id).
-  const [{ data: baseProfiles, error: profilesError }, { data: licenseRows }] = await Promise.all([
+  const [{ data: baseProfiles, error: profilesError }, { data: licenseRows, error: licensesError }] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, full_name, role")
@@ -42,6 +42,9 @@ export default async function UsersPage() {
       .order("full_name"),
     supabase.rpc("list_member_licenses"),
   ]);
+  // M3: when the license read fails the page must NOT pretend the licenses are blank (the forms used to post
+  // those blanks back and wipe the CNH): surface the error and render the license/authorization controls disabled.
+  const licensesAvailable = !licensesError && Array.isArray(licenseRows);
   const licenseById = new Map((licenseRows ?? []).map((l) => [l.id, l]));
   const profiles = (baseProfiles ?? []).map((p) => {
     const l = licenseById.get(p.id);
@@ -84,6 +87,15 @@ export default async function UsersPage() {
           {dict.team.loadError}
         </div>
       ) : null}
+      {!licensesAvailable ? (
+        <div
+          role="alert"
+          data-testid="license-load-error"
+          className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
+        >
+          {dict.team.licenseLoadError}
+        </div>
+      ) : null}
 
       <section className="px-6 py-4">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
@@ -110,6 +122,7 @@ export default async function UsersPage() {
                   drivers_license_expiration: m.drivers_license_expiration,
                 }}
                 isSelf={m.id === user.id}
+                licensesAvailable={licensesAvailable}
                 dict={dict}
               />
             ),

@@ -1,4 +1,5 @@
 import "server-only";
+import { providerErrorReason } from "./redact";
 import type {
   LatLng,
   RouteComputeOutcome,
@@ -103,7 +104,7 @@ async function rawComputeRoute(
 
     return { status: "ok", distanceKm: route.distanceMeters / 1000, durationMin };
   } catch (err) {
-    return { status: "unavailable", reason: err instanceof Error ? err.message : "routes_unknown_error" };
+    return { status: "unavailable", reason: providerErrorReason("routes", err) };
   }
 }
 

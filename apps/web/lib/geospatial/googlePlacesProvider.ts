@@ -1,4 +1,5 @@
 import "server-only";
+import { providerErrorReason } from "./redact";
 import type {
   GeocodingOutcome,
   GeocodingProvider,
@@ -89,7 +90,7 @@ async function rawGeocode(address: string, apiKey: string): Promise<GeocodingOut
     };
     return { status: "ok", location };
   } catch (err) {
-    return { status: "unavailable", reason: err instanceof Error ? err.message : "geocode_unknown_error" };
+    return { status: "unavailable", reason: providerErrorReason("geocode", err) };
   }
 }
 
@@ -152,7 +153,7 @@ async function rawSearchPlaces(query: string, apiKey: string): Promise<PlaceSear
 
     return { status: "ok", results };
   } catch (err) {
-    return { status: "unavailable", reason: err instanceof Error ? err.message : "places_unknown_error" };
+    return { status: "unavailable", reason: providerErrorReason("places", err) };
   }
 }
 

@@ -1,6 +1,7 @@
 // Shared helpers for the Phase C5 real-browser walk-throughs (Playwright, live Supabase + live
 // Google through the local `next dev` server). Provisioning mirrors
 // supabase/tests/carpool-lifecycle-rpcs.mjs: disposable orgs/users, removed in `finally`.
+import '../../supabase/tests/lib/net-retry.mjs';
 import { readFileSync, mkdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import path from "node:path";

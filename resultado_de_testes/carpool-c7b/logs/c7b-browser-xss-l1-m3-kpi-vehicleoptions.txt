@@ -1,0 +1,71 @@
+PASS - seed: hostile reservation created through create_vehicle_reservation
+PASS - seed: the 5000+ char destination is stored (DB has no limit); the form/chat paths clamp it to 300 chars (see unit tests)
+    {"len":5082}
+PASS - seed: ride requests with hostile pickup/drop-off labels created
+    {"r1":200,"r2":200}
+PASS - seed: the hostile label is stored verbatim as DATA (escaping happens at render)
+    {"len":84}
+PASS - host reservation page (PENDING requests, coarse labels): nothing executed, no injected elements
+    {"xss":0,"imgX":0,"scripts":0,"attrs":0}
+PASS - host reservation page (ACCEPTED rider => exact hostile label rendered): inert text
+    {"xss":0,"imgX":0}
+PASS - host reservation page shows the hostile destination / label as visible TEXT (escaped, not interpreted)
+    {"sawPayloadText":true}
+PASS - host reservation page: a 5000-char destination does not break the layout (no horizontal page overflow > 40px)
+    {"overflowPx":0}
+PASS - host /trips (Gantt bar label = hostile destination): inert
+    {"xss":0,"overflowPx":0}
+PASS - L1: changing the Gantt zoom persists to profiles.gantt_zoom_preference (was never saved before)
+    {"before":"month","after":"quarter"}
+PASS - L1: after a reload the Gantt opens at the saved zoom (Trimestre)
+PASS - L1: another user cannot set someone else's zoom (PATCH on profiles changes nothing)
+    {"status":403,"still":"quarter","after":"quarter"}
+PASS - rider /trips (accepted request): inert
+    {"xss":0}
+PASS - rider2 /trips (REJECTED with a hostile host reason): reason shown as inert text, nothing executed
+    {"xss":0,"imgX":0,"sawReasonText":true}
+PASS - manager dashboard (pending approvals show the hostile destination): inert
+    {"xss":0,"imgX":0,"overflowPx":0}
+PASS - manager bell: the notification body built from the hostile destination is inert text
+    {"xss":0,"imgX":0,"sawPayloadText":true}
+PASS - administrator /analytics (destinations list with the hostile destination): inert
+    {"xss":0,"overflowPx":0}
+PASS - administrator: /analytics links to the carpool KPI dashboard
+PASS - KPI dashboard (administrator) renders: ride requests = 2 (1 accepted, 1 rejected), offers enabled = 1
+    {"total":"2","accepted":"1","enabled":"1"}
+PASS - KPI dashboard shows the estimate labelling (avoided km marked as ESTIMATE, cost marked as ESTIMATED)
+    {"est":true,"cost":true}
+PASS - KPI dashboard: the 7 / 30 / 90 day range links work
+PASS - KPI dashboard: fleet_manager can open it
+PASS - KPI dashboard: employee (host) is redirected away
+    {"landed":"/dashboard"}
+PASS - KPI dashboard: employee (emp) is redirected away
+    {"landed":"/dashboard"}
+PASS - M3: toggling driver authorization changes ONLY driver_authorized (CNH number / category / expiry untouched)
+    {"before":{"n":"C5UI-000","c":"B","e":"2030-01-01","a":false},"after":{"n":"C5UI-000","c":"B","e":"2030-01-01","a":true}}
+PASS - M3: editing the license category changes ONLY the license columns (driver_authorized untouched)
+    {"after":{"n":"C5UI-000","c":"AB","e":"2030-01-01","a":true}}
+PASS - 4b: after a PAGE RELOAD the chat card shows the vehicle alternatives as numbered buttons again
+    ["1. SUV Um(C5C1JQT)","2. SUV Dois(C5C2JQT)"]
+PASS - chat: an assistant message / confirmation summary containing an XSS payload is rendered as inert text after reload
+    {"xss":0,"imgX":0,"sawPayloadText":true}
+PASS - 4b: a TAMPERED persisted vehicle list is rejected on restore (no numbered buttons; plain confirmation card)
+    {"buttons":0}
+PASS - Cleanup: no disposable rows left in the live DB
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"participants":0,"offers":0,"requests":0,"events":0,"policies":0,"quota_rows":0,"notifications":0,"audit":0}
+CLEANUP QUERY:
+select
+      (select count(*) from organizations where name like 'C5UI-ORG-%-mupzsjqt') orgs,
+      (select count(*) from profiles where id in ('77b167bc-8fd8-4fa4-8f12-e8ff60d4cef3','6cc1528c-f9bc-446e-b874-b911ce6624c4','13b8370c-3f31-41c8-931c-d3760fd5d19e','d028ebf2-79d0-4280-aec4-cf86234e5e68','cbed3505-a863-4a69-8b82-11c1c77b6564','d3387554-515c-4e0c-8e79-d0ed9b51acd0')) profiles,
+      (select count(*) from vehicles where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) vehicles,
+      (select count(*) from trip_requests where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) trips,
+      (select count(*) from trip_participants where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) participants,
+      (select count(*) from carpool_offers where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) offers,
+      (select count(*) from carpool_ride_requests where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) requests,
+      (select count(*) from carpool_events where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) events,
+      (select count(*) from carpool_policy_settings where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) policies,
+      (select count(*) from geo_provider_quota_counters where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) quota_rows,
+      (select count(*) from notifications where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) notifications,
+      (select count(*) from audit_log where organization_id in ('542228c7-4df7-422a-88a9-1729c71e8b72')) audit
+
+30/30 checks passed.

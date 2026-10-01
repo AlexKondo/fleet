@@ -1,0 +1,28 @@
+PASS - provider failure (invalid key): the outage banner is shown, the vehicle flow stays available
+PASS - the (fake) API key appears NOWHERE in the HTML / server-action responses / RSC payloads / headers / console
+    {"occurrences":0,"bytesScanned":23065766}
+PASS - no 'key=' query string of a provider URL appears in anything the browser received
+    {}
+PASS - no Google-key-shaped token (AIza + 35 chars) anywhere in what the browser received
+    {}
+PASS - the (fake) API key appears nowhere in the server log (errors / warnings / request lines)
+    {"logBytes":972,"occurrences":0}
+  server log lines mentioning googleapis (first 5, key-free by the check above): []
+PASS - Cleanup: no disposable rows left in the live DB
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"participants":0,"offers":0,"requests":0,"events":0,"policies":0,"quota_rows":0,"notifications":0,"audit":0}
+CLEANUP QUERY:
+select
+      (select count(*) from organizations where name like 'C5UI-ORG-%-mupzx88t') orgs,
+      (select count(*) from profiles where id in ('0207eed0-5f06-4d32-9659-bc4d03421432','066c2417-a905-4c05-bfdc-aecbd7d1d17a')) profiles,
+      (select count(*) from vehicles where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) vehicles,
+      (select count(*) from trip_requests where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) trips,
+      (select count(*) from trip_participants where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) participants,
+      (select count(*) from carpool_offers where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) offers,
+      (select count(*) from carpool_ride_requests where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) requests,
+      (select count(*) from carpool_events where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) events,
+      (select count(*) from carpool_policy_settings where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) policies,
+      (select count(*) from geo_provider_quota_counters where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) quota_rows,
+      (select count(*) from notifications where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) notifications,
+      (select count(*) from audit_log where organization_id in ('b25f4c3f-7e6e-415c-bc10-bfb2bead01bf')) audit
+
+6/6 checks passed.

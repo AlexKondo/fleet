@@ -1,0 +1,163 @@
+PASS - employee-host / dashboard
+PASS - employee-host / trips
+PASS - employee-host / trips-new
+PASS - employee-host / reservation-detail
+PASS - employee-host / reservation-pickup
+PASS - employee-host / reservation-of-coworker
+PASS - employee-host / account
+PASS - employee-host / account-profile
+PASS - employee-host / account-license
+PASS - employee-host / settings-redirect
+PASS - employee-host / fleet-redirect
+PASS - employee-host / gate-redirect
+PASS - employee-host / analytics-redirect
+PASS - employee-host / notification bell: shows own notification, NO 'falta de upload da cnh' (has valid CNH)
+    {"sawNotif":true}
+PASS - employee-host / chat panel opens
+PASS - employee-rider / dashboard
+PASS - employee-rider / trips
+PASS - employee-rider / reservation-of-own
+PASS - employee-rider / reservation-of-host-not-allowed
+PASS - employee-rider / account-profile
+PASS - employee-unrelated / dashboard
+PASS - employee-unrelated / trips
+PASS - employee-unrelated / reservation-of-host
+PASS - employee-unrelated / trips/new planning recommends ONLY the free vehicle (busy windows exclude V1-V3)
+    {"v4":"C7R49VP"}
+PASS - security / dashboard
+PASS - security / gate
+PASS - security / reservation-detail
+PASS - security / reservation-pickup
+PASS - security / account-profile
+PASS - security / trips
+PASS - maintenance / dashboard
+PASS - maintenance / fleet-redirect
+PASS - maintenance / trips
+PASS - fleet_manager / dashboard
+PASS - fleet_manager / trips
+PASS - fleet_manager / trips-new
+PASS - fleet_manager / reservation-detail
+PASS - fleet_manager / reservation-pickup
+PASS - fleet_manager / gate
+PASS - fleet_manager / fleet
+PASS - fleet_manager / fleet-vehicle
+PASS - fleet_manager / analytics
+PASS - fleet_manager / settings
+PASS - fleet_manager / settings-mobility-points
+PASS - fleet_manager / account
+PASS - fleet_manager / account-profile
+PASS - fleet_manager / account-license
+PASS - fleet_manager / dashboard: Approve a pending reservation works
+    {"b":"confirmed","e":"pending_approval"}
+PASS - fleet_manager / settings-users-redirect
+PASS - administrator / dashboard
+PASS - administrator / trips
+PASS - administrator / trips-new
+PASS - administrator / reservation-detail
+PASS - administrator / reservation-pickup
+PASS - administrator / gate
+PASS - administrator / fleet
+PASS - administrator / fleet-vehicle
+PASS - administrator / analytics
+PASS - administrator / settings
+PASS - administrator / settings-mobility-points
+PASS - administrator / account
+PASS - administrator / account-profile
+PASS - administrator / account-license
+PASS - administrator / settings-users
+PASS - administrator / settings-users: license numbers load from list_member_licenses (8 members with CNH)
+    {"lic":8}
+PASS - license gate: user WITHOUT CNH is redirected to /account/license and sees the gate notice
+    /account/license
+PASS - license gate: other routes stay blocked
+PASS - license bell: security user WITHOUT CNH sees the 'Falta de upload da CNH' bell item (not gated)
+PASS - license bell: after the CNH is on file the bell item disappears
+PASS - license gate: once the CNH is on file the gate clears and the bell item is gone
+    /dashboard
+PASS - Cleanup: no disposable rows left in the live DB
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"participants":0,"offers":0,"requests":0,"events":0,"policies":0,"quota_rows":0,"notifications":0,"audit":0}
+CLEANUP QUERY:
+select
+      (select count(*) from organizations where name like 'C5UI-ORG-%-mupzi9vp') orgs,
+      (select count(*) from profiles where id in ('5048f7f9-8a90-4458-97e1-8c789491b62a','10a8830d-b169-424e-90cb-a2e6957f1c72','4c207cf4-d1e1-47d2-b7ec-3a34a8d7d393','8535ff43-62bc-453f-9b27-648a13590ebf','400ede33-9c7e-4c35-988e-bfa3f3b92927','9baeb1a5-37a5-4a21-bcf6-e4107afd0617','7314ce11-98be-46c9-9668-8d0fe490e252','aae0709f-ce1a-4b2f-8441-25ac95fce6cb','d756daed-e5d5-4f00-847a-d161d53cee2f','f7384fb0-5e21-4c7b-9cf7-16c4176b60d5')) profiles,
+      (select count(*) from vehicles where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) vehicles,
+      (select count(*) from trip_requests where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) trips,
+      (select count(*) from trip_participants where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) participants,
+      (select count(*) from carpool_offers where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) offers,
+      (select count(*) from carpool_ride_requests where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) requests,
+      (select count(*) from carpool_events where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) events,
+      (select count(*) from carpool_policy_settings where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) policies,
+      (select count(*) from geo_provider_quota_counters where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) quota_rows,
+      (select count(*) from notifications where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) notifications,
+      (select count(*) from audit_log where organization_id in ('3f22b229-f44c-46f1-84a8-cf5dcdf6af6d')) audit
+
+=== SCREEN x ROLE TABLE ===
+PASS  employee-host        dashboard
+PASS  employee-host        trips
+PASS  employee-host        trips-new
+PASS  employee-host        reservation-detail
+PASS  employee-host        reservation-pickup
+PASS  employee-host        reservation-of-coworker
+PASS  employee-host        account
+PASS  employee-host        account-profile
+PASS  employee-host        account-license
+PASS  employee-host        settings-redirect
+PASS  employee-host        fleet-redirect
+PASS  employee-host        gate-redirect
+PASS  employee-host        analytics-redirect
+PASS  employee-host        bell
+PASS  employee-host        chat panel
+PASS  employee-rider       dashboard
+PASS  employee-rider       trips
+PASS  employee-rider       reservation-of-own
+PASS  employee-rider       reservation-of-host-not-allowed
+PASS  employee-rider       account-profile
+PASS  employee-unrelated   dashboard
+PASS  employee-unrelated   trips
+PASS  employee-unrelated   reservation-of-host
+PASS  employee-unrelated   trips/new plan submit
+PASS  security             dashboard
+PASS  security             gate
+PASS  security             reservation-detail
+PASS  security             reservation-pickup
+PASS  security             account-profile
+PASS  security             trips
+PASS  maintenance          dashboard
+PASS  maintenance          fleet-redirect
+PASS  maintenance          trips
+PASS  fleet_manager        dashboard
+PASS  fleet_manager        trips
+PASS  fleet_manager        trips-new
+PASS  fleet_manager        reservation-detail
+PASS  fleet_manager        reservation-pickup
+PASS  fleet_manager        gate
+PASS  fleet_manager        fleet
+PASS  fleet_manager        fleet-vehicle
+PASS  fleet_manager        analytics
+PASS  fleet_manager        settings
+PASS  fleet_manager        settings-mobility-points
+PASS  fleet_manager        account
+PASS  fleet_manager        account-profile
+PASS  fleet_manager        account-license
+PASS  fleet_manager        dashboard approve action
+PASS  fleet_manager        settings-users-redirect
+PASS  administrator        dashboard
+PASS  administrator        trips
+PASS  administrator        trips-new
+PASS  administrator        reservation-detail
+PASS  administrator        reservation-pickup
+PASS  administrator        gate
+PASS  administrator        fleet
+PASS  administrator        fleet-vehicle
+PASS  administrator        analytics
+PASS  administrator        settings
+PASS  administrator        settings-mobility-points
+PASS  administrator        account
+PASS  administrator        account-profile
+PASS  administrator        account-license
+PASS  administrator        settings-users
+PASS  administrator        settings-users license data
+PASS  security-nocnh       bell item appears, then clears
+PASS  employee-nocnh       gate + bell, then cleared
+
+71/71 checks passed.

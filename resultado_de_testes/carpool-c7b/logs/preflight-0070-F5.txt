@@ -1,0 +1,104 @@
+preflight: 0070_f5_default_privileges_no_auto_exposure.sql  suites=core,f5  checks=94  real profiles=5 (employee,employee,security,administrator,administrator)
+Every run is wrapped in begin ... rollback (single Management-API request); nothing stays applied.
+
+check                              role      BEFORE (baseline)                  WITH migration                     expected           verdict
+core.host.profile                  host      1 row(s)                           1 row(s)                           1 rows             PASS
+core.host.my_license               host      1 row(s)                           1 row(s)                           1 rows             PASS
+core.host.notif_read               host      1 row(s)                           1 row(s)                           >= 1 rows          PASS
+core.host.notif_self               host      ok (1 row)                         ok (1 row)                         ok                 PASS
+core.host.busy                     host      2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.host.vehicles                 host      4 row(s)                           4 row(s)                           >= 4 rows          PASS
+core.rA.profile                    rA        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rA.my_license                 rA        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rA.notif_read                 rA        1 row(s)                           1 row(s)                           >= 1 rows          PASS
+core.rA.notif_self                 rA        ok (1 row)                         ok (1 row)                         ok                 PASS
+core.rA.busy                       rA        2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.rA.vehicles                   rA        4 row(s)                           4 row(s)                           >= 4 rows          PASS
+core.rP.profile                    rP        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rP.my_license                 rP        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rP.notif_read                 rP        1 row(s)                           1 row(s)                           >= 1 rows          PASS
+core.rP.notif_self                 rP        ok (1 row)                         ok (1 row)                         ok                 PASS
+core.rP.busy                       rP        2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.rP.vehicles                   rP        4 row(s)                           4 row(s)                           >= 4 rows          PASS
+core.rX.profile                    rX        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rX.my_license                 rX        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rX.notif_read                 rX        1 row(s)                           1 row(s)                           >= 1 rows          PASS
+core.rX.notif_self                 rX        ok (1 row)                         ok (1 row)                         ok                 PASS
+core.rX.busy                       rX        2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.rX.vehicles                   rX        4 row(s)                           4 row(s)                           >= 4 rows          PASS
+core.sec.profile                   sec       1 row(s)                           1 row(s)                           1 rows             PASS
+core.sec.my_license                sec       1 row(s)                           1 row(s)                           1 rows             PASS
+core.sec.notif_read                sec       1 row(s)                           1 row(s)                           >= 1 rows          PASS
+core.sec.notif_self                sec       ok (1 row)                         ok (1 row)                         ok                 PASS
+core.sec.busy                      sec       2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.sec.vehicles                  sec       4 row(s)                           4 row(s)                           >= 4 rows          PASS
+core.mgr.profile                   mgr       1 row(s)                           1 row(s)                           1 rows             PASS
+core.mgr.my_license                mgr       1 row(s)                           1 row(s)                           1 rows             PASS
+core.mgr.notif_read                mgr       1 row(s)                           1 row(s)                           >= 1 rows          PASS
+core.mgr.notif_self                mgr       ok (1 row)                         ok (1 row)                         ok                 PASS
+core.mgr.busy                      mgr       2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.mgr.vehicles                  mgr       4 row(s)                           4 row(s)                           >= 4 rows          PASS
+core.adm.profile                   adm       1 row(s)                           1 row(s)                           1 rows             PASS
+core.adm.my_license                adm       1 row(s)                           1 row(s)                           1 rows             PASS
+core.adm.notif_read                adm       1 row(s)                           1 row(s)                           >= 1 rows          PASS
+core.adm.notif_self                adm       ok (1 row)                         ok (1 row)                         ok                 PASS
+core.adm.busy                      adm       2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.adm.vehicles                  adm       4 row(s)                           4 row(s)                           >= 4 rows          PASS
+core.mnt.profile                   mnt       1 row(s)                           1 row(s)                           1 rows             PASS
+core.mnt.my_license                mnt       1 row(s)                           1 row(s)                           1 rows             PASS
+core.mnt.notif_read                mnt       1 row(s)                           1 row(s)                           >= 1 rows          PASS
+core.mnt.notif_self                mnt       ok (1 row)                         ok (1 row)                         ok                 PASS
+core.mnt.busy                      mnt       2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.mnt.vehicles                  mnt       4 row(s)                           4 row(s)                           >= 4 rows          PASS
+core.mgr.lic_list                  mgr       9 row(s)                           9 row(s)                           >= 9 rows          PASS
+core.adm.lic_list                  adm       9 row(s)                           9 row(s)                           >= 9 rows          PASS
+core.host.lic_list                 host      ERROR 42501: not authorized        ERROR 42501: not authorized        error 42501        PASS
+core.rX.lic_list                   rX        ERROR 42501: not authorized        ERROR 42501: not authorized        error 42501        PASS
+core.sec.lic_list                  sec       ERROR 42501: not authorized        ERROR 42501: not authorized        error 42501        PASS
+core.mnt.lic_list                  mnt       ERROR 42501: not authorized        ERROR 42501: not authorized        error 42501        PASS
+core.host.trips                    host      1 row(s)                           1 row(s)                           1 rows             PASS
+core.host.riders                   host      3 row(s)                           3 row(s)                           3 rows             PASS
+core.host.requests                 host      2 row(s)                           2 row(s)                           2 rows             PASS
+core.host.places                   host      2 row(s)                           2 row(s)                           >= 1 rows          PASS
+core.host.msgs                     host      1 row(s)                           1 row(s)                           1 rows             PASS
+core.rP.own_requests               rP        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rA.own_requests               rA        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rA.joined_trip                rA        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rX.own_trip                   rX        1 row(s)                           1 row(s)                           1 rows             PASS
+core.rX.nodir                      rX        0 row(s)                           0 row(s)                           0 rows             PASS
+core.mgr.trips                     mgr       2 row(s)                           2 row(s)                           2 rows             PASS
+core.sec.trips                     sec       2 row(s)                           2 row(s)                           2 rows             PASS
+core.mnt.trips                     mnt       0 row(s)                           0 row(s)                           0 rows             PASS
+core.other.org                     other     0 row(s)                           0 row(s)                           0 rows             PASS
+real0.employee.own                 real      1 row {"lic":1,"own":1}            1 row {"lic":1,"own":1}            same as baseline   PASS
+real0.employee.counts              real      1 row {"trips":2,"notifs":2,"offe  1 row {"trips":2,"notifs":2,"offe  same as baseline   PASS
+real0.employee.notif_self          real      ok (1 row)                         ok (1 row)                         ok                 PASS
+real1.employee.own                 real      1 row {"lic":1,"own":1}            1 row {"lic":1,"own":1}            same as baseline   PASS
+real1.employee.counts              real      1 row {"trips":0,"notifs":0,"offe  1 row {"trips":0,"notifs":0,"offe  same as baseline   PASS
+real1.employee.notif_self          real      ok (1 row)                         ok (1 row)                         ok                 PASS
+real2.security.own                 real      1 row {"lic":1,"own":1}            1 row {"lic":1,"own":1}            same as baseline   PASS
+real2.security.counts              real      1 row {"trips":6,"notifs":7,"offe  1 row {"trips":6,"notifs":7,"offe  same as baseline   PASS
+real2.security.notif_self          real      ok (1 row)                         ok (1 row)                         ok                 PASS
+real3.administrator.own            real      1 row {"lic":1,"own":1}            1 row {"lic":1,"own":1}            same as baseline   PASS
+real3.administrator.counts         real      1 row {"trips":6,"notifs":8,"offe  1 row {"trips":6,"notifs":8,"offe  same as baseline   PASS
+real3.administrator.notif_self     real      ok (1 row)                         ok (1 row)                         ok                 PASS
+real3.administrator.lic_list       real      1 row {"n":5}                      1 row {"n":5}                      same as baseline   PASS
+real4.administrator.own            real      1 row {"lic":1,"own":1}            1 row {"lic":1,"own":1}            same as baseline   PASS
+real4.administrator.counts         real      1 row {"trips":6,"notifs":6,"offe  1 row {"trips":6,"notifs":6,"offe  same as baseline   PASS
+real4.administrator.notif_self     real      ok (1 row)                         ok (1 row)                         ok                 PASS
+real4.administrator.lic_list       real      1 row {"n":5}                      1 row {"n":5}                      same as baseline   PASS
+f5.anon.new_table                  anon      0 row(s)                           ERROR 42501: permission denied fo  error 42501        PASS (changed by migration)
+f5.anon.new_function               anon      1 row {"zz_probe_fn":1}            ERROR 42501: permission denied fo  error 42501        PASS (changed by migration)
+f5.anon.new_sequence               anon      1 row {"nextval":1}                ERROR 42501: permission denied fo  error 42501        PASS (changed by migration)
+f5.authenticated.new_table         rX        0 row(s)                           ERROR 42501: permission denied fo  error 42501        PASS (changed by migration)
+f5.authenticated.new_function      rX        1 row {"zz_probe_fn":1}            ERROR 42501: permission denied fo  error 42501        PASS (changed by migration)
+f5.authenticated.new_sequence      rX        1 row {"nextval":2}                ERROR 42501: permission denied fo  error 42501        PASS (changed by migration)
+f5.service.new_table               service_role 1 row {"id":1}                     1 row {"id":1}                     ok                 PASS
+f5.service.new_function            service_role 1 row {"zz_probe_fn":1}            1 row {"zz_probe_fn":1}            ok                 PASS
+f5.grant_works                     rX        0 row(s)                           0 row(s)                           ok                 PASS
+
+94/94 expectations met WITH the migration; 6 are changed by it (fail before, pass after).
+ACL snapshot: the migration changes 7 ACL lines (functions/relations/columns/default ACLs).
+ROLLBACK ACL proof: 316 ACL entries (functions, relations, columns, default ACLs) before the migration; after migration + rollback the snapshot is IDENTICAL (diff = 0)
+ROLLBACK proof: after migration + 0070_rollback.sql, 94/94 checks return exactly the baseline result
+rollback proof (must be zeros): {"orgs":0,"users":0}

@@ -13,7 +13,9 @@ import { ThemeToggle } from "./ui/ThemeToggle";
 import { LanguageToggle } from "./ui/LanguageToggle";
 import { getLocale, getDictionary } from "../lib/i18n/getLocale";
 import { getCurrentUser } from "../lib/auth/currentUser";
-import { getOwnLicense } from "../lib/auth/ownLicense";
+import { getOwnLicense, licenseMissingFromHeader } from "../lib/auth/ownLicense";
+import { LICENSE_MISSING_HEADER } from "../lib/auth/headers";
+import { headers } from "next/headers";
 import { createSupabaseServerClient } from "../lib/supabase/server";
 import {
   AnalyticsIcon,
@@ -73,12 +75,15 @@ export async function AppShell({
   let avatarUrl: string | null = null;
   if (currentUser) {
     // License columns are not directly readable since 0063: get_my_license() answers for the caller only.
+    // L6: middleware already read it for this request (one RPC per request, not two); only when it did not
+    // (/account routes skip the gate, or the read failed there) does the shell read it itself.
+    const fromMiddleware = licenseMissingFromHeader((await headers()).get(LICENSE_MISSING_HEADER));
     const [{ data: ownProfile }, ownLicense] = await Promise.all([
       supabase.from("profiles").select("avatar_url").eq("id", currentUser.id).maybeSingle(),
-      getOwnLicense(supabase),
+      fromMiddleware === null ? getOwnLicense(supabase) : Promise.resolve(null),
     ]);
     // null = the read failed: do not lock the UI down on a transient error (the middleware gate fails open too).
-    licenseMissing = ownLicense ? !ownLicense.number : false;
+    licenseMissing = fromMiddleware !== null ? fromMiddleware : ownLicense ? !ownLicense.number : false;
     avatarUrl = ownProfile?.avatar_url ?? null;
   }
 

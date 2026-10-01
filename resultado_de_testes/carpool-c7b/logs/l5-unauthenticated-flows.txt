@@ -1,0 +1,35 @@
+PASS - unauthenticated GET /login -> /login (200)
+PASS - unauthenticated GET /signup -> /signup (200)
+PASS - unauthenticated GET /forgot-password -> /forgot-password (200)
+PASS - unauthenticated GET /reset-password -> /forgot-password (200)
+PASS - unauthenticated GET /trips -> /login (200)
+PASS - unauthenticated GET / -> /login (200)
+PASS - unauthenticated GET /analytics/carpool -> /login (200)
+PASS - wrong-password login stays on /login with an error (no crash)
+PASS - forgot-password submission completes without a server error
+server-side Supabase requests during the unauthenticated flows: total=2, /rest/v1 = 0, of which with the anon key = 0
+  by path/bearer: [["POST /auth/v1/token [anon]",1],["POST /auth/v1/recover [anon]",1]]
+PASS - L5: NO unauthenticated flow reads or writes a table/RPC through PostgREST with the anon key
+    []
+PASS - unauthenticated flows only talk to the Auth API (and only with the anon key)
+    ["/auth/v1/token","/auth/v1/recover"]
+PASS - control: after login the app's table reads use the USER jwt (never the anon key)
+    {"n":17,"bearers":["user"]}
+PASS - Cleanup: no disposable rows left in the live DB
+    {"orgs":0,"profiles":0,"vehicles":0,"trips":0,"participants":0,"offers":0,"requests":0,"events":0,"policies":0,"quota_rows":0,"notifications":0,"audit":0}
+CLEANUP QUERY:
+select
+      (select count(*) from organizations where name like 'C5UI-ORG-%-mupzvz01') orgs,
+      (select count(*) from profiles where id in ('b93581aa-ef3d-4408-9894-2702488617a5')) profiles,
+      (select count(*) from vehicles where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) vehicles,
+      (select count(*) from trip_requests where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) trips,
+      (select count(*) from trip_participants where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) participants,
+      (select count(*) from carpool_offers where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) offers,
+      (select count(*) from carpool_ride_requests where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) requests,
+      (select count(*) from carpool_events where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) events,
+      (select count(*) from carpool_policy_settings where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) policies,
+      (select count(*) from geo_provider_quota_counters where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) quota_rows,
+      (select count(*) from notifications where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) notifications,
+      (select count(*) from audit_log where organization_id in ('755affcd-083f-4047-9c28-b4833f4fc495')) audit
+
+13/13 checks passed.

@@ -275,7 +275,7 @@ export function ChatPanel({
           {state.messages.map((message, index) => (
             <div
               key={index}
-              className={`max-w-[85%] whitespace-pre-line rounded-sm px-3 py-2 text-sm ${
+              className={`max-w-[85%] whitespace-pre-line break-user-text rounded-sm px-3 py-2 text-sm ${
                 message.role === "user"
                   ? "self-end bg-gwm-accent text-ink-950"
                   : "self-start bg-panel-800 text-paper-50"
@@ -288,7 +288,7 @@ export function ChatPanel({
 
         {state.status === "needs_confirmation" && state.pendingAction ? (
           <div className="mt-3 flex flex-col gap-2 rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-3">
-            <p className="whitespace-pre-line text-sm text-gwm-accent">{state.pendingAction.summary}</p>
+            <p className="whitespace-pre-line text-sm text-gwm-accent break-user-text">{state.pendingAction.summary}</p>
             {state.pendingAction.vehicleOptions ? (
               <div className="flex flex-wrap gap-1.5">
                 {state.pendingAction.vehicleOptions.map((option, index) => {

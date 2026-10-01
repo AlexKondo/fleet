@@ -34,7 +34,7 @@ vi.mock("@/lib/domain/chatOrchestrator", () => ({ interpretMessage: (...a: unkno
 vi.mock("./dispatch", () => ({ dispatchIntent: (...a: unknown[]) => m.dispatch(...a) }));
 vi.mock("./queries", () => ({ findActiveReservations: vi.fn(async () => []), resolveReservationId: vi.fn() }));
 vi.mock("@/app/trips/new/actions", () => ({ planTrip: vi.fn() }));
-vi.mock("@/app/carpool/actions", () => ({ searchCompatibleCarpool: (...a: unknown[]) => m.search(...a) }));
+vi.mock("@/app/carpool/actions", () => ({ searchCompatibleCarpool: (...a: unknown[]) => m.search(...a), searchCompatibleCarpoolForChat: (...a: unknown[]) => m.search(...a) }));
 vi.mock("@/app/carpool/requestActions", () => ({
   enableCarpoolOffer: (...a: unknown[]) => m.enable(...a),
   updateCarpoolOffer: (...a: unknown[]) => m.update(...a),

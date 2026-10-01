@@ -167,7 +167,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
                   <p className="truncate text-xs text-paper-50">
                     {r.trip_request?.requester?.full_name ?? "—"}
                   </p>
-                  <p className="truncate text-[11px] text-fog-600">
+                  <p className="truncate text-[11px] text-fog-600 break-user-text">
                     {r.trip_request?.origin} → {r.trip_request?.destination}
                   </p>
                 </div>

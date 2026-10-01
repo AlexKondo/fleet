@@ -732,10 +732,77 @@ export type Dictionary = {
       };
     };
   };
+  /** Carpool KPI / telemetry dashboard (/analytics/carpool), fleet_manager and administrator only. */
+  carpoolKpi: {
+    title: string;
+    loadError: string;
+    linkFromAnalytics: string;
+    backToAnalytics: string;
+    rangeLabel: string;
+    range7: string;
+    range30: string;
+    range90: string;
+    sectionSearch: string;
+    sectionOffers: string;
+    sectionRequests: string;
+    sectionShared: string;
+    sectionProvider: string;
+    sectionDefinitions: string;
+    tripsEvaluated: string;
+    offersEvaluated: string;
+    candidatesAfterPrefilter: string;
+    preciseRouteCalls: string;
+    compatibleMatches: string;
+    outcomeMatches: string;
+    outcomeNone: string;
+    outcomeUnavailable: string;
+    outcomeError: string;
+    sourceWeb: string;
+    sourceChat: string;
+    offersEnabled: string;
+    offersActiveNow: string;
+    rideRequests: string;
+    accepted: string;
+    rejected: string;
+    expired: string;
+    cancelled: string;
+    pending: string;
+    invalidatedRequests: string;
+    acceptanceRate: string;
+    invalidationsAfterHostChange: string;
+    completedSharedTrips: string;
+    seatsShared: string;
+    avoidedAllocations: string;
+    avoidedKm: string;
+    /** {factor} = road distance factor used by the estimate. */
+    avoidedKmNote: string;
+    requestsWithoutCoordinates: string;
+    latencyAvg: string;
+    latencyP95: string;
+    searchesPerDay: string;
+    colKind: string;
+    colCalls: string;
+    colErrors: string;
+    colAvgLatency: string;
+    colEstCost: string;
+    totalRow: string;
+    providerGeocode: string;
+    providerPlaceSearch: string;
+    providerRouting: string;
+    costNote: string;
+    noData: string;
+    defSearch: string;
+    defRequests: string;
+    defShared: string;
+    defAvoided: string;
+    defProvider: string;
+  };
   /** Team / user management screen (app/settings/users). */
   team: {
     title: string;
     loadError: string;
+    /** Shown (and the license/authorization forms disabled) when list_member_licenses() fails: never submit blank license fields. */
+    licenseLoadError: string;
     /** {count} = number of members. */
     membersHeading: string;
     columns: {
