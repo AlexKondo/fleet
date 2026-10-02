@@ -115,15 +115,17 @@ async function main() {
   const st = await fresh('pending');
   await sql(`insert into carpool_events (organization_id, event_type, carpool_offer_id, trip_request_id) values ('${A.orgId}', 'CarpoolOfferEnabled', '${st.offer}', '${st.trip}')`);
 
-  async function probeSelect(table, allowed, pendingFix = {}) {
+  async function probeSelect(table, allowed, pendingFix = {}, filter = "") {
     const actual = {};
     for (const role of ROLES) {
-      const r = role === 'svc' ? await rest(SVC, 'GET', `${table}?select=id&limit=5`) : await rest(tok[role], 'GET', `${table}?select=id&limit=5`);
+      const r = role === 'svc' ? await rest(SVC, 'GET', `${table}?select=id${filter}&limit=5`) : await rest(tok[role], 'GET', `${table}?select=id${filter}&limit=5`);
       actual[role] = Array.isArray(r.body) && r.body.length > 0;
     }
     matrix.push({ group: 'TABLE read', endpoint: table, allowed, actual, pendingFix });
   }
-  await probeSelect('carpool_offers', ['host', 'mgr', 'adm', 'svc'], { rider: 'M1' }); // 'rider' has only a PENDING request: sees none once 0066 is applied
+  // Targeted at THIS offer (st.offer), where `rider` has only a PENDING request. An unfiltered read would also return offers
+  // that earlier probes (accept_carpool_ride_request above) left ACCEPTED for the same rider, which they may legitimately read.
+  await probeSelect('carpool_offers', ['host', 'mgr', 'adm', 'svc'], { rider: 'M1' }, `&id=eq.${st.offer}`);
   await probeSelect('carpool_ride_requests', ['host', 'rider', 'mgr', 'adm', 'svc']);
   await probeSelect('carpool_events', ['mgr', 'adm', 'svc']);
   await probeSelect('carpool_policy_settings', ['host', 'rider', 'stranger', 'sec', 'mgr', 'adm', 'mnt', 'svc']);

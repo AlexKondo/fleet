@@ -277,7 +277,9 @@ async function main() {
   const self = await notifIns(U.empC.token, U.empC.id, 'nota para mim');
   record('employee C -> self: allowed', self.status < 300, `status=${self.status}`);
   const mnt = await notifIns(U.mnt.token, U.empB.id, 'Qualquer coisa');
-  check('M2', 'maintenance operator -> employee: refused', mnt.status >= 400, `status=${mnt.status}`);
+  // 0067 treats maintenance_operator as staff (same as security) so block_vehicle keeps notifying; the
+  // spoof surface that stays closed is employee -> coworker, checked above.
+  record('maintenance operator -> employee: allowed (staff role, same as security)', mnt.status < 300, `status=${mnt.status}`);
   const mg = await notifIns(U.mgr.token, U.empB.id, 'Reserva aprovada');
   record('fleet manager -> employee: allowed (approve / cancel flows)', mg.status < 300, `status=${mg.status}`);
   const anon = await notifIns(null, U.empB.id, 'x');
