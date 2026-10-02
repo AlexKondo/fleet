@@ -2,12 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { GET as licenseReminders } from "../license-reminders/route";
 import { GET as chatCleanup } from "../chat-cleanup/route";
 import { GET as carpoolExpiry } from "../carpool-expiry/route";
+import { GET as carpoolRetention } from "../carpool-retention/route";
 
 export const dynamic = "force-dynamic";
 
 /**
  * The one cron entry registered in vercel.json. The project is on Vercel's Hobby plan, which allows
- * at most 2 cron jobs; the app has 3 daily jobs (license reminders, chat cleanup, carpool expiry),
+ * at most 2 cron jobs; the app has 4 daily jobs (license reminders, chat cleanup, carpool expiry, carpool location retention),
  * so they run sequentially from this single dispatcher instead of being registered separately.
  * Each job's own route still exists (manual invocation, tests) and does its own CRON_SECRET check,
  * so the same request — Authorization header included — is forwarded to it. One job failing never
@@ -18,6 +19,7 @@ const JOBS: ReadonlyArray<readonly [string, (request: NextRequest) => Promise<Re
   ["license-reminders", licenseReminders],
   ["chat-cleanup", chatCleanup],
   ["carpool-expiry", carpoolExpiry],
+  ["carpool-retention", carpoolRetention],
 ];
 
 export async function GET(request: NextRequest) {

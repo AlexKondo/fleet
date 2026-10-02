@@ -411,9 +411,9 @@ export function TripRequestForm({
             {hostStepEnabled ? (
               <fieldset
                 data-testid="host-offer-step"
-                className="flex flex-col gap-2 rounded-sm border border-line-800 bg-panel-800 p-3"
+                className="flex flex-col gap-2 mt-3 rounded-sm border border-line-800 bg-panel-800 p-3"
               >
-                <legend className="px-1 text-xs font-semibold uppercase tracking-widest text-fog-400">
+                <legend className="relative -top-2.5 px-1 text-xs font-semibold uppercase tracking-widest text-fog-400">
                   {ct.hostQuestion}
                 </legend>
                 {plan.vehicle.maxOfferableSeats < 1 ? (

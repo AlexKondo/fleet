@@ -5,10 +5,12 @@ const jobs = vi.hoisted(() => ({
   license: vi.fn(),
   chat: vi.fn(),
   carpool: vi.fn(),
+  retention: vi.fn(),
 }));
 vi.mock("./license-reminders/route", () => ({ GET: jobs.license }));
 vi.mock("./chat-cleanup/route", () => ({ GET: jobs.chat }));
 vi.mock("./carpool-expiry/route", () => ({ GET: jobs.carpool }));
+vi.mock("./carpool-retention/route", () => ({ GET: jobs.retention }));
 
 import { GET } from "./daily/route";
 
@@ -21,6 +23,7 @@ beforeEach(() => {
   jobs.license.mockReset().mockResolvedValue(NextResponse.json({ sent: 2 }));
   jobs.chat.mockReset().mockResolvedValue(NextResponse.json({ deleted: 1 }));
   jobs.carpool.mockReset().mockResolvedValue(NextResponse.json({ expired: 0 }));
+  jobs.retention.mockReset().mockResolvedValue(NextResponse.json({ purged: 0 }));
 });
 afterEach(() => {
   if (saved === undefined) delete process.env.CRON_SECRET;
@@ -37,15 +40,17 @@ describe("daily cron dispatcher", () => {
     expect(jobs.license).not.toHaveBeenCalled();
     expect(jobs.chat).not.toHaveBeenCalled();
     expect(jobs.carpool).not.toHaveBeenCalled();
+    expect(jobs.retention).not.toHaveBeenCalled();
   });
 
-  it("runs all three jobs in order with the same request and returns every result", async () => {
+  it("runs all four jobs in order with the same request and returns every result", async () => {
     const response = await GET(req("Bearer s3cret"));
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       "license-reminders": { status: 200, body: { sent: 2 } },
       "chat-cleanup": { status: 200, body: { deleted: 1 } },
       "carpool-expiry": { status: 200, body: { expired: 0 } },
+      "carpool-retention": { status: 200, body: { purged: 0 } },
     });
     expect(jobs.license.mock.calls[0]![0].headers.get("authorization")).toBe("Bearer s3cret");
   });

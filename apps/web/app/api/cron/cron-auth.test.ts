@@ -17,10 +17,11 @@ vi.mock("@/lib/email/sendEmail", () => ({ sendEmail: async () => undefined }));
 vi.mock("@/lib/email/renderEmail", () => ({ renderEmail: () => ({ html: "", text: "" }) }));
 
 import { GET as carpool } from "./carpool-expiry/route";
+import { GET as retention } from "./carpool-retention/route";
 import { GET as chat } from "./chat-cleanup/route";
 import { GET as license } from "./license-reminders/route";
 
-const routes = { "carpool-expiry": carpool, "chat-cleanup": chat, "license-reminders": license };
+const routes = { "carpool-expiry": carpool, "carpool-retention": retention, "chat-cleanup": chat, "license-reminders": license };
 const req = (auth?: string) =>
   new NextRequest("http://localhost/api/cron/x", { headers: auth ? { authorization: auth } : {} });
 const saved = process.env.CRON_SECRET;

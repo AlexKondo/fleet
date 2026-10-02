@@ -1572,6 +1572,10 @@ export type Database = {
         Args: never
         Returns: number
       }
+      purge_old_carpool_locations: {
+        Args: { p_days?: number }
+        Returns: number
+      }
       create_carpool_participation: {
         Args: {
           p_departure_at: string
