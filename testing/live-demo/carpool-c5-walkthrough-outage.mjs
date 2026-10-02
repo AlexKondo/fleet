@@ -37,7 +37,7 @@ try {
   await fillTrip(rider, { departure: dep, origin: "Avenida Paulista, 1578, São Paulo", destination: "Aeroporto de Congonhas, São Paulo", passengers: 1 });
   await rider.waitForSelector('[data-testid="carpool-unavailable"]', { timeout: 90000 });
   const t = await body(rider);
-  record("Provider outage: banner 'não foi possível validar caronas agora' is shown", has(t, "não foi possível validar caronas agora"));
+  record("Provider outage: banner 'serviço de mapas do Google está indisponível' is shown", has(t, "serviço de mapas do Google está indisponível"));
   record("Provider outage: no carpool card, and nothing is guessed", (await rider.locator('[data-testid="carpool-offer-card"]').count()) === 0);
   await rider.waitForSelector("text=Veículo recomendado");
   record("Provider outage: the normal vehicle flow is untouched (vehicle recommended, host seat question present)", has(await body(rider), "veículo recomendado") && (await rider.locator('[data-testid="host-offer-step"]').count()) === 1);
