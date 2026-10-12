@@ -2,9 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTime, formatDayMonth } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
 import { setGanttZoomPreference, type GanttZoomLevel } from "./ganttZoomActions";
+
+const BRASILIA_OFFSET_MS = 3 * 3_600_000;
+/** Start (00:00 Brasília) of the Brasília day containing `ms`, as a UTC instant. */
+function brasiliaDayStart(ms: number): number {
+  return Math.floor((ms - BRASILIA_OFFSET_MS) / 86_400_000) * 86_400_000 + BRASILIA_OFFSET_MS;
+}
 
 export type GanttBar = {
   id: string;
@@ -77,8 +83,10 @@ export function ReservationGantt({
   const ends = bars.map((r) => new Date(r.end_at).getTime());
   // Pad a little on each side so a bar never touches the edge of the chart, and floor/ceil
   // to whole days so the day gridlines land on clean boundaries.
-  const windowStart = new Date(Math.min(...starts)).setHours(0, 0, 0, 0);
-  const windowEndRaw = new Date(Math.max(...ends)).setHours(0, 0, 0, 0) + 86_400_000;
+  // Day boundaries are Brasília midnights (UTC-3, no DST), NOT the runtime's: Vercel renders in UTC and the browser in the viewer's
+  // zone, and a runtime-zone midnight made the server and client day grids (and labels) disagree (React hydration error #418).
+  const windowStart = brasiliaDayStart(Math.min(...starts));
+  const windowEndRaw = brasiliaDayStart(Math.max(...ends)) + 86_400_000;
   // Grid always reaches at least a year out from the earliest reservation, even when every
   // bar sits in the first few weeks of it — otherwise the gridlines (and the ability to
   // scroll forward and see "nothing booked yet") stopped dead at the last bar.
@@ -91,7 +99,7 @@ export function ReservationGantt({
   for (let d = 0; d <= totalDays; d++) {
     const t = windowStart + d * 86_400_000;
     dayTicks.push({
-      label: new Date(t).toLocaleDateString(locale, { day: "2-digit", month: "2-digit" }),
+      label: formatDayMonth(new Date(t), locale),
       left: d * pxPerDay,
     });
   }
