@@ -4,6 +4,7 @@ import { InactivityLogout } from "../InactivityLogout";
 import { SessionBackupSync } from "../SessionBackupSync";
 import { ChatWidget } from "../ChatWidget";
 import { MobileNav } from "../MobileNav";
+import { NavFeedback } from "./NavFeedback";
 import { NotificationBell } from "../dashboard/NotificationBell";
 import { UserMenu } from "../UserMenu";
 import { LanguageToggle } from "../ui/LanguageToggle";
@@ -80,6 +81,7 @@ export async function FmShell({
 
   return (
     <div className="fm-theme" data-testid="fm-theme">
+      <NavFeedback />
       <InactivityLogout />
       <SessionBackupSync />
       {licenseGateActive ? null : (

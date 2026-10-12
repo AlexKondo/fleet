@@ -701,3 +701,35 @@ a.fm-tab:hover {
     grid-template-columns: minmax(0, 1fr) 340px;
   }
 }
+
+/* Instant navigation feedback (NavFeedback.tsx): clicked link lights up, progress bar on top, content dims. */
+.fm-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: var(--fm-blue-500);
+  z-index: 2147483000;
+  opacity: 0;
+  pointer-events: none;
+}
+.fm-theme[data-nav-pending] .fm-navbar {
+  opacity: 1;
+  width: 92%;
+  transition: width 1.6s cubic-bezier(0.1, 0.7, 0.2, 1);
+}
+.fm-theme[data-nav-pending] .fm-content {
+  opacity: 0.55;
+  transition: opacity 80ms linear;
+}
+.fm-nav a[data-pending],
+.fm-bottom-nav a[data-pending] {
+  background: var(--fm-blue-600);
+  color: #fff;
+}
+.fm-bottom-nav a[data-pending] {
+  background: transparent;
+  color: var(--fm-blue-600);
+  font-weight: 700;
+}
