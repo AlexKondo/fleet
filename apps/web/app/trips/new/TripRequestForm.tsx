@@ -8,13 +8,15 @@ import type { Dictionary } from "../../../lib/i18n/dictionaries";
 import type { CarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { fillTemplate } from "@/lib/carpool/errorText";
 import { CarpoolFirstPanel } from "./CarpoolFirstPanel";
+import { parseBrasiliaLocalDateTime } from "@/lib/trips/brasiliaLocalDateTime";
 import { RvCarIcon, RvCheckIcon, RvUsersIcon } from "./rvIcons";
 import "./reservar.css";
 
+/** ISO instant -> "YYYY-MM-DDTHH:mm" in Brasília time (the zone-less datetime-local value is read as Brasília time, see brasiliaLocalDateTime.ts). */
 function toLocalInputValue(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return new Date(iso)
+    .toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })
+    .replace(" ", "T");
 }
 
 type StepKey = "trip" | "carpool" | "vehicle" | "confirm";
@@ -161,8 +163,8 @@ export function TripRequestForm({
     const formData = new FormData(e.currentTarget);
     writeDraft(formData);
     setFormInput({
-      departureAt: new Date(String(formData.get("departureAt"))).toISOString(),
-      expectedReturnAt: new Date(String(formData.get("expectedReturnAt"))).toISOString(),
+      departureAt: parseBrasiliaLocalDateTime(String(formData.get("departureAt"))).toISOString(),
+      expectedReturnAt: parseBrasiliaLocalDateTime(String(formData.get("expectedReturnAt"))).toISOString(),
       origin: String(formData.get("origin")),
       destination: String(formData.get("destination")),
       distanceKm: Number(formData.get("distanceKm")),

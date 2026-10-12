@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { parseBrasiliaLocalDateTime } from "@/lib/trips/brasiliaLocalDateTime";
 import {
   planMobility,
   type CarpoolCandidate,
@@ -200,8 +201,8 @@ function filterTrafficRestrictionReasons(reasons: string[], enabled: boolean): s
 
 function parseTripFormInput(formData: FormData): TripFormInput {
   return {
-    departureAt: new Date(String(formData.get("departureAt"))).toISOString(),
-    expectedReturnAt: new Date(String(formData.get("expectedReturnAt"))).toISOString(),
+    departureAt: parseBrasiliaLocalDateTime(String(formData.get("departureAt"))).toISOString(),
+    expectedReturnAt: parseBrasiliaLocalDateTime(String(formData.get("expectedReturnAt"))).toISOString(),
     origin: clampText(formData.get("origin"), MAX_LOCATION_TEXT),
     destination: clampText(formData.get("destination"), MAX_LOCATION_TEXT),
     distanceKm: Number(formData.get("distanceKm")),

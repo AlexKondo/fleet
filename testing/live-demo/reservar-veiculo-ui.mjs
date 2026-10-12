@@ -194,7 +194,7 @@ try {
   // ---- COMPATIBLE carpool on the route (desktop)
   await openForm(d);
   await fillAndSearch(d, { origin: RIDER_ORIGIN, destination: RIDER_DEST });
-  await d.waitForSelector('[data-testid="carpool-offer-card"]', { timeout: 120000 });
+  try { await d.waitForSelector('[data-testid="carpool-offer-card"]', { timeout: 120000 }); } catch (e) { console.log("DEBUG-SEARCHLOG:", JSON.stringify(await sql(`select source, offers_evaluated, prefilter_candidates, precise_route_calls, compatible_count, outcome, latency_ms from carpool_search_log where organization_id='${A.orgId}' order by created_at`))); console.log("DEBUG-OFFER:", JSON.stringify(await sql(`select o.status offer_status, o.seats_available, tr.departure_at, tr.origin, tr.destination, tr.allow_carpool, (select string_agg(r.status::text, ',') from reservations r where r.trip_request_id=tr.id) res_status, now() db_now from carpool_offers o join trip_requests tr on tr.id=o.trip_request_id where o.organization_id='${A.orgId}'`)), "RIDER_DEP", String(typeof dep!=="undefined"?dep:"n/a")); console.log("DEBUG-BODY:", (await d.locator("body").innerText()).split(String.fromCharCode(10)).join(" | ").slice(0, 1800)); throw e; }
   await d.waitForTimeout(800);
   const cardTxt = await d.locator('[data-testid="carpool-offer-card"]').first().innerText();
   record("Compatible state: 1 offer card with departure, detour, seats, Solicitar carona", (await d.locator('[data-testid="carpool-offer-card"]').count()) === 1 && /\d{2}:\d{2}/.test(cardTxt) && /\+[\d.]+ km/.test(cardTxt) && /vagas?/.test(cardTxt) && /Solicitar carona/.test(cardTxt), cardTxt.replace(/\n/g, " | "));
