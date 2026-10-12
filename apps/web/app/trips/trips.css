@@ -1,0 +1,215 @@
+/*
+ * SCR-USR-004 Minhas Reservas e Viagens (/trips). Everything is under .fm-theme; shared tokens/components come from
+ * carpool/fm-theme.css and carpool/fm-shared.css.
+ */
+.fm-theme .tp-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fm-theme .tp-new {
+  align-self: flex-start;
+}
+.fm-theme .tp-banner {
+  margin-top: 16px;
+}
+.fm-theme .tp-tabs {
+  margin-top: 20px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--fm-border);
+  scrollbar-width: thin;
+}
+.fm-theme .tp-tab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--fm-text-muted);
+  border-bottom: 3px solid transparent;
+}
+.fm-theme .tp-tab:hover {
+  color: var(--fm-blue-600);
+}
+.fm-theme .tp-tab[aria-current="page"] {
+  color: var(--fm-blue-600);
+  border-bottom-color: var(--fm-blue-600);
+}
+.fm-theme .tp-count {
+  font-weight: 500;
+}
+.fm-theme .tp-section {
+  margin-top: 24px;
+}
+.fm-theme .tp-empty {
+  margin-top: 24px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* reservation card */
+.fm-theme .tp-card {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 8px 14px;
+  padding: 14px;
+  align-items: start;
+}
+.fm-theme .tp-date {
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  padding: 8px 0;
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-blue-100);
+  color: var(--fm-navy-900);
+}
+.fm-theme .tp-date strong {
+  font-size: 22px;
+}
+.fm-theme .tp-date span {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.fm-theme .tp-date small {
+  font-size: 12px;
+  color: #4a5b72;
+  text-transform: uppercase;
+}
+.fm-theme .tp-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fm-theme .tp-link:hover .tp-title {
+  color: var(--fm-blue-600);
+}
+.fm-theme .tp-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 16px;
+  color: var(--fm-navy-900);
+  overflow-wrap: anywhere;
+}
+.fm-theme .tp-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--fm-bg);
+  border: 1px solid var(--fm-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fm-text-muted);
+}
+.fm-theme .tp-kind svg {
+  width: 14px;
+  height: 14px;
+}
+.fm-theme .tp-plate {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .tp-route {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.fm-theme .tp-meta {
+  font-size: 13px;
+  color: var(--fm-text-muted);
+  overflow-wrap: anywhere;
+}
+.fm-theme .tp-side {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fm-theme .tp-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fm-theme .tp-actions .fm-btn {
+  flex: 1 1 140px;
+  min-height: 44px;
+}
+
+/* carpool request / joined carpool rows */
+.fm-theme .tp-request {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px 12px;
+  padding: 14px;
+  align-items: start;
+}
+.fm-theme .tp-kind-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e6f4ee;
+  color: #14664a;
+}
+.fm-theme .tp-kind-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.fm-theme .tp-gantt {
+  padding: 8px;
+  overflow-x: auto;
+}
+
+@media (min-width: 768px) {
+  .fm-theme .tp-head {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .fm-theme .tp-card {
+    grid-template-columns: 64px minmax(0, 1fr) auto auto;
+    align-items: center;
+  }
+  .fm-theme .tp-date {
+    grid-row: auto;
+  }
+  .fm-theme .tp-side {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .fm-theme .tp-actions {
+    grid-column: auto;
+    flex-wrap: nowrap;
+  }
+  .fm-theme .tp-actions .fm-btn {
+    flex: 0 0 auto;
+    padding: 0 16px;
+  }
+  .fm-theme .tp-request {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .fm-theme .tp-request .tp-actions {
+    grid-column: auto;
+  }
+}

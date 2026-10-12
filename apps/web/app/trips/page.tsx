@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { formatDateTime, formatDateTimeShort } from "@/lib/formatDateTime";
-import { AppShell } from "../AppShell";
+import { formatDateTimeShort } from "@/lib/formatDateTime";
+import { FmShell } from "../carpool/FmShell";
 import { leaveCarpool } from "./actions";
 import { riderCancelRequest } from "../carpool/formActions";
 import { carpoolErrorText, carpoolReasonText, carpoolStatusText, fillTemplate } from "@/lib/carpool/errorText";
@@ -11,17 +11,36 @@ import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { ReservationGantt } from "../ReservationGantt";
 import type { GanttZoomLevel } from "../ganttZoomActions";
+import { getStatusMeta } from "../dashboard/statusMeta";
+import { FmCarIcon, FmChevronIcon, FmPlusIcon, FmUsersIcon } from "../fmIcons";
+import "./trips.css";
+
+const TABS = ["all", "upcoming", "active", "carpools", "done", "cancelled"] as const;
+type Tab = (typeof TABS)[number];
+
+const TZ = "America/Sao_Paulo";
+function dateBlock(iso: string, locale: string) {
+  const d = new Date(iso);
+  const f = (o: Intl.DateTimeFormatOptions) => d.toLocaleString(locale, { timeZone: TZ, ...o }).replace(".", "");
+  return { day: f({ day: "2-digit" }), month: f({ month: "short" }), weekday: f({ weekday: "short" }) };
+}
+function timeOf(iso: string, locale: string) {
+  return new Date(iso).toLocaleTimeString(locale, { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+}
 
 export default async function TripsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tripActionError?: string; carpoolActionError?: string }>;
+  searchParams: Promise<{ tripActionError?: string; carpoolActionError?: string; tab?: string }>;
 }) {
-  const { tripActionError, carpoolActionError } = await searchParams;
+  const { tripActionError, carpoolActionError, tab: tabParam } = await searchParams;
+  const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? "") ? (tabParam as Tab) : "all";
   const dict = await getDictionary();
   const locale = await getLocale();
+  const m = dict.trips.minhas;
   const reservationStatusLabel = (status: string): string =>
     (dict.trips.statuses as Record<string, string>)[status] ?? status;
+  const vehicleStatusMeta = getStatusMeta(dict);
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
@@ -104,31 +123,127 @@ export default async function TripsPage({
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
 
+  // ---- grouping for the tabs (all derived from the rows above) ----
+  const all = reservations ?? [];
+  const isActive = (r: (typeof all)[number]) =>
+    r.status === "confirmed" && (r.vehicle?.status === "in_use" || r.vehicle?.status === "returning");
+  const activeList = all.filter(isActive).sort((a, b) => a.start_at.localeCompare(b.start_at));
+  const upcomingList = all
+    .filter((r) => (r.status === "pending_approval" || r.status === "confirmed") && !isActive(r))
+    .sort((a, b) => a.start_at.localeCompare(b.start_at));
+  const doneList = all.filter((r) => r.status === "completed");
+  const cancelledList = all.filter((r) => r.status === "cancelled");
+  const requests = carpoolRequests ?? [];
+  const carpoolCount = requests.length + listedCarpools.length;
+  const total = all.length + carpoolCount;
+  const historyList = [...doneList, ...cancelledList].sort((a, b) => b.start_at.localeCompare(a.start_at));
+
+  const counts: Record<Tab, number> = {
+    all: total,
+    upcoming: upcomingList.length,
+    active: activeList.length,
+    carpools: carpoolCount,
+    done: doneList.length,
+    cancelled: cancelledList.length,
+  };
+  const tabLabels: Record<Tab, string> = {
+    all: m.tabAll,
+    upcoming: m.tabUpcoming,
+    active: m.tabActive,
+    carpools: m.tabCarpools,
+    done: m.tabDone,
+    cancelled: m.tabCancelled,
+  };
+
+  const show = (section: "active" | "upcoming" | "carpools" | "history") => {
+    if (tab === "all") return true;
+    if (section === "history") return tab === "done" || tab === "cancelled";
+    return tab === section;
+  };
+  const historyShown = tab === "done" ? doneList : tab === "cancelled" ? cancelledList : historyList;
+
+  type Row = (typeof all)[number];
+  const tone = (s: string) => (s === "confirmed" ? "ok" : s === "pending_approval" ? "warn" : s === "cancelled" ? "bad" : "neutral");
+
+  const card = (r: Row) => {
+    const d = dateBlock(r.start_at, locale);
+    const vs = r.vehicle?.status;
+    const canPickup = r.status === "confirmed" && (vs === "reserved" || vs === "awaiting_pickup");
+    const canReturn = r.status === "confirmed" && vs === "in_use";
+    return (
+      <li key={r.id} className="fm-card tp-card" data-testid="trip-card" data-status={r.status}>
+        <div className="tp-date" aria-hidden="true">
+          <strong>{d.day}</strong>
+          <span>{d.month}</span>
+          <small>{d.weekday}</small>
+        </div>
+        <div className="tp-main">
+          <p className="tp-title">
+            <span className="tp-kind"><FmCarIcon />{m.kindVehicle}</span>
+            <strong>{r.vehicle?.name ?? r.vehicle?.plate ?? "—"}</strong>
+            <span className="tp-plate">{r.vehicle?.plate ?? "—"}</span>
+          </p>
+          <p className="tp-route break-user-text">{r.trip_request?.origin} → {r.trip_request?.destination}</p>
+          <p className="tp-meta">
+            {formatDateTimeShort(r.start_at, locale)} → {timeOf(r.end_at, locale)}
+          </p>
+        </div>
+        <div className="tp-side">
+          <span className="fm-pill" data-tone={tone(r.status)}>{reservationStatusLabel(r.status)}</span>
+          {isActive(r) && vs ? <span className="fm-pill" data-tone="info">{vehicleStatusMeta[vs]?.label ?? vs}</span> : null}
+        </div>
+        <div className="tp-actions">
+          {canPickup ? (
+            <Link href={`/reservations/${r.id}/pickup`} className="fm-btn fm-btn-primary">{dict.trips.list.startPickup}</Link>
+          ) : null}
+          {canReturn ? (
+            <Link href={`/reservations/${r.id}/return`} className="fm-btn fm-btn-primary">{dict.trips.list.registerReturn}</Link>
+          ) : null}
+          <Link href={`/reservations/${r.id}`} className="fm-btn fm-btn-ghost">
+            {m.viewDetails} <FmChevronIcon />
+          </Link>
+        </div>
+      </li>
+    );
+  };
+
+  const section = (id: string, title: string, rows: Row[], testid: string) =>
+    rows.length === 0 ? null : (
+      <section className="tp-section" aria-labelledby={id} data-testid={testid}>
+        <h2 id={id} className="fm-h2">{title}</h2>
+        <ul className="fm-list">{rows.map(card)}</ul>
+      </section>
+    );
+
+  const showCarpools = show("carpools") && (requests.length > 0 || listedCarpools.length > 0);
+  const visibleCount =
+    (show("active") ? activeList.length : 0) +
+    (show("upcoming") ? upcomingList.length : 0) +
+    (show("history") ? historyShown.length : 0) +
+    (showCarpools ? 1 : 0);
+
   return (
-    <AppShell
+    <FmShell
       active="trips"
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title={dict.trips.list.title}
-      headerActions={
-        <Link
-          href="/trips/new"
-          className="rounded-sm bg-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
-        >
-          + {dict.trips.list.newTrip}
-        </Link>
-      }
     >
-      <div className="px-6 py-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="tp">
+        <div className="tp-head">
+          <div>
+            <h1 className="fm-title">{m.title}</h1>
+            <p className="fm-subtitle">{m.subtitle}</p>
+          </div>
+          <Link href="/trips/new" className="fm-btn fm-btn-primary tp-new">
+            <FmPlusIcon /> {m.newReservation}
+          </Link>
+        </div>
+
         {tripActionError ? (
-          <div
-            role="alert"
-            className="mb-4 rounded-md border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red"
-          >
+          <div role="alert" className="fm-banner fm-banner-danger tp-banner">
             {/* The pickup/return checklist pages redirect here with a specific reason when
                 they refuse to open; anything else keeps the generic action-failed text. */}
             {tripActionError === "checklist_not_authorized"
@@ -142,82 +257,60 @@ export default async function TripsPage({
         ) : null}
 
         {carpoolActionError ? (
-          <div
-            role="alert"
-            data-testid="carpool-action-error"
-            className="mb-4 rounded-md border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red"
-          >
+          <div role="alert" data-testid="carpool-action-error" className="fm-banner fm-banner-danger tp-banner">
             {fillTemplate(dict.carpool.rider.actionErrorNotice, { message: carpoolErrorText(dict, carpoolActionError) })}
           </div>
         ) : null}
 
-        {!reservations || reservations.length === 0 ? (
-          <p className="text-sm text-fog-400">
-            {dict.trips.list.empty}
-          </p>
-        ) : (
-          <ReservationGantt
-            bars={[
-              ...reservations.map((r) => ({
-                id: r.id,
-                start_at: r.start_at,
-                end_at: r.end_at,
-                status: r.status,
-                rowPlate: r.vehicle?.plate ?? "—",
-                rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
-                barLabel: r.trip_request?.destination ?? "—",
-              })),
-              ...carpools.map(({ reservation: r }) => ({
-                id: r.id,
-                start_at: r.start_at,
-                end_at: r.end_at,
-                status: r.status,
-                rowPlate: r.vehicle?.plate ?? "—",
-                rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
-                barLabel: r.trip_request?.destination ?? "—",
-                tooltipExtra: dict.trips.list.carpoolsTitle,
-              })),
-            ]}
-            locale={locale}
-            rowHeading={dict.common.vehicle}
-            initialZoom={(profile?.gantt_zoom_preference as GanttZoomLevel) ?? "month"}
-          />
-        )}
+        <nav className="tp-tabs" aria-label={m.tabsLabel} data-testid="trips-tabs">
+          {TABS.map((k) => (
+            <Link
+              key={k}
+              href={k === "all" ? "/trips" : `/trips?tab=${k}`}
+              className="tp-tab"
+              aria-current={k === tab ? "page" : undefined}
+              data-tab={k}
+            >
+              {tabLabels[k]} <span className="tp-count">({counts[k]})</span>
+            </Link>
+          ))}
+        </nav>
 
-        {carpoolRequests && carpoolRequests.length > 0 ? (
-          <div className="mt-8" data-testid="my-carpool-requests">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              {dict.carpool.rider.myRequestsTitle}
-            </h2>
-            <ul className="flex flex-col gap-3">
-              {carpoolRequests.map((r) => {
+        {total === 0 ? (
+          <div className="fm-card tp-empty" data-testid="trips-empty">
+            <p>{dict.trips.list.empty}</p>
+            <Link href="/trips/new" className="fm-btn fm-btn-primary">{m.newReservation}</Link>
+          </div>
+        ) : visibleCount === 0 ? (
+          <p className="fm-card tp-empty" data-testid="trips-tab-empty">{m.tabEmpty}</p>
+        ) : null}
+
+        {show("active") ? section("tp-active", m.activeTitle, activeList, "trips-active") : null}
+        {show("upcoming") ? section("tp-upcoming", m.upcomingTitle, upcomingList, "trips-upcoming") : null}
+
+        {showCarpools && requests.length > 0 ? (
+          <section className="tp-section" aria-labelledby="tp-requests" data-testid="my-carpool-requests">
+            <h2 id="tp-requests" className="fm-h2">{dict.carpool.rider.myRequestsTitle}</h2>
+            <ul className="fm-list">
+              {requests.map((r) => {
                 const reason = carpoolReasonText(dict, r.status_reason);
                 const live = r.status === "PENDING" || r.status === "ACCEPTED";
                 return (
-                  <li
-                    key={r.id}
-                    data-testid="my-carpool-request"
-                    data-status={r.status}
-                    className="flex items-center justify-between gap-4 rounded-md border border-line-800 bg-panel-900/60 p-4"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-paper-50">
+                  <li key={r.id} data-testid="my-carpool-request" data-status={r.status} className="fm-card tp-request">
+                    <span className="tp-kind-icon"><FmUsersIcon /></span>
+                    <div className="tp-main">
+                      <p className="tp-title">
                         <span
                           data-testid="my-carpool-request-status"
-                          className={`mr-2 rounded-sm border px-2 py-0.5 text-xs uppercase tracking-widest ${
-                            r.status === "ACCEPTED"
-                              ? "border-signal-teal/40 text-signal-teal"
-                              : r.status === "PENDING"
-                                ? "border-signal-blue/40 text-signal-blue"
-                                : "border-signal-red/40 text-signal-red"
-                          }`}
+                          className="fm-pill"
+                          data-tone={r.status === "ACCEPTED" ? "ok" : r.status === "PENDING" ? "info" : "bad"}
                         >
                           {carpoolStatusText(dict, r.status)}
                         </span>
-                        {fillTemplate(dict.carpool.rider.requestedFor, { time: formatDateTimeShort(r.requested_departure_at, locale) })}
+                        <span>{fillTemplate(dict.carpool.rider.requestedFor, { time: formatDateTimeShort(r.requested_departure_at, locale) })}</span>
                       </p>
                       {r.match_additional_distance_km !== null && r.match_additional_time_min !== null ? (
-                        <p className="mt-1 text-xs text-fog-600">
+                        <p className="tp-meta">
                           {fillTemplate(dict.carpool.rider.detourLine, {
                             km: Math.round(Number(r.match_additional_distance_km) * 10) / 10,
                             min: Math.round(Number(r.match_additional_time_min)),
@@ -225,17 +318,12 @@ export default async function TripsPage({
                         </p>
                       ) : null}
                       {reason && (r.status === "INVALIDATED" || r.status === "REJECTED") ? (
-                        <p data-testid="my-carpool-request-reason" className="mt-1 text-xs text-fog-400 break-user-text">
-                          {reason}
-                        </p>
+                        <p data-testid="my-carpool-request-reason" className="tp-meta break-user-text">{reason}</p>
                       ) : null}
                     </div>
                     {live ? (
-                      <form action={riderCancelRequest.bind(null, r.id)}>
-                        <ConfirmSubmitButton
-                          confirmMessage={dict.carpool.rider.cancelConfirm}
-                          className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
-                        >
+                      <form action={riderCancelRequest.bind(null, r.id)} className="tp-actions">
+                        <ConfirmSubmitButton confirmMessage={dict.carpool.rider.cancelConfirm} className="fm-btn fm-btn-danger">
                           {dict.carpool.rider.cancel}
                         </ConfirmSubmitButton>
                       </form>
@@ -244,47 +332,32 @@ export default async function TripsPage({
                 );
               })}
             </ul>
-          </div>
+          </section>
         ) : null}
 
-        {listedCarpools.length > 0 ? (
-          <div className="mt-8">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-              {dict.trips.list.carpoolsTitle}
-            </h2>
-            <ul className="flex flex-col gap-3">
+        {showCarpools && listedCarpools.length > 0 ? (
+          <section className="tp-section" aria-labelledby="tp-carpools" data-testid="trips-carpools">
+            <h2 id="tp-carpools" className="fm-h2">{dict.trips.list.carpoolsTitle}</h2>
+            <ul className="fm-list">
               {listedCarpools.map(({ participantId, status, reservation: r }) => {
                 const vehicleStatus = r.vehicle?.status;
                 const canLeave =
                   r.status === "pending_approval" ||
                   (r.status === "confirmed" && vehicleStatus !== "in_use" && vehicleStatus !== "returning");
                 return (
-                  <li
-                    key={participantId}
-                    className="flex items-center justify-between rounded-md border border-line-800 bg-panel-900/60 p-4"
-                  >
-                    <Link href={`/reservations/${r.id}`} className="min-w-0 flex-1 hover:opacity-80">
-                      <p className="text-sm text-paper-50 break-user-text">
-                        {r.trip_request?.origin} → {r.trip_request?.destination}
-                      </p>
-                      <p className="mt-1 font-mono text-xs tabular-nums text-fog-400">
-                        {r.vehicle?.plate ?? "—"} · {formatDateTime(r.start_at, locale)}
-                      </p>
-                      <p className="mt-1 text-xs text-fog-600">
+                  <li key={participantId} className="fm-card tp-request">
+                    <span className="tp-kind-icon"><FmUsersIcon /></span>
+                    <Link href={`/reservations/${r.id}`} className="tp-main tp-link">
+                      <p className="tp-title break-user-text">{r.trip_request?.origin} → {r.trip_request?.destination}</p>
+                      <p className="tp-meta">{r.vehicle?.plate ?? "—"} · {formatDateTimeShort(r.start_at, locale)}</p>
+                      <p className="tp-meta">
                         {reservationStatusLabel(r.status)}
-                        {status === "pending" ? (
-                          <span className="ml-2 text-signal-blue">
-                            · {dict.trips.list.awaitingDriverAcceptance}
-                          </span>
-                        ) : null}
+                        {status === "pending" ? <> · {dict.trips.list.awaitingDriverAcceptance}</> : null}
                       </p>
                     </Link>
                     {canLeave ? (
-                      <form action={leaveCarpool.bind(null, participantId)}>
-                        <ConfirmSubmitButton
-                          confirmMessage={dict.trips.list.confirmLeave}
-                          className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
-                        >
+                      <form action={leaveCarpool.bind(null, participantId)} className="tp-actions">
+                        <ConfirmSubmitButton confirmMessage={dict.trips.list.confirmLeave} className="fm-btn fm-btn-danger">
                           {dict.trips.list.leave}
                         </ConfirmSubmitButton>
                       </form>
@@ -293,10 +366,45 @@ export default async function TripsPage({
                 );
               })}
             </ul>
-          </div>
+          </section>
+        ) : null}
+
+        {show("history") ? section("tp-history", m.historyTitle, historyShown, "trips-history") : null}
+
+        {tab === "all" && all.length > 0 ? (
+          <section className="tp-section" aria-labelledby="tp-schedule" data-testid="trips-schedule">
+            <h2 id="tp-schedule" className="fm-h2">{m.scheduleTitle}</h2>
+            <div className="fm-card tp-gantt">
+              <ReservationGantt
+                bars={[
+                  ...all.map((r) => ({
+                    id: r.id,
+                    start_at: r.start_at,
+                    end_at: r.end_at,
+                    status: r.status,
+                    rowPlate: r.vehicle?.plate ?? "—",
+                    rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
+                    barLabel: r.trip_request?.destination ?? "—",
+                  })),
+                  ...carpools.map(({ reservation: r }) => ({
+                    id: r.id,
+                    start_at: r.start_at,
+                    end_at: r.end_at,
+                    status: r.status,
+                    rowPlate: r.vehicle?.plate ?? "—",
+                    rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
+                    barLabel: r.trip_request?.destination ?? "—",
+                    tooltipExtra: dict.trips.list.carpoolsTitle,
+                  })),
+                ]}
+                locale={locale}
+                rowHeading={dict.common.vehicle}
+                initialZoom={(profile?.gantt_zoom_preference as GanttZoomLevel) ?? "month"}
+              />
+            </div>
+          </section>
         ) : null}
       </div>
-      </div>
-    </AppShell>
+    </FmShell>
   );
 }

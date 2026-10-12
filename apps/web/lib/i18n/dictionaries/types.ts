@@ -265,6 +265,29 @@ export type Dictionary = {
       rejectedByManager: string;
       cancelledByManager: string;
     };
+    /** Employee Home (SCR-USR-001). */
+    home: {
+      navHome: string;
+      greeting: string;
+      greetingSub: string;
+      quickActions: string;
+      actionBook: string;
+      actionBookHint: string;
+      actionCarpool: string;
+      actionCarpoolHint: string;
+      actionTrips: string;
+      actionTripsHint: string;
+      nextTitle: string;
+      viewAll: string;
+      nextEmpty: string;
+      nextEmptyCta: string;
+      viewDetails: string;
+      alertAwaiting: string;
+      carpoolTitle: string;
+      usedTitle: string;
+      usedCountOne: string;
+      usedCountOther: string;
+    };
     attention: {
       heading: string;
       empty: string;
@@ -599,6 +622,26 @@ export type Dictionary = {
       planChanged: string;
       confirmError: string;
     };
+    /** Minhas Reservas e Viagens (SCR-USR-004). */
+    minhas: {
+      title: string;
+      subtitle: string;
+      newReservation: string;
+      tabsLabel: string;
+      tabAll: string;
+      tabUpcoming: string;
+      tabActive: string;
+      tabCarpools: string;
+      tabDone: string;
+      tabCancelled: string;
+      upcomingTitle: string;
+      activeTitle: string;
+      historyTitle: string;
+      scheduleTitle: string;
+      kindVehicle: string;
+      viewDetails: string;
+      tabEmpty: string;
+    };
     reservar: {
       title: string;
       subtitle: string;
@@ -910,6 +953,7 @@ export type Dictionary = {
       photoCount: string;
       upload: string;
       fileTooLarge: string;
+      remove: string;
       damageHint: string;
       takePhoto: string;
       openingCamera: string;
@@ -927,6 +971,12 @@ export type Dictionary = {
       };
     };
     checklist: {
+      sectionTrip: string;
+      equipmentHint: string;
+      sectionCondition: string;
+      pickupIntro: string;
+      returnIntro: string;
+      routeLabel: string;
       electricRange: string;
       fuelLabel: string;
       batteryLabel: string;

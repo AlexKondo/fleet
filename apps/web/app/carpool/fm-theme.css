@@ -133,6 +133,9 @@
   min-width: 0;
 }
 .fm-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 35;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -143,9 +146,10 @@
   border-bottom: 1px solid var(--fm-border);
 }
 .fm-topbar-brand {
-  display: none;
-  font-size: 18px;
+  display: block;
+  font-size: 20px;
   font-weight: 700;
+  color: var(--fm-navy-900);
 }
 .fm-topbar-right {
   display: flex;
@@ -200,7 +204,7 @@
 }
 .fm-content {
   flex: 1;
-  padding: 20px 16px 104px;
+  padding: 20px 16px calc(168px + env(safe-area-inset-bottom));
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
@@ -645,6 +649,9 @@ a.fm-tab:hover {
 
 /* ---------- >= 768px: sidebar shell ---------- */
 @media (min-width: 768px) {
+  .fm-topbar-brand {
+    display: none;
+  }
   .fm-sidebar {
     display: flex;
   }

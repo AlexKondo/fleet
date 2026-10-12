@@ -2,8 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTime, formatDateTimeShort } from "@/lib/formatDateTime";
 import { AppShell } from "../../AppShell";
+import { FmShell } from "../../carpool/FmShell";
 import { getStatusMeta } from "../../dashboard/statusMeta";
 import { getDictionary, getLocale } from "../../../lib/i18n/getLocale";
 import { MessageThread, type ReservationMessage } from "./MessageThread";
@@ -14,6 +15,7 @@ import { maxOfferableSeats } from "@fleet/domain";
 import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
 import { CarpoolHostSection } from "./CarpoolHostSection";
 import { loadHostCarpool } from "./loadHostCarpool";
+import "./checklist.css";
 
 /**
  * Reservation Detail (SCREEN_CATALOG.md) + Communication Hub for this reservation
@@ -136,17 +138,11 @@ export default async function ReservationDetailPage({
     vehicleStatus !== "returning" &&
     new Date(reservation.trip_request.departure_at).getTime() > Date.now();
 
-  return (
-    <AppShell
-      active="trips"
-      orgName={profile?.organization?.name ?? "—"}
-      userName={profile?.full_name ?? user.email ?? "—"}
-      role={profile?.role ?? "employee"}
-      isFleetManager={isFleetManager}
-      isAdministrator={isAdministrator}
-      title={dict.reservations.detail.title}
-    >
-      <div className="mx-auto max-w-3xl px-4 py-6">
+  const statusTone = reservation.status === "confirmed" ? "ok" : reservation.status === "pending_approval" ? "warn" : reservation.status === "cancelled" ? "bad" : "neutral";
+  const statusText = (dict.trips.statuses as Record<string, string>)[reservation.status] ?? reservation.status;
+
+  const banners = (
+    <>
       {carpoolError ? (
         <div
           role="alert"
@@ -173,6 +169,172 @@ export default async function ReservationDetailPage({
           {fillTemplate(dict.carpool.host.actionErrorNotice, { message: carpoolErrorText(dict, carpoolActionErrorCode) })}
         </div>
       ) : null}
+    </>
+  );
+  const tail = (
+    <>
+      {isOwnReservation && hostCarpool?.showSection ? (
+        <CarpoolHostSection
+          reservationId={id}
+          tripRequestId={reservation.trip_request.id}
+          dict={dict}
+          locale={locale}
+          offer={hostCarpool.offer}
+          maxSeats={maxSeats}
+          canOffer={canOfferCarpool}
+          participants={hostCarpool.participants}
+          pending={hostCarpool.pending}
+          history={hostCarpool.history}
+        />
+      ) : null}
+
+      {isOwnReservation && pendingCarpoolRequests && pendingCarpoolRequests.length > 0 ? (
+        <section className="mt-4 rounded-md border border-signal-blue/40 bg-signal-blue/10 p-6">
+          <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-signal-blue">
+            {dict.reservations.detail.carpoolRequestsTitle}
+          </h2>
+          {/* The legacy pending list (trip_participants from the previous carpool flow) can
+              still hold rows during the transition; the new engine's requests are in the
+              section above and never appear here (they are 'accepted' participants only). */}
+          {hostCarpool?.showSection ? (
+            <p className="mb-3 text-xs text-fog-600">{dict.carpool.host.legacyNote}</p>
+          ) : (
+            <div className="mb-2" />
+          )}
+          <ul className="flex flex-col gap-3">
+            {pendingCarpoolRequests.map((request) => (
+              <li
+                key={request.id}
+                className="flex items-center justify-between gap-4 rounded-sm border border-line-800 bg-panel-900/60 p-3"
+              >
+                <p className="text-sm text-paper-50">
+                  {request.passenger?.full_name ?? "—"}
+                  <span className="ml-2 text-xs text-fog-600">
+                    {(request.passenger_count === 1
+                      ? dict.reservations.detail.passengerCountOne
+                      : dict.reservations.detail.passengerCountOther
+                    ).replace("{count}", String(request.passenger_count))}
+                  </span>
+                </p>
+                <div className="flex shrink-0 items-center gap-2">
+                  <form action={respondToCarpoolRequest.bind(null, id, request.id, true)}>
+                    <button
+                      type="submit"
+                      className="rounded-sm border border-signal-teal px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
+                    >
+                      {dict.reservations.detail.accept}
+                    </button>
+                  </form>
+                  <form action={respondToCarpoolRequest.bind(null, id, request.id, false)}>
+                    <ConfirmSubmitButton
+                      confirmMessage={dict.reservations.detail.declineConfirm}
+                      className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
+                    >
+                      {dict.reservations.detail.decline}
+                    </ConfirmSubmitButton>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-6">
+        <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-fog-400">
+          {dict.reservations.detail.communicationTitle}
+        </h2>
+        <MessageThread reservationId={id} messages={messages} dict={dict} locale={locale} />
+      </section>
+    </>
+  );
+
+  // SCR-USR-004/005: an employee gets the FleetMind v2.0 detail (scoped theme). Every other role keeps the
+  // original AppShell page below, unchanged.
+  if (profile?.role === "employee") {
+    return (
+      <FmShell
+        active="trips"
+        orgName={profile?.organization?.name ?? "—"}
+        userName={profile?.full_name ?? user.email ?? "—"}
+        role="employee"
+        isFleetManager={false}
+        isAdministrator={false}
+      >
+        <div className="rd" data-testid="reservation-detail-fm">
+          {banners}
+          <Link href="/trips" className="fm-link">
+            {dict.reservations.detail.backToTrips}
+          </Link>
+
+          <header className="fm-card rd-head">
+            <div className="rd-head-top">
+              <div className="min-w-0">
+                <h1 className="rd-name">{reservation.vehicle?.name ?? reservation.vehicle?.plate ?? "—"}</h1>
+                <p className="ck-plate">{reservation.vehicle?.plate}</p>
+                <p className="rd-route break-user-text">
+                  {reservation.trip_request.origin} → {reservation.trip_request.destination}
+                </p>
+                <p className="rd-meta">
+                  {reservation.trip_request.requester?.full_name} · {formatDateTimeShort(reservation.start_at, locale)} →{" "}
+                  {formatDateTimeShort(reservation.end_at, locale)}
+                </p>
+              </div>
+              <div className="rd-pills">
+                {/* the reservation status is the answer to "did this get cancelled?"; the vehicle status is the second badge */}
+                <span className="fm-pill" data-tone={statusTone}>{statusText}</span>
+                {statusMeta ? <span className="fm-pill" data-tone="info">{statusMeta.label}</span> : null}
+              </div>
+            </div>
+
+            {canPickup || canReturn || canCancel ? (
+              <div className="rd-actions">
+                {canPickup ? (
+                  <Link href={`/reservations/${id}/pickup`} className="fm-btn fm-btn-primary">
+                    {dict.trips.list.startPickup}
+                  </Link>
+                ) : null}
+                {canReturn ? (
+                  <Link href={`/reservations/${id}/return`} className="fm-btn fm-btn-primary">
+                    {dict.trips.list.registerReturn}
+                  </Link>
+                ) : null}
+                {canCancel ? (
+                  <form action={cancelMyReservation.bind(null, id)}>
+                    <ConfirmSubmitButton confirmMessage={dict.trips.list.confirmCancel} className="fm-btn fm-btn-danger">
+                      {dict.common.cancel}
+                    </ConfirmSubmitButton>
+                  </form>
+                ) : null}
+              </div>
+            ) : null}
+
+            {reservation.impacted_at ? (
+              <div className="rd-impacted" role="status">
+                <strong>{dict.reservations.detail.impactedTitle}</strong>
+                {reservation.impacted_reason ?? dict.reservations.detail.impactedDefaultReason}
+              </div>
+            ) : null}
+          </header>
+
+          {tail}
+        </div>
+      </FmShell>
+    );
+  }
+
+  return (
+    <AppShell
+      active="trips"
+      orgName={profile?.organization?.name ?? "—"}
+      userName={profile?.full_name ?? user.email ?? "—"}
+      role={profile?.role ?? "employee"}
+      isFleetManager={isFleetManager}
+      isAdministrator={isAdministrator}
+      title={dict.reservations.detail.title}
+    >
+      <div className="mx-auto max-w-3xl px-4 py-6">
+      {banners}
       <Link href="/trips" className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent">
         {dict.reservations.detail.backToTrips}
       </Link>
@@ -267,79 +429,7 @@ export default async function ReservationDetailPage({
         ) : null}
       </header>
 
-      {isOwnReservation && hostCarpool?.showSection ? (
-        <CarpoolHostSection
-          reservationId={id}
-          tripRequestId={reservation.trip_request.id}
-          dict={dict}
-          locale={locale}
-          offer={hostCarpool.offer}
-          maxSeats={maxSeats}
-          canOffer={canOfferCarpool}
-          participants={hostCarpool.participants}
-          pending={hostCarpool.pending}
-          history={hostCarpool.history}
-        />
-      ) : null}
-
-      {isOwnReservation && pendingCarpoolRequests && pendingCarpoolRequests.length > 0 ? (
-        <section className="mt-4 rounded-md border border-signal-blue/40 bg-signal-blue/10 p-6">
-          <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-signal-blue">
-            {dict.reservations.detail.carpoolRequestsTitle}
-          </h2>
-          {/* The legacy pending list (trip_participants from the previous carpool flow) can
-              still hold rows during the transition; the new engine's requests are in the
-              section above and never appear here (they are 'accepted' participants only). */}
-          {hostCarpool?.showSection ? (
-            <p className="mb-3 text-xs text-fog-600">{dict.carpool.host.legacyNote}</p>
-          ) : (
-            <div className="mb-2" />
-          )}
-          <ul className="flex flex-col gap-3">
-            {pendingCarpoolRequests.map((request) => (
-              <li
-                key={request.id}
-                className="flex items-center justify-between gap-4 rounded-sm border border-line-800 bg-panel-900/60 p-3"
-              >
-                <p className="text-sm text-paper-50">
-                  {request.passenger?.full_name ?? "—"}
-                  <span className="ml-2 text-xs text-fog-600">
-                    {(request.passenger_count === 1
-                      ? dict.reservations.detail.passengerCountOne
-                      : dict.reservations.detail.passengerCountOther
-                    ).replace("{count}", String(request.passenger_count))}
-                  </span>
-                </p>
-                <div className="flex shrink-0 items-center gap-2">
-                  <form action={respondToCarpoolRequest.bind(null, id, request.id, true)}>
-                    <button
-                      type="submit"
-                      className="rounded-sm border border-signal-teal px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-teal hover:bg-signal-teal/10"
-                    >
-                      {dict.reservations.detail.accept}
-                    </button>
-                  </form>
-                  <form action={respondToCarpoolRequest.bind(null, id, request.id, false)}>
-                    <ConfirmSubmitButton
-                      confirmMessage={dict.reservations.detail.declineConfirm}
-                      className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
-                    >
-                      {dict.reservations.detail.decline}
-                    </ConfirmSubmitButton>
-                  </form>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <section className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-6">
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          {dict.reservations.detail.communicationTitle}
-        </h2>
-        <MessageThread reservationId={id} messages={messages} dict={dict} locale={locale} />
-      </section>
+      {tail}
       </div>
     </AppShell>
   );

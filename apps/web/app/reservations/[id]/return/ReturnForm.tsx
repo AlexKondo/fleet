@@ -116,179 +116,139 @@ export function ReturnForm({
     });
   }
 
+  const photoBlocked = !damageEvidenceMissing && failedPhotoAngles;
+
   return (
-    <form action={handleSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-          {t.odometerLabel}
-        </span>
-        <input
-          type="number"
-          name="odometerKm"
-          required
-          min={currentOdometer}
-          defaultValue={currentOdometer}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-        />
-        <span className="text-xs text-fog-600">
-          {t.odometerAtPickup.replace("{km}", currentOdometer.toLocaleString(locale))}
-        </span>
-      </label>
-
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-          {t.parkedWhereLabel}
-        </span>
-        <select
-          name="currentLocationId"
-          required
-          defaultValue={homeLocationId ?? ""}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-        >
-          <option value="" disabled>
-            {t.selectLocation}
-          </option>
-          {locations.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <div className="grid grid-cols-2 gap-4">
-        {showFuel ? (
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              {tc.fuelLabel}
-            </span>
-            <select
-              name="fuelLevelPercent"
+    <form action={handleSubmit} className="ck-form" data-testid="checklist-form">
+      <section className="fm-card ck-card" aria-labelledby="ck-trip">
+        <h2 id="ck-trip" className="fm-h2">{tc.sectionTrip}</h2>
+        <div className="ck-grid">
+          <label className="fm-field">
+            <span className="fm-label">{t.odometerLabel}</span>
+            <input
+              type="number"
+              name="odometerKm"
               required
-              defaultValue=""
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            >
+              min={currentOdometer}
+              defaultValue={currentOdometer}
+              className="fm-input"
+            />
+            <span className="ck-hint">{t.odometerAtPickup.replace("{km}", currentOdometer.toLocaleString(locale))}</span>
+          </label>
+          <label className="fm-field">
+            <span className="fm-label">{t.parkedWhereLabel}</span>
+            <select name="currentLocationId" required defaultValue={homeLocationId ?? ""} className="fm-input">
               <option value="" disabled>
-                {dict.fleet.vehicleForm.selectPlaceholder}
+                {t.selectLocation}
               </option>
-              {FUEL_LEVEL_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {dict.fleet.vehicleForm.fuelLevels[`${opt.value}`]}
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
                 </option>
               ))}
             </select>
           </label>
-        ) : null}
-        {showBattery ? (
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              {tc.batteryLabel}
-            </span>
-            <input
-              type="number"
-              name="batteryLevelPercent"
-              min={0}
-              max={100}
-              required
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
-          </label>
-        ) : null}
-      </div>
+          {showFuel ? (
+            <label className="fm-field">
+              <span className="fm-label">{tc.fuelLabel}</span>
+              <select name="fuelLevelPercent" required defaultValue="" className="fm-input">
+                <option value="" disabled>
+                  {dict.fleet.vehicleForm.selectPlaceholder}
+                </option>
+                {FUEL_LEVEL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {dict.fleet.vehicleForm.fuelLevels[`${opt.value}`]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          {showBattery ? (
+            <label className="fm-field">
+              <span className="fm-label">{tc.batteryLabel}</span>
+              <input type="number" name="batteryLevelPercent" min={0} max={100} required className="fm-input" />
+            </label>
+          ) : null}
+        </div>
+      </section>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-xs font-medium uppercase tracking-widest text-fog-400">
-          {tc.safetyEquipmentLegend}
-        </legend>
-        {equipmentItems.map((item) => (
-          <label key={item.id} className="flex items-center gap-2 text-sm text-fog-400">
-            <input
-              type="checkbox"
-              name={`equip_${item.id}`}
-              defaultChecked
-              className="h-4 w-4"
-            />
-            {item.name}
-          </label>
-        ))}
-      </fieldset>
-
-      <label className="flex items-center gap-2 text-sm text-fog-400">
-        <input
-          type="checkbox"
-          checked={hasNewDamage}
-          onChange={(e) => setHasNewDamage(e.target.checked)}
-          className="h-4 w-4"
-        />
-        {t.hasNewDamage}
-      </label>
-      {hasNewDamage ? (
-        <textarea
-          name="damageNotes"
-          placeholder={tc.damageNotesPlaceholder}
-          rows={2}
-          className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-        />
+      {equipmentItems.length > 0 ? (
+        <fieldset className="fm-card ck-card ck-fieldset">
+          <legend className="fm-h2">{tc.safetyEquipmentLegend}</legend>
+          <p className="ck-hint">{tc.equipmentHint}</p>
+          <div className="ck-checks">
+            {equipmentItems.map((item) => (
+              <label key={item.id} className="ck-check">
+                <input type="checkbox" name={`equip_${item.id}`} defaultChecked />
+                <span>{item.name}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
       ) : null}
 
-      <label className="flex items-center gap-2 text-sm text-fog-400">
-        <input type="checkbox" name="isDirtyExterior" className="h-4 w-4" />
-        {tc.dirtyExterior}
-      </label>
-      <label className="flex items-center gap-2 text-sm text-fog-400">
-        <input type="checkbox" name="isDirtyInterior" className="h-4 w-4" />
-        {tc.dirtyInterior}
-      </label>
+      <section className="fm-card ck-card" aria-labelledby="ck-cond">
+        <h2 id="ck-cond" className="fm-h2">{tc.sectionCondition}</h2>
+        <div className="ck-checks">
+          <label className="ck-check" data-tone="warn">
+            <input type="checkbox" checked={hasNewDamage} onChange={(e) => setHasNewDamage(e.target.checked)} />
+            <span>{t.hasNewDamage}</span>
+          </label>
+          {hasNewDamage ? (
+            <textarea name="damageNotes" placeholder={tc.damageNotesPlaceholder} rows={3} className="fm-input ck-textarea" aria-label={tc.damageNotesPlaceholder} />
+          ) : null}
+          <label className="ck-check">
+            <input type="checkbox" name="isDirtyExterior" />
+            <span>{tc.dirtyExterior}</span>
+          </label>
+          <label className="ck-check">
+            <input type="checkbox" name="isDirtyInterior" />
+            <span>{tc.dirtyInterior}</span>
+          </label>
+        </div>
 
-      {/* Changed per explicit product decision: photos are only requested when "Nova
-          avaria identificada" is checked, not on every return as fleet-car-saas.txt §10 /
-          ADR-004 originally specified — that doc is now stale on this point. */}
-      {hasNewDamage ? (
-        <PhotoCaptureSection
-          dict={dict}
-          includeDamageAngle={hasNewDamage}
-          onFileChange={(fieldName, files) => photoFiles.current.set(fieldName, files)}
-        />
-      ) : null}
+        {/* Changed per explicit product decision: photos are only requested when "Nova
+            avaria identificada" is checked, not on every return as fleet-car-saas.txt §10 /
+            ADR-004 originally specified — that doc is now stale on this point. */}
+        {hasNewDamage ? (
+          <div className="ck-photos">
+            <PhotoCaptureSection
+              dict={dict}
+              includeDamageAngle={hasNewDamage}
+              onFileChange={(fieldName, files) => photoFiles.current.set(fieldName, files)}
+            />
+          </div>
+        ) : null}
+      </section>
 
       {error ? (
-        <p role="alert" className="text-sm text-signal-red">
+        <p role="alert" className="fm-banner fm-banner-danger ck-msg">
           {t.submitError.replace("{error}", error)}
         </p>
       ) : null}
 
       {damageEvidenceMissing ? (
-        <p role="alert" className="text-sm text-signal-red">
+        <p role="alert" className="fm-banner fm-banner-danger ck-msg">
           {tc.damagePhotoRequired}
         </p>
       ) : null}
 
-      {!damageEvidenceMissing && failedPhotoAngles ? (
-        <div role="alert" className="rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-3">
-          <p className="text-sm text-gwm-accent">
+      {photoBlocked ? (
+        <div role="alert" className="fm-banner ck-msg">
+          <p>
             {(failedPhotoAngles.length === 1 ? t.photosFailedOne : t.photosFailedOther).replace(
               "{angles}",
-              failedPhotoAngles
-                .map((angle) => dict.reservations.photos.angles[angle])
-                .join(", "),
+              failedPhotoAngles.map((angle) => dict.reservations.photos.angles[angle]).join(", "),
             )}
           </p>
-          <button
-            type="button"
-            onClick={() => router.push("/trips")}
-            className="mt-2 rounded-sm border border-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
-          >
+          <button type="button" onClick={() => router.push("/trips")} className="fm-btn fm-btn-ghost ck-msg-btn">
             {tc.goToTrips}
           </button>
         </div>
       ) : null}
 
-      {!damageEvidenceMissing && failedPhotoAngles ? null : (
-        <button
-          type="submit"
-          disabled={isPending}
-          className="mt-2 rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
+      {photoBlocked ? null : (
+        <button type="submit" disabled={isPending} className="fm-btn fm-btn-primary ck-submit">
           {isPending ? tc.submitting : t.submit}
         </button>
       )}

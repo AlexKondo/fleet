@@ -68,7 +68,7 @@ function UploadIcon({ className }: { className?: string }) {
   );
 }
 
-function Thumbnail({ file, onRemove }: { file: File; onRemove: () => void }) {
+function Thumbnail({ file, onRemove, removeLabel }: { file: File; onRemove: () => void; removeLabel: string }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -78,16 +78,18 @@ function Thumbnail({ file, onRemove }: { file: File; onRemove: () => void }) {
   }, [file]);
 
   return (
-    <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-sm border border-line-800 bg-panel-800">
-      {previewUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- local blob: preview, not a remote asset
-        <img src={previewUrl} alt="" className="h-full w-full object-cover" />
-      ) : null}
+    <span className="flex shrink-0 items-center">
+      <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-sm border border-line-800 bg-panel-800">
+        {previewUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- local blob: preview, not a remote asset
+          <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+        ) : null}
+      </span>
       <button
         type="button"
         onClick={onRemove}
-        aria-label="Remove"
-        className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-bl-sm bg-black/70 text-[10px] leading-none text-paper-50 hover:bg-signal-red"
+        aria-label={removeLabel}
+        className="ck-remove flex h-11 w-11 items-center justify-center text-base leading-none text-fog-400 hover:text-signal-red"
       >
         ×
       </button>
@@ -144,11 +146,11 @@ function PhotoCaptureField({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5 transition-colors hover:border-line-700">
+      <div className="flex flex-wrap items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5 transition-colors hover:border-line-700">
         <span className="flex shrink-0 items-center gap-1.5">
           {files.length > 0 ? (
             files.map((f, i) => (
-              <Thumbnail key={`${f.name}-${f.lastModified}-${i}`} file={f} onRemove={() => handleRemove(i)} />
+              <Thumbnail key={`${f.name}-${f.lastModified}-${i}`} file={f} removeLabel={t.remove} onRemove={() => handleRemove(i)} />
             ))
           ) : (
             <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-sm border border-line-800 bg-panel-800">
@@ -156,7 +158,7 @@ function PhotoCaptureField({
             </span>
           )}
         </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="flex min-w-[8rem] flex-1 flex-col gap-0.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{label}</span>
           <span className="truncate font-mono text-[11px] text-fog-600">
             {files.length > 0 ? withCount(t.photoCount, files.length) : (hint ?? t.tapToCapture)}
@@ -220,7 +222,7 @@ export function PhotoCaptureSection({
   const t = dict.reservations.photos;
 
   return (
-    <fieldset className="flex flex-col gap-2 border-t border-line-800 pt-4">
+    <fieldset className="flex min-w-0 flex-col gap-2 border-t border-line-800 pt-4">
       <legend className="mb-1 text-xs font-medium uppercase tracking-widest text-fog-400">
         {t.legend}
       </legend>

@@ -1,0 +1,225 @@
+/*
+ * Shared by the Lote 1A screens (Home, Minhas Reservas e Viagens, checklists, reservation detail). Imported by FmShell
+ * next to fm-theme.css. Every rule is under .fm-theme.
+ */
+/* legacy signal colours, darkened inside the scope so text/icons from shared widgets keep >= 4.5:1 on white */
+.fm-theme {
+  --color-signal-green: #1f7a54;
+  --color-signal-teal: #17707c;
+  --color-signal-blue: #1f5fa8;
+  --color-signal-violet: #5b2fa3;
+  --color-signal-yellow: #8a5a0b;
+  --color-signal-red: #b3302a;
+}
+.fm-theme .fm-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: #eef2f7;
+  color: #3a4a5e;
+}
+.fm-theme .fm-pill[data-tone="ok"] {
+  background: #e6f4ee;
+  color: #14664a;
+}
+.fm-theme .fm-pill[data-tone="warn"] {
+  background: #fdf5e2;
+  color: #7a5110;
+}
+.fm-theme .fm-pill[data-tone="bad"] {
+  background: #fbeaea;
+  color: #8e2f2f;
+}
+.fm-theme .fm-pill[data-tone="info"] {
+  background: var(--fm-blue-100);
+  color: #1b57ab;
+}
+.fm-theme .fm-link {
+  color: var(--fm-blue-600);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.fm-theme .fm-btn svg {
+  flex-shrink: 0;
+}
+.fm-theme .fm-btn-danger {
+  background: var(--fm-surface);
+  color: #8e2f2f;
+  border-color: #8e2f2f;
+}
+.fm-theme .fm-btn-danger:hover:not(:disabled) {
+  background: #fbeaea;
+}
+.fm-theme .fm-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.fm-theme .fm-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ---------- mobile top bar: the hamburger panel opens under the single FleetMind bar ---------- */
+.fm-theme .fm-mobilepanel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 60px;
+  z-index: 40;
+  max-height: calc(100dvh - 60px);
+  overflow-y: auto;
+  background: var(--fm-surface);
+  border-bottom: 1px solid var(--fm-border);
+  box-shadow: var(--fm-shadow-card);
+}
+.fm-theme .fm-mobilepanel a,
+.fm-theme .fm-mobilepanel button {
+  min-height: 44px;
+}
+.fm-theme .fm-mobilepanel nav a {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 600;
+  color: var(--fm-text);
+  border-radius: var(--fm-radius-md);
+}
+.fm-theme .fm-mobilepanel nav a[aria-current="page"] {
+  background: var(--fm-blue-100);
+  color: var(--fm-blue-600);
+}
+.fm-theme .fm-mobilepanel p {
+  letter-spacing: 0;
+  text-transform: none;
+}
+.fm-theme .fm-mobilenav {
+  display: flex;
+  align-items: center;
+}
+.fm-theme .fm-mobilenav button[aria-expanded] {
+  border-color: var(--fm-border-strong);
+  border-radius: var(--fm-radius-md);
+  color: var(--fm-text-muted);
+  background: var(--fm-surface);
+}
+
+/* ---------- employee reservation detail: host carpool panel + message thread (legacy markup, restyled in scope) ---------- */
+.fm-theme .rd [data-testid="carpool-host-section"],
+.fm-theme .rd > section {
+  margin-top: 0;
+  padding: 18px;
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-lg);
+  box-shadow: var(--fm-shadow-card);
+}
+.fm-theme .rd h2,
+.fm-theme .rd h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fm-navy-900);
+}
+.fm-theme .rd h3 {
+  margin-top: 20px;
+  font-size: 15px;
+}
+.fm-theme .rd [class*="tracking-widest"] {
+  letter-spacing: 0;
+  text-transform: none;
+}
+.fm-theme .rd .text-xs {
+  font-size: 13px;
+}
+.fm-theme .rd [class*="text-[11px]"],
+.fm-theme .rd [class*="text-[10px]"] {
+  font-size: 12px;
+}
+.fm-theme .rd li[class*="border-line-800"] {
+  background: var(--fm-bg);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 12px;
+}
+.fm-theme .rd span[class*="border"][class*="px-"] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.fm-theme .rd form button[type="submit"]:not(.fm-btn),
+.fm-theme .rd [data-testid="carpool-host-section"] button:not(.fm-btn) {
+  min-height: 44px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fm-blue-600);
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-blue-600);
+  border-radius: var(--fm-radius-md);
+  cursor: pointer;
+}
+.fm-theme .rd form button[type="submit"]:not(.fm-btn):hover:not(:disabled) {
+  background: var(--fm-blue-100);
+}
+.fm-theme .rd form button[type="submit"]:not(.fm-btn).bg-gwm-accent {
+  color: #fff;
+  background: var(--fm-blue-600);
+}
+.fm-theme .rd form button[type="submit"]:not(.fm-btn).bg-gwm-accent:hover:not(:disabled) {
+  background: #1b57ab;
+}
+.fm-theme .rd form button[type="submit"]:not(.fm-btn):disabled {
+  opacity: 0.6;
+}
+.fm-theme .rd input:not([type="checkbox"]):not([type="radio"]),
+.fm-theme .rd select,
+.fm-theme .rd textarea {
+  font: inherit;
+  font-size: 14px;
+  color: var(--fm-text);
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-border-strong);
+  border-radius: var(--fm-radius-md);
+  padding: 8px 12px;
+}
+.fm-theme .rd label {
+  color: var(--fm-text-muted);
+}
+.fm-theme .rd [class*="text-paper-50"] {
+  color: var(--fm-text);
+}
+
+/* ---------- fieldset legends sit inside the card, not on its border ---------- */
+.fm-theme .ck-fieldset,
+.fm-theme .ck-photos fieldset {
+  min-width: 0;
+}
+.fm-theme .ck-fieldset > legend,
+.fm-theme .ck-photos legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.fm-theme .ck-fieldset > legend + *,
+.fm-theme .ck-photos legend + * {
+  clear: both;
+}

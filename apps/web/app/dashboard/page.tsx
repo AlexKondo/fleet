@@ -13,6 +13,7 @@ import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { BlockVehicleForm } from "../BlockVehicleForm";
 import { StatusBadge } from "../ui/StatusBadge";
 import { RevealAction } from "../ui/RevealAction";
+import { EmployeeHome } from "./EmployeeHome";
 import { ReservationGantt } from "../ReservationGantt";
 import type { GanttZoomLevel } from "../ganttZoomActions";
 import {
@@ -85,6 +86,26 @@ export default async function DashboardPage({
     row,
     attention: assessVehicleReadiness(toDomainVehicle(row, row.category?.energy_type ?? "ICE")),
   }));
+
+  // SCR-USR-001: an employee gets the FleetMind v2.0 Home (scoped theme). Every other role keeps the screen below
+  // unchanged (managers/security/admin are restyled separately); nothing a role could do here is removed.
+  if (profile?.role === "employee") {
+    return (
+      <EmployeeHome
+        userId={user.id}
+        userName={profile.full_name ?? user.email ?? "—"}
+        orgName={profile.organization?.name ?? "—"}
+        dict={dict}
+        locale={locale}
+        vehicles={vehiclesWithAttention}
+        vehiclesError={Boolean(vehiclesError)}
+        statusMeta={statusMeta}
+        attentionLabels={attentionLabels}
+        fleetActionError={Boolean(fleetActionError)}
+        actionSuccess={Boolean(actionSuccess)}
+      />
+    );
+  }
 
   // Grouped by reason -> which specific vehicles, not just a bare count — a fleet manager
   // seeing "1 Energia baixa" still had to scan every card below to find which one; each

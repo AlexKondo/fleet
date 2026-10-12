@@ -55,6 +55,7 @@ export function MobileNav({
   role,
   dict,
   locale,
+  compact = false,
 }: {
   items: NavItem[];
   active: NavKey;
@@ -63,21 +64,23 @@ export function MobileNav({
   role: string;
   dict: Dictionary;
   locale: Locale;
+  /** FleetMind v2.0 shell: no brand block (the shell's own top bar carries it), 44px controls, panel under the bar. */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const roleLabels = getRoleLabels(dict);
 
   return (
     <div className="md:hidden">
-      <div className="flex items-center justify-between border-b border-line-800 bg-panel-900/40 px-4 py-3">
-        <div className="min-w-0">
+      <div className={compact ? "flex items-center" : "flex items-center justify-between border-b border-line-800 bg-panel-900/40 px-4 py-3"}>
+        {compact ? null : <div className="min-w-0">
           <p className="font-display text-lg font-extrabold uppercase tracking-tight text-paper-50">
             Fleet<span className="text-gwm-accent">.</span>
           </p>
           <p className="max-w-[10rem] truncate text-[11px] uppercase tracking-widest text-fog-600">
             {orgName}
           </p>
-        </div>
+        </div>}
         <div className="flex items-center gap-2">
           <NotificationBell align="right" dict={dict} locale={locale} />
           <button
@@ -85,7 +88,7 @@ export function MobileNav({
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? dict.common.closeMenu : dict.common.openMenu}
             aria-expanded={open}
-            className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-1 rounded-sm border border-line-800 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
+            className="flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-1 rounded-sm border border-line-800 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
           >
             <span
               className={`h-0.5 w-4 rounded-full bg-current transition-transform ${open ? "translate-y-1.5 rotate-45" : ""}`}
@@ -99,7 +102,7 @@ export function MobileNav({
       </div>
 
       {open ? (
-        <div className="flex flex-col border-b border-line-800 bg-ink-950 px-4 py-4">
+        <div className={compact ? "fm-mobilepanel flex flex-col border-b border-line-800 bg-ink-950 px-4 py-4" : "flex flex-col border-b border-line-800 bg-ink-950 px-4 py-4"}>
           <nav className="flex flex-col gap-1">
             {items.map((item) => {
               const isActive = item.key === active;

@@ -110,7 +110,7 @@ try {
   record("Desktop: nav marks 'Reservar Veículo' as the current page", /Reservar Veículo/.test(await d.locator('.fm-sidebar a[aria-current="page"]').innerText()));
   record("Desktop: h1 is Reservar Veículo", (await d.locator("h1").innerText()).trim() === "Reservar Veículo");
   const sideHrefs = await d.locator(".fm-sidebar a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-  record("Employee sidebar: CTA + Buscar Carona, Reservar, Minhas Viagens; no manager-only items", ["/trips/new", "/carpool", "/trips"].every((h) => sideHrefs.includes(h)) && !sideHrefs.some((h) => ["/dashboard", "/gate", "/analytics", "/fleet", "/settings", "/settings/users"].includes(h)), sideHrefs);
+  record("Employee sidebar: CTA + Inicio (/dashboard, Lote 1A), Buscar Carona, Reservar, Minhas Viagens; no manager-only items", ["/trips/new", "/carpool", "/trips", "/dashboard"].every((h) => sideHrefs.includes(h)) && !sideHrefs.some((h) => ["/gate", "/analytics", "/fleet", "/settings", "/settings/users"].includes(h)), sideHrefs);
   record("Desktop topbar: theme toggle, language toggle, bell, user menu, sign-out", (await d.locator('.fm-topbar button[aria-label="Tema"]').count()) === 1 && (await d.locator('.fm-topbar button[aria-label="Idioma"]').count()) === 1 && (await d.locator('.fm-topbar button[aria-label="Menu da conta"]').count()) === 1 && (await d.locator('.fm-topbar form button[aria-label]').count()) === 1 && (await d.locator('.fm-topbar button[aria-haspopup]').count()) >= 3);
   const fab = d.locator('button[aria-label="Assistente Fleet"]');
   record("Chat assistant button present on /trips/new", (await fab.count()) === 1);
@@ -273,10 +273,11 @@ try {
   const adH = await ad.locator(".fm-sidebar a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
   record("Administrator sidebar on /carpool: Team (/settings/users) + manager items", ["/settings/users", "/dashboard", "/settings"].every((h) => adH.includes(h)), adH);
   record("/carpool keeps the chat assistant", (await ad.locator('button[aria-label="Assistente Fleet"]').count()) === 1);
-
   // ---- scoping: another route keeps the old look
-  await d.goto(BASE + "/trips", { waitUntil: "domcontentloaded" });
-  record("Other screens are unaffected (/trips has no fm-theme wrapper)", (await d.locator('[data-testid="fm-theme"]').count()) === 0);
+  await d.goto(BASE + "/account", { waitUntil: "domcontentloaded" });
+  record("Other screens are unaffected (/account has no fm-theme wrapper; /trips joined the theme in Lote 1A)", (await d.locator('[data-testid="fm-theme"]').count()) === 0);
+  await mg.goto(BASE + "/settings", { waitUntil: "domcontentloaded" });
+  record("Other screens are unaffected (/settings, manager session, has no fm-theme wrapper)", (await mg.locator('[data-testid="fm-theme"]').count()) === 0);
   const carpoolPage = await newPage(U.rider3, { width: 1440, height: 900 });
   await carpoolPage.goto(BASE + "/carpool", { waitUntil: "domcontentloaded" });
   record("/carpool still renders in the same shell (nav marks Buscar Carona)", /Buscar Carona/.test(await carpoolPage.locator('.fm-sidebar a[aria-current="page"]').innerText()));

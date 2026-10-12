@@ -191,8 +191,11 @@ try {
   await shot(d, "11-desktop-blocked");
 
   // ---- scoping: another route keeps the old look
-  await d.goto(BASE + "/trips", { waitUntil: "domcontentloaded" });
-  record("Other screens are unaffected (/trips has no fm-theme wrapper)", (await d.locator('[data-testid="fm-theme"]').count()) === 0);
+  await d.goto(BASE + "/account", { waitUntil: "domcontentloaded" });
+  record("Other screens are unaffected (/account has no fm-theme wrapper; /trips joined the theme in Lote 1A)", (await d.locator('[data-testid="fm-theme"]').count()) === 0);
+  const mgrP = await newPage(U.mgr, { width: 1280, height: 900 });
+  await mgrP.goto(BASE + "/settings", { waitUntil: "domcontentloaded" });
+  record("Other screens are unaffected (/settings, manager session, has no fm-theme wrapper)", (await mgrP.locator('[data-testid="fm-theme"]').count()) === 0);
 } catch (e) {
   record("FATAL (unexpected exception)", false, String(e && e.stack ? e.stack : e));
 } finally {

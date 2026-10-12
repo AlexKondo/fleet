@@ -1,0 +1,357 @@
+/*
+ * SCR-USR-001 Home (employee /dashboard). Everything is under .fm-theme; shared tokens/components come from
+ * carpool/fm-theme.css and carpool/fm-shared.css.
+ */
+.fm-theme .hm {
+  display: flex;
+  flex-direction: column;
+}
+.fm-theme .hm-banner {
+  margin: 0 0 16px;
+}
+.fm-theme .hm-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.fm-theme .hm-col-main,
+.fm-theme .hm-col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.fm-theme .hm-col-side {
+  display: none;
+}
+.fm-theme .hm-card {
+  padding: 16px;
+}
+.fm-theme .hm-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fm-theme .hm-link {
+  color: var(--fm-blue-600);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.fm-theme .hm-muted {
+  color: var(--fm-text-muted);
+  font-size: 14px;
+}
+
+/* quick actions */
+.fm-theme .hm-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.fm-theme .hm-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 6px;
+  text-align: center;
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-lg);
+  box-shadow: var(--fm-shadow-card);
+}
+.fm-theme .hm-action:hover {
+  border-color: var(--fm-blue-600);
+}
+.fm-theme .hm-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--fm-blue-100);
+  color: var(--fm-blue-600);
+}
+.fm-theme .hm-action[data-tone="blue"] .hm-action-icon {
+  background: var(--fm-blue-600);
+  color: #fff;
+}
+.fm-theme .hm-action[data-tone="green"] .hm-action-icon {
+  background: #e6f4ee;
+  color: #14664a;
+}
+.fm-theme .hm-action[data-tone="violet"] .hm-action-icon {
+  background: #efe6fb;
+  color: #5b2fa3;
+}
+.fm-theme .hm-action-icon svg {
+  width: 28px;
+  height: 28px;
+}
+.fm-theme .hm-action-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.fm-theme .hm-action-text strong {
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--fm-navy-900);
+}
+.fm-theme .hm-action-text small {
+  display: none;
+  font-size: 12px;
+  color: var(--fm-text-muted);
+}
+
+/* next reservation */
+.fm-theme .hm-next-body {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fm-theme .hm-next-when {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fm-theme .hm-next-icon,
+.fm-theme .hm-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--fm-blue-100);
+  color: var(--fm-blue-600);
+}
+.fm-theme .hm-next-icon svg,
+.fm-theme .hm-row-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.fm-theme .hm-next-vehicle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fm-theme .hm-next-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fm-navy-900);
+  overflow-wrap: anywhere;
+}
+.fm-theme .hm-plate {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .hm-plate-lg {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fm-navy-900);
+}
+.fm-theme .hm-route {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.fm-theme .hm-next-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--fm-border);
+}
+.fm-theme .hm-next-facts > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.fm-theme .hm-next-facts dt {
+  display: flex;
+  color: var(--fm-blue-600);
+}
+.fm-theme .hm-next-facts dt svg {
+  width: 20px;
+  height: 20px;
+}
+.fm-theme .hm-next-facts dd {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.fm-theme .hm-next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.fm-theme .hm-next-actions .fm-btn {
+  flex: 1 1 140px;
+}
+.fm-theme .hm-empty {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+/* lists */
+.fm-theme .hm-list,
+.fm-theme .hm-used,
+.fm-theme .hm-attention-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fm-theme .hm-row,
+.fm-theme .hm-used-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+.fm-theme .hm-used-item {
+  flex-wrap: wrap;
+}
+.fm-theme .hm-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.fm-theme .hm-alert {
+  margin: 12px 0 0;
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--fm-radius-md);
+  background: #fdf5e2;
+  border: 1px solid #ecd29a;
+  color: #7a5110;
+  font-size: 14px;
+}
+.fm-theme .hm-alert-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.fm-theme .hm-alert-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.fm-theme .hm-attention-list {
+  font-size: 14px;
+}
+
+/* fleet cards */
+.fm-theme .hm-fleet {
+  margin-top: 28px;
+}
+.fm-theme .hm-vehicles {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.fm-theme .hm-vehicle {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-margin-top: 16px;
+}
+.fm-theme .hm-vehicle:target {
+  border-color: var(--fm-blue-600);
+}
+.fm-theme .hm-vehicle-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fm-theme .hm-vehicle-data {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--fm-border);
+  font-size: 14px;
+}
+.fm-theme .hm-vehicle-data dt {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fm-text-muted);
+}
+.fm-theme .hm-vehicle-data dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+.fm-theme .hm-chip-warn {
+  background: #fdf5e2;
+  border-color: #ecd29a;
+  color: #7a5110;
+}
+
+@media (min-width: 768px) {
+  .fm-theme .hm-vehicles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fm-theme .hm-actions {
+    gap: 14px;
+  }
+  .fm-theme .hm-action {
+    flex-direction: row;
+    text-align: left;
+    padding: 14px;
+  }
+  .fm-theme .hm-action-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+  }
+  .fm-theme .hm-action-text small {
+    display: block;
+  }
+}
+@media (min-width: 1100px) {
+  .fm-theme .hm-grid {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+  .fm-theme .hm-col-side {
+    display: flex;
+  }
+  .fm-theme .hm-next-mobile {
+    display: none;
+  }
+  .fm-theme .hm-vehicles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1099px) {
+  .fm-theme .hm-next-desktop {
+    display: none;
+  }
+}

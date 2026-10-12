@@ -1,0 +1,300 @@
+/*
+ * SCR-USR-005 checklists (pickup / return) and the employee view of the reservation detail. Everything is under
+ * .fm-theme; shared tokens/components come from carpool/fm-theme.css and carpool/fm-shared.css.
+ */
+.fm-theme .ck {
+  display: flex;
+  flex-direction: column;
+  max-width: 760px;
+}
+.fm-theme .ck-vehicle {
+  margin-top: 20px;
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+}
+.fm-theme .ck-vehicle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--fm-blue-100);
+  color: var(--fm-blue-600);
+}
+.fm-theme .ck-vehicle-icon svg {
+  width: 30px;
+  height: 30px;
+}
+.fm-theme .ck-vehicle-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fm-theme .ck-vehicle-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fm-navy-900);
+  overflow-wrap: anywhere;
+}
+.fm-theme .ck-plate {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--fm-text-muted);
+}
+.fm-theme .ck-route {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--fm-text-muted);
+  overflow-wrap: anywhere;
+}
+.fm-theme .ck-route svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--fm-blue-600);
+}
+
+/* form */
+.fm-theme .ck-form {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fm-theme .ck-card {
+  padding: 16px;
+  margin: 0;
+  min-width: 0;
+}
+.fm-theme .ck-card > .fm-h2,
+.fm-theme .ck-fieldset > legend {
+  margin-bottom: 12px;
+  padding: 0;
+}
+.fm-theme .ck-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+.fm-theme .ck-hint {
+  font-size: 13px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .ck-fieldset > .ck-hint {
+  margin: -4px 0 12px;
+}
+.fm-theme .ck-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fm-theme .ck-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--fm-border-strong);
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-surface);
+  cursor: pointer;
+}
+.fm-theme .ck-check:has(input:checked) {
+  border-color: var(--fm-blue-600);
+  background: var(--fm-blue-100);
+}
+.fm-theme .ck-check[data-tone="warn"]:has(input:checked) {
+  border-color: #8e2f2f;
+  background: #fbeaea;
+}
+.fm-theme .ck-check input {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: var(--fm-blue-600);
+}
+.fm-theme .ck-textarea {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.fm-theme .ck-msg {
+  margin: 0;
+}
+.fm-theme .ck-msg-btn {
+  margin-top: 10px;
+}
+.fm-theme .ck-submit {
+  width: 100%;
+  min-height: 52px;
+}
+
+/* photo capture (shared PhotoCaptureSection, legacy Tailwind markup) */
+.fm-theme .ck-photos {
+  margin-top: 16px;
+}
+.fm-theme .ck-photos fieldset {
+  border-top-color: var(--fm-border);
+}
+.fm-theme .ck-photos legend {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fm-navy-900);
+}
+.fm-theme .ck-photos button {
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 12px;
+  color: var(--fm-text);
+  border-color: var(--fm-border-strong);
+  border-radius: var(--fm-radius-sm);
+  padding: 0 12px;
+}
+.fm-theme .ck-photos button.ck-remove {
+  border: 0;
+  padding: 0;
+  font-size: 22px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .ck-photos [class*="font-mono"] {
+  font-size: 12px;
+}
+
+/* reservation detail (employee) */
+.fm-theme .rd {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 900px;
+}
+.fm-theme .rd-head {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fm-theme .rd-head-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.fm-theme .rd-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--fm-navy-900);
+  overflow-wrap: anywhere;
+}
+.fm-theme .rd-route {
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+.fm-theme .rd-meta {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--fm-text-muted);
+  overflow-wrap: anywhere;
+}
+.fm-theme .rd-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fm-theme .rd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--fm-border);
+}
+.fm-theme .rd-actions .fm-btn {
+  flex: 1 1 160px;
+}
+.fm-theme .rd-actions form {
+  display: contents;
+}
+.fm-theme .rd-section {
+  padding: 18px;
+}
+.fm-theme .rd-section > .fm-h2 {
+  margin-bottom: 12px;
+}
+.fm-theme .rd-impacted {
+  padding: 12px;
+  border-radius: var(--fm-radius-md);
+  background: #fdf5e2;
+  border: 1px solid #ecd29a;
+  color: #7a5110;
+}
+.fm-theme .rd-impacted strong {
+  display: block;
+}
+.fm-theme .rd-pending {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fm-theme .rd-pending-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.fm-theme .rd-pending-row form {
+  display: inline-flex;
+}
+
+/* shared widgets inside the detail (host carpool panel, message thread: legacy markup, re-pointed tokens) */
+.fm-theme .rd button,
+.fm-theme .rd [type="submit"] {
+  min-height: 44px;
+}
+.fm-theme .rd input:not([type="checkbox"]):not([type="radio"]),
+.fm-theme .rd select,
+.fm-theme .rd textarea {
+  min-height: 44px;
+  border-color: var(--fm-border-strong);
+}
+
+.fm-theme .rd label:has(input[type="radio"]) {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--fm-border-strong);
+  border-radius: var(--fm-radius-md);
+  font-size: 14px;
+  color: var(--fm-text);
+}
+.fm-theme .rd input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--fm-blue-600);
+}
+
+@media (min-width: 768px) {
+  .fm-theme .ck-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fm-theme .ck-checks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fm-theme .ck-checks .ck-textarea {
+    grid-column: 1 / -1;
+  }
+  .fm-theme .ck-submit {
+    width: auto;
+    align-self: flex-start;
+    min-width: 280px;
+  }
+}

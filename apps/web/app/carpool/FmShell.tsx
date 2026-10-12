@@ -11,6 +11,7 @@ import { ThemeToggle } from "../ui/ThemeToggle";
 import { FindRideIcon, LogoutIcon, TripsIcon } from "../NavIcons";
 import { buildBaseNavItems, loadShellContext, type NavKey } from "../shellData";
 import "./fm-theme.css";
+import "./fm-shared.css";
 
 /**
  * Scoped shell of the new FleetMind look (SCR-USR-003 / SCR-USR-002): navy sidebar on desktop, bottom navigation
@@ -34,13 +35,15 @@ export async function FmShell({
   isFleetManager: boolean;
   isAdministrator: boolean;
   /** Which nav item is the current page. */
-  active?: "carpool" | "book";
+  active?: NavKey;
   children: React.ReactNode;
 }) {
   const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState } =
     await loadShellContext(role);
 
   const base = buildBaseNavItems(dict, { role, isFleetManager, isAdministrator });
+  // The employee's Home (SCR-USR-001) lives at /dashboard; managers keep "Painel" there.
+  if (role === "employee") base[0] = { ...base[0]!, label: dict.dashboard.home.navHome, visible: true };
   const extra = [
     { key: "carpool" as NavKey, href: "/carpool", label: dict.carpool.buscar.navFind, icon: FindRideIcon, visible: true },
     { key: "book" as NavKey, href: "/trips/new", label: dict.trips.reservar.navBook, icon: TripsIcon, visible: true },
@@ -83,24 +86,25 @@ export async function FmShell({
       )}
 
       <div className="fm-main">
-        {licenseGateActive ? null : (
-          <div className="fm-mobilenav">
-            <MobileNav
-              items={items.map(({ key, href, label }) => ({ key, href, label }))}
-              active={active}
-              orgName={orgName}
-              userName={userName}
-              role={role}
-              dict={dict}
-              locale={locale}
-            />
-          </div>
-        )}
         <header className="fm-topbar">
           <p className="fm-topbar-brand">FleetMind</p>
           <div className="fm-topbar-right">
             <LanguageToggle locale={locale} dict={dict} />
             <ThemeToggle dict={dict} />
+          {licenseGateActive ? null : (
+            <div className="fm-mobilenav">
+              <MobileNav
+                compact
+                items={items.map(({ key, href, label }) => ({ key, href, label }))}
+                active={active}
+                orgName={orgName}
+                userName={userName}
+                role={role}
+                dict={dict}
+                locale={locale}
+              />
+            </div>
+          )}
             <div className="fm-topbar-desktop">
               {licenseGateActive ? null : (
                 <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
