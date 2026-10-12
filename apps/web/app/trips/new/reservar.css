@@ -380,7 +380,7 @@
   color: #a13a3a;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 920px) {
   .fm-theme .rv-step-hint {
     display: block;
   }
@@ -407,7 +407,7 @@
     align-self: flex-start;
   }
 }
-@media (min-width: 1100px) {
+@media (min-width: 1380px) {
   .fm-theme .rv-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }

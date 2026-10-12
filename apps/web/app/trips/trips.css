@@ -179,7 +179,7 @@
   overflow-x: auto;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1048px) {
   .fm-theme .tp-head {
     flex-direction: row;
     align-items: flex-start;

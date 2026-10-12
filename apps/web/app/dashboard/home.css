@@ -52,7 +52,7 @@
 /* quick actions */
 .fm-theme .hm-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
 }
 .fm-theme .hm-action {
@@ -259,6 +259,16 @@
 }
 .fm-theme .hm-attention-list {
   font-size: 14px;
+  gap: 8px;
+}
+.fm-theme .hm-attention-list > li {
+  margin: 0;
+  min-height: 0;
+  line-height: 1.5;
+}
+.fm-theme .hm-attention-list > li > * {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 /* fleet cards */
@@ -321,6 +331,7 @@
   }
   .fm-theme .hm-actions {
     gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   }
   .fm-theme .hm-action {
     flex-direction: row;
@@ -336,7 +347,7 @@
     display: block;
   }
 }
-@media (min-width: 1100px) {
+@media (min-width: 1280px) {
   .fm-theme .hm-grid {
     grid-template-columns: minmax(0, 1fr) 380px;
   }
@@ -350,7 +361,12 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-@media (max-width: 1099px) {
+@media (min-width: 1600px) {
+  .fm-theme .hm-vehicles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1279px) {
   .fm-theme .hm-next-desktop {
     display: none;
   }
