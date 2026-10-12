@@ -1,3 +1,9 @@
 {
-  "regions": ["gru1"]
+  "regions": ["pdx1"],
+  "crons": [
+    {
+      "path": "/api/cron/daily",
+      "schedule": "0 12 * * *"
+    }
+  ]
 }
