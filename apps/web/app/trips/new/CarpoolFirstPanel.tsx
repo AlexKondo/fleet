@@ -18,7 +18,7 @@ type CardOutcome =
 /**
  * Phase C5 (pack 05): the carpool-first step of New Trip. Shown BEFORE the vehicle result.
  *  - offers          : compatible cards (departure, detour, seats, Request Ride) + decline button
- *  - none            : nothing fits -> the vehicle result follows automatically (caller)
+ *  - none            : nothing fits -> renders nothing; the vehicle result follows automatically (caller)
  *  - unavailable     : outage banner; the vehicle flow is untouched
  *  - needs_precision : we do NOT guess; the rider is asked for a more precise place
  * Every request carries a client_request_id generated once per offer and REUSED on retry, so a
@@ -85,14 +85,8 @@ export function CarpoolFirstPanel({
     );
   }
 
-  if (state.status === "none") {
-    return (
-      <div className="flex flex-col gap-2">
-        <PlacesConfirmation origin={state.origin} destination={state.destination} dict={dict} />
-        <p className="text-sm text-fog-400">{t.noneFound}</p>
-      </div>
-    );
-  }
+  // Carpool is optional: with nobody on the route it simply does not appear (the vehicle result follows).
+  if (state.status === "none") return null;
 
   if (state.status === "needs_precision") {
     const failing: { check: PlaceCheck & { ok: false }; field: string }[] = [];

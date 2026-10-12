@@ -41,3 +41,12 @@ export function formatDateTimeShort(iso: string, locale: Locale): string {
     minute: "2-digit",
   });
 }
+
+/** Time of day only ("07:30"), same Brasília-time rule (carpool "Buscar Carona" cards). */
+export function formatTimeShort(iso: string, locale: Locale): string {
+  return new Date(iso).toLocaleTimeString(locale, {
+    timeZone: TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

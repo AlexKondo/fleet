@@ -1,0 +1,35 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Substituições - Buscar Carona</title>
+<style>body{font-family:Arial,sans-serif;margin:0;background:#f4f7fb;color:#19283b}
+h1{padding:16px 24px;margin:0;background:#101d35;color:#fff;font-size:20px}
+.intro{padding:12px 24px;max-width:1100px}
+.pair{margin:20px 24px;padding:16px;background:#fff;border:1px solid #dce4ee;border-radius:12px}
+.pair h2{margin:0 0 12px;font-size:17px}
+.grid{display:grid;grid-template-columns:1fr 40px 1fr;gap:12px;align-items:start}
+.arrow{font-size:32px;text-align:center;align-self:center;color:#2369c8}
+.lbl{font-weight:bold;font-size:14px;margin-bottom:6px}.lbl small{display:block;font-weight:normal;color:#627389}
+.red{color:#c64747}.green{color:#22805c}
+img{max-width:100%;border:1px solid #dce4ee}
+.note{margin-top:10px;font-size:13px;color:#627389}.two{display:flex;gap:10px}.two img{width:50%}</style></head><body>
+<h1>Buscar Carona: o que sai e o que entra (pares)</h1>
+<div class="intro">Cada bloco = UMA tela de hoje que será substituída por UMA tela nova. Hoje a carona vive dentro da página "Solicitar Viagem" (/trips/new). No design novo ela vira uma tela própria, "Buscar Carona" (SCR-USR-003). Nada foi alterado no sistema ainda.</div>
+
+<div class="pair"><h2>Par 1 — lista de caronas compatíveis</h2><div class="grid">
+<div><div class="lbl red">SAI: Solicitar Viagem com carona compatível<small>/trips/new (hoje)</small></div><img src="05-before.png"></div>
+<div class="arrow">→</div>
+<div><div class="lbl green">ENTRA: Buscar Carona, desktop<small>SCR-USR-003, imagem 05, painel direito</small></div><img src="05-after-desktop.png"></div></div>
+<div class="note">Mudam: menu lateral, cartão por carona, mapa da rota. Sem dado hoje (ficam fora ou "sem dados"): foto/nota do motorista, "Match %", mensagem ao motorista.</div></div>
+
+<div class="pair"><h2>Par 2 — depois de pedir a carona</h2><div class="grid">
+<div><div class="lbl red">SAI: Solicitar Viagem, pedido enviado, aguardando o motorista<small>/trips/new e /trips (hoje)</small></div><img src="06-before.png"></div>
+<div class="arrow">→</div>
+<div><div class="lbl green">ENTRA: "Solicitação enviada" + "Minhas solicitações"<small>SCR-USR-003 passo 5 e SCR-USR-006, imagem 05, painéis 5 e 6 (mobile)</small></div>
+<div class="two"><img src="05-after-p5-enviada.png"><img src="05-after-p6-acompanhar.png"></div></div></div></div>
+
+<div class="pair"><h2>Par 3 — quando não há carona na rota (duas telas)</h2><div class="grid">
+<div><div class="lbl red">SAI: Solicitar Viagem mostrando "Nenhuma carona compatível encontrada" + caixa "Locais entendidos"<small>/trips/new (hoje)</small></div><img src="07-before.png"></div>
+<div class="arrow">→</div>
+<div><div class="lbl green">ENTRA (a) na reserva: a carona NÃO aparece<small>Solicitar Viagem segue direto para o veículo recomendado. Esta parte já está feita no seu computador, não publicada.</small></div>
+<div class="note" style="font-size:15px;border:1px dashed #22805c;padding:12px">Sem painel de carona, sem aviso, sem "Locais entendidos". Só o veículo recomendado, como na área azul clara da imagem à esquerda.</div>
+<div class="lbl green" style="margin-top:16px">ENTRA (b) na tela Buscar Carona: só a mensagem<small>SCR-USR-003, quando a pessoa buscou de propósito e não há ninguém</small></div>
+<div class="note" style="font-size:20px;border:1px solid #dce4ee;padding:24px;text-align:center;background:#fff;color:#19283b">Sem carona compatível</div></div></div></div>
+</body></html>

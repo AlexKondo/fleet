@@ -56,8 +56,7 @@ try {
   await fillTrip(host, { departure: dep, origin: HOST_ORIGIN, destination: HOST_DEST, passengers: 1 });
   await host.waitForSelector('[data-testid="host-offer-step"]', { timeout: 90000 });
   const hostBody = await body(host);
-  record("Host: carpool-first ran and showed the places the system understood (confirm labels)", (await host.locator('[data-testid="carpool-places"]').count()) === 1,
-    { origin: await host.locator('[data-testid="carpool-origin-label"]').textContent(), destination: await host.locator('[data-testid="carpool-destination-label"]').textContent() });
+  record("Host: nobody on the route -> the carpool panel (and its places box) does not appear at all", (await host.locator('[data-testid="carpool-places"]').count()) === 0 && (await host.locator('[data-testid="carpool-first"]').count()) === 0);
   record("Host: vehicle recommended AFTER carpool-first, host question 'Deseja disponibilizar vagas para carona?' shown", has(hostBody, "Deseja disponibilizar vagas para carona?") && has(hostBody, "Veículo recomendado"));
   record("Host: the OLD allow_carpool consent checkbox is hidden (new Yes/No step is the only carpool question)", (await host.locator('input[type="checkbox"][name="allowCarpool"]').count()) === 0 && (await host.locator('input[type="hidden"][name="allowCarpool"]').count()) === 1);
   record("Host: default answer is No (no seats published unless the host opts in)", await host.locator('input[name="offerChoice"][value="no"]').isChecked());
@@ -110,12 +109,12 @@ try {
   await fillTrip(rider4, { departure: dep, origin: RIDER_ORIGIN, destination: FAR_DEST, passengers: 1 });
   await rider4.waitForSelector("text=Veículo recomendado", { timeout: 90000 });
   const r4Body = await body(rider4);
-  record("Incompatible rider (far destination): NO carpool card, no hint of the host's trip; vehicle flow shown", (await rider4.locator('[data-testid="carpool-offer-card"]').count()) === 0 && has(r4Body, "Nenhuma carona compatível") && !has(r4Body, U.host.fullName));
+  record("Incompatible rider (far destination): NO carpool card, no hint of the host's trip; vehicle flow shown", (await rider4.locator('[data-testid="carpool-offer-card"]').count()) === 0 && !has(r4Body, "Nenhuma carona compatível") && !has(r4Body, U.host.fullName));
   await shot(rider4, "rider-incompatible-no-offer-vehicle-shown");
 
   await fillTrip(rider4, { departure: dep, origin: SLOW_ORIGIN, destination: RIDER_DEST, passengers: 1 });
   await rider4.waitForSelector("text=Veículo recomendado", { timeout: 90000 });
-  record("Close-by rider whose detour is too long for the policy (+20 min > 10): route-based matching refuses it, NO card", (await rider4.locator('[data-testid="carpool-offer-card"]').count()) === 0 && has(await body(rider4), "Nenhuma carona compatível"));
+  record("Close-by rider whose detour is too long for the policy (+20 min > 10): route-based matching refuses it, NO card", (await rider4.locator('[data-testid="carpool-offer-card"]').count()) === 0 && !has(await body(rider4), "Nenhuma carona compatível"));
   await shot(rider4, "rider-route-detour-too-long-no-offer");
 
   await fillTrip(rider4, { departure: dep, origin: RIDER_ORIGIN, destination: "São Paulo", passengers: 1 });
@@ -210,7 +209,7 @@ try {
   // ------------------------------------------------------------ 8. POLICY: new version used by the next search
   const rider4b = rider4;
   await fillTrip(rider4b, { departure: dep10, origin: RIDER_ORIGIN, destination: RIDER_DEST, passengers: 1 });
-  await rider4b.waitForSelector('[data-testid="carpool-offer-card"], :text("Nenhuma carona compatível")', { timeout: 90000 });
+  await rider4b.waitForSelector('[data-testid="carpool-offer-card"], :text("Veículo recomendado")', { timeout: 90000 });
   record("Policy v1 (departure window 15 min): a rider departing +10 min IS offered the carpool", (await rider4b.locator('[data-testid="carpool-offer-card"]').count()) === 1);
   await shot(rider4b, "policy-v1-window-15-plus-10min-card-shown");
   const mgr = await newPage(U.mgr);
@@ -246,7 +245,7 @@ try {
   record("Employee is redirected away from /settings (no policy screen for non-managers)", !rider1.url().includes("/settings"), rider1.url());
 
   await fillTrip(rider4b, { departure: dep10, origin: RIDER_ORIGIN, destination: RIDER_DEST, passengers: 1 });
-  await rider4b.waitForSelector("text=Nenhuma carona compatível", { timeout: 90000 });
+  await rider4b.waitForSelector("text=Veículo recomendado", { timeout: 90000 });
   record("After publishing v2 (window 5 min) the NEXT search uses it: the +10 min rider no longer gets the carpool", (await rider4b.locator('[data-testid="carpool-offer-card"]').count()) === 0);
   await shot(rider4b, "policy-v2-window-5-plus-10min-no-card");
 

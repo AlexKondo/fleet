@@ -328,7 +328,7 @@ export function TripRequestForm({
           {t.recommendationTitle}
         </h2>
 
-        {carpoolFirst ? (
+        {carpoolFirst && carpoolFirst.status !== "none" ? (
           <div className="mb-4" data-testid="carpool-first">
             <CarpoolFirstPanel
               state={carpoolFirst}

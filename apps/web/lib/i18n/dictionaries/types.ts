@@ -1146,7 +1146,6 @@ export type Dictionary = {
       outcomeAccepted: string;
       viewMyTrips: string;
       continueWithVehicle: string;
-      noneFound: string;
       unavailableBanner: string;
       needsPrecisionTitle: string;
       cityLevel: string;
@@ -1164,6 +1163,32 @@ export type Dictionary = {
       seatsLabel: string;
       hostHint: string;
       noFreeSeats: string;
+    };
+    buscar: {
+      title: string;
+      subtitle: string;
+      tabFind: string;
+      tabOffer: string;
+      originLabel: string;
+      originPlaceholder: string;
+      destinationLabel: string;
+      destinationPlaceholder: string;
+      dateTimeLabel: string;
+      seatsLabel: string;
+      clearField: string;
+      submit: string;
+      searching: string;
+      resultsTitle: string;
+      searchSummaryTitle: string;
+      requestedTimeLabel: string;
+      noMatch: string;
+      invalidInput: string;
+      successTitle: string;
+      successHint: string;
+      newSearch: string;
+      navFind: string;
+      navMain: string;
+      departureShort: string;
     };
     errors: {
       notAuthorized: string;
