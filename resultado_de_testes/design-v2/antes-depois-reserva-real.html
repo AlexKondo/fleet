@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reservar Veículo (SCR-USR-002): arte x tela real</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f4f7fb;color:#19283b}
+h1{padding:16px 24px;margin:0;background:#101d35;color:#fff;font-size:20px}
+.intro{padding:12px 24px;max-width:1100px;line-height:1.45}
+.pair{margin:20px 24px;padding:16px;background:#fff;border:1px solid #dce4ee;border-radius:12px}
+.pair h2{margin:0 0 12px;font-size:17px}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.cols.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cols.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.lbl{font-weight:bold;font-size:14px;margin-bottom:6px}.lbl small{display:block;font-weight:normal;color:#4d5f74}
+.art{color:#6a3fb0}.before{color:#a13a3a}.after{color:#1a6b4d}
+img{max-width:100%;border:1px solid #dce4ee;display:block}
+.note{margin-top:10px;font-size:13px;color:#4d5f74;line-height:1.45}
+@media (max-width:900px){.cols,.cols.four{grid-template-columns:1fr}}
+</style></head><body>
+<h1>Reservar Veículo (SCR-USR-002): arte aprovada x tela real implementada</h1>
+<div class="intro">Cada bloco mostra a arte aprovada, o ANTES (tela antiga "Solicitar Viagem", capturas antigas preservadas em design-v2/before-real (copiadas de carpool-c5 antes de reexecutar os testes; tela antiga, não regenerada porque exigiria compilar o commit anterior)) e o DEPOIS (tela real em /trips/new, capturada com Playwright contra <code>next start</code>). Este material compara aproximação visual, não fidelidade de pixel: as diferenças deliberadas estão listadas ao final.</div>
+
+<div class="pair"><h2>1. Desktop, sem carona na rota</h2><div class="cols">
+<div><div class="lbl art">ARTE<small>usr002/art04-web.png (imagem 04)</small></div><img src="usr002/art04-web.png" alt="Arte 04 desktop"></div>
+<div><div class="lbl before">ANTES<small>before-real/01-host-vehicle-recommended-offer-step-default-no.png</small></div><img src="before-real/01-host-vehicle-recommended-offer-step-default-no.png" alt="Antes: veículo recomendado"></div>
+<div><div class="lbl after">DEPOIS (real)<small>implemented-usr002/02-desktop-no-carpool-vehicle-host-offer.png</small></div><img src="implemented-usr002/02-desktop-no-carpool-vehicle-host-offer.png" alt="Depois: sem carona"></div>
+</div><div class="note">Sem carona: o bloco de carona não aparece (decisão do usuário; a arte tem o aviso "Não encontramos caronas", que NÃO foi implementado). Fica o passo "Deseja disponibilizar vagas" (Sim/Não e vagas).</div></div>
+
+<div class="pair"><h2>2. Desktop, com carona compatível antes dos veículos</h2><div class="cols four">
+<div><div class="lbl art">ARTE<small>usr002/art06-web.png (imagem 06)</small></div><img src="usr002/art06-web.png" alt="Arte 06 desktop"></div>
+<div><div class="lbl before">ANTES<small>before-real/05-rider-compatible-card-with-detour.png</small></div><img src="before-real/05-rider-compatible-card-with-detour.png" alt="Antes: carona compatível"></div>
+<div><div class="lbl after">DEPOIS (real): carona</div><img src="implemented-usr002/03-desktop-carpool-compatible.png" alt="Depois: carona compatível"><div class="note">03-desktop-carpool-compatible.png</div></div>
+<div><div class="lbl after">DEPOIS (real): carona, depois veículo</div><img src="implemented-usr002/04-desktop-carpool-then-vehicle.png" alt="Depois: carona e veículo"><div class="note">04-desktop-carpool-then-vehicle.png (carona acima do veículo)</div></div>
+</div></div>
+
+<div class="pair"><h2>3. Celular (390x844), sem carona na rota</h2><div class="cols four">
+<div><div class="lbl art">ARTE<small>usr002/art04-mobile.png</small></div><img src="usr002/art04-mobile.png" alt="Arte 04 celular"></div>
+<div><div class="lbl before">ANTES</div><div class="note">Não existe captura mobile anterior: a página era a versão desktop empilhada.</div></div>
+<div><div class="lbl after">DEPOIS (real): formulário</div><img src="implemented-usr002/mobile-01-form.png" alt="Depois celular formulário"></div>
+<div><div class="lbl after">DEPOIS (real): veículo e vagas</div><img src="implemented-usr002/mobile-02-no-carpool-host-offer.png" alt="Depois celular veículo"></div>
+</div></div>
+
+<div class="pair"><h2>4. Celular (390x844), com carona compatível</h2><div class="cols four">
+<div><div class="lbl art">ARTE<small>usr002/art06-mobile.png</small></div><img src="usr002/art06-mobile.png" alt="Arte 06 celular"></div>
+<div><div class="lbl before">ANTES</div><div class="note">Sem captura mobile anterior.</div></div>
+<div><div class="lbl after">DEPOIS (real): topo</div><img src="implemented-usr002/mobile-04-carpool-compatible-top.png" alt="Depois celular topo"></div>
+<div><div class="lbl after">DEPOIS (real): cartão da carona</div><img src="implemented-usr002/mobile-03-carpool-compatible.png" alt="Depois celular carona"></div>
+</div></div>
+
+<div class="pair"><h2>5. Estados sem equivalente na arte (mantidos como hoje)</h2><div class="cols two">
+<div><div class="lbl before">ANTES: pedir lugar mais preciso<small>before-real/09-rider-city-only-destination-clarification.png</small></div><img src="before-real/09-rider-city-only-destination-clarification.png" alt="Antes precisão"></div>
+<div><div class="lbl after">DEPOIS (real)<small>06-desktop-needs-precision.png</small></div><img src="implemented-usr002/06-desktop-needs-precision.png" alt="Depois precisão"></div>
+<div><div class="lbl before">ANTES: serviço de mapas indisponível<small>before-real/41-outage-banner-vehicle-flow-untouched.png</small></div><img src="before-real/41-outage-banner-vehicle-flow-untouched.png" alt="Antes indisponível"></div>
+<div><div class="lbl after">DEPOIS (real)<small>08-desktop-outage.png</small></div><img src="implemented-usr002/08-desktop-outage.png" alt="Depois indisponível"></div>
+<div><div class="lbl after">DEPOIS (real): sem opção disponível<small>07-desktop-no-options.png</small></div><img src="implemented-usr002/07-desktop-no-options.png" alt="Depois sem opção"></div>
+<div><div class="lbl after">DEPOIS (real): formulário vazio<small>01-desktop-empty.png</small></div><img src="implemented-usr002/01-desktop-empty.png" alt="Depois vazio"></div>
+</div></div>
+
+<div class="pair"><h2>Diferenças deliberadas em relação à arte</h2><div class="note" style="font-size:14px">
+Sem mapa, km/tempo de rota, foto/nota/Match % do motorista, "Uso recente", abas "Por período / Por destino / Uso recorrente", botão de localização, imagens de veículo, filtros e grade de 6 veículos (não há dados reais para isso). Sem o aviso "Não encontramos caronas". O cabeçalho de passos é apenas visual e segue o estado da página; na versão de 4 passos a ordem é Viagem, Carona, Veículo, Confirmação (a arte põe Veículo antes de Carona). Campos reais da reserva (distância, passageiros, carga, justificativa) no lugar de "Motivo da viagem". Sem busca global, data de hoje e seletor de unidade da arte. O menu, o assistente de chat, o botão de nova viagem, tema, idioma, sino e menu do usuário são os mesmos da tela antiga, por papel. O veículo é mostrado como placa e categoria, em cartão simples. O seletor Sim/Não e o stepper de vagas substituem o interruptor da arte. Nas capturas de página inteira o menu lateral aparece no meio por ser fixo na janela.
+</div></div>
+</body></html>

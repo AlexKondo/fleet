@@ -2,98 +2,131 @@ import Link from "next/link";
 import { signOut } from "../dashboard/actions";
 import { InactivityLogout } from "../InactivityLogout";
 import { SessionBackupSync } from "../SessionBackupSync";
+import { ChatWidget } from "../ChatWidget";
+import { MobileNav } from "../MobileNav";
 import { NotificationBell } from "../dashboard/NotificationBell";
+import { UserMenu } from "../UserMenu";
 import { LanguageToggle } from "../ui/LanguageToggle";
-import { getRoleLabels } from "../settings/users/ROLE_LABELS";
-import { DashboardIcon, LogoutIcon, TripsIcon } from "../NavIcons";
-import type { Dictionary } from "@/lib/i18n/dictionaries";
-import type { Locale } from "@/lib/i18n/locales";
+import { ThemeToggle } from "../ui/ThemeToggle";
+import { FindRideIcon, LogoutIcon, TripsIcon } from "../NavIcons";
+import { buildBaseNavItems, loadShellContext, type NavKey } from "../shellData";
 import "./fm-theme.css";
 
 /**
- * Scoped shell of the new FleetMind look (SCR-USR-003): navy sidebar on desktop, bottom navigation on mobile.
- * Only destinations that exist today are listed (nothing decorative). Everything is under `.fm-theme`.
+ * Scoped shell of the new FleetMind look (SCR-USR-003 / SCR-USR-002): navy sidebar on desktop, bottom navigation
+ * plus the shared hamburger menu on mobile. It carries EVERYTHING AppShell carries for the same role (the data
+ * comes from the same loader, the widgets are the same components): chat assistant, every nav item the role may
+ * see, the "Solicitar viagem" CTA, theme/language toggles, the bell with the license notice, the user menu, the
+ * license gate. Everything is under `.fm-theme`.
  */
-function FindRideIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <circle cx="11" cy="11" r="6.5" />
-      <path d="m20 20-4.2-4.2" />
-    </svg>
-  );
-}
-
-export function FmShell({
-  dict,
-  locale,
+export async function FmShell({
   orgName,
   userName,
   role,
   isFleetManager,
+  isAdministrator,
+  active = "carpool",
   children,
 }: {
-  dict: Dictionary;
-  locale: Locale;
   orgName: string;
   userName: string;
   role: string;
   isFleetManager: boolean;
+  isAdministrator: boolean;
+  /** Which nav item is the current page. */
+  active?: "carpool" | "book";
   children: React.ReactNode;
 }) {
-  const roleLabels = getRoleLabels(dict);
-  const items: { key: string; href: string; label: string; Icon: typeof TripsIcon; visible: boolean }[] = [
-    { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, Icon: DashboardIcon, visible: isFleetManager },
-    { key: "carpool", href: "/carpool", label: dict.carpool.buscar.navFind, Icon: FindRideIcon, visible: true },
-    { key: "book", href: "/trips/new", label: dict.chrome.requestTrip.replace(/^\+\s*/, ""), Icon: TripsIcon, visible: true },
-    { key: "trips", href: "/trips", label: dict.nav.trips, Icon: TripsIcon, visible: true },
-  ];
-  const visible = items.filter((i) => i.visible);
+  const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState } =
+    await loadShellContext(role);
 
-  const renderLinks = () =>
-    visible.map(({ key, href, label, Icon }) => (
-      <Link key={key} href={href} aria-current={key === "carpool" ? "page" : undefined}>
-        <Icon className="" />
-        <span>{label}</span>
-      </Link>
-    ));
+  const base = buildBaseNavItems(dict, { role, isFleetManager, isAdministrator });
+  const extra = [
+    { key: "carpool" as NavKey, href: "/carpool", label: dict.carpool.buscar.navFind, icon: FindRideIcon, visible: true },
+    { key: "book" as NavKey, href: "/trips/new", label: dict.trips.reservar.navBook, icon: TripsIcon, visible: true },
+  ];
+  // dashboard first, then the two rider destinations, then the shared items
+  const items = [base[0]!, ...extra, ...base.slice(1)].filter((i) => i.visible);
+  // the bottom bar only fits the main destinations; the hamburger menu (MobileNav) lists everything
+  const bottomKeys: NavKey[] = ["dashboard", "carpool", "book", "trips"];
+  const bottomItems = items.filter((i) => bottomKeys.includes(i.key));
+
+  const link = ({ key, href, label, icon: Icon }: (typeof items)[number]) => (
+    <Link key={key} href={href} aria-current={key === active ? "page" : undefined}>
+      <Icon className="" />
+      <span>{label}</span>
+    </Link>
+  );
 
   return (
     <div className="fm-theme" data-testid="fm-theme">
       <InactivityLogout />
       <SessionBackupSync />
-      <aside className="fm-sidebar">
-        <div className="fm-brand">
-          <p className="fm-brand-name">FleetMind</p>
-          <p className="fm-brand-org">{orgName}</p>
+      {licenseGateActive ? null : (
+        <div className="fm-chat">
+          <ChatWidget dict={dict} locale={locale} initialState={chatInitialState} />
         </div>
-        <nav className="fm-nav" aria-label={dict.carpool.buscar.navMain}>
-          {renderLinks()}
-        </nav>
-      </aside>
+      )}
+      {licenseGateActive ? null : (
+        <aside className="fm-sidebar">
+          <div className="fm-brand">
+            <p className="fm-brand-name">FleetMind</p>
+            <p className="fm-brand-org">{orgName}</p>
+          </div>
+          <Link href="/trips/new" className="fm-cta">
+            {dict.chrome.requestTrip}
+          </Link>
+          <nav className="fm-nav" aria-label={dict.carpool.buscar.navMain}>
+            {items.map(link)}
+          </nav>
+        </aside>
+      )}
 
       <div className="fm-main">
+        {licenseGateActive ? null : (
+          <div className="fm-mobilenav">
+            <MobileNav
+              items={items.map(({ key, href, label }) => ({ key, href, label }))}
+              active={active}
+              orgName={orgName}
+              userName={userName}
+              role={role}
+              dict={dict}
+              locale={locale}
+            />
+          </div>
+        )}
         <header className="fm-topbar">
           <p className="fm-topbar-brand">FleetMind</p>
           <div className="fm-topbar-right">
             <LanguageToggle locale={locale} dict={dict} />
-            <NotificationBell align="right" dict={dict} locale={locale} />
-            <Link href="/account" className="fm-user" title={dict.chrome.accountLink}>
-              <p className="fm-user-name">{userName}</p>
-              <p className="fm-user-role">{roleLabels[role] ?? role}</p>
-            </Link>
-            <form action={signOut}>
-              <button type="submit" className="fm-icon-btn" aria-label={dict.chrome.signOut}>
-                <LogoutIcon className="" />
-              </button>
-            </form>
+            <ThemeToggle dict={dict} />
+            <div className="fm-topbar-desktop">
+              {licenseGateActive ? null : (
+                <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
+              )}
+              <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} avatarUrl={avatarUrl} dict={dict} />
+              <form action={signOut}>
+                <button type="submit" className="fm-icon-btn" aria-label={dict.chrome.signOut}>
+                  <LogoutIcon className="" />
+                </button>
+              </form>
+            </div>
           </div>
         </header>
+        {licenseGateActive ? (
+          <p role="alert" className="fm-banner" style={{ margin: "16px 16px 0" }}>
+            {dict.chrome.licenseGateNotice}
+          </p>
+        ) : null}
         <main className="fm-content">{children}</main>
       </div>
 
-      <nav className="fm-bottom-nav" aria-label={dict.carpool.buscar.navMain}>
-        {renderLinks()}
-      </nav>
+      {licenseGateActive ? null : (
+        <nav className="fm-bottom-nav" aria-label={dict.carpool.buscar.navMain}>
+          {bottomItems.map(link)}
+        </nav>
+      )}
     </div>
   );
 }

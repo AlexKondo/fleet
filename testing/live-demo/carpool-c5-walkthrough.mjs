@@ -113,9 +113,16 @@ try {
   await shot(rider4, "rider-incompatible-no-offer-vehicle-shown");
 
   await fillTrip(rider4, { departure: dep, origin: SLOW_ORIGIN, destination: RIDER_DEST, passengers: 1 });
-  await rider4.waitForSelector("text=Veículo recomendado", { timeout: 90000 });
-  record("Close-by rider whose detour is too long for the policy (+20 min > 10): route-based matching refuses it, NO card", (await rider4.locator('[data-testid="carpool-offer-card"]').count()) === 0 && !has(await body(rider4), "Nenhuma carona compatível"));
-  await shot(rider4, "rider-route-detour-too-long-no-offer");
+  // live-traffic dependent (Google): the slow route's detour can come back under the policy limit; do not abort the whole walkthrough then
+  await rider4.locator("text=Veículo recomendado").or(rider4.locator('[data-testid="carpool-offer-card"]')).first().waitFor({ timeout: 90000 });
+  if ((await rider4.locator('[data-testid="carpool-offer-card"]').count()) > 0) {
+    record("Close-by rider whose detour is too long for the policy: [DATA-DEPENDENT, live Google traffic gave a compatible detour today, scenario not reproducible]", false, (await rider4.locator('[data-testid="carpool-offer-card"]').first().innerText()).split(String.fromCharCode(10)).join(" | "));
+  } else {
+  
+    record("Close-by rider whose detour is too long for the policy (+20 min > 10): route-based matching refuses it, NO card", (await rider4.locator('[data-testid="carpool-offer-card"]').count()) === 0 && !has(await body(rider4), "Nenhuma carona compatível"));
+    await shot(rider4, "rider-route-detour-too-long-no-offer");
+  
+  }
 
   await fillTrip(rider4, { departure: dep, origin: RIDER_ORIGIN, destination: "São Paulo", passengers: 1 });
   await rider4.waitForSelector('[data-testid="carpool-needs-precision"], [data-testid="carpool-unavailable"]', { timeout: 90000 });

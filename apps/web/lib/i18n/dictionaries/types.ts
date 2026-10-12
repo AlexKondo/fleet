@@ -566,8 +566,6 @@ export type Dictionary = {
       completed: string;
     };
     request: {
-      title: string;
-      subtitle: string;
       departureLabel: string;
       expectedReturnLabel: string;
       originLabel: string;
@@ -580,7 +578,6 @@ export type Dictionary = {
       justificationLabel: string;
       submit: string;
       submitPending: string;
-      recommendationTitle: string;
       emptyState: string;
       planError: string;
       carpoolAvailable: string;
@@ -601,6 +598,26 @@ export type Dictionary = {
       reservationConflict: string;
       planChanged: string;
       confirmError: string;
+    };
+    reservar: {
+      title: string;
+      subtitle: string;
+      navBook: string;
+      detailsTitle: string;
+      stepsLabel: string;
+      stepTrip: string;
+      stepTripHint: string;
+      stepVehicle: string;
+      stepVehicleHint: string;
+      stepCarpool: string;
+      stepCarpoolHint: string;
+      stepConfirm: string;
+      stepConfirmHint: string;
+      stepDone: string;
+      stepCurrent: string;
+      decreaseSeats: string;
+      increaseSeats: string;
+      resultTitle: string;
     };
     /** Mobility Decision Engine reason codes shown under a recommendation. */
     reasons: {

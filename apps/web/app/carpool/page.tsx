@@ -29,12 +29,11 @@ export default async function CarpoolPage() {
 
   return (
     <FmShell
-      dict={dict}
-      locale={locale}
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={role}
       isFleetManager={role === "fleet_manager" || role === "administrator"}
+      isAdministrator={role === "administrator"}
     >
       {!profile ? (
         <p role="alert" className="fm-banner fm-banner-danger" data-testid="buscar-forbidden">

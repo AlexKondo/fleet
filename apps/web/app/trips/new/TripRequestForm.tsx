@@ -8,12 +8,16 @@ import type { Dictionary } from "../../../lib/i18n/dictionaries";
 import type { CarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { fillTemplate } from "@/lib/carpool/errorText";
 import { CarpoolFirstPanel } from "./CarpoolFirstPanel";
+import { RvCarIcon, RvCheckIcon, RvUsersIcon } from "./rvIcons";
+import "./reservar.css";
 
 function toLocalInputValue(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+type StepKey = "trip" | "carpool" | "vehicle" | "confirm";
 
 const DRAFT_STORAGE_KEY = "fleet.trip-request-draft.v1";
 // Only worth restoring if it's from moments ago (e.g. a stray remount right after
@@ -72,6 +76,7 @@ export function TripRequestForm({
 }) {
   const t = dict.trips.request;
   const ct = dict.carpool.newTrip;
+  const rv = dict.trips.reservar;
   const reasonLabel = (reason: string): string =>
     (dict.trips.reasons as Record<string, string>)[reason] ?? reason;
   const [plan, planAction, isPlanning] = useActionState<PlanTripResult | null, FormData>(
@@ -144,6 +149,14 @@ export function TripRequestForm({
     return Math.min(Math.max(Number.isFinite(typed) && typed > 0 ? typed : cap, 1), cap);
   }
 
+  function stepSeats(delta: number, cap: number) {
+    setOffer((o) => {
+      const cur = Math.floor(Number(o.seats));
+      const base = Number.isFinite(cur) && cur > 0 ? cur : cap;
+      return { ...o, seats: String(Math.min(Math.max(base + delta, 1), cap)) };
+    });
+  }
+
   function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
     const formData = new FormData(e.currentTarget);
     writeDraft(formData);
@@ -189,147 +202,138 @@ export function TripRequestForm({
   const defaultReturn =
     draft.expectedReturnAt ?? toLocalInputValue(new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString());
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <form
-        ref={formRef}
-        action={planAction}
-        onSubmit={handleFormSubmit}
-        className="flex flex-col gap-4 rounded-md border border-line-800 bg-panel-900/60 p-6"
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.departureLabel}</span>
-            <input
-              type="datetime-local"
-              name="departureAt"
-              required
-              defaultValue={defaultDeparture}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              {t.expectedReturnLabel}
-            </span>
-            <input
-              type="datetime-local"
-              name="expectedReturnAt"
-              required
-              defaultValue={defaultReturn}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
-          </label>
-        </div>
+  // Step header: VISUAL ONLY. It mirrors where this single page currently is; it is not a wizard.
+  const legacyCarpoolPlan = Boolean(plan && !plan.error && plan.type === "carpool" && plan.carpoolOptions?.length);
+  const hasCarpoolStep = carpoolFirst?.status === "offers" || legacyCarpoolPlan;
+  const stepKeys: readonly StepKey[] = hasCarpoolStep
+    ? (["trip", "carpool", "vehicle", "confirm"] as const)
+    : (["trip", "vehicle", "confirm"] as const);
+  const currentStep: StepKey = !plan || plan.error
+    ? "trip"
+    : isConfirming
+      ? "confirm"
+      : carpoolFirst?.status === "offers" && !vehicleRevealed
+        ? "carpool"
+        : legacyCarpoolPlan
+          ? "carpool"
+          : plan.type === "vehicle" && plan.vehicle && vehicleVisible
+            ? "vehicle"
+            : "trip";
+  const currentIdx = stepKeys.indexOf(currentStep);
+  const stepText: Record<StepKey, [string, string]> = {
+    trip: [rv.stepTrip, rv.stepTripHint],
+    carpool: [rv.stepCarpool, rv.stepCarpoolHint],
+    vehicle: [rv.stepVehicle, rv.stepVehicleHint],
+    confirm: [rv.stepConfirm, rv.stepConfirmHint],
+  };
 
-        <div className="grid grid-cols-2 gap-4">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.originLabel}</span>
-            <input
-              name="origin"
-              required
-              defaultValue={draft.origin ?? "Iracemápolis"}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
+  const reasonList = (reasons: string[]) => (
+    <ul className="rv-reasons">
+      {reasons.map((r) => (
+        <li key={r}>
+          <RvCheckIcon />
+          <span>{reasonLabel(r)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+
+  return (
+    <div className="rv">
+      <ol className="rv-steps" aria-label={rv.stepsLabel} data-testid="rv-steps">
+        {stepKeys.map((key, i) => {
+          const state = i < currentIdx ? "done" : i === currentIdx ? "current" : "todo";
+          return (
+            <li key={key} className="rv-step" data-state={state} aria-current={state === "current" ? "step" : undefined}>
+              <span className="rv-step-dot" aria-hidden="true">
+                {state === "done" ? <RvCheckIcon /> : i + 1}
+              </span>
+              <span className="rv-step-label">
+                {stepText[key][0]}
+                {state !== "todo" ? (
+                  <span className="fm-sr-only"> ({state === "done" ? rv.stepDone : rv.stepCurrent})</span>
+                ) : null}
+              </span>
+              <span className="rv-step-hint">{stepText[key][1]}</span>
+            </li>
+          );
+        })}
+      </ol>
+
+      <form ref={formRef} action={planAction} onSubmit={handleFormSubmit} className="fm-card rv-form">
+        <h2 className="fm-h2">{rv.detailsTitle}</h2>
+        <div className="rv-grid">
+          <label className="fm-field">
+            <span className="fm-label">{t.originLabel}</span>
+            <input name="origin" required defaultValue={draft.origin ?? "Iracemápolis"} className="fm-input" />
           </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.destinationLabel}</span>
+          <label className="fm-field">
+            <span className="fm-label">{t.destinationLabel}</span>
             <input
               name="destination"
               required
               defaultValue={draft.destination}
               placeholder={t.destinationPlaceholder}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
+              className="fm-input"
             />
+          </label>
+          <label className="fm-field">
+            <span className="fm-label">{t.departureLabel}</span>
+            <input type="datetime-local" name="departureAt" required defaultValue={defaultDeparture} className="fm-input" />
+          </label>
+          <label className="fm-field">
+            <span className="fm-label">{t.expectedReturnLabel}</span>
+            <input type="datetime-local" name="expectedReturnAt" required defaultValue={defaultReturn} className="fm-input" />
+          </label>
+          <label className="fm-field">
+            <span className="fm-label">{t.distanceLabel}</span>
+            <input type="number" name="distanceKm" required min={1} defaultValue={draft.distanceKm ?? 100} className="fm-input" />
+          </label>
+          <label className="fm-field">
+            <span className="fm-label">{t.passengersLabel}</span>
+            <input type="number" name="passengerCount" required min={1} defaultValue={draft.passengerCount ?? 1} className="fm-input" />
+          </label>
+
+          <label className="rv-check rv-span-2">
+            <input type="checkbox" name="requiresCargo" defaultChecked={draft.requiresCargo === "on"} />
+            <span>{t.cargoLabel}</span>
+          </label>
+
+          {carpoolMode.newEngine ? (
+            // Phase C5 decision: with the new carpool engine the old consent checkbox would be a
+            // confusing second carpool question. It is hidden; the value stays "on" so the DB
+            // default (allow_carpool = true) and the chat slot semantics are unchanged. The new
+            // Yes/No "offer seats" step (after the vehicle recommendation) is the only question.
+            <input type="hidden" name="allowCarpool" value="on" />
+          ) : (
+            <label className="rv-check rv-span-2">
+              <input
+                type="checkbox"
+                name="allowCarpool"
+                defaultChecked={draft.allowCarpool !== undefined ? draft.allowCarpool === "on" : true}
+              />
+              <span>{t.allowCarpoolLabel}</span>
+            </label>
+          )}
+
+          <label className="fm-field rv-span-4">
+            <span className="fm-label">{t.justificationLabel}</span>
+            <textarea name="justification" required rows={3} defaultValue={draft.justification} className="fm-input" />
           </label>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              {t.distanceLabel}
-            </span>
-            <input
-              type="number"
-              name="distanceKm"
-              required
-              min={1}
-              defaultValue={draft.distanceKm ?? 100}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-              {t.passengersLabel}
-            </span>
-            <input
-              type="number"
-              name="passengerCount"
-              required
-              min={1}
-              defaultValue={draft.passengerCount ?? 1}
-              className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
-          </label>
-        </div>
-
-        <label className="flex items-center gap-2 text-sm text-fog-400">
-          <input
-            type="checkbox"
-            name="requiresCargo"
-            defaultChecked={draft.requiresCargo === "on"}
-            className="h-4 w-4"
-          />
-          {t.cargoLabel}
-        </label>
-
-        {carpoolMode.newEngine ? (
-          // Phase C5 decision: with the new carpool engine the old consent checkbox would be a
-          // confusing second carpool question. It is hidden; the value stays "on" so the DB
-          // default (allow_carpool = true) and the chat slot semantics are unchanged. The new
-          // Yes/No "offer seats" step (after the vehicle recommendation) is the only question.
-          <input type="hidden" name="allowCarpool" value="on" />
-        ) : (
-          <label className="flex items-center gap-2 text-sm text-fog-400">
-            <input
-              type="checkbox"
-              name="allowCarpool"
-              defaultChecked={draft.allowCarpool !== undefined ? draft.allowCarpool === "on" : true}
-              className="h-4 w-4"
-            />
-            {t.allowCarpoolLabel}
-          </label>
-        )}
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
-            {t.justificationLabel}
-          </span>
-          <textarea
-            name="justification"
-            required
-            rows={3}
-            defaultValue={draft.justification}
-            className="rounded-sm border border-line-800 bg-panel-800 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-          />
-        </label>
-
-        <button
-          type="submit"
-          disabled={isPlanning}
-          className="mt-2 rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
+        <button type="submit" disabled={isPlanning} className="fm-btn fm-btn-primary rv-submit">
           {isPlanning ? t.submitPending : t.submit}
         </button>
       </form>
 
-      <div className="rounded-md border border-line-800 bg-panel-900/60 p-6">
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          {t.recommendationTitle}
+      <section className="rv-results" aria-labelledby="rv-results-title">
+        <h2 id="rv-results-title" className="fm-sr-only">
+          {rv.resultTitle}
         </h2>
 
         {carpoolFirst && carpoolFirst.status !== "none" ? (
-          <div className="mb-4" data-testid="carpool-first">
+          <div data-testid="carpool-first">
             <CarpoolFirstPanel
               state={carpoolFirst}
               dict={dict}
@@ -340,27 +344,31 @@ export function TripRequestForm({
         ) : null}
 
         {!plan ? (
-          <p className="text-sm text-fog-600">{t.emptyState}</p>
+          <p className="fm-card rv-empty">{t.emptyState}</p>
         ) : plan.error ? (
-          <p className="text-sm text-signal-red">{t.planError}</p>
+          <p className="fm-banner fm-banner-danger" role="alert" style={{ marginTop: 0 }}>
+            {t.planError}
+          </p>
         ) : !vehicleVisible ? null : plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            <p className="text-xs uppercase tracking-widest text-signal-teal">
-              {plan.carpoolOptions.length > 1
-                ? t.carpoolsCompatible.replace("{count}", String(plan.carpoolOptions.length))
-                : t.carpoolAvailable}
-            </p>
-            {plan.carpoolOptions.length > 1 ? (
-              <p className="text-xs text-fog-600">{t.carpoolMatchNote}</p>
-            ) : null}
-            <ul className="flex flex-col gap-3">
+          <section className="fm-card rv-block rv-block-carpool">
+            <div className="rv-head">
+              <span className="rv-head-icon">
+                <RvUsersIcon />
+              </span>
+              <div>
+                <h3 className="fm-h2">
+                  {plan.carpoolOptions.length > 1
+                    ? t.carpoolsCompatible.replace("{count}", String(plan.carpoolOptions.length))
+                    : t.carpoolAvailable}
+                </h3>
+                {plan.carpoolOptions.length > 1 ? <p className="rv-sub">{t.carpoolMatchNote}</p> : null}
+              </div>
+            </div>
+            <ul className="rv-offers">
               {plan.carpoolOptions.map((option) => (
-                <li
-                  key={option.reservationId}
-                  className="rounded-sm border border-signal-teal/40 bg-signal-teal/10 p-4"
-                >
-                  <p className="font-mono text-lg text-paper-50">{option.vehiclePlate}</p>
-                  <p className="mt-1 text-sm text-fog-400">
+                <li key={option.reservationId} className="rv-offer">
+                  <p className="rv-offer-time">{option.vehiclePlate}</p>
+                  <p className="rv-muted">
                     {t.carpoolSchedule
                       .replace("{departure}", formatDateTime(option.departureAt, locale))
                       .replace("{returnAt}", formatDateTime(option.expectedReturnAt, locale))}
@@ -368,157 +376,161 @@ export function TripRequestForm({
                   <button
                     onClick={() => handleConfirm(option.reservationId)}
                     disabled={isConfirming}
-                    className="mt-3 rounded-sm bg-signal-teal px-4 py-2 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+                    className="fm-btn fm-btn-primary"
                   >
                     {isConfirming ? t.confirming : t.acceptCarpool}
                   </button>
                 </li>
               ))}
             </ul>
-            <ul className="flex flex-col gap-1 text-sm text-fog-400">
-              {plan.reasons.map((r) => (
-                <li key={r}>• {reasonLabel(r)}</li>
-              ))}
-            </ul>
-          </div>
+            {reasonList(plan.reasons)}
+          </section>
         ) : plan.type === "vehicle" && plan.vehicle ? (
-          <div className="flex flex-col gap-4">
-            <div className="rounded-sm border border-signal-blue/40 bg-signal-blue/10 p-4">
-              <p className="text-xs uppercase tracking-widest text-signal-blue">{t.recommendedVehicle}</p>
-              <p className="mt-1 font-mono text-lg text-paper-50">{plan.vehicle.plate}</p>
-              <p className="mt-1 text-sm text-fog-400">{plan.vehicle.categoryName}</p>
-            </div>
-            <ul className="flex flex-col gap-1 text-sm text-fog-400">
-              {plan.vehicle.reasons.map((r) => (
-                <li key={r}>• {reasonLabel(r)}</li>
-              ))}
-            </ul>
-            {plan.vehicle.requiredPreparation && plan.vehicle.requiredPreparation.length > 0 ? (
-              <p className="text-xs text-gwm-accent">
-                {t.preparationNote}
-              </p>
-            ) : null}
-            {plan.vehicle.trafficRestriction?.restricted ? (
-              <div className="rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-4">
-                <p className="text-xs uppercase tracking-widest text-gwm-accent">
-                  {t.trafficRestrictionTitle}
-                </p>
-                <p className="mt-1 text-sm text-fog-400">
-                  {t.trafficRestrictionBody}
-                </p>
+          <>
+            <section className="fm-card rv-block" aria-labelledby="rv-vehicle-title">
+              <div className="rv-vehicle">
+                <span className="rv-head-icon">
+                  <RvCarIcon />
+                </span>
+                <div>
+                  <div className="rv-badge-row">
+                    <h3 id="rv-vehicle-title" className="fm-badge">
+                      {t.recommendedVehicle}
+                    </h3>
+                  </div>
+                  <p className="rv-plate">{plan.vehicle.plate}</p>
+                  <p className="rv-muted">{plan.vehicle.categoryName}</p>
+                </div>
               </div>
-            ) : null}
-            {hostStepEnabled ? (
-              <fieldset
-                data-testid="host-offer-step"
-                className="flex flex-col gap-2 mt-3 rounded-sm border border-line-800 bg-panel-800 p-3"
+              {reasonList(plan.vehicle.reasons)}
+              {plan.vehicle.requiredPreparation && plan.vehicle.requiredPreparation.length > 0 ? (
+                <p className="rv-warn">{t.preparationNote}</p>
+              ) : null}
+              {plan.vehicle.trafficRestriction?.restricted ? (
+                <div className="rv-warn">
+                  <p className="rv-warn-title">{t.trafficRestrictionTitle}</p>
+                  <p>{t.trafficRestrictionBody}</p>
+                </div>
+              ) : null}
+              {hostStepEnabled ? (
+                <fieldset data-testid="host-offer-step" className="rv-host">
+                  <legend>{ct.hostQuestion}</legend>
+                  {plan.vehicle.maxOfferableSeats < 1 ? (
+                    <p className="rv-hint">{ct.noFreeSeats}</p>
+                  ) : (
+                    <>
+                      <div className="rv-seg-row">
+                        <label className="rv-seg">
+                          <input
+                            type="radio"
+                            name="offerChoice"
+                            value="yes"
+                            checked={offer.choice === "yes"}
+                            onChange={() =>
+                              setOffer((o) => ({
+                                choice: "yes",
+                                seats: o.seats || String(plan.vehicle!.maxOfferableSeats),
+                              }))
+                            }
+                          />
+                          {ct.yes}
+                        </label>
+                        <label className="rv-seg">
+                          <input
+                            type="radio"
+                            name="offerChoice"
+                            value="no"
+                            checked={offer.choice === "no"}
+                            onChange={() => setOffer((o) => ({ ...o, choice: "no" }))}
+                          />
+                          {ct.no}
+                        </label>
+                      </div>
+                      {offer.choice === "yes" ? (
+                        <div className="fm-field" role="group" aria-labelledby="rv-offer-seats-label">
+                          <label id="rv-offer-seats-label" htmlFor="rv-offer-seats" className="fm-label">
+                            {fillTemplate(ct.seatsLabel, { max: plan.vehicle.maxOfferableSeats })}
+                          </label>
+                          <div className="rv-stepper">
+                            <button
+                              type="button"
+                              className="rv-stepper-btn"
+                              aria-label={rv.decreaseSeats}
+                              onClick={() => stepSeats(-1, plan.vehicle!.maxOfferableSeats)}
+                            >
+                              −
+                            </button>
+                            <input
+                              id="rv-offer-seats"
+                              type="number"
+                              name="offerSeats"
+                              min={1}
+                              max={plan.vehicle.maxOfferableSeats}
+                              value={offer.seats}
+                              onChange={(e) => setOffer((o) => ({ ...o, seats: e.target.value }))}
+                              className="fm-input"
+                            />
+                            <button
+                              type="button"
+                              className="rv-stepper-btn"
+                              aria-label={rv.increaseSeats}
+                              onClick={() => stepSeats(1, plan.vehicle!.maxOfferableSeats)}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                      <p className="rv-hint">{ct.hostHint}</p>
+                    </>
+                  )}
+                </fieldset>
+              ) : null}
+              <button
+                onClick={() => handleConfirm(plan.vehicle!.vehicleId)}
+                disabled={isConfirming}
+                className="fm-btn fm-btn-primary rv-confirm"
               >
-                <legend className="relative -top-2.5 px-1 text-xs font-semibold uppercase tracking-widest text-fog-400">
-                  {ct.hostQuestion}
-                </legend>
-                {plan.vehicle.maxOfferableSeats < 1 ? (
-                  <p className="text-xs text-fog-600">{ct.noFreeSeats}</p>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-4 text-sm text-paper-50">
-                      <label className="flex items-center gap-1.5">
-                        <input
-                          type="radio"
-                          name="offerChoice"
-                          value="yes"
-                          checked={offer.choice === "yes"}
-                          onChange={() =>
-                            setOffer((o) => ({
-                              choice: "yes",
-                              seats: o.seats || String(plan.vehicle!.maxOfferableSeats),
-                            }))
-                          }
-                        />
-                        {ct.yes}
-                      </label>
-                      <label className="flex items-center gap-1.5">
-                        <input
-                          type="radio"
-                          name="offerChoice"
-                          value="no"
-                          checked={offer.choice === "no"}
-                          onChange={() => setOffer((o) => ({ ...o, choice: "no" }))}
-                        />
-                        {ct.no}
-                      </label>
-                    </div>
-                    {offer.choice === "yes" ? (
-                      <label className="flex flex-col gap-1 text-xs text-fog-400">
-                        {fillTemplate(ct.seatsLabel, { max: plan.vehicle.maxOfferableSeats })}
-                        <input
-                          type="number"
-                          name="offerSeats"
-                          min={1}
-                          max={plan.vehicle.maxOfferableSeats}
-                          value={offer.seats}
-                          onChange={(e) => setOffer((o) => ({ ...o, seats: e.target.value }))}
-                          className="w-24 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-                        />
-                      </label>
-                    ) : null}
-                    <p className="text-xs text-fog-600">{ct.hostHint}</p>
-                  </>
-                )}
-              </fieldset>
-            ) : null}
-            <button
-              onClick={() => handleConfirm(plan.vehicle!.vehicleId)}
-              disabled={isConfirming}
-              className="rounded-sm bg-signal-blue px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {isConfirming ? t.confirming : t.requestReservation}
-            </button>
+                {isConfirming ? t.confirming : t.requestReservation}
+              </button>
+            </section>
 
             {plan.vehicle.alternatives.length > 0 ? (
-              <div className="flex flex-col gap-3 border-t border-line-800 pt-4">
-                <p className="text-xs uppercase tracking-widest text-fog-400">
-                  {plan.bookingMode === "user_choice"
-                    ? t.otherEligibleVehicles
-                    : t.preferAnotherVehicle}
-                </p>
-                <ul className="flex flex-col gap-2">
+              <section className="fm-card rv-block" aria-labelledby="rv-alt-title">
+                <h3 id="rv-alt-title" className="fm-h2">
+                  {plan.bookingMode === "user_choice" ? t.otherEligibleVehicles : t.preferAnotherVehicle}
+                </h3>
+                <ul className="rv-alt-list">
                   {plan.vehicle.alternatives.map((alt) => (
-                    <li
-                      key={alt.vehicleId}
-                      className="flex items-center justify-between gap-3 rounded-sm border border-line-800 bg-panel-800 px-3 py-2.5"
-                    >
+                    <li key={alt.vehicleId} className="rv-alt">
                       <div>
-                        <p className="font-mono text-sm text-paper-50">{alt.plate}</p>
-                        <p className="text-xs text-fog-600">{alt.categoryName}</p>
+                        <p className="rv-plate" style={{ fontSize: 17 }}>
+                          {alt.plate}
+                        </p>
+                        <p className="rv-muted">{alt.categoryName}</p>
                       </div>
                       <button
                         onClick={() => handleConfirm(alt.vehicleId)}
                         disabled={isConfirming}
-                        className="shrink-0 rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-blue hover:text-signal-blue disabled:opacity-50"
+                        className="fm-btn fm-btn-ghost"
                       >
                         {t.choose}
                       </button>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </section>
             ) : null}
-          </div>
+          </>
         ) : (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm text-signal-red">
-              {t.noOptions}
-            </p>
-            <ul className="flex flex-col gap-1 text-sm text-fog-400">
-              {plan.reasons.map((r) => (
-                <li key={r}>• {reasonLabel(r)}</li>
-              ))}
-            </ul>
-          </div>
+          <section className="fm-card rv-block">
+            <p className="rv-error">{t.noOptions}</p>
+            {reasonList(plan.reasons)}
+          </section>
         )}
 
         {confirmError ? (
-          <p role="alert" className="mt-4 text-sm text-signal-red">
+          <p role="alert" className="fm-banner fm-banner-danger" style={{ marginTop: 0 }}>
             {confirmError === "RESERVATION_CONFLICT"
               ? t.reservationConflict
               : confirmError === "plan_changed"
@@ -526,7 +538,7 @@ export function TripRequestForm({
                 : t.confirmError.replace("{code}", confirmError)}
           </p>
         ) : null}
-      </div>
+      </section>
     </div>
   );
 }

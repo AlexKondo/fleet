@@ -1,0 +1,426 @@
+/*
+ * SCR-USR-002 "Reservar Veiculo" (/trips/new): extra rules on top of carpool/fm-theme.css. Everything is under
+ * .fm-theme so no other screen is affected.
+ */
+.fm-theme .rv {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---------- step header (visual only) ---------- */
+.fm-theme .rv-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+.fm-theme .rv-step {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.fm-theme .rv-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 19px;
+  left: calc(50% + 26px);
+  right: calc(-50% + 26px);
+  height: 2px;
+  background: var(--fm-border);
+}
+.fm-theme .rv-step[data-state="done"]:not(:last-child)::after {
+  background: var(--fm-blue-600);
+}
+.fm-theme .rv-step-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  background: var(--fm-surface);
+  border: 2px solid var(--fm-border);
+  color: var(--fm-navy-800);
+}
+.fm-theme .rv-step[data-state="current"] .rv-step-dot {
+  background: var(--fm-blue-600);
+  border-color: var(--fm-blue-600);
+  color: #fff;
+}
+.fm-theme .rv-step[data-state="done"] .rv-step-dot {
+  background: var(--fm-blue-100);
+  border-color: var(--fm-blue-600);
+  color: var(--fm-blue-600);
+}
+.fm-theme .rv-step-dot svg {
+  width: 20px;
+  height: 20px;
+}
+.fm-theme .rv-step-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--fm-navy-900);
+  line-height: 1.2;
+}
+.fm-theme .rv-step-hint {
+  display: none;
+  font-size: 12px;
+  color: var(--fm-text-muted);
+}
+
+/* ---------- form card ---------- */
+.fm-theme .rv-form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fm-theme .rv-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.fm-theme textarea.fm-input {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.fm-theme .rv-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--fm-text);
+  cursor: pointer;
+}
+.fm-theme .rv-check input,
+.fm-theme .rv-seg input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--fm-blue-600);
+}
+.fm-theme .rv-submit {
+  width: 100%;
+}
+
+/* ---------- result blocks ---------- */
+.fm-theme .rv-results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.fm-theme .rv-block {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fm-theme .rv-block-carpool {
+  background: #eef8f3;
+  border-color: #bfe0d0;
+}
+.fm-theme .rv-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.fm-theme .rv-head-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fm-blue-100);
+  color: var(--fm-blue-600);
+}
+.fm-theme .rv-block-carpool .rv-head-icon {
+  background: #d9efe5;
+  color: var(--fm-success);
+}
+.fm-theme .rv-head-icon svg {
+  width: 24px;
+  height: 24px;
+}
+.fm-theme .rv-sub {
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .rv-block-carpool .rv-sub {
+  color: #4d5f74;
+}
+.fm-theme .rv-offers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.fm-theme .rv-offer {
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fm-theme .rv-offer-time {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fm-navy-900);
+}
+.fm-theme .rv-muted {
+  font-size: 14px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .rv-offer .fm-btn {
+  margin-top: 4px;
+  width: 100%;
+}
+.fm-theme .rv-places {
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 12px 14px;
+  font-size: 14px;
+}
+.fm-theme .rv-places ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.fm-theme .rv-places-label {
+  font-weight: 600;
+  color: var(--fm-text-muted);
+}
+.fm-theme .rv-ok {
+  font-weight: 700;
+  color: #1a6b4d;
+}
+.fm-theme .rv-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  color: var(--fm-blue-600);
+  text-decoration: underline;
+}
+
+/* vehicle */
+.fm-theme .rv-vehicle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.fm-theme .rv-plate {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: var(--fm-navy-900);
+}
+.fm-theme .rv-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.fm-theme .rv-badge-row .fm-badge {
+  margin-left: 0;
+}
+.fm-theme .rv-reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.fm-theme .rv-reasons li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.fm-theme .rv-reasons svg {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: var(--fm-success);
+}
+.fm-theme .rv-warn {
+  padding: 12px 14px;
+  border-radius: var(--fm-radius-md);
+  border: 1px solid #ecd29a;
+  background: #fdf5e2;
+  color: #7a5110;
+}
+.fm-theme .rv-warn-title {
+  font-weight: 700;
+}
+.fm-theme .rv-host {
+  margin: 0;
+  padding: 16px;
+  min-width: 0;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fm-theme .rv-host legend {
+  padding: 0 6px;
+  font-weight: 700;
+  color: var(--fm-navy-900);
+}
+.fm-theme .rv-seg-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.fm-theme .rv-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  min-width: 96px;
+  padding: 0 16px;
+  border: 1px solid var(--fm-border-strong);
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+.fm-theme .rv-seg:has(input:checked) {
+  border-color: var(--fm-blue-600);
+  background: var(--fm-blue-100);
+  color: var(--fm-navy-900);
+}
+.fm-theme .rv-seg:has(input:focus-visible) {
+  outline: 3px solid var(--fm-focus);
+  outline-offset: 2px;
+}
+.fm-theme .rv-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fm-theme .rv-stepper .fm-input {
+  width: 84px;
+  text-align: center;
+}
+.fm-theme .rv-stepper-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--fm-radius-md);
+  border: 1px solid var(--fm-border-strong);
+  background: var(--fm-blue-100);
+  color: var(--fm-blue-600);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.fm-theme .rv-stepper-btn:hover {
+  background: #d6e6fb;
+  color: #174b94;
+}
+.fm-theme .rv-hint {
+  font-size: 13px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .rv-confirm {
+  width: 100%;
+}
+.fm-theme .rv-alt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.fm-theme .rv-alt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-surface);
+}
+.fm-theme .rv-alt .fm-btn {
+  flex-shrink: 0;
+}
+.fm-theme .rv-empty {
+  padding: 24px 20px;
+  color: var(--fm-text-muted);
+  text-align: center;
+}
+.fm-theme .rv-error {
+  font-weight: 600;
+  color: #a13a3a;
+}
+
+@media (min-width: 640px) {
+  .fm-theme .rv-step-hint {
+    display: block;
+  }
+  .fm-theme .rv-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fm-theme .rv-grid .rv-span-2 {
+    grid-column: span 2;
+  }
+  .fm-theme .rv-offers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fm-theme .rv-alt-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fm-theme .rv-submit,
+  .fm-theme .rv-confirm {
+    width: auto;
+    min-width: 260px;
+    align-self: flex-start;
+  }
+  .fm-theme .rv-offer .fm-btn {
+    width: auto;
+    align-self: flex-start;
+  }
+}
+@media (min-width: 1100px) {
+  .fm-theme .rv-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .fm-theme .rv-grid .rv-span-2 {
+    grid-column: span 2;
+  }
+  .fm-theme .rv-grid .rv-span-4 {
+    grid-column: 1 / -1;
+  }
+  .fm-theme .rv-offers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .fm-theme .rv-alt-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

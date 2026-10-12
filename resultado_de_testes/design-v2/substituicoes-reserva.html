@@ -1,0 +1,24 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Substituições - Reserva Inteligente</title>
+<style>body{font-family:Arial,sans-serif;margin:0;background:#f4f7fb;color:#19283b}
+h1{padding:16px 24px;margin:0;background:#101d35;color:#fff;font-size:20px}
+.intro{padding:12px 24px;max-width:1100px}
+.pair{margin:20px 24px;padding:16px;background:#fff;border:1px solid #dce4ee;border-radius:12px}
+.pair h2{margin:0 0 12px;font-size:17px}
+.grid{display:grid;grid-template-columns:1fr 40px 1fr;gap:12px;align-items:start}
+.arrow{font-size:32px;text-align:center;align-self:center;color:#2369c8}
+.lbl{font-weight:bold;font-size:14px;margin-bottom:6px}.lbl small{display:block;font-weight:normal;color:#627389}
+.red{color:#c64747}.green{color:#22805c}img{max-width:100%;border:1px solid #dce4ee}.note{margin-top:10px;font-size:13px;color:#627389}</style></head><body>
+<h1>Reserva Inteligente (SCR-USR-002): o que sai e o que entra</h1>
+<div class="intro">Hoje esta tela se chama "Solicitar Viagem" (/trips/new). Na arte vira "Reservar Veículo", em passos numerados, com o menu azul-marinho. Nada foi alterado ainda.</div>
+<div class="pair"><h2>Par 1 — reserva quando NÃO há carona na rota</h2><div class="grid">
+<div><div class="lbl red">SAI: Solicitar Viagem + veículo recomendado + "Deseja disponibilizar vagas?"<small>/trips/new (hoje)</small></div><img src="usr002/before-1.png"></div><div class="arrow">→</div>
+<div><div class="lbl green">ENTRA: Reservar Veículo, desktop, sem caronas<small>SCR-USR-002, imagem 04</small></div><img src="usr002/art04-web.png"></div></div>
+<div class="note">Diferença importante: a arte mostra o aviso "Não encontramos caronas para este destino". Você decidiu que, sem carona, a carona nem aparece. Eu NÃO mostraria esse aviso. Fica o passo "Oferecer carona nesta viagem" (liga/desliga e vagas), que já existe hoje.</div></div>
+<div class="pair"><h2>Par 2 — reserva quando HÁ carona compatível</h2><div class="grid">
+<div><div class="lbl red">SAI: Solicitar Viagem com carona compatível<small>/trips/new (hoje)</small></div><img src="usr002/before-2.png"></div><div class="arrow">→</div>
+<div><div class="lbl green">ENTRA: Reservar Veículo com "Caronas compatíveis" antes dos veículos<small>SCR-USR-002, imagem 06</small></div><img src="usr002/art06-web.png"></div></div></div>
+<div class="pair"><h2>Par 3 — celular</h2><div class="grid">
+<div><div class="lbl red">SAI: a mesma página de hoje no celular<small>sem tela própria hoje</small></div><div class="note">Hoje a página é a mesma do desktop empilhada.</div></div><div class="arrow">→</div>
+<div style="display:flex;gap:10px"><div><div class="lbl green">ENTRA (imagem 06)</div><img src="usr002/art06-mobile.png" style="max-width:240px"></div><div><div class="lbl green">ENTRA, sem caronas (imagem 04)</div><img src="usr002/art04-mobile.png" style="max-width:240px"></div></div></div></div>
+<div class="pair"><h2>O que a arte tem e eu NÃO faria (não há dado real ou funcionalidade)</h2><div class="note" style="font-size:15px">• Mapa da rota com km e tempo (precisaria da API de rotas na reserva e custa chamada). • Foto e nota do motorista e "Match %". • Estrelas. • Passos numerados com barra (Viagem, Veículo, Carona, Confirmação): a reserva hoje é uma página só; eu faria o cabeçalho de passos apenas visual se você quiser. • Abas "Por período / Por destino / Uso recorrente" e "Uso recente". • Botão "usar minha localização". • Filtros de veículo por tipo e a lista de 6 veículos: só se houver dados reais de cada veículo (modelo, tipo, lugares, autonomia). Hoje o sistema recomenda 1 veículo e mostra "outro veículo elegível".</div></div>
+</body></html>

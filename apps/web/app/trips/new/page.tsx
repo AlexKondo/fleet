@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { AppShell } from "../../AppShell";
+import { FmShell } from "../../carpool/FmShell";
 import { TripRequestForm } from "./TripRequestForm";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
@@ -31,26 +31,19 @@ export default async function NewTripPage() {
   );
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
-  const isAdministrator = profile?.role === "administrator";
 
   return (
-    <AppShell
-      active="trips"
+    <FmShell
+      active="book"
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
-      isAdministrator={isAdministrator}
-      title={dict.trips.request.title}
+      isAdministrator={profile?.role === "administrator"}
     >
-      <div className="px-6 py-8">
-        <div className="mx-auto max-w-4xl">
-          <p className="mb-6 text-xs uppercase tracking-widest text-fog-600">
-            {dict.trips.request.subtitle}
-          </p>
-          <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} />
-        </div>
-      </div>
-    </AppShell>
+      <h1 className="fm-title">{dict.trips.reservar.title}</h1>
+      <p className="fm-subtitle">{dict.trips.reservar.subtitle}</p>
+      <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} />
+    </FmShell>
   );
 }

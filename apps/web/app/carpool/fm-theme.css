@@ -13,7 +13,8 @@
   --fm-blue-100: #e8f1fd;
   --fm-bg: #f4f7fb;
   --fm-surface: #ffffff;
-  --fm-border: #dce4ee;
+  --fm-border: #dce4ee; /* card edges and dividers */
+  --fm-border-strong: #7f8da1; /* edges of controls (inputs, segments, icon buttons): >= 3:1 on white */
   --fm-text: #19283b;
   --fm-text-muted: #627389;
   --fm-success: #22805c;
@@ -142,6 +143,7 @@
   border-bottom: 1px solid var(--fm-border);
 }
 .fm-topbar-brand {
+  display: none;
   font-size: 18px;
   font-weight: 700;
 }
@@ -182,7 +184,7 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border: 1px solid var(--fm-border);
+  border: 1px solid var(--fm-border-strong);
   border-radius: var(--fm-radius-md);
   background: var(--fm-surface);
   color: var(--fm-text-muted);
@@ -318,11 +320,11 @@ a.fm-tab:hover {
   font: inherit;
   color: var(--fm-text);
   background: var(--fm-surface);
-  border: 1px solid var(--fm-border);
+  border: 1px solid var(--fm-border-strong);
   border-radius: var(--fm-radius-md);
 }
 .fm-input::placeholder {
-  color: #6b7a90;
+  color: #566579;
 }
 .fm-input:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--fm-focus) 35%, transparent);
@@ -588,6 +590,50 @@ a.fm-tab:hover {
     background-position: -200% 0;
   }
 }
+.fm-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: 0 0 16px;
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-blue-600);
+  color: #fff;
+  font-weight: 700;
+}
+.fm-cta:hover {
+  background: #1b57ab;
+}
+.fm-topbar-desktop {
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+.fm-mobilenav button,
+.fm-mobilenav a {
+  min-width: 44px;
+  min-height: 44px;
+}
+/* chat assistant hint bubble: its dismiss X is 20px in the shared widget; give it a 44px touch target here */
+.fm-chat div[role="button"] button {
+  width: 44px;
+  height: 44px;
+  top: -22px;
+  right: -16px;
+}
+/* chat assistant: keep its floating button/panel above the mobile bottom bar */
+@media (max-width: 767px) {
+  .fm-chat button.fixed {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+  .fm-chat div.fixed[role="button"] {
+    bottom: calc(128px + env(safe-area-inset-bottom));
+  }
+  .fm-chat div[class*="h-[31rem]"] {
+    bottom: calc(128px + env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 148px);
+  }
+}
 .fm-sr-only {
   position: absolute;
   width: 1px;
@@ -602,9 +648,11 @@ a.fm-tab:hover {
   .fm-sidebar {
     display: flex;
   }
-  .fm-bottom-nav,
-  .fm-topbar-brand {
+  .fm-bottom-nav {
     display: none;
+  }
+  .fm-topbar-desktop {
+    display: flex;
   }
   .fm-user {
     display: flex;

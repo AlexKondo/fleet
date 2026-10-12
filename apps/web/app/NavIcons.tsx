@@ -15,6 +15,15 @@ function Svg({ children, className }: { children: React.ReactNode; className?: s
   );
 }
 
+export function FindRideIcon({ className }: { className?: string }) {
+  return (
+    <Svg className={className}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.2-4.2" />
+    </Svg>
+  );
+}
+
 export function DashboardIcon({ className }: { className?: string }) {
   return (
     <Svg className={className}>

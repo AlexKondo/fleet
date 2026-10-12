@@ -3,32 +3,15 @@ import { signOut } from "./dashboard/actions";
 import { InactivityLogout } from "./InactivityLogout";
 import { SessionBackupSync } from "./SessionBackupSync";
 import { ChatWidget } from "./ChatWidget";
-import { loadLatestChatState } from "./chat/queries";
-import type { ChatState } from "./chat/actions";
 import { MobileNav } from "./MobileNav";
 import { NotificationBell } from "./dashboard/NotificationBell";
 import { UserMenu } from "./UserMenu";
-import { getRoleLabels } from "./settings/users/ROLE_LABELS";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { LanguageToggle } from "./ui/LanguageToggle";
-import { getLocale, getDictionary } from "../lib/i18n/getLocale";
-import { getCurrentUser } from "../lib/auth/currentUser";
-import { getOwnLicense, licenseMissingFromHeader } from "../lib/auth/ownLicense";
-import { LICENSE_MISSING_HEADER } from "../lib/auth/headers";
-import { headers } from "next/headers";
-import { createSupabaseServerClient } from "../lib/supabase/server";
-import {
-  AnalyticsIcon,
-  DashboardIcon,
-  FleetIcon,
-  GateIcon,
-  LogoutIcon,
-  SettingsIcon,
-  TeamIcon,
-  TripsIcon,
-} from "./NavIcons";
+import { LogoutIcon } from "./NavIcons";
+import { buildBaseNavItems, loadShellContext, type NavKey } from "./shellData";
 
-export type NavKey = "dashboard" | "trips" | "gate" | "analytics" | "fleet" | "team" | "settings";
+export type { NavKey };
 
 /**
  * Shared left-sidebar shell for every authenticated screen — previously each page built
@@ -62,67 +45,10 @@ export async function AppShell({
   headerActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
-  const dict = await getDictionary();
-  const roleLabels = getRoleLabels(dict);
+  const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState } =
+    await loadShellContext(role);
 
-  // Drives the bell's shake animation + the injected "CNH not uploaded" notice
-  // (dashboard/NotificationBell.tsx) — fetched here, once, so every page using this
-  // shell gets it for free instead of each page.tsx adding its own query for it.
-  const supabase = await createSupabaseServerClient();
-  const currentUser = await getCurrentUser(supabase);
-  let licenseMissing = false;
-  let avatarUrl: string | null = null;
-  if (currentUser) {
-    // License columns are not directly readable since 0063: get_my_license() answers for the caller only.
-    // L6: middleware already read it for this request (one RPC per request, not two); only when it did not
-    // (/account routes skip the gate, or the read failed there) does the shell read it itself.
-    const fromMiddleware = licenseMissingFromHeader((await headers()).get(LICENSE_MISSING_HEADER));
-    const [{ data: ownProfile }, ownLicense] = await Promise.all([
-      supabase.from("profiles").select("avatar_url").eq("id", currentUser.id).maybeSingle(),
-      fromMiddleware === null ? getOwnLicense(supabase) : Promise.resolve(null),
-    ]);
-    // null = the read failed: do not lock the UI down on a transient error (the middleware gate fails open too).
-    licenseMissing = fromMiddleware !== null ? fromMiddleware : ownLicense ? !ownLicense.number : false;
-    avatarUrl = ownProfile?.avatar_url ?? null;
-  }
-
-  // Derived from `role` (which every caller already passes) rather than taken as another
-  // prop: the gatehouse nav item has to appear on every screen a security user can land
-  // on — including /dashboard — without each page having to opt in.
-  const isSecurity = role === "security";
-
-  // The actual navigation block lives in middleware.ts (redirects any other route to
-  // /account/license before it ever renders) — this only decides what the one page that
-  // survives that redirect looks like. Hiding the sidebar/menus here as well, instead of
-  // just relying on there being nothing else to click through to, is what the user asked
-  // for directly: no nav, no user menu, nothing but the upload screen until it's done.
-  const licenseGateActive = licenseMissing && !isSecurity;
-
-  const chatInitialState: ChatState = currentUser
-    ? await loadLatestChatState(supabase, currentUser.id)
-    : { status: "idle", messages: [] };
-
-  const items: { key: NavKey; href: string; label: string; icon: typeof DashboardIcon; visible: boolean }[] = [
-    // "Painel" (fleet-wide approvals/active-reservations/tasks) is a plain employee's
-    // nothing-to-do-here screen, same reasoning as hiding it for them — and a security/gate
-    // user's whole job is pickup/return checklists on "Movimentações", nothing on Painel
-    // is theirs to approve or manage either, so it's hidden for pure security too (not for
-    // fleet_manager/administrator, who also carry security's own gate duties sometimes).
-    { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: isFleetManager },
-    { key: "trips", href: "/trips", label: dict.nav.trips, icon: TripsIcon, visible: true },
-    {
-      key: "gate",
-      href: "/gate",
-      label: dict.nav.gate,
-      icon: GateIcon,
-      visible: isSecurity || isFleetManager,
-    },
-    { key: "analytics", href: "/analytics", label: dict.nav.analytics, icon: AnalyticsIcon, visible: isFleetManager },
-    { key: "fleet", href: "/fleet", label: dict.nav.fleet, icon: FleetIcon, visible: isFleetManager },
-    { key: "team", href: "/settings/users", label: dict.nav.team, icon: TeamIcon, visible: isAdministrator },
-    { key: "settings", href: "/settings", label: dict.nav.settings, icon: SettingsIcon, visible: isFleetManager },
-  ];
+  const items = buildBaseNavItems(dict, { role, isFleetManager, isAdministrator });
 
   const visibleItems = items.filter((i) => i.visible);
 

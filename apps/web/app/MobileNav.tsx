@@ -10,6 +10,7 @@ import type { Locale } from "../lib/i18n/locales";
 import {
   AnalyticsIcon,
   DashboardIcon,
+  FindRideIcon,
   FleetIcon,
   GateIcon,
   LogoutIcon,
@@ -30,6 +31,8 @@ const ICONS_BY_KEY: Record<NavKey, (props: { className?: string }) => React.Reac
   fleet: FleetIcon,
   team: TeamIcon,
   settings: SettingsIcon,
+  carpool: FindRideIcon,
+  book: TripsIcon,
 };
 
 interface NavItem {

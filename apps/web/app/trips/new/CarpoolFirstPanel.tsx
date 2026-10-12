@@ -10,6 +10,7 @@ import type { ResolvedPlace } from "@/lib/carpool/resolveLocationText";
 import { formatDateTimeShort } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { RvUsersIcon } from "./rvIcons";
 
 type CardOutcome =
   | { kind: "requested"; status: "PENDING" | "ACCEPTED" | string }
@@ -79,7 +80,7 @@ export function CarpoolFirstPanel({
 
   if (state.status === "unavailable") {
     return (
-      <p role="status" data-testid="carpool-unavailable" className="rounded-sm border border-signal-yellow/40 bg-signal-yellow/10 p-3 text-sm text-signal-yellow">
+      <p role="status" data-testid="carpool-unavailable" className="fm-banner" style={{ marginTop: 0 }}>
         {t.unavailableBanner}
       </p>
     );
@@ -93,9 +94,9 @@ export function CarpoolFirstPanel({
     if (!state.origin.ok) failing.push({ check: state.origin, field: t.originField });
     if (!state.destination.ok) failing.push({ check: state.destination, field: t.destinationField });
     return (
-      <div role="alert" data-testid="carpool-needs-precision" className="flex flex-col gap-3 rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gwm-accent">{t.needsPrecisionTitle}</p>
-        <ul className="flex flex-col gap-1.5 text-sm text-paper-50">
+      <div role="alert" data-testid="carpool-needs-precision" className="fm-banner fm-needs" style={{ marginTop: 0 }}>
+        <p style={{ fontWeight: 700 }}>{t.needsPrecisionTitle}</p>
+        <ul>
           {failing.map(({ check, field }) => (
             <li key={field}>
               {fillTemplate(
@@ -112,11 +113,7 @@ export function CarpoolFirstPanel({
             </li>
           ))}
         </ul>
-        <button
-          type="button"
-          onClick={onContinue}
-          className="self-start rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-blue hover:text-signal-blue"
-        >
+        <button type="button" onClick={onContinue} className="fm-btn fm-btn-ghost" style={{ marginTop: 12 }}>
           {t.continueWithoutCarpool}
         </button>
       </div>
@@ -125,34 +122,39 @@ export function CarpoolFirstPanel({
 
   // offers
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-xs uppercase tracking-widest text-signal-teal">{t.offersTitle}</p>
-      <p className="text-xs text-fog-600">{t.offersIntro}</p>
+    <section className="fm-card rv-block rv-block-carpool" aria-labelledby="rv-carpool-title">
+      <div className="rv-head">
+        <span className="rv-head-icon">
+          <RvUsersIcon />
+        </span>
+        <div>
+          <h2 id="rv-carpool-title" className="fm-h2">
+            {t.offersTitle}
+          </h2>
+          <p className="rv-sub">{t.offersIntro}</p>
+        </div>
+      </div>
       <PlacesConfirmation origin={state.origin} destination={state.destination} dict={dict} />
-      <ul className="flex flex-col gap-3">
+      <ul className="rv-offers">
         {state.offers.map((offer) => {
           const outcome = outcomes[offer.offerId];
           return (
-            <li
-              key={offer.offerId}
-              data-testid="carpool-offer-card"
-              className="rounded-sm border border-signal-teal/40 bg-signal-teal/10 p-4"
-            >
-              <p className="font-mono text-base text-paper-50">
+            <li key={offer.offerId} data-testid="carpool-offer-card" className="rv-offer">
+              <p className="rv-offer-time">
                 {fillTemplate(t.cardDeparture, { time: formatDateTimeShort(offer.hostDepartureAt, locale) })}
               </p>
-              <p className="mt-1 text-sm text-fog-400">
+              <p className="rv-muted">
                 {fillTemplate(t.cardDetour, { km: offer.additionalDistanceKm, min: offer.additionalTimeMin })}
               </p>
-              <p className="mt-1 text-sm text-fog-400">
-                {fillTemplate(offer.seatsAvailable === 1 ? t.seatsOne : t.seatsOther, { count: offer.seatsAvailable })}
-              </p>
+              <div className="fm-chips">
+                <span className="fm-chip fm-chip-seats">
+                  {fillTemplate(offer.seatsAvailable === 1 ? t.seatsOne : t.seatsOther, { count: offer.seatsAvailable })}
+                </span>
+              </div>
               {outcome?.kind === "requested" ? (
-                <div role="status" className="mt-3 flex flex-col gap-2">
-                  <p className="text-sm font-semibold text-signal-teal">
-                    {outcome.status === "ACCEPTED" ? t.outcomeAccepted : t.outcomePending}
-                  </p>
-                  <Link href="/trips" className="text-xs uppercase tracking-widest text-gwm-accent hover:underline">
+                <div role="status" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <p className="rv-ok">{outcome.status === "ACCEPTED" ? t.outcomeAccepted : t.outcomePending}</p>
+                  <Link href="/trips" className="rv-link">
                     {t.viewMyTrips}
                   </Link>
                 </div>
@@ -162,12 +164,12 @@ export function CarpoolFirstPanel({
                     type="button"
                     onClick={() => request(offer.offerId)}
                     disabled={busyOffer !== null}
-                    className="mt-3 rounded-sm bg-signal-teal px-4 py-2 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 disabled:opacity-50"
+                    className="fm-btn fm-btn-primary"
                   >
                     {busyOffer === offer.offerId ? t.requesting : t.requestRide}
                   </button>
                   {outcome?.kind === "error" ? (
-                    <p role="alert" className="mt-2 text-sm text-signal-red">
+                    <p role="alert" className="fm-error">
                       {carpoolErrorText(dict, outcome.code)}
                     </p>
                   ) : null}
@@ -177,14 +179,10 @@ export function CarpoolFirstPanel({
           );
         })}
       </ul>
-      <button
-        type="button"
-        onClick={onContinue}
-        className="self-start rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-blue hover:text-signal-blue"
-      >
+      <button type="button" onClick={onContinue} className="fm-btn fm-btn-ghost" style={{ alignSelf: "flex-start" }}>
         {t.continueWithVehicle}
       </button>
-    </div>
+    </section>
   );
 }
 
@@ -200,24 +198,22 @@ export function PlacesConfirmation({
 }) {
   const t = dict.carpool.newTrip;
   const row = (label: string, place: ResolvedPlace, testId: string) => (
-    <li data-testid={testId} className="text-sm text-paper-50">
-      <span className="text-xs uppercase tracking-widest text-fog-600">{label}: </span>
+    <li data-testid={testId}>
+      <span className="rv-places-label">{label}: </span>
       {place.label}
-      {place.source === "corporate_mobility_point" ? (
-        <span className="ml-2 rounded-sm border border-signal-blue/40 px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-signal-blue">
-          {t.sourceMobilityPoint}
-        </span>
-      ) : null}
+      {place.source === "corporate_mobility_point" ? <span className="fm-badge">{t.sourceMobilityPoint}</span> : null}
     </li>
   );
   return (
-    <div className="rounded-sm border border-line-800 bg-panel-800 p-3" data-testid="carpool-places">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-fog-400">{t.placesTitle}</p>
-      <ul className="flex flex-col gap-1">
+    <div className="rv-places" data-testid="carpool-places">
+      <p style={{ fontWeight: 700 }}>{t.placesTitle}</p>
+      <ul>
         {row(t.originLabel, origin, "carpool-origin-label")}
         {row(t.destinationLabel, destination, "carpool-destination-label")}
       </ul>
-      <p className="mt-2 text-xs text-fog-600">{t.confirmHint}</p>
+      <p className="rv-hint" style={{ marginTop: 8 }}>
+        {t.confirmHint}
+      </p>
     </div>
   );
 }
