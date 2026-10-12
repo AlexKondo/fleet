@@ -3,7 +3,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { VEHICLE_STATUSES, getStatusMeta } from "../dashboard/statusMeta";
-import { AppShell } from "../AppShell";
+import { FmShell } from "../carpool/FmShell";
+import { FmCarIcon } from "../fmIcons";
 import { AddCategorySection } from "./AddCategorySection";
 import { AddLocationSection } from "./AddLocationSection";
 import { AddVehicleSection } from "./AddVehicleSection";
@@ -54,7 +55,7 @@ export default async function FleetPage() {
     supabase
       .from("vehicles")
       .select(
-        "id, plate, name, color, photo_storage_path, category_id, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
+        "id, plate, name, color, photo_storage_path, category_id, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name, energy_type), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
       )
       .order("plate"),
   ]);
@@ -99,8 +100,18 @@ export default async function FleetPage() {
       .map((s) => [s.path as string, s.signedUrl]),
   );
 
+  // Veículos (SCR-FM-002) tiles: counts of rows already loaded above.
+  const o = dict.ops.fleet;
+  const statusCounts = new Map<string, number>();
+  const energyCounts = new Map<string, number>();
+  for (const v of vehicles ?? []) {
+    statusCounts.set(v.status, (statusCounts.get(v.status) ?? 0) + 1);
+    const e = v.category?.energy_type;
+    if (e) energyCounts.set(e, (energyCounts.get(e) ?? 0) + 1);
+  }
+
   return (
-    <AppShell
+    <FmShell
       active="fleet"
       orgName={profile.organization?.name ?? "—"}
       userName={profile.full_name ?? user.email ?? "—"}
@@ -108,18 +119,60 @@ export default async function FleetPage() {
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
       title={dict.fleet.title}
+      subtitle={o.subtitle}
+      legacy
+      wide
     >
+      <section className="fm-kpis" aria-label={o.kpisLabel} data-testid="fleet-kpis">
+        <div className="fm-kpi fm-kpi-wide" data-testid="fleet-kpi-total">
+          <span className="fm-kpi-icon"><FmCarIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{vehicles?.length ?? 0}</p>
+            <p className="fm-kpi-label">{o.kpiTotal}</p>
+          </div>
+          {(vehicles?.length ?? 0) > 0 ? (
+            <>
+              <div className="fm-seg" role="img" aria-label={o.kpiStatusBar}>
+                {[...statusCounts.entries()].map(([status, n]) => (
+                  <span key={status} data-s={status} style={{ flexGrow: n }} />
+                ))}
+              </div>
+              <ul className="fm-legend">
+                {[...statusCounts.entries()].map(([status, n]) => (
+                  <li key={status}>
+                    <span className="fm-dot" data-s={status} aria-hidden="true" />
+                    <span>{statusMeta[status as keyof typeof statusMeta]?.label ?? status}</span>
+                    <strong>{n}</strong>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+        </div>
+        {(["BEV", "PHEV", "HEV", "ICE"] as const)
+          .filter((e) => energyCounts.has(e))
+          .map((e) => (
+            <div key={e} className="fm-kpi" data-testid={`fleet-kpi-${e}`}>
+              <span className="fm-kpi-icon" data-tone={e === "BEV" ? "ok" : e === "PHEV" ? "violet" : e === "HEV" ? "info" : "warn"}><FmCarIcon /></span>
+              <div className="fm-kpi-body">
+                <p className="fm-kpi-value">{energyCounts.get(e)}</p>
+                <p className="fm-kpi-label">{dict.fleet.categories.energy[e]}</p>
+              </div>
+            </div>
+          ))}
+      </section>
 
       {loadError ? (
         <div
           role="alert"
-          className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
+          className="fm-banner fm-banner-danger"
+          style={{ marginTop: 0, marginBottom: 16 }}
         >
           {dict.fleet.loadError}
         </div>
       ) : null}
 
-      <section className="px-6 py-6">
+      <section>
         <FleetTabs
           tabs={[
             {
@@ -230,6 +283,6 @@ export default async function FleetPage() {
           ]}
         />
       </section>
-    </AppShell>
+    </FmShell>
   );
 }

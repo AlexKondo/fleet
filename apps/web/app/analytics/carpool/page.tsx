@@ -6,9 +6,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { loadCarpoolKpis } from "@/lib/carpool/kpi/loadKpis";
 import { KPI_RANGE_DAYS, ROAD_DISTANCE_FACTOR } from "@/lib/carpool/kpi/config";
-import { AppShell } from "../../AppShell";
+import { FmShell } from "../../carpool/FmShell";
 import { StatBar } from "../StatBar";
-import { Card } from "../../ui/Card";
 
 /**
  * C7b KPI / telemetry dashboard for the carpool engine (pack 06 "Observability/KPIs"). Same family as the
@@ -56,19 +55,19 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
 
   const Metric = ({ label, value, testId }: { label: string; value: string; testId: string }) => (
     <div data-testid={testId}>
-      <p className="text-2xl font-semibold tabular-nums text-paper-50" data-value={value}>{value}</p>
-      <p className="text-xs text-fog-400">{label}</p>
+      <p className="rp-metric-value" data-value={value}>{value}</p>
+      <p className="rp-metric-label">{label}</p>
     </div>
   );
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <section className="mb-6">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">{title}</h2>
-      <Card>{children}</Card>
+    <section className="fm-panel">
+      <h2 className="fm-h2">{title}</h2>
+      {children}
     </section>
   );
 
   return (
-    <AppShell
+    <FmShell
       active="analytics"
       orgName={profile.organization?.name ?? "—"}
       userName={profile.full_name ?? user.email ?? "—"}
@@ -76,26 +75,24 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
       isFleetManager
       isAdministrator={profile.role === "administrator"}
       title={t.title}
+      subtitle={dict.ops.carpoolMgr.subtitle}
+      legacy
+      wide
       headerActions={
-        <Link href="/analytics" className="text-xs uppercase tracking-widest text-fog-400 hover:text-paper-50">
+        <Link href="/analytics" className="fm-btn fm-btn-ghost">
           {t.backToAnalytics}
         </Link>
       }
     >
-      <div className="px-6 py-6" data-testid="carpool-kpi-page">
-        <div className="mb-5 flex flex-wrap items-center gap-2" role="group" aria-label={t.rangeLabel}>
-          <span className="text-xs uppercase tracking-widest text-fog-600">{t.rangeLabel}</span>
+      <div data-testid="carpool-kpi-page">
+        <div className="rp-range" role="group" aria-label={t.rangeLabel}>
+          <span className="rp-range-label">{t.rangeLabel}</span>
           {KPI_RANGE_DAYS.map((d) => (
             <Link
               key={d}
               href={`/analytics/carpool?range=${d}`}
               data-testid={`kpi-range-${d}`}
               aria-current={d === days ? "true" : undefined}
-              className={`rounded-sm border px-3 py-1 text-xs font-semibold uppercase tracking-widest ${
-                d === days
-                  ? "border-gwm-accent bg-gwm-accent/10 text-gwm-accent"
-                  : "border-line-800 text-fog-400 hover:border-line-700 hover:text-paper-50"
-              }`}
             >
               {d === 7 ? t.range7 : d === 30 ? t.range30 : t.range90}
             </Link>
@@ -103,7 +100,7 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
         </div>
 
         {report === null ? (
-          <div role="alert" className="rounded-md border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red">
+          <div role="alert" className="fm-banner fm-banner-danger" style={{ marginTop: 0 }}>
             {t.loadError}
           </div>
         ) : (
@@ -239,6 +236,6 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
           </>
         )}
       </div>
-    </AppShell>
+    </FmShell>
   );
 }

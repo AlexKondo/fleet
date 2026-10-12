@@ -4,9 +4,10 @@ import { assessVehicleReadiness } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { toDomainVehicle, VEHICLE_DOMAIN_COLUMNS } from "@/lib/domain/mappers";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTimeShort } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
-import { AppShell } from "../AppShell";
+import { FmShell } from "../carpool/FmShell";
+import { FmAlertIcon, FmCalendarIcon, FmCarIcon, FmCheckIcon, FmUsersIcon } from "../fmIcons";
 import { getAttentionLabels, getStatusMeta } from "./statusMeta";
 import { EnergyGauge } from "./EnergyGauge";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
@@ -43,6 +44,7 @@ export default async function DashboardPage({
   const locale = await getLocale();
   const dict = await getDictionary();
   const t = dict.dashboard;
+  const cc = dict.ops.cc;
   const statusMeta = getStatusMeta(dict);
   const attentionLabels = getAttentionLabels(dict);
   const workflowTaskLabels: Record<string, string> = t.tasks.types;
@@ -208,23 +210,33 @@ export default async function DashboardPage({
     }
   }
 
+  // Command Center 360 (SCR-FM-001) numbers: only counts of rows this page already loaded.
+  const statusCounts = new Map<string, number>();
+  for (const { row } of vehiclesWithAttention) statusCounts.set(row.status, (statusCounts.get(row.status) ?? 0) + 1);
+  const attentionVehicleCount = vehiclesWithAttention.filter((v) => v.attention.length > 0).length;
+  const LIST_CAP = 50; // the queries above are .limit(50): show "50+" instead of a wrong exact count
+  const capped = (n: number) => (n >= LIST_CAP ? `${LIST_CAP}+` : String(n));
+
   return (
-    <AppShell
+    <FmShell
       active="dashboard"
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title={dict.nav.dashboard}
+      title={cc.title}
+      subtitle={cc.subtitle}
+      legacy
+      wide
     >
       {fleetActionError ? (
         <div
           role="alert"
-          className="flex items-start justify-between gap-4 border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
+          className="fm-banner fm-banner-danger cc-banner"
         >
           <span>{t.actionError}</span>
-          <Link href="/dashboard" className="shrink-0 text-xs uppercase tracking-widest hover:underline">
+          <Link href="/dashboard" className="fm-link">
             {t.dismissBanner}
           </Link>
         </div>
@@ -235,21 +247,89 @@ export default async function DashboardPage({
       {actionSuccess ? (
         <div
           role="status"
-          className="flex items-start justify-between gap-4 border-b border-signal-green/40 bg-signal-green/10 px-6 py-3 text-sm text-signal-green"
+          className="fm-banner cc-banner cc-banner-ok"
         >
           <span>{t.actionSuccess}</span>
           <Link
             href={onlyMyTasks ? "/dashboard?myTasks=1" : "/dashboard"}
-            className="shrink-0 text-xs uppercase tracking-widest hover:underline"
+            className="fm-link"
           >
             {t.dismissBanner}
           </Link>
         </div>
       ) : null}
 
-      <section className="border-b border-line-800 px-6 py-4">
-        <div className="mb-1.5 h-1.5 w-10 rounded-sm hazard-stripe" aria-hidden="true" />
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+      <section className="fm-kpis" aria-label={cc.kpisLabel} data-testid="cc-kpis">
+        <div className="fm-kpi fm-kpi-wide" data-testid="cc-kpi-vehicles">
+          <span className="fm-kpi-icon"><FmCarIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{vehicles.length}</p>
+            <p className="fm-kpi-label">{cc.kpiVehicles}</p>
+          </div>
+          {vehicles.length > 0 ? (
+            <>
+              <div className="fm-seg" role="img" aria-label={cc.kpiVehiclesBar}>
+                {[...statusCounts.entries()].map(([status, n]) => (
+                  <span key={status} data-s={status} style={{ flexGrow: n }} />
+                ))}
+              </div>
+              <ul className="fm-legend">
+                {[...statusCounts.entries()].map(([status, n]) => (
+                  <li key={status}>
+                    <span className="fm-dot" data-s={status} aria-hidden="true" />
+                    <span>{statusMeta[status as keyof typeof statusMeta]?.label ?? status}</span>
+                    <strong>{n}</strong>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+        </div>
+        {isFleetManager ? (
+          <a href="#pending-approvals" className="fm-kpi" data-testid="cc-kpi-pending">
+            <span className="fm-kpi-icon" data-tone="warn"><FmCheckIcon /></span>
+            <div className="fm-kpi-body">
+              <p className="fm-kpi-value">{capped(pendingReservations?.length ?? 0)}</p>
+              <p className="fm-kpi-label">{cc.kpiPending}</p>
+              {(pendingReservations?.length ?? 0) >= LIST_CAP ? <p className="fm-kpi-sub">{cc.kpiCapped.replace("{count}", String(LIST_CAP))}</p> : null}
+            </div>
+          </a>
+        ) : null}
+        {isFleetManager ? (
+          <a href="#active-reservations" className="fm-kpi" data-testid="cc-kpi-active">
+            <span className="fm-kpi-icon" data-tone="info"><FmCalendarIcon /></span>
+            <div className="fm-kpi-body">
+              <p className="fm-kpi-value">{capped(activeReservations?.length ?? 0)}</p>
+              <p className="fm-kpi-label">{cc.kpiActive}</p>
+              {(activeReservations?.length ?? 0) >= LIST_CAP ? <p className="fm-kpi-sub">{cc.kpiCapped.replace("{count}", String(LIST_CAP))}</p> : null}
+              {conflictedReservationIds.size > 0 ? (
+                <p className="fm-kpi-sub fm-kpi-sub-bad">{cc.kpiConflicts.replace("{count}", String(conflictedReservationIds.size))}</p>
+              ) : null}
+            </div>
+          </a>
+        ) : null}
+        {canManageTasks ? (
+          <a href="#open-tasks" className="fm-kpi" data-testid="cc-kpi-tasks">
+            <span className="fm-kpi-icon" data-tone="info"><FmUsersIcon /></span>
+            <div className="fm-kpi-body">
+              <p className="fm-kpi-value">{capped(openTasks?.length ?? 0)}</p>
+              <p className="fm-kpi-label">{onlyMyTasks ? cc.kpiTasksMine : cc.kpiTasks}</p>
+              {(openTasks?.length ?? 0) >= LIST_CAP ? <p className="fm-kpi-sub">{cc.kpiCapped.replace("{count}", String(LIST_CAP))}</p> : null}
+            </div>
+          </a>
+        ) : null}
+        <a href="#attention" className="fm-kpi" data-testid="cc-kpi-attention">
+          <span className="fm-kpi-icon" data-tone={attentionVehicleCount > 0 ? "bad" : "ok"}><FmAlertIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{attentionVehicleCount}</p>
+            <p className="fm-kpi-label">{cc.kpiAttention}</p>
+          </div>
+        </a>
+      </section>
+
+      <div className={isFleetManager ? "cc-grid" : "cc-grid cc-grid-solo"}>
+      <section className="fm-panel cc-attention" id="attention">
+        <h2 className="fm-h2">
           {t.attention.heading}
         </h2>
         {Object.keys(vehiclesByAttentionReason).length === 0 ? (
@@ -275,8 +355,8 @@ export default async function DashboardPage({
       </section>
 
       {isFleetManager ? (
-        <section className="border-b border-line-800 px-6 py-4">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+        <section className="fm-panel cc-pending" id="pending-approvals">
+          <h2 className="fm-h2">
             {t.pendingReservations.heading}
           </h2>
           {!pendingReservations || pendingReservations.length === 0 ? (
@@ -317,7 +397,7 @@ export default async function DashboardPage({
                           </Link>{" "}
                           ·{" "}
                           <span className="font-mono tabular-nums">
-                            {formatDateTime(r.start_at, locale)}
+                            {formatDateTimeShort(r.start_at, locale)}
                           </span>
                         </span>
                       </div>
@@ -329,7 +409,7 @@ export default async function DashboardPage({
                           )}
                         </span>
                         <span className="font-mono tabular-nums">
-                          {t.pendingReservations.returnBy} {formatDateTime(r.end_at, locale)}
+                          {t.pendingReservations.returnBy} {formatDateTimeShort(r.end_at, locale)}
                         </span>
                       </div>
                       <p
@@ -401,195 +481,10 @@ export default async function DashboardPage({
         </section>
       ) : null}
 
-      {isFleetManager ? (
-        <section className="border-b border-line-800 px-6 py-4">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
-            {t.activeReservations.heading}
-          </h2>
-          {conflictedReservationIds.size > 0 ? (
-            <p role="alert" className="mb-3 text-sm text-signal-red">
-              {t.activeReservations.overlapWarning}
-            </p>
-          ) : null}
-          {!activeReservations || activeReservations.length === 0 ? (
-            <p className="text-sm text-fog-400">{t.activeReservations.empty}</p>
-          ) : (
-            <>
-            <ReservationGantt
-              bars={activeReservations.map((r) => ({
-                id: r.id,
-                start_at: r.start_at,
-                end_at: r.end_at,
-                status: r.status,
-                rowPlate: r.vehicle?.plate ?? "—",
-                rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
-                barLabel: r.trip_request?.requester?.full_name ?? t.activeReservations.unknownRequester,
-                tooltipExtra: r.trip_request?.destination,
-              }))}
-              locale={locale}
-              rowHeading={dict.common.vehicle}
-              initialZoom={(profile?.gantt_zoom_preference as GanttZoomLevel) ?? "month"}
-            />
-            <div className="overflow-x-auto rounded-md border border-line-800">
-              <table className="w-full min-w-[1200px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
-                    <th className="px-4 py-3 font-medium">{dict.common.vehicle}</th>
-                    <th className="px-4 py-3 font-medium">{t.activeReservations.routeColumn}</th>
-                    <th className="px-4 py-3 font-medium">{t.activeReservations.requesterColumn}</th>
-                    <th className="px-4 py-3 font-medium">{t.activeReservations.departureColumn}</th>
-                    <th className="px-4 py-3 font-medium">{t.activeReservations.returnColumn}</th>
-                    <th className="px-4 py-3 font-medium">{dict.common.status}</th>
-                    <th className="px-4 py-3 font-medium">{t.activeReservations.swapColumn}</th>
-                    <th className="px-4 py-3 font-medium">{t.activeReservations.transferColumn}</th>
-                    <th className="px-4 py-3 font-medium">{dict.common.cancel}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeReservations.map((r) => {
-                    const vehicleOptions = vehicles.filter(
-                      (v) => v.status === "available" && v.id !== r.vehicle?.id,
-                    );
-                    const transferOptions = (orgProfiles ?? []).filter(
-                      (p) => p.id !== r.trip_request?.requester_id,
-                    );
-                    return (
-                      <tr key={r.id} className="border-b border-line-800 last:border-0 hover:bg-panel-900/60">
-                        <td className="px-4 py-3 font-mono tabular-nums text-paper-50">
-                          {r.vehicle?.plate ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-fog-400 break-user-text">
-                          {r.trip_request?.origin} → {r.trip_request?.destination}
-                        </td>
-                        <td className="px-4 py-3 text-fog-400">
-                          {r.trip_request?.requester?.full_name ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs tabular-nums text-fog-400">
-                          {formatDateTime(r.start_at, locale)}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs tabular-nums text-fog-400">
-                          {formatDateTime(r.end_at, locale)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={r.status === "confirmed" ? "text-signal-blue" : "text-gwm-accent"}>
-                            {r.status === "confirmed"
-                              ? t.activeReservations.statusConfirmed
-                              : t.activeReservations.statusPending}
-                          </span>
-                          {r.impacted_at ? (
-                            <span className="ml-2 text-xs text-signal-yellow">
-                              {t.activeReservations.impacted}
-                            </span>
-                          ) : null}
-                          {conflictedReservationIds.has(r.id) ? (
-                            <span
-                              className="ml-2 text-xs text-signal-red"
-                              title={t.activeReservations.overlapWarning}
-                            >
-                              {t.activeReservations.overlapBadge}
-                            </span>
-                          ) : null}
-                          <Link
-                            href={`/reservations/${r.id}`}
-                            className="ml-2 text-xs text-fog-400 hover:text-gwm-accent hover:underline"
-                          >
-                            {t.activeReservations.messages}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3">
-                          {vehicleOptions.length === 0 ? (
-                            <span className="text-xs text-fog-600">
-                              {t.activeReservations.noVehicleAvailable}
-                            </span>
-                          ) : (
-                            <RevealAction trigger={t.activeReservations.swapAction}>
-                              <form action={swapVehicle.bind(null, r.id)} className="flex items-center gap-2">
-                                <select
-                                  name="vehicleId"
-                                  required
-                                  defaultValue=""
-                                  className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue"
-                                >
-                                  <option value="" disabled>
-                                    {t.activeReservations.selectPlaceholder}
-                                  </option>
-                                  {vehicleOptions.map((v) => (
-                                    <option key={v.id} value={v.id}>
-                                      {v.plate} — {v.category?.name ?? "—"}
-                                      {v.color ? ` · ${v.color}` : ""}
-                                    </option>
-                                  ))}
-                                </select>
-                                <ConfirmSubmitButton
-                                  confirmMessage={t.activeReservations.confirmSwap}
-                                  className="rounded-sm border border-signal-blue px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
-                                >
-                                  {t.activeReservations.swapAction}
-                                </ConfirmSubmitButton>
-                              </form>
-                            </RevealAction>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {transferOptions.length === 0 ? (
-                            <span className="text-xs text-fog-600">—</span>
-                          ) : (
-                            <RevealAction trigger={t.activeReservations.transferAction}>
-                              <form action={transferReservation.bind(null, r.id)} className="flex items-center gap-2">
-                                <select
-                                  name="requesterId"
-                                  required
-                                  defaultValue=""
-                                  className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-violet"
-                                >
-                                  <option value="" disabled>
-                                    {t.activeReservations.selectPlaceholder}
-                                  </option>
-                                  {transferOptions.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.full_name}
-                                    </option>
-                                  ))}
-                                </select>
-                                <ConfirmSubmitButton
-                                  confirmMessage={t.activeReservations.confirmTransfer}
-                                  className="rounded-sm border border-signal-violet px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-violet hover:bg-signal-violet/10"
-                                >
-                                  {t.activeReservations.transferAction}
-                                </ConfirmSubmitButton>
-                              </form>
-                            </RevealAction>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <form action={cancelReservation.bind(null, r.id, dict.dashboard.cancelReasons.cancelledByManager)}>
-                            <ConfirmSubmitButton
-                              confirmMessage={t.activeReservations.confirmCancel.replace(
-                                "{name}",
-                                r.trip_request?.requester?.full_name ??
-                                  t.activeReservations.unknownRequester,
-                              )}
-                              className="rounded-sm border border-signal-red px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
-                            >
-                              {dict.common.cancel}
-                            </ConfirmSubmitButton>
-                          </form>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            </>
-          )}
-        </section>
-      ) : null}
-
       {canManageTasks ? (
-        <section className="border-b border-line-800 px-6 py-4">
+        <section className="fm-panel cc-tasks" id="open-tasks">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
+            <h2 className="fm-h2">
               {t.tasks.heading}
             </h2>
             {/* A single global queue gave a maintenance operator no way to see what is
@@ -707,8 +602,197 @@ export default async function DashboardPage({
         </section>
       ) : null}
 
-      <section className="px-6 py-4">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+      </div>
+
+      {isFleetManager ? (
+        <section className="fm-panel cc-active" id="active-reservations">
+          <h2 className="fm-h2">
+            {t.activeReservations.heading}
+          </h2>
+          {conflictedReservationIds.size > 0 ? (
+            <p role="alert" className="mb-3 text-sm text-signal-red">
+              {t.activeReservations.overlapWarning}
+            </p>
+          ) : null}
+          {!activeReservations || activeReservations.length === 0 ? (
+            <p className="text-sm text-fog-400">{t.activeReservations.empty}</p>
+          ) : (
+            <>
+            <div className="cc-gantt">
+            <ReservationGantt
+              bars={activeReservations.map((r) => ({
+                id: r.id,
+                start_at: r.start_at,
+                end_at: r.end_at,
+                status: r.status,
+                rowPlate: r.vehicle?.plate ?? "—",
+                rowVehicleName: r.vehicle?.name ?? r.vehicle?.plate ?? "—",
+                barLabel: r.trip_request?.requester?.full_name ?? t.activeReservations.unknownRequester,
+                tooltipExtra: r.trip_request?.destination,
+              }))}
+              locale={locale}
+              rowHeading={dict.common.vehicle}
+              initialZoom={(profile?.gantt_zoom_preference as GanttZoomLevel) ?? "month"}
+            />
+            </div>
+            <div className="cc-table-wrap overflow-x-auto rounded-md border border-line-800">
+              <table className="w-full min-w-[1200px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-line-800 text-left text-xs uppercase tracking-widest text-fog-600">
+                    <th className="px-4 py-3 font-medium">{dict.common.vehicle}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.routeColumn}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.requesterColumn}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.departureColumn}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.returnColumn}</th>
+                    <th className="px-4 py-3 font-medium">{dict.common.status}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.swapColumn}</th>
+                    <th className="px-4 py-3 font-medium">{t.activeReservations.transferColumn}</th>
+                    <th className="px-4 py-3 font-medium">{dict.common.cancel}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeReservations.map((r) => {
+                    const vehicleOptions = vehicles.filter(
+                      (v) => v.status === "available" && v.id !== r.vehicle?.id,
+                    );
+                    const transferOptions = (orgProfiles ?? []).filter(
+                      (p) => p.id !== r.trip_request?.requester_id,
+                    );
+                    return (
+                      <tr key={r.id} className="border-b border-line-800 last:border-0 hover:bg-panel-900/60">
+                        <td className="px-4 py-3 font-mono tabular-nums text-paper-50">
+                          {r.vehicle?.plate ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 text-fog-400 break-user-text">
+                          {r.trip_request?.origin} → {r.trip_request?.destination}
+                        </td>
+                        <td className="px-4 py-3 text-fog-400">
+                          {r.trip_request?.requester?.full_name ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs tabular-nums text-fog-400">
+                          {formatDateTimeShort(r.start_at, locale)}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs tabular-nums text-fog-400">
+                          {formatDateTimeShort(r.end_at, locale)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={r.status === "confirmed" ? "text-signal-blue" : "text-gwm-accent"}>
+                            {r.status === "confirmed"
+                              ? t.activeReservations.statusConfirmed
+                              : t.activeReservations.statusPending}
+                          </span>
+                          {r.impacted_at ? (
+                            <span className="ml-2 text-xs text-signal-yellow">
+                              {t.activeReservations.impacted}
+                            </span>
+                          ) : null}
+                          {conflictedReservationIds.has(r.id) ? (
+                            <span
+                              className="ml-2 text-xs text-signal-red"
+                              title={t.activeReservations.overlapWarning}
+                            >
+                              {t.activeReservations.overlapBadge}
+                            </span>
+                          ) : null}
+                          <Link
+                            href={`/reservations/${r.id}`}
+                            className="ml-2 text-xs text-fog-400 hover:text-gwm-accent hover:underline"
+                          >
+                            {t.activeReservations.messages}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          {vehicleOptions.length === 0 ? (
+                            <span className="text-xs text-fog-600">
+                              {t.activeReservations.noVehicleAvailable}
+                            </span>
+                          ) : (
+                            <RevealAction trigger={t.activeReservations.swapAction}>
+                              <form action={swapVehicle.bind(null, r.id)} className="flex items-center gap-2">
+                                <select
+                                  name="vehicleId"
+                                  required
+                                  defaultValue=""
+                                  className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue"
+                                >
+                                  <option value="" disabled>
+                                    {t.activeReservations.selectPlaceholder}
+                                  </option>
+                                  {vehicleOptions.map((v) => (
+                                    <option key={v.id} value={v.id}>
+                                      {v.plate} — {v.category?.name ?? "—"}
+                                      {v.color ? ` · ${v.color}` : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ConfirmSubmitButton
+                                  confirmMessage={t.activeReservations.confirmSwap}
+                                  className="rounded-sm border border-signal-blue px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
+                                >
+                                  {t.activeReservations.swapAction}
+                                </ConfirmSubmitButton>
+                              </form>
+                            </RevealAction>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {transferOptions.length === 0 ? (
+                            <span className="text-xs text-fog-600">—</span>
+                          ) : (
+                            <RevealAction trigger={t.activeReservations.transferAction}>
+                              <form action={transferReservation.bind(null, r.id)} className="flex items-center gap-2">
+                                <select
+                                  name="requesterId"
+                                  required
+                                  defaultValue=""
+                                  className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-violet"
+                                >
+                                  <option value="" disabled>
+                                    {t.activeReservations.selectPlaceholder}
+                                  </option>
+                                  {transferOptions.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.full_name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ConfirmSubmitButton
+                                  confirmMessage={t.activeReservations.confirmTransfer}
+                                  className="rounded-sm border border-signal-violet px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-violet hover:bg-signal-violet/10"
+                                >
+                                  {t.activeReservations.transferAction}
+                                </ConfirmSubmitButton>
+                              </form>
+                            </RevealAction>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <form action={cancelReservation.bind(null, r.id, dict.dashboard.cancelReasons.cancelledByManager)}>
+                            <ConfirmSubmitButton
+                              confirmMessage={t.activeReservations.confirmCancel.replace(
+                                "{name}",
+                                r.trip_request?.requester?.full_name ??
+                                  t.activeReservations.unknownRequester,
+                              )}
+                              className="rounded-sm border border-signal-red px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10"
+                            >
+                              {dict.common.cancel}
+                            </ConfirmSubmitButton>
+                          </form>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            </>
+          )}
+        </section>
+      ) : null}
+
+      <section className="fm-panel cc-fleet" id="fleet-vehicles">
+        <h2 className="fm-h2">
           {t.vehicles.heading}
         </h2>
 
@@ -827,6 +911,6 @@ export default async function DashboardPage({
           </ul>
         )}
       </section>
-    </AppShell>
+    </FmShell>
   );
 }

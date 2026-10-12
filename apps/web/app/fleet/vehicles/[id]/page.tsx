@@ -2,9 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { formatDateTime, formatDayMonth } from "@/lib/formatDateTime";
+import { formatDateTimeShort, formatDayMonth } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
-import { AppShell } from "../../../AppShell";
+import { FmShell } from "../../../carpool/FmShell";
 import { getStatusMeta } from "../../../dashboard/statusMeta";
 import { StatusBadge } from "../../../ui/StatusBadge";
 
@@ -47,7 +47,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
     supabase
       .from("vehicles")
       .select(
-        "id, plate, name, color, status, category:vehicle_categories(name), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
+        "id, plate, name, color, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, category:vehicle_categories(name, energy_type), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
       )
       .eq("id", id)
       .single(),
@@ -70,6 +70,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
   const reservations = reservationRows ?? [];
   const meta = getStatusMeta(dict)[vehicle.status];
   const reservationStatusLabel: Record<string, string> = dict.fleet.detail.reservationStatus;
+  const o = dict.ops.fleet;
   const now = new Date();
 
   // Timeline bounds: a few days of padding around today plus whatever the reservations
@@ -101,7 +102,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
   const todayPx = pxFor(now.toISOString());
 
   return (
-    <AppShell
+    <FmShell
       active="fleet"
       orgName={profile.organization?.name ?? "—"}
       userName={profile.full_name ?? user.email ?? "—"}
@@ -109,23 +110,69 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
       title={dict.fleet.detail.title}
-    >
-      <div className="px-6 py-6">
-        <Link href="/fleet" className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent">
+      subtitle={o.detailSubtitle}
+      legacy
+      wide
+      headerActions={
+        <Link href="/fleet" className="fm-btn fm-btn-ghost">
           ← {dict.fleet.detail.backToFleet}
         </Link>
-
-        <div className="mt-4 flex flex-wrap items-start justify-between gap-3 rounded-md border border-line-800 bg-panel-900/60 p-5">
-          <div>
-            <p className="text-xl text-paper-50">{vehicle.name ?? vehicle.plate}</p>
-            <p className="font-mono text-sm text-fog-400">{vehicle.plate}</p>
-            <p className="mt-1 text-xs text-fog-400">
-              {vehicle.category?.name ?? "—"}
-              {vehicle.color ? ` · ${vehicle.color}` : ""} · {vehicle.current_location?.name ?? "—"}
-            </p>
+      }
+    >
+      <div>
+        <section className="fm-panel vd-head" data-testid="vehicle-detail-head">
+          <div className="vd-title">
+            <div>
+              <p className="vd-name">{vehicle.name ?? vehicle.plate}</p>
+              <p className="vd-plate fm-mono">{vehicle.plate}</p>
+            </div>
+            <StatusBadge meta={meta} />
           </div>
-          <StatusBadge meta={meta} />
-        </div>
+          <dl className="vd-facts">
+            <div>
+              <dt>{dict.fleet.vehicleForm.categoryLabel}</dt>
+              <dd>{vehicle.category?.name ?? "—"}{vehicle.category?.energy_type ? ` · ${dict.fleet.categories.energy[vehicle.category.energy_type as "ICE" | "HEV" | "PHEV" | "BEV"] ?? vehicle.category.energy_type}` : ""}</dd>
+            </div>
+            {vehicle.color ? (
+              <div>
+                <dt>{dict.fleet.vehicleRow.color}</dt>
+                <dd>{vehicle.color}</dd>
+              </div>
+            ) : null}
+            <div>
+              <dt>{dict.fleet.vehicleRow.location}</dt>
+              <dd>{vehicle.current_location?.name ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>{dict.fleet.vehicleRow.odometer}</dt>
+              <dd className="fm-mono">{vehicle.odometer_km.toLocaleString(locale)} km</dd>
+            </div>
+            {vehicle.fuel_level_percent !== null ? (
+              <div>
+                <dt>{dict.fleet.vehicleForm.fuelLabel}</dt>
+                <dd className="fm-mono">{vehicle.fuel_level_percent}%</dd>
+              </div>
+            ) : null}
+            {vehicle.battery_level_percent !== null ? (
+              <div>
+                <dt>{dict.fleet.vehicleForm.batteryLabel}</dt>
+                <dd className="fm-mono">{vehicle.battery_level_percent}%</dd>
+              </div>
+            ) : null}
+            {vehicle.estimated_range_km !== null ? (
+              <div>
+                <dt>{dict.fleet.vehicleForm.estimatedRangeLabel}</dt>
+                <dd className="fm-mono">{vehicle.estimated_range_km.toLocaleString(locale)} km</dd>
+              </div>
+            ) : null}
+            {vehicle.next_service_odometer_km !== null ? (
+              <div>
+                <dt>{dict.fleet.vehicleForm.nextServiceLabel}</dt>
+                <dd className="fm-mono">{vehicle.next_service_odometer_km.toLocaleString(locale)} km</dd>
+              </div>
+            ) : null}
+          </dl>
+        </section>
 
         <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-fog-400">
@@ -215,7 +262,7 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
                       className="relative border-b border-line-800 last:border-b-0"
                     >
                       <div
-                        title={`${r.trip_request?.requester?.full_name ?? "—"} · ${r.trip_request?.origin} → ${r.trip_request?.destination}\n${formatDateTime(r.start_at, locale)} → ${formatDateTime(r.end_at, locale)}\n${reservationStatusLabel[r.status] ?? r.status}`}
+                        title={`${r.trip_request?.requester?.full_name ?? "—"} · ${r.trip_request?.origin} → ${r.trip_request?.destination}\n${formatDateTimeShort(r.start_at, locale)} → ${formatDateTimeShort(r.end_at, locale)}\n${reservationStatusLabel[r.status] ?? r.status}`}
                         className={`absolute top-1/2 h-6 -translate-y-1/2 rounded-sm border ${STATUS_BAR_CLASS[r.status] ?? "border-line-700 bg-panel-800"}`}
                         style={{ left, width }}
                       />
@@ -234,6 +281,6 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
           </div>
         )}
       </div>
-    </AppShell>
+    </FmShell>
   );
 }

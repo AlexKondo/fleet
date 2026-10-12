@@ -549,7 +549,7 @@ try {
   const mgr = await newPage(U.mgr, D);
   await go(mgr, "/dashboard");
   t = await text(mgr);
-  record("Manager /dashboard: unchanged AppShell (no .fm-theme) with approvals, tasks, attention and the fleet block/unblock", !(await hasFm(mgr)) && /Reservas Aguardando Aprovação/i.test(t) && (await mgr.locator('button:has-text("Aprovar")').count()) >= 1 && /Precisa de Atenção/i.test(t) && /Painel de Veículos/i.test(t) && (await mgr.locator('button:has-text("Bloquear")').count()) >= 1);
+  record("Manager /dashboard: same content (approvals, tasks, attention, fleet block/unblock), now in the Lote 1B FleetMind look (.fm-theme)", (await hasFm(mgr)) && /Reservas Aguardando Aprovação/i.test(t) && (await mgr.locator('button:has-text("Aprovar")').count()) >= 1 && /Precisa de Atenção/i.test(t) && /Painel de Veículos/i.test(t) && (await mgr.locator('button:has-text("Bloquear")').count()) >= 1);
   await go(mgr, `/reservations/${R1.id}`);
   record("Manager /reservations/[id]: unchanged AppShell page (no .fm-theme), thread visible, no employee-only actions", !(await hasFm(mgr)) && (await mgr.locator("textarea").count()) >= 1 && /MSG-LA-1/.test(await text(mgr)));
   await go(mgr, "/trips");
@@ -559,13 +559,13 @@ try {
   record("Manager can still open a pickup checklist of another employee (privileged) inside the new shell", (await hasFm(mgr)) && new URL(mgr.url()).pathname.endsWith("/pickup"));
   const adm = await newPage(U.adm, D);
   await go(adm, "/dashboard");
-  record("Administrator /dashboard unchanged (no .fm-theme, approvals visible)", !(await hasFm(adm)) && /Reservas Aguardando Aprovação/i.test(await text(adm)));
+  record("Administrator /dashboard same content (approvals visible), now in the Lote 1B FleetMind look (.fm-theme)", (await hasFm(adm)) && /Reservas Aguardando Aprovação/i.test(await text(adm)));
   await go(adm, "/trips");
   const ah = await sideHrefs(adm);
   record("Administrator /trips nav keeps Equipe (/settings/users)", ah.includes("/settings/users") && ah.includes("/dashboard"), ah);
   const sec = await newPage(U.sec, D);
   await go(sec, "/dashboard");
-  record("Security /dashboard unchanged (no .fm-theme), attention + vehicle panel render", !(await hasFm(sec)) && /Precisa de Atenção/i.test(await text(sec)));
+  record("Security /dashboard same content (attention + vehicle panel), now in the Lote 1B FleetMind look (.fm-theme)", (await hasFm(sec)) && /Precisa de Atenção/i.test(await text(sec)));
   await go(sec, "/trips");
   const sh2 = await sideHrefs(sec);
   record("Security /trips nav: Movimentações (/gate) + Minhas Reservas, no Painel", sh2.includes("/gate") && sh2.includes("/trips") && !sh2.includes("/dashboard"), sh2);
@@ -576,13 +576,14 @@ try {
   const mnt = await newPage(U.mnt, D);
   await go(mnt, "/dashboard");
   t = await text(mnt);
-  record("Maintenance operator /dashboard unchanged (no .fm-theme): tasks section + vehicles", !(await hasFm(mnt)) && /Precisa de Atenção/i.test(t) && /Painel de Veículos/i.test(t) && /tarefas/i.test(t) && !/Reservas Aguardando Aprovação/i.test(t));
+  record("Maintenance operator /dashboard same content (tasks section + vehicles), now in the Lote 1B FleetMind look (.fm-theme)", (await hasFm(mnt)) && /Precisa de Atenção/i.test(t) && /Painel de Veículos/i.test(t) && /tarefas/i.test(t) && !/Reservas Aguardando Aprovação/i.test(t));
   record("Page errors: none on any page", [emp, empM, pP, pA, pR, mgr, adm, sec, mnt, pHost].every((p) => p.__errors.length === 0), [emp, empM, pP, pA, pR, mgr, adm, sec, mnt, pHost].flatMap((p) => p.__errors));
 
   // scoping: other screens are NOT in the theme
-  for (const [who, u] of [[emp, "/account"], [mgr, "/settings"], [mgr, "/fleet"], [mgr, "/analytics"]]) {
+  for (const [who, u, themed] of [[emp, "/account", false], [mgr, "/settings", true], [mgr, "/fleet", true], [mgr, "/analytics", true]]) {
     await go(who, u);
-    record(`Scoping: ${u} stays outside .fm-theme`, !(await hasFm(who)));
+    // Lote 1B restyled /settings, /fleet and /analytics into the FleetMind look; /account stays outside
+    record(`Scoping: ${u} ${themed ? "is in .fm-theme (Lote 1B)" : "stays outside .fm-theme"}`, themed ? await hasFm(who) : !(await hasFm(who)));
   }
   await go(emp, "/carpool");
   record("Scoping: /carpool and /trips/new still use the theme (previous lots intact)", await hasFm(emp));

@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { AppShell } from "../AppShell";
+import { FmShell } from "../carpool/FmShell";
+import { FmCarIcon, FmCheckIcon, FmGaugeIcon, FmUsersIcon } from "../fmIcons";
 import { SettingsForm } from "./SettingsForm";
 import { SafetyEquipmentSection } from "./SafetyEquipmentSection";
 import { ChatUsageSummary } from "./ChatUsageSummary";
@@ -70,18 +71,56 @@ export default async function SettingsPage() {
     values: policyFromRow(row as unknown as PolicyRow),
   }));
 
+  const o = dict.ops.settings;
+  const bookingMode = settings?.booking_mode ?? "ai_recommended";
+  const bookingLabel =
+    dict.settings.form.booking.modes[bookingMode as keyof typeof dict.settings.form.booking.modes]?.label ?? bookingMode;
+
   return (
-    <AppShell
+    <FmShell
       active="settings"
       orgName={profile.organization?.name ?? "—"}
       userName={profile.full_name ?? user.email ?? "—"}
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title={dict.settings.title}
+      title={o.title}
+      subtitle={o.subtitle}
+      legacy
+      wide
     >
+      <section className="st-summary fm-kpis" aria-label={o.summaryLabel} data-testid="settings-summary" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+        <div className="fm-kpi">
+          <span className="fm-kpi-icon"><FmGaugeIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{settings?.range_safety_buffer_percent ?? 20}%</p>
+            <p className="fm-kpi-label">{dict.settings.form.range.safetyBufferLabel}</p>
+          </div>
+        </div>
+        <div className="fm-kpi">
+          <span className="fm-kpi-icon" data-tone="violet"><FmCarIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value st-kpi-text">{bookingLabel}</p>
+            <p className="fm-kpi-label">{dict.settings.form.booking.heading}</p>
+          </div>
+        </div>
+        <div className="fm-kpi">
+          <span className="fm-kpi-icon" data-tone="ok"><FmUsersIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{policyVersions[0] ? `v${policyVersions[0].version}` : "—"}</p>
+            <p className="fm-kpi-label">{dict.carpool.policy.title}</p>
+          </div>
+        </div>
+        <div className="fm-kpi">
+          <span className="fm-kpi-icon" data-tone="warn"><FmCheckIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{(equipmentItems ?? []).length}</p>
+            <p className="fm-kpi-label">{dict.settings.safetyEquipment.heading}</p>
+          </div>
+        </div>
+      </section>
 
-      <section className="px-6 py-6">
+      <section className="st-grid">
         <SettingsForm
           dict={dict}
           initialValues={{
@@ -97,19 +136,17 @@ export default async function SettingsPage() {
             earlyPickupGraceMinutes: settings?.early_pickup_grace_minutes ?? 15,
           }}
         />
-        <SafetyEquipmentSection dict={dict} items={equipmentItems ?? []} />
-        <ChatUsageSummary dict={dict} stats={chatUsageStats} />
-        <CarpoolPolicySection dict={dict} locale={locale} versions={policyVersions} />
-
-        <div className="mt-8 border-t border-line-800 pt-6">
-          <a
-            href="/settings/mobility-points"
-            className="text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:underline"
-          >
-            {dict.mobilityPoints.title} →
-          </a>
+        <div className="st-side">
+          <div className="fm-panel"><SafetyEquipmentSection dict={dict} items={equipmentItems ?? []} /></div>
+          <div className="fm-panel"><ChatUsageSummary dict={dict} stats={chatUsageStats} /></div>
+          <div className="fm-panel"><CarpoolPolicySection dict={dict} locale={locale} versions={policyVersions} /></div>
+          <div className="fm-panel">
+            <a href="/settings/mobility-points" className="fm-link">
+              {dict.mobilityPoints.title} →
+            </a>
+          </div>
         </div>
       </section>
-    </AppShell>
+    </FmShell>
   );
 }

@@ -113,7 +113,7 @@ export function ReservationGantt({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {GANTT_LEGEND.map((item) => (
             <span key={item.label} className="flex items-center gap-1 text-[11px] text-fog-400">
-              <span className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm text-[9px] text-ink-950 ${item.className}`}>
+              <span aria-hidden="true" className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm text-[9px] text-ink-950 ${item.className}`}>
                 {item.icon}
               </span>
               {item.label}

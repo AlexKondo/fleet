@@ -1364,4 +1364,72 @@ export type Dictionary = {
       newVersionHint: string;
     };
   };
+  /** FleetMind v2.0, group B (Command Center, Veículos, Portaria, Relatórios, Usuários, Políticas). */
+  ops: {
+    cc: {
+      title: string;
+      subtitle: string;
+      kpisLabel: string;
+      kpiVehicles: string;
+      kpiVehiclesBar: string;
+      kpiPending: string;
+      kpiActive: string;
+      kpiConflicts: string;
+      kpiTasks: string;
+      kpiTasksMine: string;
+      kpiCapped: string;
+      kpiAttention: string;
+    };
+    gate: {
+      title: string;
+      subtitle: string;
+      kpisLabel: string;
+      kpiPickup: string;
+      kpiInUse: string;
+      kpiReturning: string;
+      searchTitle: string;
+      viewLabel: string;
+      tabAll: string;
+      tabPickup: string;
+      tabReturn: string;
+      noneInView: string;
+      capNote: string;
+    };
+    fleet: {
+      subtitle: string;
+      kpisLabel: string;
+      kpiTotal: string;
+      kpiStatusBar: string;
+      detailSubtitle: string;
+    };
+    reports: {
+      title: string;
+      subtitle: string;
+      kpisLabel: string;
+      kpiCompletedTrips: string;
+      kpiAvgKm: string;
+      kpiUnderused: string;
+      kpiMaintenance: string;
+      kpiCarpoolRate: string;
+      noData: string;
+      noCostData: string;
+    };
+    carpoolMgr: {
+      subtitle: string;
+    };
+    users: {
+      title: string;
+      subtitle: string;
+      summaryLabel: string;
+      kpiTotal: string;
+      kpiAuthorized: string;
+      kpiNoLicense: string;
+      kpiByRole: string;
+    };
+    settings: {
+      title: string;
+      subtitle: string;
+      summaryLabel: string;
+    };
+  };
 };

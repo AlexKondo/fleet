@@ -6,7 +6,8 @@ import { getLocale, getDictionary } from "@/lib/i18n/getLocale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { loadOrgConfig } from "@/lib/domain/orgConfig";
-import { AppShell } from "../AppShell";
+import { FmShell } from "../carpool/FmShell";
+import { FmCalendarIcon, FmCarIcon, FmRouteIcon, FmUsersIcon, FmWrenchIcon } from "../fmIcons";
 import { StatBar } from "./StatBar";
 
 /**
@@ -200,20 +201,26 @@ export default async function AnalyticsPage() {
   const carpoolRatePercent =
     totalTripRequests > 0 ? Math.round((totalParticipants / totalTripRequests) * 100) : 0;
 
+  const o = dict.ops.reports;
+  const totalCompleted = vehicleStats.reduce((n, v) => n + v.completedTrips, 0);
+
   return (
-    <AppShell
+    <FmShell
       active="analytics"
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title={t.title}
+      title={o.title}
+      subtitle={o.subtitle}
+      legacy
+      wide
       headerActions={
         <Link
           href="/analytics/carpool"
           data-testid="carpool-kpi-link"
-          className="text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:opacity-80"
+          className="fm-btn fm-btn-ghost"
         >
           {dict.carpoolKpi.linkFromAnalytics}
         </Link>
@@ -221,11 +228,51 @@ export default async function AnalyticsPage() {
     >
 
       {vehiclesError ? (
-        <p className="px-6 py-4 text-sm text-signal-red">{t.loadError}</p>
+        <p role="alert" className="fm-banner fm-banner-danger" style={{ marginTop: 0 }}>{t.loadError}</p>
       ) : (
         <>
-          <section className="border-b border-line-800 px-6 py-4">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+          <section className="fm-kpis" aria-label={o.kpisLabel} data-testid="reports-kpis" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
+            <div className="fm-kpi" data-testid="reports-kpi-trips">
+              <span className="fm-kpi-icon"><FmCalendarIcon /></span>
+              <div className="fm-kpi-body">
+                <p className="fm-kpi-value">{totalCompleted}</p>
+                <p className="fm-kpi-label">{o.kpiCompletedTrips}</p>
+              </div>
+            </div>
+            <div className="fm-kpi" data-testid="reports-kpi-avgkm">
+              <span className="fm-kpi-icon" data-tone="ok"><FmRouteIcon /></span>
+              <div className="fm-kpi-body">
+                <p className="fm-kpi-value">{avgKmPerTrip === null ? "—" : `${avgKmPerTrip} ${t.units.km}`}</p>
+                <p className="fm-kpi-label">{o.kpiAvgKm}</p>
+                {avgKmPerTrip === null ? <p className="fm-kpi-sub">{o.noData}</p> : null}
+              </div>
+            </div>
+            <div className="fm-kpi" data-testid="reports-kpi-underused">
+              <span className="fm-kpi-icon" data-tone={underutilized.length > 0 ? "warn" : "ok"}><FmCarIcon /></span>
+              <div className="fm-kpi-body">
+                <p className="fm-kpi-value">{underutilized.length}</p>
+                <p className="fm-kpi-label">{o.kpiUnderused}</p>
+              </div>
+            </div>
+            <div className="fm-kpi" data-testid="reports-kpi-maint">
+              <span className="fm-kpi-icon" data-tone={maintenancePredictions.length > 0 ? "warn" : "ok"}><FmWrenchIcon /></span>
+              <div className="fm-kpi-body">
+                <p className="fm-kpi-value">{maintenancePredictions.length}</p>
+                <p className="fm-kpi-label">{o.kpiMaintenance}</p>
+              </div>
+            </div>
+            <div className="fm-kpi" data-testid="reports-kpi-carpool">
+              <span className="fm-kpi-icon" data-tone="violet"><FmUsersIcon /></span>
+              <div className="fm-kpi-body">
+                <p className="fm-kpi-value">{totalTripRequests > 0 ? `${carpoolRatePercent}%` : "—"}</p>
+                <p className="fm-kpi-label">{o.kpiCarpoolRate}</p>
+                {totalTripRequests === 0 ? <p className="fm-kpi-sub">{o.noData}</p> : null}
+              </div>
+            </div>
+          </section>
+          <div className="rp-grid">
+          <section className="fm-panel">
+            <h2 className="fm-h2">
               {t.underutilized.title}
             </h2>
             {underutilized.length === 0 ? (
@@ -247,8 +294,8 @@ export default async function AnalyticsPage() {
             )}
           </section>
 
-          <section className="border-b border-line-800 px-6 py-4">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+          <section className="fm-panel">
+            <h2 className="fm-h2">
               {t.maintenance.title}
             </h2>
             {maintenancePredictions.length === 0 ? (
@@ -301,8 +348,8 @@ export default async function AnalyticsPage() {
             </p>
           </section>
 
-          <section className="border-b border-line-800 px-6 py-4">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+          <section className="fm-panel rp-span">
+            <h2 className="fm-h2">
               {t.utilization.title}
             </h2>
             {vehicleStats.length === 0 ? (
@@ -347,8 +394,8 @@ export default async function AnalyticsPage() {
             )}
           </section>
 
-          <section className="border-b border-line-800 px-6 py-4">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+          <section className="fm-panel">
+            <h2 className="fm-h2">
               {t.kmPerTrip.title}
             </h2>
             {tripKm.length === 0 ? (
@@ -390,8 +437,8 @@ export default async function AnalyticsPage() {
             )}
           </section>
 
-          <section className="border-b border-line-800 px-6 py-4">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+          <section className="fm-panel">
+            <h2 className="fm-h2">
               {t.destinations.title}
             </h2>
             {topDestinations.length === 0 ? (
@@ -413,8 +460,8 @@ export default async function AnalyticsPage() {
             )}
           </section>
 
-          <section className="px-6 py-4">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+          <section className="fm-panel rp-span">
+            <h2 className="fm-h2">
               {t.carpooling.title}
             </h2>
             {totalTripRequests === 0 ? (
@@ -448,8 +495,10 @@ export default async function AnalyticsPage() {
               </div>
             )}
           </section>
+          </div>
+          <p className="rp-note" data-testid="reports-omitted-note">{o.noCostData}</p>
         </>
       )}
-    </AppShell>
+    </FmShell>
   );
 }

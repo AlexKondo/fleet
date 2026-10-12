@@ -277,7 +277,7 @@ try {
   await d.goto(BASE + "/account", { waitUntil: "domcontentloaded" });
   record("Other screens are unaffected (/account has no fm-theme wrapper; /trips joined the theme in Lote 1A)", (await d.locator('[data-testid="fm-theme"]').count()) === 0);
   await mg.goto(BASE + "/settings", { waitUntil: "domcontentloaded" });
-  record("Other screens are unaffected (/settings, manager session, has no fm-theme wrapper)", (await mg.locator('[data-testid="fm-theme"]').count()) === 0);
+  record("Other screens: /settings (manager session) is now the Lote 1B FleetMind screen (has the fm-theme wrapper)", (await mg.locator('[data-testid="fm-theme"]').count()) === 1);
   const carpoolPage = await newPage(U.rider3, { width: 1440, height: 900 });
   await carpoolPage.goto(BASE + "/carpool", { waitUntil: "domcontentloaded" });
   record("/carpool still renders in the same shell (nav marks Buscar Carona)", /Buscar Carona/.test(await carpoolPage.locator('.fm-sidebar a[aria-current="page"]').innerText()));

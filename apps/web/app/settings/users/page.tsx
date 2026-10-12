@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { AppShell } from "../../AppShell";
+import { FmShell } from "../../carpool/FmShell";
+import { FmAlertIcon, FmCheckIcon, FmUsersIcon } from "../../fmIcons";
 import { InviteUserModal } from "./InviteUserModal";
 import { UserRow } from "./UserRow";
 import { UserTable } from "./UserTable";
@@ -67,22 +68,33 @@ export default async function UsersPage() {
     }),
   );
 
+  const o = dict.ops.users;
+  const roleLabels = getRoleLabels(dict);
+  const roleCounts = new Map<string, number>();
+  for (const m of members) roleCounts.set(m.role, (roleCounts.get(m.role) ?? 0) + 1);
+  const authorizedCount = members.filter((m) => m.driver_authorized).length;
+  const noLicenseCount = members.filter((m) => !m.drivers_license_number).length;
+
   return (
-    <AppShell
+    <FmShell
       active="team"
       orgName={profile.organization?.name ?? "—"}
       userName={profile.full_name ?? user.email ?? "—"}
       role={profile.role}
       isFleetManager
       isAdministrator
-      title={dict.team.title}
+      title={o.title}
+      subtitle={o.subtitle}
+      legacy
+      wide
       headerActions={<InviteUserModal dict={dict} />}
     >
 
       {profilesError ? (
         <div
           role="alert"
-          className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
+          className="fm-banner fm-banner-danger"
+          style={{ marginTop: 0, marginBottom: 16 }}
         >
           {dict.team.loadError}
         </div>
@@ -91,14 +103,52 @@ export default async function UsersPage() {
         <div
           role="alert"
           data-testid="license-load-error"
-          className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
+          className="fm-banner fm-banner-danger"
+          style={{ marginTop: 0, marginBottom: 16 }}
         >
           {dict.team.licenseLoadError}
         </div>
       ) : null}
 
-      <section className="px-6 py-4">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-fog-400">
+      <section className="us-summary fm-kpis" aria-label={o.summaryLabel} data-testid="users-summary" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
+        <div className="fm-kpi" data-testid="users-kpi-total">
+          <span className="fm-kpi-icon"><FmUsersIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{members.length}</p>
+            <p className="fm-kpi-label">{o.kpiTotal}</p>
+          </div>
+        </div>
+        <div className="fm-kpi" data-testid="users-kpi-authorized">
+          <span className="fm-kpi-icon" data-tone="ok"><FmCheckIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{licensesAvailable ? authorizedCount : "—"}</p>
+            <p className="fm-kpi-label">{o.kpiAuthorized}</p>
+          </div>
+        </div>
+        <div className="fm-kpi" data-testid="users-kpi-nolicense">
+          <span className="fm-kpi-icon" data-tone={licensesAvailable && noLicenseCount > 0 ? "warn" : "ok"}><FmAlertIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{licensesAvailable ? noLicenseCount : "—"}</p>
+            <p className="fm-kpi-label">{o.kpiNoLicense}</p>
+          </div>
+        </div>
+        <div className="fm-kpi fm-kpi-roles" data-testid="users-kpi-roles">
+          <div className="fm-kpi-body" style={{ gridColumn: "1 / -1" }}>
+            <p className="fm-kpi-label">{o.kpiByRole}</p>
+            <ul className="fm-legend">
+              {[...roleCounts.entries()].map(([r, n]) => (
+                <li key={r}>
+                  <span>{roleLabels[r] ?? r}</span>
+                  <strong>{n}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="fm-panel us-wrap">
+        <h2 className="fm-h2">
           {dict.team.membersHeading.replace("{count}", String(members.length))}
         </h2>
 
@@ -129,13 +179,13 @@ export default async function UsersPage() {
           }))}
         />
 
-        <p className="text-xs text-fog-600">
+        <p className="text-xs text-fog-600" data-testid="roles-legend">
           {dict.team.rolesLegend.replace(
             "{roles}",
             Object.values(getRoleLabels(dict)).join(" · "),
           )}
         </p>
       </section>
-    </AppShell>
+    </FmShell>
   );
 }

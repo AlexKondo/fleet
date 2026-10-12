@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { publishCarpoolPolicy, type CarpoolPolicyActionState } from "./carpoolPolicyActions";
 import { fillTemplate } from "@/lib/carpool/errorText";
 import { POLICY_BOUNDS } from "@/lib/carpool/policyInput";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTimeShort } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { CarpoolPolicyConfig } from "@fleet/domain";
@@ -119,7 +119,7 @@ export function CarpoolPolicySection({
               <li key={row.version} className="rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2 text-xs text-fog-400">
                 <span className="font-mono text-paper-50">{fillTemplate(t.versionLabel, { version: row.version })}</span>
                 {" · "}
-                {fillTemplate(t.publishedAt, { date: formatDateTime(row.createdAt, locale) })}
+                {fillTemplate(t.publishedAt, { date: formatDateTimeShort(row.createdAt, locale) })}
                 {" · "}±{row.values.departureWindowMinutes} min · {row.values.maxAdditionalDistanceKm} km /{" "}
                 {row.values.maxAdditionalTimeMinutes} min
                 {!row.values.carpoolEnabled ? ` · ${t.carpoolEnabled}: ✗` : ""}

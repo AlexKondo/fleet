@@ -195,7 +195,7 @@ try {
   record("Other screens are unaffected (/account has no fm-theme wrapper; /trips joined the theme in Lote 1A)", (await d.locator('[data-testid="fm-theme"]').count()) === 0);
   const mgrP = await newPage(U.mgr, { width: 1280, height: 900 });
   await mgrP.goto(BASE + "/settings", { waitUntil: "domcontentloaded" });
-  record("Other screens are unaffected (/settings, manager session, has no fm-theme wrapper)", (await mgrP.locator('[data-testid="fm-theme"]').count()) === 0);
+  record("Other screens: /settings (manager session) is now the Lote 1B FleetMind screen (has the fm-theme wrapper)", (await mgrP.locator('[data-testid="fm-theme"]').count()) === 1);
 } catch (e) {
   record("FATAL (unexpected exception)", false, String(e && e.stack ? e.stack : e));
 } finally {

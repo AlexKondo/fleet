@@ -63,10 +63,13 @@ try {
   const tHost = await token(U.host.email);
   const dep = new Date(Date.now() + 30 * 3600e3), ret = new Date(dep.getTime() + 4 * 3600e3);
   const created = await rpc(tHost, "create_vehicle_reservation", {
-    p_departure_at: dep.toISOString(), p_expected_return_at: ret.toISOString(), p_origin: `${XSS3} ${UNI}`, p_destination: `${XSS1} ${SQLI} ${LONG}`,
+    p_departure_at: dep.toISOString(), p_expected_return_at: ret.toISOString(), p_origin: `${XSS3} ${UNI}`, p_destination: `${XSS1} ${SQLI}`,
     p_distance_km: 12, p_passenger_count: 1, p_requires_cargo: false, p_justification: XSS2, p_vehicle_id: A.vehicles[0].id, p_allow_carpool: true,
   });
   record("seed: hostile reservation created through create_vehicle_reservation", created.ok, created.ok ? undefined : created.body);
+  // Migration 0067 caps notification bodies at 1000 chars, so the RPC (which notifies the managers) refuses a 5000-char destination:
+  // the reservation is created with the short hostile destination and the long one is stored afterwards with an admin UPDATE (the DB itself has no limit).
+  await sql(`update trip_requests set destination = '${(`${XSS1} ${SQLI} ${LONG}`).replace(/'/g, "''")}' where requester_id='${U.host.id}'`);
   const [trip] = await sql(`select tr.id trip, r.id res, tr.destination from trip_requests tr join reservations r on r.trip_request_id=tr.id where tr.requester_id='${U.host.id}'`);
   record("seed: the 5000+ char destination is stored (DB has no limit); the form/chat paths clamp it to 300 chars (see unit tests)", trip.destination.length > 5000, { len: trip.destination.length });
   const en = await rpc(tHost, "enable_carpool_offer", { p_trip_request_id: trip.trip, p_seats: 3 });

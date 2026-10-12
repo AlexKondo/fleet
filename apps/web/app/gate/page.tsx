@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTimeShort } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
-import { AppShell } from "../AppShell";
+import { FmShell } from "../carpool/FmShell";
+import { FmArrowInIcon, FmArrowOutIcon, FmCarIcon } from "../fmIcons";
 import { getStatusMeta } from "../dashboard/statusMeta";
 import { GateList, type GateRow } from "./GateList";
 
@@ -83,38 +84,73 @@ export default async function GatePage() {
         vehicleName: r.vehicle?.name ?? null,
         requesterName: r.trip_request?.requester?.full_name ?? null,
         route: `${r.trip_request?.origin ?? "—"} → ${r.trip_request?.destination ?? "—"}`,
-        startAt: formatDateTime(r.start_at, locale),
+        startAt: formatDateTimeShort(r.start_at, locale),
         statusLabel: meta?.label ?? vehicleStatus,
         statusClass: meta?.text ?? "text-fog-400",
+        status: vehicleStatus,
         action: (PICKUP_VEHICLE_STATUSES as readonly string[]).includes(vehicleStatus)
           ? "pickup"
           : "return",
       };
     });
 
+  const g = dict.ops.gate;
+  const pickupCount = rows.filter((r) => r.action === "pickup").length;
+  // distinct VEHICLES (a vehicle can have more than one confirmed reservation row in the list)
+  const inUseCount = new Set(rows.filter((r) => r.status === "in_use").map((r) => r.plate)).size;
+  const returningCount = new Set(rows.filter((r) => r.status === "returning").map((r) => r.plate)).size;
+  // the reservation query is .limit(100): say so instead of showing a silently truncated count
+  const capped = (reservations?.length ?? 0) >= 100;
+  const plus = capped ? "+" : "";
+
   return (
-    <AppShell
+    <FmShell
       active="gate"
       orgName={profile.organization?.name ?? "—"}
       userName={profile.full_name ?? user.email ?? "—"}
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title={dict.gate.title}
+      title={g.title}
+      subtitle={g.subtitle}
+      legacy
+      wide
     >
       {loadError ? (
-        <div
-          role="alert"
-          className="border-b border-signal-red/40 bg-signal-red/10 px-6 py-3 text-sm text-signal-red"
-        >
+        <div role="alert" className="fm-banner fm-banner-danger" style={{ marginTop: 0, marginBottom: 16 }}>
           {dict.gate.loadError}
         </div>
       ) : null}
 
-      <section className="px-6 py-6">
-        <p className="mb-4 max-w-2xl text-sm text-fog-400">{dict.gate.description}</p>
-        <GateList rows={rows} dict={dict} />
+      <section className="fm-kpis" aria-label={g.kpisLabel} data-testid="gate-kpis" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+        <div className="fm-kpi" data-testid="gate-kpi-pickup">
+          <span className="fm-kpi-icon"><FmArrowOutIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{pickupCount}{plus}</p>
+            <p className="fm-kpi-label">{g.kpiPickup}</p>
+          </div>
+        </div>
+        <div className="fm-kpi" data-testid="gate-kpi-inuse">
+          <span className="fm-kpi-icon" data-tone="ok"><FmCarIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{inUseCount}{plus}</p>
+            <p className="fm-kpi-label">{g.kpiInUse}</p>
+          </div>
+        </div>
+        <div className="fm-kpi" data-testid="gate-kpi-returning">
+          <span className="fm-kpi-icon" data-tone="violet"><FmArrowInIcon /></span>
+          <div className="fm-kpi-body">
+            <p className="fm-kpi-value">{returningCount}{plus}</p>
+            <p className="fm-kpi-label">{g.kpiReturning}</p>
+          </div>
+        </div>
       </section>
-    </AppShell>
+
+      {capped ? (
+        <p role="status" className="fm-banner" data-testid="gate-cap-note" style={{ marginTop: 0, marginBottom: 16 }}>{g.capNote}</p>
+      ) : null}
+
+      <GateList rows={rows} dict={dict} capped={capped} />
+    </FmShell>
   );
 }

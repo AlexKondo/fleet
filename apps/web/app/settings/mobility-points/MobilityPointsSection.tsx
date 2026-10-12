@@ -30,7 +30,6 @@ export function MobilityPointsSection({
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-semibold text-paper-50">{t.title}</h1>
       <p className="mb-4 text-xs text-fog-400">{t.description}</p>
 
       <ul className="mb-6 flex flex-col gap-1.5">

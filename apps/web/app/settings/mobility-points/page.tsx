@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { AppShell } from "../../AppShell";
+import { FmShell } from "../../carpool/FmShell";
 import { getDictionary } from "../../../lib/i18n/getLocale";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
 import { MobilityPointsSection } from "./MobilityPointsSection";
@@ -38,7 +38,7 @@ export default async function MobilityPointsPage() {
   const points = result.status === "ok" ? result.data : [];
 
   return (
-    <AppShell
+    <FmShell
       active="settings"
       orgName={profile.organization?.name ?? "—"}
       userName={profile.full_name ?? user.email ?? "—"}
@@ -46,10 +46,11 @@ export default async function MobilityPointsPage() {
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
       title={dict.mobilityPoints.title}
+      legacy
     >
-      <section className="px-6 py-6">
+      <section className="fm-panel">
         <MobilityPointsSection dict={dict} points={points} />
       </section>
-    </AppShell>
+    </FmShell>
   );
 }

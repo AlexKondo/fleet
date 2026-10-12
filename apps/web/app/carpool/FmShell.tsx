@@ -12,6 +12,7 @@ import { FindRideIcon, LogoutIcon, TripsIcon } from "../NavIcons";
 import { buildBaseNavItems, loadShellContext, type NavKey } from "../shellData";
 import "./fm-theme.css";
 import "./fm-shared.css";
+import "../fm-ops.css";
 
 /**
  * Scoped shell of the new FleetMind look (SCR-USR-003 / SCR-USR-002): navy sidebar on desktop, bottom navigation
@@ -27,6 +28,11 @@ export async function FmShell({
   isFleetManager,
   isAdministrator,
   active = "carpool",
+  title,
+  subtitle,
+  headerActions,
+  legacy = false,
+  wide = false,
   children,
 }: {
   orgName: string;
@@ -36,6 +42,15 @@ export async function FmShell({
   isAdministrator: boolean;
   /** Which nav item is the current page. */
   active?: NavKey;
+  /** Group B (manager/security/admin screens): page title row rendered at the top of the content. */
+  title?: string;
+  subtitle?: string;
+  /** Page-specific header controls (hidden while the license gate is active, like the old AppShell). */
+  headerActions?: React.ReactNode;
+  /** Content still uses the legacy Tailwind markup: restyled by fm-ops.css under `.fm-legacy`. */
+  legacy?: boolean;
+  /** Wider content column (dashboards, tables). */
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState } =
@@ -51,7 +66,9 @@ export async function FmShell({
   // dashboard first, then the two rider destinations, then the shared items
   const items = [base[0]!, ...extra, ...base.slice(1)].filter((i) => i.visible);
   // the bottom bar only fits the main destinations; the hamburger menu (MobileNav) lists everything
-  const bottomKeys: NavKey[] = ["dashboard", "carpool", "book", "trips"];
+  // (employees: home + rider destinations; operations roles: their own working screens)
+  const isOps = role !== "employee";
+  const bottomKeys: NavKey[] = isOps ? ["dashboard", "gate", "fleet", "trips", "carpool"] : ["dashboard", "carpool", "book", "trips"];
   const bottomItems = items.filter((i) => bottomKeys.includes(i.key));
 
   const link = ({ key, href, label, icon: Icon }: (typeof items)[number]) => (
@@ -90,7 +107,8 @@ export async function FmShell({
           <p className="fm-topbar-brand">FleetMind</p>
           <div className="fm-topbar-right">
             <LanguageToggle locale={locale} dict={dict} />
-            <ThemeToggle dict={dict} />
+            {/* the FleetMind v2.0 look is light-only; the theme toggle would do nothing on these screens */}
+            {legacy ? null : <ThemeToggle dict={dict} />}
           {licenseGateActive ? null : (
             <div className="fm-mobilenav">
               <MobileNav
@@ -123,7 +141,18 @@ export async function FmShell({
             {dict.chrome.licenseGateNotice}
           </p>
         ) : null}
-        <main className="fm-content">{children}</main>
+        <main className={wide ? "fm-content fm-content-wide" : "fm-content"}>
+          {title ? (
+            <div className="fm-ops-head">
+              <div className="fm-ops-head-text">
+                <h1 className="fm-title">{title}</h1>
+                {subtitle ? <p className="fm-subtitle">{subtitle}</p> : null}
+              </div>
+              {headerActions && !licenseGateActive ? <div className="fm-ops-actions fm-legacy">{headerActions}</div> : null}
+            </div>
+          ) : null}
+          {legacy ? <div className="fm-legacy">{children}</div> : children}
+        </main>
       </div>
 
       {licenseGateActive ? null : (

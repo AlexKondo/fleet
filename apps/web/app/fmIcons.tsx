@@ -77,3 +77,35 @@ export const FmPlusIcon = () => (
     <path d="M12 5v14M5 12h14" />
   </Svg>
 );
+export const FmArrowOutIcon = () => (
+  <Svg>
+    <path d="M10 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H10" />
+    <path d="M10 12h10" />
+    <path d="m16 8 4 4-4 4" />
+  </Svg>
+);
+export const FmArrowInIcon = () => (
+  <Svg>
+    <path d="M14 4h3.5A1.5 1.5 0 0 1 19 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14" />
+    <path d="M4 12h10" />
+    <path d="m10 8 4 4-4 4" />
+  </Svg>
+);
+export const FmSearchIcon = () => (
+  <Svg>
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="m16 16 4.5 4.5" />
+  </Svg>
+);
+export const FmWrenchIcon = () => (
+  <Svg>
+    <path d="M20 5.5a5 5 0 0 1-6.6 6.6L5.9 19.6a2.2 2.2 0 0 1-3.1-3.1l7.5-7.5A5 5 0 0 1 16.9 2.4l-3 3 1.9 3.8 3.8 1.9 1-2.6" />
+  </Svg>
+);
+export const FmRouteIcon = () => (
+  <Svg>
+    <circle cx="6" cy="18" r="2.2" />
+    <circle cx="18" cy="6" r="2.2" />
+    <path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.8" />
+  </Svg>
+);
