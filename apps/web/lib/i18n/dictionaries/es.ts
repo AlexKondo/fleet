@@ -1342,6 +1342,20 @@ const dict: Dictionary = {
       newVersionHint: "El formulario de abajo parte de la versión vigente.",
     },
   },
+  routeMap: {
+    title: "Ruta",
+    loading: "Cargando el mapa de la ruta…",
+    unavailable: "Mapa no disponible por el momento.",
+    estimated: "tiempo estimado",
+    approx: "Ruta aproximada entre los centros de los lugares indicados.",
+    alt: "Mapa de la ruta de {origin} a {destination}",
+    origin: "Origen",
+    destination: "Destino",
+    dist: "{km} km",
+    hm: "{h}h {m}min",
+    m: "{m} min",
+    h: "{h}h",
+  },
   ops: {
     cc: {
       title: "Fleet Command Center 360°",

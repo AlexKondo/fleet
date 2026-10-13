@@ -8,6 +8,7 @@ import type { Dictionary } from "../../../lib/i18n/dictionaries";
 import type { CarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { fillTemplate } from "@/lib/carpool/errorText";
 import { CarpoolFirstPanel } from "./CarpoolFirstPanel";
+import { RouteMapCard } from "../../carpool/RouteMapCard";
 import { parseBrasiliaLocalDateTime } from "@/lib/trips/brasiliaLocalDateTime";
 import { RvCarIcon, RvCheckIcon, RvUsersIcon } from "./rvIcons";
 import "./reservar.css";
@@ -329,6 +330,7 @@ export function TripRequestForm({
         </button>
       </form>
 
+      <div className="rv-resultswrap">
       <section className="rv-results" aria-labelledby="rv-results-title">
         <h2 id="rv-results-title" className="fm-sr-only">
           {rv.resultTitle}
@@ -541,6 +543,13 @@ export function TripRequestForm({
           </p>
         ) : null}
       </section>
+      {/* Route map: loaded lazily AFTER the plan, independent of the recommendation (never blocks it). */}
+      {plan && !plan.error && formInput ? (
+        <aside className="rv-mapcol" data-testid="rv-mapcol">
+          <RouteMapCard dict={dict} locale={locale} originText={formInput.origin} destinationText={formInput.destination} />
+        </aside>
+      ) : null}
+      </div>
     </div>
   );
 }

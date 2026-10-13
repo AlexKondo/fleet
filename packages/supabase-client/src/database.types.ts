@@ -529,6 +529,35 @@ export type Database = {
           },
         ]
       }
+      route_map_user_usage: {
+        Row: {
+          day: string
+          updated_at: string
+          user_id: string
+          views: number
+        }
+        Insert: {
+          day: string
+          updated_at?: string
+          user_id: string
+          views?: number
+        }
+        Update: {
+          day?: string
+          updated_at?: string
+          user_id?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_map_user_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       safety_equipment_items: {
         Row: {
           created_at: string
@@ -1599,6 +1628,13 @@ export type Database = {
           p_provider_call_kind: string
         }
         Returns: undefined
+      }
+      consume_route_map_view: {
+        Args: {
+          p_daily_cap: number
+          p_user_id: string
+        }
+        Returns: boolean
       }
       increment_geo_provider_quota_counter: {
         Args: {

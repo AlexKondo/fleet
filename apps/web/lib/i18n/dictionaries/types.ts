@@ -1364,6 +1364,21 @@ export type Dictionary = {
       newVersionHint: string;
     };
   };
+  /** Embedded route map card (Google Static Maps) shared by New Trip, Buscar Carona and the reservation detail. */
+  routeMap: {
+    title: string;
+    loading: string;
+    unavailable: string;
+    estimated: string;
+    approx: string;
+    alt: string;
+    origin: string;
+    destination: string;
+    dist: string;
+    hm: string;
+    m: string;
+    h: string;
+  };
   /** FleetMind v2.0, group B (Command Center, Veículos, Portaria, Relatórios, Usuários, Políticas). */
   ops: {
     cc: {

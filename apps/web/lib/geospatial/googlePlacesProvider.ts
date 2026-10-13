@@ -162,7 +162,11 @@ async function rawSearchPlaces(query: string, apiKey: string): Promise<PlaceSear
  * (`geocode` call kind). Returns `{ status: "unavailable" }` on missing API key, quota
  * block, circuit-open, timeout, malformed response, or non-OK Google status — never throws.
  */
-export async function geocodeAddress(organizationId: string, address: string): Promise<GeocodingOutcome> {
+export async function geocodeAddress(
+  organizationId: string,
+  address: string,
+  callKind: "geocode" | "map_geocode" = "geocode",
+): Promise<GeocodingOutcome> {
   const apiKey = readApiKey();
   if (!apiKey) {
     return { status: "unavailable", reason: "missing_api_key" };
@@ -170,7 +174,7 @@ export async function geocodeAddress(organizationId: string, address: string): P
 
   const guarded = await withCostGuard(
     organizationId,
-    "geocode",
+    callKind,
     () => rawGeocode(address, apiKey),
     (outcome) => outcome.status === "ok",
   );
@@ -205,9 +209,10 @@ export async function searchPlaces(organizationId: string, query: string): Promi
  * organization — constructed per-request since Cost Guard is org-scoped. */
 export function createGooglePlacesProvider(
   organizationId: string,
+  options: { geocodeKind?: "geocode" | "map_geocode" } = {},
 ): GeocodingProvider & PlaceSearchProvider {
   return {
-    geocode: (address: string) => geocodeAddress(organizationId, address),
+    geocode: (address: string) => geocodeAddress(organizationId, address, options.geocodeKind ?? "geocode"),
     searchPlaces: (query: string) => searchPlaces(organizationId, query),
   };
 }

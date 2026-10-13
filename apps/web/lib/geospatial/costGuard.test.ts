@@ -84,6 +84,20 @@ describe("withCostGuard", () => {
     ]);
   });
 
+  it("route-map kinds have their own counters and caps (map_geocode 1000, map_routing 600, static_map 600)", async () => {
+    await withCostGuard("org-1", "static_map", async () => ({ status: "ok" as const }), (r) => r.status === "ok");
+    const kinds = (state.rpcCalls as { args: { p_provider_call_kind: string } }[]).map((c) => c.args.p_provider_call_kind);
+    expect(kinds).toEqual(["static_map", "static_map"]);
+    for (const [kind, cap] of [["map_geocode", 1000], ["map_routing", 600], ["static_map", 600]] as const) {
+      state.row = { call_count: cap, consecutive_failure_count: 0, circuit_state: "closed", circuit_opened_at: null };
+      const doCall = vi.fn(async () => ({ status: "ok" as const }));
+      expect(await withCostGuard("org-1", kind, doCall, (r) => r.status === "ok")).toEqual({ status: "blocked", reason: "daily_quota_exceeded" });
+      expect(doCall).not.toHaveBeenCalled();
+      state.row = { call_count: cap - 1, consecutive_failure_count: 0, circuit_state: "closed", circuit_opened_at: null };
+      expect((await withCostGuard("org-1", kind, doCall, (r) => r.status === "ok")).status).toBe("ok");
+    }
+  });
+
   it("blocks a call once the daily quota is exceeded, and never invokes doCall", async () => {
     state.row = { call_count: 2000, consecutive_failure_count: 0, circuit_state: "closed", circuit_opened_at: null };
     const doCall = vi.fn(async () => ({ status: "ok" as const }));

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useRef, useState, useTransition } from "react";
 import { requestCarpoolRide } from "@/app/carpool/requestActions";
 import { getMyCarpoolRequestStatus } from "@/app/carpool/formActions";
+import { RouteMapCard } from "@/app/carpool/RouteMapCard";
 import { searchBuscarCarona, type BuscarCaronaResult } from "@/app/carpool/searchActions";
 import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
 import { localInputToIso, MAX_SEATS } from "@/lib/carpool/buscarCarona";
@@ -52,6 +53,8 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
   const [busyOffer, setBusyOffer] = useState<string | null>(null);
   const [sent, setSent] = useState<Sent | null>(null);
   const [hideResults, setHideResults] = useState(false);
+  // The places the rider typed in the last search: the route map shows the RIDER's own route only (never a host's).
+  const [searched, setSearched] = useState<{ origin: string; destination: string } | null>(null);
   const [, startRequesting] = useTransition();
 
   // Bound-to-form action (the repo's documented safe shape for session-reading server actions).
@@ -62,6 +65,7 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
     keys.current = new Map();
     const departureAt = localInputToIso(String(formData.get("departureAt") ?? ""));
     if (!departureAt) return { status: "invalid" };
+    setSearched({ origin: String(formData.get("origin") ?? ""), destination: String(formData.get("destination") ?? "") });
     try {
       return await searchBuscarCarona({
         originText: String(formData.get("origin") ?? ""),
@@ -314,6 +318,7 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
           </ul>
         </section>
 
+        <div className="fm-routemap-side">
         <aside className="fm-card fm-summary" data-testid="carpool-places" aria-labelledby="fm-summary-h">
           <h2 className="fm-h2" id="fm-summary-h">{b.searchSummaryTitle}</h2>
           <dl>
@@ -338,6 +343,10 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
           </dl>
           <p className="fm-subtitle" style={{ marginTop: 12, fontSize: 13 }}>{t.confirmHint}</p>
         </aside>
+        {searched ? (
+          <RouteMapCard dict={dict} locale={locale} originText={searched.origin} destinationText={searched.destination} testId="route-map" />
+        ) : null}
+        </div>
       </div>
     );
   }

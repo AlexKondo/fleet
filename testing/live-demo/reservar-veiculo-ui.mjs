@@ -63,7 +63,9 @@ async function fillAndSearch(page, { origin, destination, passengers = 1 }) {
 }
 const outcome = (page) =>
   page.waitForSelector('[data-testid="carpool-offer-card"], [data-testid="host-offer-step"], .rv-vehicle, [data-testid="carpool-needs-precision"], [data-testid="carpool-unavailable"], .rv-error', { timeout: 120000 });
-const bodyText = (page) => page.evaluate(() => document.body.innerText);
+// The embedded route map card (Google Static Maps, added after this script was written) is intentional and
+// is excluded from the "no invented elements" checks; it has its own coverage in mapa-ui.mjs.
+const bodyText = (page) => page.evaluate(() => { const els = [...document.querySelectorAll('[data-testid="route-map"], [data-testid="route-map-unavailable"]')]; const prev = els.map((e) => e.style.display); els.forEach((e) => (e.style.display = "none")); const t = document.body.innerText; els.forEach((e, k) => (e.style.display = prev[k])); return t; });
 const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 const smallTargets = (page) =>
   page.evaluate(() =>
@@ -125,7 +127,7 @@ try {
   const ph = await d.evaluate(() => getComputedStyle(document.querySelector('input[name="destination"]'), "::placeholder").color);
   record("Placeholder contrast on white >= 4.5:1", 1.05 / (lum(ph) + 0.05) >= 4.5, ph);
   const allEmpty = await bodyText(d);
-  record("Empty state: shows hint, no carpool block, no invented elements", (await d.locator('[data-testid="carpool-first"]').count()) === 0 && !INVENTED.test(allEmpty) && (await d.locator(".fm-theme main img").count()) === 0, allEmpty.match(INVENTED)?.[0]);
+  record("Empty state: shows hint, no carpool block, no invented elements", (await d.locator('[data-testid="carpool-first"]').count()) === 0 && !INVENTED.test(allEmpty) && (await d.locator(".fm-theme main img:not([data-testid=\"route-map-img\"])").count()) === 0, allEmpty.match(INVENTED)?.[0]);
   // keyboard focus is visible
   await d.focus('input[name="origin"]');
   await d.keyboard.press("Tab");
@@ -141,7 +143,7 @@ try {
   record("No-carpool state: step header = Viagem done, Veículo current", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:done", "Veículo:current", "Confirmação:todo"]), await stepState(d));
   record("Other eligible vehicle listed with a Escolher button", (await d.locator(".rv-alt").count()) === 1 && (await d.locator('.rv-alt button:has-text("Escolher")').count()) === 1);
   record("Requests-reservation button present", (await d.locator('button:has-text("Solicitar reserva")').count()) === 1);
-  record("No invented elements on result (map/photo/rating/match %/image)", !INVENTED.test(noCarpoolTxt) && (await d.locator(".fm-theme main img").count()) === 0, noCarpoolTxt.match(INVENTED)?.[0]);
+  record("No invented elements on result (map/photo/rating/match %/image)", !INVENTED.test(noCarpoolTxt) && (await d.locator(".fm-theme main img:not([data-testid=\"route-map-img\"])").count()) === 0, noCarpoolTxt.match(INVENTED)?.[0]);
   await d.check('input[name="offerChoice"][value="yes"]');
   await d.waitForSelector('input[name="offerSeats"]');
   const s0 = await d.inputValue('input[name="offerSeats"]');
@@ -201,7 +203,7 @@ try {
   record("Compatible state: vehicle is held back until the rider continues (existing flow)", (await d.locator(".rv-plate").count()) === 0 && (await d.locator('[data-testid="host-offer-step"]').count()) === 0);
   record("Compatible state: step header has 4 steps, Carona current", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:done", "Carona:current", "Veículo:todo", "Confirmação:todo"]), await stepState(d));
   const all = await bodyText(d);
-  record("Compatible state: privacy (no host name) and no invented elements", !all.includes(U.host.fullName) && !INVENTED.test(all) && (await d.locator(".fm-theme main img").count()) === 0, all.match(INVENTED)?.[0]);
+  record("Compatible state: privacy (no host name) and no invented elements", !all.includes(U.host.fullName) && !INVENTED.test(all) && (await d.locator(".fm-theme main img:not([data-testid=\"route-map-img\"])").count()) === 0, all.match(INVENTED)?.[0]);
   record("Compatible state: places confirmation shown", /origem/i.test(await d.locator('[data-testid="carpool-places"]').innerText()));
   await shot(d, "03-desktop-carpool-compatible");
 

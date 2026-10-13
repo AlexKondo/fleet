@@ -1306,6 +1306,20 @@ const dict: Dictionary = {
       newVersionHint: "下面的表单以当前版本为起点。",
     },
   },
+  routeMap: {
+    title: "路线",
+    loading: "正在加载路线地图…",
+    unavailable: "地图暂时不可用。",
+    estimated: "预计时间",
+    approx: "路线为所填地点中心之间的大致路线。",
+    alt: "从 {origin} 到 {destination} 的路线地图",
+    origin: "起点",
+    destination: "终点",
+    dist: "{km} 公里",
+    hm: "{h}小时{m}分钟",
+    m: "{m}分钟",
+    h: "{h}小时",
+  },
   ops: {
     cc: {
       title: "车队指挥中心 360°",

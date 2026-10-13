@@ -424,3 +424,25 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ---------- route map column: stacked under the results on narrow screens, beside them on wide ones ---------- */
+.fm-theme .rv-resultswrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.fm-theme .rv-mapcol {
+  min-width: 0;
+}
+/* 240px sidebar + page padding are already inside the viewport width: content is ~viewport - 300px. */
+@media (min-width: 1180px) {
+  .fm-theme .rv-resultswrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+    align-items: start;
+  }
+  .fm-theme .rv-mapcol {
+    position: sticky;
+    top: 16px;
+  }
+}

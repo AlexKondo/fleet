@@ -13,6 +13,7 @@ import { cancelMyReservation } from "../../trips/actions";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
 import { maxOfferableSeats } from "@fleet/domain";
 import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
+import { RouteMapCard } from "../../carpool/RouteMapCard";
 import { CarpoolHostSection } from "./CarpoolHostSection";
 import { loadHostCarpool } from "./loadHostCarpool";
 import "./checklist.css";
@@ -171,6 +172,17 @@ export default async function ReservationDetailPage({
       ) : null}
     </>
   );
+  // Route map of THIS trip's own origin -> destination, only after the visibility checks above (requester or
+  // privileged role - the same rule as the page itself). Lazy client card: never delays the page.
+  const routeMap = (
+    <RouteMapCard
+      dict={dict}
+      locale={locale}
+      originText={reservation.trip_request.origin}
+      destinationText={reservation.trip_request.destination}
+      testId="route-map"
+    />
+  );
   const tail = (
     <>
       {isOwnReservation && hostCarpool?.showSection ? (
@@ -317,6 +329,8 @@ export default async function ReservationDetailPage({
             ) : null}
           </header>
 
+          {routeMap}
+
           {tail}
         </div>
       </FmShell>
@@ -428,6 +442,8 @@ export default async function ReservationDetailPage({
           </div>
         ) : null}
       </header>
+
+      <div className="mt-4">{routeMap}</div>
 
       {tail}
       </div>

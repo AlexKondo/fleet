@@ -180,6 +180,79 @@ export async function evaluateRouteInsertion(
   return { status: "ok", result };
 }
 
+/**
+ * Route + overview polyline for the embedded route map (one Routes API call, Cost Guard `map_routing` kind).
+ * Deliberately NOT traffic-aware (no `routingPreference`): the duration is the plain estimated driving time and
+ * the UI labels it as such. Only the three fields the map needs are requested.
+ */
+export type RoutePolylineOutcome =
+  | { status: "ok"; distanceKm: number; durationMin: number; encodedPolyline: string }
+  | { status: "unavailable"; reason: string };
+
+const POLYLINE_FIELD_MASK = "routes.polyline.encodedPolyline,routes.distanceMeters,routes.duration";
+/** Sanity cap on the encoded polyline accepted from Google (an overview polyline is a few KB). */
+const MAX_ENCODED_POLYLINE_CHARS = 200_000;
+
+async function rawComputeRouteWithPolyline(origin: LatLng, destination: LatLng, apiKey: string): Promise<RoutePolylineOutcome> {
+  try {
+    const response = await fetch(COMPUTE_ROUTES_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": POLYLINE_FIELD_MASK,
+      },
+      body: JSON.stringify({
+        origin: toWaypoint(origin),
+        destination: toWaypoint(destination),
+        travelMode: "DRIVE",
+        units: "METRIC",
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) return { status: "unavailable", reason: `routes_http_${response.status}` };
+    const json: unknown = await response.json();
+    if (typeof json !== "object" || json === null) return { status: "unavailable", reason: "malformed_routes_response" };
+    const body = json as {
+      routes?: Array<{ distanceMeters?: number; duration?: string; polyline?: { encodedPolyline?: string } }>;
+    };
+    const route = Array.isArray(body.routes) ? body.routes[0] : undefined;
+    if (!route) return { status: "unavailable", reason: "routes_no_route_found" };
+    const durationMin = parseDurationSecondsToMinutes(route.duration);
+    const encoded = route.polyline?.encodedPolyline;
+    if (
+      typeof route.distanceMeters !== "number" ||
+      durationMin === undefined ||
+      typeof encoded !== "string" ||
+      encoded.length === 0 ||
+      encoded.length > MAX_ENCODED_POLYLINE_CHARS
+    ) {
+      return { status: "unavailable", reason: "routes_missing_fields" };
+    }
+    return { status: "ok", distanceKm: route.distanceMeters / 1000, durationMin, encodedPolyline: encoded };
+  } catch (err) {
+    return { status: "unavailable", reason: providerErrorReason("routes", err) };
+  }
+}
+
+export async function computeRouteWithPolyline(
+  organizationId: string,
+  origin: LatLng,
+  destination: LatLng,
+): Promise<RoutePolylineOutcome> {
+  const apiKey = readApiKey();
+  if (!apiKey) return { status: "unavailable", reason: "missing_api_key" };
+  // route-map feature: its own `map_routing` counter / breaker (never the carpool `routing` one)
+  const guarded = await withCostGuard(
+    organizationId,
+    "map_routing",
+    () => rawComputeRouteWithPolyline(origin, destination, apiKey),
+    (outcome) => outcome.status === "ok",
+  );
+  if (guarded.status === "blocked") return { status: "unavailable", reason: guarded.reason };
+  return guarded.result;
+}
+
 /** Concrete `RoutingProvider` implementation bound to one organization (Cost Guard is
  * org-scoped, so this is constructed per-request/per-search rather than as a singleton). */
 export function createGoogleRoutingProvider(organizationId: string): RoutingProvider {

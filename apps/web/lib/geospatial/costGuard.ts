@@ -35,12 +35,29 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
  * `analyzeDriversLicense.ts`.
  */
 
-export type ProviderCallKind = "geocode" | "place_search" | "routing";
+/**
+ * `geocode` / `place_search` / `routing` belong to carpool matching. The embedded route map (cosmetic) has its OWN kinds
+ * - `map_geocode`, `map_routing`, `static_map` (migration 0072) - so it can never consume the carpool quotas nor feed the
+ * carpool circuit breakers, and a Static Maps failure only opens ITS breaker.
+ */
+export type ProviderCallKind =
+  | "geocode"
+  | "place_search"
+  | "routing"
+  | "map_geocode"
+  | "map_routing"
+  | "static_map";
 
+// Per organization per UTC day. Map caps are deliberately lower than the carpool ones: one map view = 2 map_geocode
+// + 1 map_routing + 1 static_map, so 600 views/day/org (static_map and map_routing) and 1000 geocodes (> 2 x 500 views
+// of headroom for retries) bound the cosmetic spend.
 const DAILY_CALL_CAP: Record<ProviderCallKind, number> = {
   geocode: 2000,
   place_search: 500,
   routing: 1000,
+  map_geocode: 1000,
+  map_routing: 600,
+  static_map: 600,
 };
 
 const FAILURE_THRESHOLD = 5;
