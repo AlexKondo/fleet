@@ -558,6 +558,38 @@ export type Database = {
           },
         ]
       }
+      user_daily_geo_usage: {
+        Row: {
+          calls: number
+          day: string
+          kind: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calls?: number
+          day: string
+          kind: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+          kind?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_daily_geo_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       safety_equipment_items: {
         Row: {
           created_at: string
@@ -1628,6 +1660,14 @@ export type Database = {
           p_provider_call_kind: string
         }
         Returns: undefined
+      }
+      consume_user_geo_quota: {
+        Args: {
+          p_daily_cap: number
+          p_kind: string
+          p_user_id: string
+        }
+        Returns: boolean
       }
       consume_route_map_view: {
         Args: {

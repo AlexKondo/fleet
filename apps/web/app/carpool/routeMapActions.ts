@@ -1,8 +1,10 @@
-"use server";
+import "server-only";
 
 /**
- * Embedded route map (Google Static Maps) for the signed-in user's OWN route. The actor always comes from the
- * session (never a client id); the org carpool/geo policy gates it (an unreadable policy fails closed); both
+ * Embedded route map (Google Static Maps) for the signed-in user's OWN route. Served by the route handler
+ * POST /api/geo/route-map (NOT a server action: Next runs server actions one at a time per tab, which made the map wait
+ * for / block the plan submit). The actor always comes from the session (never a client id); it needs an authenticated user
+ * of an org (it does NOT depend on the carpool policy: the map is useful with carpool off); both
  * places go through the existing resolver (Corporate Mobility Points, then the Cost Guard-metered geocoder);
  * the route and the image are Cost Guard-metered Google calls; the PNG comes back as a data URL, so there is no
  * public proxy endpoint and the API key never leaves the server. Every failure is a fixed reason code.
@@ -16,7 +18,6 @@ import { getLocale } from "@/lib/i18n/getLocale";
 import type { Locale } from "@/lib/i18n/locales";
 import { RouteMapCache, routeMapCacheKey } from "@/lib/geospatial/routeMapCache";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
@@ -77,8 +78,6 @@ export async function getTripRouteMap(raw: { originText: string; destinationText
     const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user.id).single();
     if (!profile) return { status: "unavailable", reason: "not_authenticated" };
 
-    const policy = await loadLatestPolicy(supabase, profile.organization_id);
-    if (!policy.ok || !policy.policy.carpoolEnabled) return { status: "unavailable", reason: "disabled" };
     if (throttled(user.id)) return { status: "unavailable", reason: "rate_limited" };
 
     // Per-user DB daily cap BEFORE any provider call (a cache hit below still consumes a view). Fail closed.

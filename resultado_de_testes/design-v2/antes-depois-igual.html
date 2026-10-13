@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reservar Veículo: arte x implementação</title>
+<style>
+  body { font-family: system-ui, "Segoe UI", sans-serif; margin: 0; background: #f4f7fb; color: #19283b; }
+  header { padding: 24px 32px 8px; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  p.sub { margin: 0; color: #4d5f74; max-width: 980px; }
+  section { padding: 16px 32px 24px; }
+  h2 { font-size: 18px; margin: 16px 0 8px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  figure { margin: 0; background: #fff; border: 1px solid #dce4ee; border-radius: 12px; padding: 10px; }
+  figcaption { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  figcaption span { font-weight: 500; color: #4d5f74; }
+  img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .mobile .pair { grid-template-columns: repeat(2, minmax(0, 360px)); }
+  @media (max-width: 900px) { .pair { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Reservar Veículo: arte aprovada x implementação real</h1>
+  <p class="sub">Esquerda: arte (design-v2/usr002). Direita: captura real da tela /trips/new (Playwright, dados reais, org descartável). Sem fotos de carros, avaliações, Match % ou filtro "Automático": a base não tem esses dados.</p>
+</header>
+
+<section>
+  <h2>1. Com caronas compatíveis (art06-web)</h2>
+  <div class="pair">
+    <figure><figcaption>Arte <span>art06-web.png</span></figcaption><img src="usr002/art06-web.png" alt="Arte 06 desktop"></figure>
+    <figure><figcaption>Implementado <span>05-desktop-1440-carpool-and-vehicles.png</span></figcaption><img src="implemented-igual/05-desktop-1440-carpool-and-vehicles.png" alt="Implementação com caronas e veículos"></figure>
+  </div>
+  <h2>Mesma tela, só a primeira dobra</h2>
+  <div class="pair">
+    <figure><figcaption>Arte <span>art06-web.png</span></figcaption><img src="usr002/art06-web.png" alt="Arte 06 desktop"></figure>
+    <figure><figcaption>Implementado <span>05v-desktop-1440-carpool-viewport.png</span></figcaption><img src="implemented-igual/05v-desktop-1440-carpool-viewport.png" alt="Implementação, primeira dobra"></figure>
+  </div>
+</section>
+
+<section>
+  <h2>2. Sem caronas na rota (art04-web)</h2>
+  <div class="pair">
+    <figure><figcaption>Arte <span>art04-web.png</span></figcaption><img src="usr002/art04-web.png" alt="Arte 04 desktop"></figure>
+    <figure><figcaption>Implementado <span>04-desktop-1440-no-carpool-vehicles.png</span></figcaption><img src="implemented-igual/04-desktop-1440-no-carpool-vehicles.png" alt="Implementação sem caronas"></figure>
+  </div>
+</section>
+
+<section class="mobile">
+  <h2>3. Mobile 390 (art06-mobile / art04-mobile)</h2>
+  <div class="pair">
+    <figure><figcaption>Arte <span>art06-mobile.png</span></figcaption><img src="usr002/art06-mobile.png" alt="Arte 06 mobile"></figure>
+    <figure><figcaption>Implementado, formulário <span>07-mobile-390-form-viewport.png</span></figcaption><img src="implemented-igual/07-mobile-390-form-viewport.png" alt="Implementação mobile formulário"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Arte <span>art04-mobile.png</span></figcaption><img src="usr002/art04-mobile.png" alt="Arte 04 mobile"></figure>
+    <figure><figcaption>Implementado, veículos <span>09-mobile-390-vehicles-viewport.png</span></figcaption><img src="implemented-igual/09-mobile-390-vehicles-viewport.png" alt="Implementação mobile veículos"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Implementado, tela inteira <span>08-mobile-390-full.png</span></figcaption><img src="implemented-igual/08-mobile-390-full.png" alt="Implementação mobile completa"></figure>
+  </div>
+</section>
+
+<section>
+  <h2>4. Autocomplete de endereços (Google Places) e busca global</h2>
+  <div class="pair">
+    <figure><figcaption>Sugestões ao digitar <span>10-desktop-autocomplete-open.png</span></figcaption><img src="implemented-igual/10-desktop-autocomplete-open.png" alt="Autocomplete aberto"></figure>
+    <figure><figcaption>Ponto corporativo primeiro <span>11-desktop-autocomplete-point-first.png</span></figcaption><img src="implemented-igual/11-desktop-autocomplete-point-first.png" alt="Ponto corporativo primeiro"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Busca global Ctrl+K <span>02-desktop-global-search.png</span></figcaption><img src="implemented-igual/02-desktop-global-search.png" alt="Busca global"></figure>
+    <figure><figcaption>Mapa no topo, ao lado do formulário <span>03-desktop-1440-map-top.png</span></figcaption><img src="implemented-igual/03-desktop-1440-map-top.png" alt="Mapa no topo"></figure>
+  </div>
+</section>
+
+<section>
+  <h2>4b. Mobile 390: lista aberta sem cobrir a barra inferior / botão do chat; política de carona desligada (sem o toggle)</h2>
+  <div class="pair">
+    <figure><figcaption>Autocomplete aberto no mobile <span>13-mobile-390-autocomplete-open.png</span></figcaption><img src="implemented-igual/13-mobile-390-autocomplete-open.png" alt="Autocomplete mobile"></figure>
+    <figure><figcaption>Org com carona desligada <span>14-desktop-carpool-off-no-toggle.png</span></figcaption><img src="implemented-igual/14-desktop-carpool-off-no-toggle.png" alt="Sem toggle de carona"></figure>
+  </div>
+</section>
+
+<section>
+  <h2>5. Larguras intermediárias e queda do provedor</h2>
+  <div class="pair">
+    <figure><figcaption>1100 px <span>06-width-1100.png</span></figcaption><img src="implemented-igual/06-width-1100.png" alt="Largura 1100"></figure>
+    <figure><figcaption>820 px <span>06-width-820.png</span></figcaption><img src="implemented-igual/06-width-820.png" alt="Largura 820"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Provedor Google fora do ar (chave inválida) <span>12-desktop-outage.png</span></figcaption><img src="implemented-igual/12-desktop-outage.png" alt="Queda do provedor"></figure>
+  </div>
+</section>
+</body>
+</html>

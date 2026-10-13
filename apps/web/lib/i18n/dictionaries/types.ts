@@ -166,6 +166,20 @@ export type Dictionary = {
     };
     licensePendingNotice: string;
     licenseGateNotice: string;
+    todayPill: string;
+    organizationLabel: string;
+    brandTagline: string;
+    assistantTitle: string;
+    assistantMic: string;
+    assistantExamplesLabel: string;
+    assistantExample1: string;
+    assistantExample2: string;
+    assistantExample3: string;
+    assistantExample4: string;
+    searchPlaceholder: string;
+    searchLabel: string;
+    searchResultsLabel: string;
+    searchNoResults: string;
   };
   /** Self-service "change my password" screen, reachable by any role from the header. */
   account: {
@@ -661,6 +675,41 @@ export type Dictionary = {
       decreaseSeats: string;
       increaseSeats: string;
       resultTitle: string;
+      departureDateLabel: string;
+      departureTimeLabel: string;
+      returnDateLabel: string;
+      returnTimeLabel: string;
+      reasonLabel: string;
+      reasonMeeting: string;
+      reasonClientVisit: string;
+      reasonTraining: string;
+      reasonDelivery: string;
+      reasonMaintenance: string;
+      reasonOther: string;
+      reasonOtherLabel: string;
+      reasonOtherPlaceholder: string;
+      searchCarpoolLabel: string;
+      searchCarpoolHint: string;
+      distanceAuto: string;
+      mapEmpty: string;
+      carpoolsFoundTitle: string;
+      carpoolsFoundHint: string;
+      vehiclesTitle: string;
+      vehiclesHint: string;
+      filterLabel: string;
+      filterAll: string;
+      energyICE: string;
+      energyHEV: string;
+      energyPHEV: string;
+      energyBEV: string;
+      recommendedBadge: string;
+      select: string;
+      noVehiclesFiltered: string;
+      seatsCount: string;
+      fuelLevel: string;
+      batteryLevel: string;
+      rangeKm: string;
+      odometerKm: string;
     };
     /** Mobility Decision Engine reason codes shown under a recommendation. */
     reasons: {
@@ -1363,6 +1412,15 @@ export type Dictionary = {
       publishedAt: string;
       newVersionHint: string;
     };
+  };
+  /** Address autocomplete (Google Places) used by the trip and carpool address boxes. */
+  placeAutocomplete: {
+    available: string;
+    availableOne: string;
+    poweredBy: string;
+    pointBadge: string;
+    loading: string;
+    listLabel: string;
   };
   /** Embedded route map card (Google Static Maps) shared by New Trip, Buscar Carona and the reservation detail. */
   routeMap: {

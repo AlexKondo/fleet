@@ -8,6 +8,18 @@ import type { Locale } from "../lib/i18n/locales";
 
 const HINT_SHOW_DELAY_MS = 2500;
 
+/** Event other parts of the page (the sidebar "Falar com o FleetMind" panel) dispatch to open THIS chat. */
+export const OPEN_CHAT_EVENT = "fleetmind:open-chat";
+export interface OpenChatDetail {
+  /** Start the microphone right away (when the browser supports it). */
+  voice?: boolean;
+  /** Pre-fill the message box with this text (an example phrase). */
+  draft?: string;
+}
+export interface OpenChatRequest extends OpenChatDetail {
+  id: number;
+}
+
 /**
  * Global floating chat entry point, mounted once in AppShell.tsx (alongside
  * InactivityLogout/SessionBackupSync, not inside the header) so it isn't duplicated
@@ -34,6 +46,21 @@ export function ChatWidget({
   // else and came back.
   const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [openRequest, setOpenRequest] = useState<OpenChatRequest | null>(null);
+
+  // The sidebar voice panel opens this very chat (no second chat is mounted): same panel, same conversation.
+  useEffect(() => {
+    let seq = 0;
+    function onOpen(event: Event) {
+      const detail = ((event as CustomEvent<OpenChatDetail>).detail ?? {}) as OpenChatDetail;
+      setIsOpen(true);
+      setHasOpenedOnce(true);
+      setShowHint(false);
+      setOpenRequest({ id: ++seq, voice: detail.voice, draft: detail.draft });
+    }
+    window.addEventListener(OPEN_CHAT_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
+  }, []);
 
   // Shows on every page load now (per explicit request) — no sessionStorage/dismissal
   // memory anymore, so it's not something a returning-within-the-same-tab user has to
@@ -130,6 +157,7 @@ export function ChatWidget({
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
           initialState={initialState}
+          openRequest={openRequest}
         />
       ) : null}
     </>

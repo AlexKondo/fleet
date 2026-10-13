@@ -147,16 +147,20 @@ try {
   dep.setHours(9, 0, 0, 0);
   const lp = (d) => { const z = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; };
   await p.goto(BASE + "/trips/new", { waitUntil: "load" });
-  await p.waitForFunction(() => { const f = document.querySelector("form"); return f && Object.keys(f).some((k) => k.startsWith("__react")); }, null, { timeout: 60000 });
-  await p.fill('input[name="departureAt"]', lp(dep));
-  await p.fill('input[name="expectedReturnAt"]', lp(new Date(dep.getTime() + 8 * 3600000)));
+  await p.waitForFunction(() => { const f = document.querySelector("main form"); return f && Object.keys(f).some((k) => k.startsWith("__react")) && (f.dataset.ready === undefined || f.dataset.ready === "true"); }, null, { timeout: 60000 });
+  // date + time are separate inputs now ("Reservar igual")
+  await p.fill("#rv-dep-date", lp(dep).slice(0, 10));
+  await p.fill("#rv-dep-time", lp(dep).slice(11));
+  await p.fill("#rv-ret-date", lp(new Date(dep.getTime() + 8 * 3600000)).slice(0, 10));
+  await p.fill("#rv-ret-time", lp(new Date(dep.getTime() + 8 * 3600000)).slice(11));
   await p.fill('input[name="origin"]', "Avenida Paulista, 1578, São Paulo");
   await p.fill('input[name="destination"]', "Avenida Washington Luís, 5000, São Paulo");
   await p.fill('input[name="distanceKm"]', "20");
   await p.fill('input[name="passengerCount"]', "1");
-  await p.fill('textarea[name="justification"]', "c7a plan");
+  await p.selectOption("#rv-motivo", "meeting"); // "Motivo da viagem" is a select now
   await p.click('form button[type="submit"]:has-text("Buscar recomendação")');
-  await p.waitForTimeout(9000);
+  await p.waitForSelector('[data-testid="vehicle-card-recommended"], .rv-error', { timeout: 90000 }); // the plan takes a few seconds (the old fixed 9s wait raced it)
+  await p.waitForTimeout(500);
   const planText = await body(p);
   await p.screenshot({ path: path.join(SHOTS, "employee-unrelated-plan.png"), fullPage: true });
   const okPlan = planText.includes(v4.plate.toLowerCase()) && !planText.includes(v1.plate.toLowerCase()) && !planText.includes(v2.plate.toLowerCase()) && !planText.includes(v3.plate.toLowerCase()) && !BAD.some((b) => planText.includes(b));

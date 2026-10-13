@@ -5,6 +5,7 @@ import { useActionState, useRef, useState, useTransition } from "react";
 import { requestCarpoolRide } from "@/app/carpool/requestActions";
 import { getMyCarpoolRequestStatus } from "@/app/carpool/formActions";
 import { RouteMapCard } from "@/app/carpool/RouteMapCard";
+import { PlaceAutocomplete } from "@/app/carpool/PlaceAutocomplete";
 import { searchBuscarCarona, type BuscarCaronaResult } from "@/app/carpool/searchActions";
 import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
 import { localInputToIso, MAX_SEATS } from "@/lib/carpool/buscarCarona";
@@ -160,23 +161,13 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
         <form action={formAction} className="fm-form" data-testid="buscar-form">
           <div className="fm-field fm-span-2">
             <label className="fm-label" htmlFor="fm-origin">{b.originLabel}</label>
-            <div className="fm-input-wrap">
-              <input id="fm-origin" name="origin" className="fm-input" required maxLength={300} autoComplete="off"
-                placeholder={b.originPlaceholder} value={origin} onChange={(e) => setOrigin(e.target.value)} />
-              {origin ? (
-                <button type="button" className="fm-clear" aria-label={`${b.clearField}: ${b.originLabel}`} onClick={() => setOrigin("")}>×</button>
-              ) : null}
-            </div>
+            <PlaceAutocomplete id="fm-origin" name="origin" dict={dict} required placeholder={b.originPlaceholder}
+              value={origin} onChange={setOrigin} clearLabel={`${b.clearField}: ${b.originLabel}`} />
           </div>
           <div className="fm-field fm-span-2">
             <label className="fm-label" htmlFor="fm-destination">{b.destinationLabel}</label>
-            <div className="fm-input-wrap">
-              <input id="fm-destination" name="destination" className="fm-input" required maxLength={300} autoComplete="off"
-                placeholder={b.destinationPlaceholder} value={destination} onChange={(e) => setDestination(e.target.value)} />
-              {destination ? (
-                <button type="button" className="fm-clear" aria-label={`${b.clearField}: ${b.destinationLabel}`} onClick={() => setDestination("")}>×</button>
-              ) : null}
-            </div>
+            <PlaceAutocomplete id="fm-destination" name="destination" dict={dict} required placeholder={b.destinationPlaceholder}
+              value={destination} onChange={setDestination} clearLabel={`${b.clearField}: ${b.destinationLabel}`} />
           </div>
           <div className="fm-field">
             <label className="fm-label" htmlFor="fm-when">{b.dateTimeLabel}</label>

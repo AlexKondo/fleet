@@ -95,7 +95,9 @@ export async function cleanupOrgs(orgs) {
       (select count(*) from carpool_policy_settings where organization_id in (${orgIds})) policies,
       (select count(*) from geo_provider_quota_counters where organization_id in (${orgIds})) quota_rows,
       (select count(*) from notifications where organization_id in (${orgIds})) notifications,
-      (select count(*) from audit_log where organization_id in (${orgIds})) audit`;
+      (select count(*) from audit_log where organization_id in (${orgIds})) audit,
+      (select count(*) from user_daily_geo_usage where user_id in (${ids.map((i) => `'${i}'`).join(",") || "'00000000-0000-0000-0000-000000000000'"})) geo_usage,
+      (select count(*) from route_map_user_usage where user_id in (${ids.map((i) => `'${i}'`).join(",") || "'00000000-0000-0000-0000-000000000000'"})) map_usage`;
     const left = await sql(q);
     record("Cleanup: no disposable rows left in the live DB", Object.values(left[0]).every((v) => Number(v) === 0), left[0]);
     console.log("CLEANUP QUERY:\n" + q);
@@ -128,20 +130,30 @@ export function localIso(d) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-/** Fill the New Trip form and submit ("Buscar recomendação"). */
-export async function fillTrip(page, { departure, origin, destination, passengers = 1 }) {
+/** The trip form has separate date + time inputs (departure / return); this sets them from a Date (browser-local, i.e. Brasília). */
+export async function setTripDates(page, departure, ret) {
+  const [dd, dt] = localIso(new Date(departure)).split("T");
+  const [rd, rt] = localIso(new Date(ret)).split("T");
+  await page.fill("#rv-dep-date", dd);
+  await page.fill("#rv-dep-time", dt);
+  await page.fill("#rv-ret-date", rd);
+  await page.fill("#rv-ret-time", rt);
+}
+
+/** Fill the New Trip form and submit ("Buscar recomendação"). `searchCarpool: false` turns the "Buscar caronas compatíveis" toggle off. */
+export async function fillTrip(page, { departure, origin, destination, passengers = 1, searchCarpool = true }) {
   await page.goto(BASE + "/trips/new", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => sessionStorage.clear());
   await page.reload({ waitUntil: "domcontentloaded" });
   await waitHydrated(page);
   const ret = new Date(new Date(departure).getTime() + 8 * 3600000);
-  await page.fill('input[name="departureAt"]', localIso(new Date(departure)));
-  await page.fill('input[name="expectedReturnAt"]', localIso(ret));
+  await setTripDates(page, departure, ret);
   await page.fill('input[name="origin"]', origin);
   await page.fill('input[name="destination"]', destination);
   await page.fill('input[name="distanceKm"]', "20");
   await page.fill('input[name="passengerCount"]', String(passengers));
-  await page.fill('textarea[name="justification"]', "C5UI teste");
+  // "Motivo da viagem": the select defaults to "Reunião" (written to the justification field)
+  if (!searchCarpool) await page.uncheck("#rv-search-carpool");
   await page.click('form button[type="submit"]:has-text("Buscar recomendação")');
 }
 
@@ -149,6 +161,6 @@ export async function fillTrip(page, { departure, origin, destination, passenger
 export async function waitHydrated(page) {
   await page.waitForFunction(() => {
     const f = document.querySelector("form");
-    return Boolean(f) && Object.keys(f).some((k) => k.startsWith("__reactFiber") || k.startsWith("__reactProps"));
+    return Boolean(f) && Object.keys(f).some((k) => k.startsWith("__reactFiber") || k.startsWith("__reactProps")) && (f.dataset.ready === undefined || f.dataset.ready === "true");
   }, null, { timeout: 60000 });
 }

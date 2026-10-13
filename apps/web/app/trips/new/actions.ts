@@ -58,6 +58,17 @@ export interface TripFormInput {
   allowCarpool: boolean;
 }
 
+/** Real facts shown on a vehicle card (nothing invented: fields the vehicle does not have are null). */
+export interface VehicleCardInfo {
+  energyType: string;
+  passengerCapacity: number | null;
+  fuelLevelPercent: number | null;
+  batteryLevelPercent: number | null;
+  estimatedRangeKm: number | null;
+  odometerKm: number | null;
+  locationName: string | null;
+}
+
 export interface PlanTripResult {
   type: "carpool" | "vehicle" | "none";
   reasons: string[];
@@ -94,9 +105,11 @@ export interface PlanTripResult {
       reasons: string[];
       /** Phase C5: seats the host could offer if this vehicle is chosen. */
       maxOfferableSeats: number;
+      info: VehicleCardInfo;
     }[];
     /** Phase C5: capacity - declared occupants, exactly as enable_carpool_offer derives it. */
     maxOfferableSeats: number;
+    info: VehicleCardInfo;
   };
   bookingMode: "ai_recommended" | "user_choice" | "hybrid";
   error?: string;
@@ -143,6 +156,10 @@ async function buildPlanInputs(input: TripFormInput) {
   // the recommendation engine has no use for it, but the chat confirmation card does, to
   // show a driver-friendly name instead of a bare plate. Looked up separately rather than
   // widening the domain Vehicle type just for this.
+  // Location names for the vehicle cards (best effort: a failed read just leaves the location out).
+  const { data: locationRows } = await supabase.from("vehicle_locations").select("id, name");
+  const locationNameById = new Map<string, string>((locationRows ?? []).map((l) => [l.id, l.name]));
+
   const vehicleNameByPlate = new Map((vehicleRows ?? []).map((row) => [row.plate, row.name]));
 
   // Phase C7 (0063): an employee's RLS context can no longer read other people's reservations
@@ -179,7 +196,7 @@ async function buildPlanInputs(input: TripFormInput) {
   // (dead code kept on purpose).
   const carpoolCandidates: CarpoolCandidateWithPlate[] = [];
 
-  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, gating };
+  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, locationNameById, gating };
 }
 
 /**
@@ -197,6 +214,19 @@ async function buildPlanInputs(input: TripFormInput) {
  */
 function filterTrafficRestrictionReasons(reasons: string[], enabled: boolean): string[] {
   return enabled ? reasons : reasons.filter((r) => r !== "traffic_restriction_active");
+}
+
+function cardInfo(candidate: CandidateVehicle | undefined, locationNameById: Map<string, string>): VehicleCardInfo {
+  const v = candidate?.vehicle;
+  return {
+    energyType: String(candidate?.category?.energyType ?? v?.energyType ?? ""),
+    passengerCapacity: candidate?.category?.passengerCapacity ?? null,
+    fuelLevelPercent: v?.fuelLevelPercent ?? null,
+    batteryLevelPercent: v?.batteryLevelPercent ?? null,
+    estimatedRangeKm: v?.estimatedRangeKm ?? null,
+    odometerKm: v?.odometerKm ?? null,
+    locationName: (v?.currentLocationId && locationNameById.get(v.currentLocationId)) || null,
+  };
 }
 
 function parseTripFormInput(formData: FormData): TripFormInput {
@@ -230,6 +260,9 @@ export async function planTripAction(
 ): Promise<PlanTripResult> {
   const input = parseTripFormInput(formData);
   const plan = await planTrip(input);
+  // The "Buscar caronas compatíveis" toggle (explicit "off") skips the carpool-first search entirely: no geocode,
+  // no routing, no provider call. Absent / any other value = on (the default and the behaviour of every other caller).
+  if (formData.get("searchCarpool") === "off") return plan;
   if (plan.error || !plan.carpoolGating?.carpoolFirst) return plan;
 
   // Phase C5 carpool-first: resolve the rider's places and search compatible offers BEFORE the
@@ -276,7 +309,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   if ("error" in built) {
     return { type: "none", reasons: [], bookingMode: "ai_recommended", error: built.error };
   }
-  const { now, config, vehicleCandidates, vehicleNameByPlate, gating } = built;
+  const { now, config, vehicleCandidates, vehicleNameByPlate, locationNameById, gating } = built;
   // Phase C5 gating: when the new geospatial engine owns carpool for this org the old
   // city-string matcher is NOT consulted (empty candidates => planMobility never returns a
   // carpool plan). NOTE: the chat path (chat/actions.ts, chat/dispatch.ts) also goes through
@@ -346,6 +379,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
               categoryName: altCandidate?.category.name ?? "",
               reasons: filterTrafficRestrictionReasons(r.reasons, trafficRestrictionEnabled),
               maxOfferableSeats: maxOfferableSeats(altCandidate?.category.passengerCapacity, input.passengerCount),
+              info: cardInfo(altCandidate, locationNameById),
             };
           })
       : [];
@@ -365,6 +399,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
         requiredPreparation: plan.vehicle.requiredPreparation,
         trafficRestriction: trafficRestrictionEnabled ? plan.trafficRestriction : undefined,
         alternatives,
+        info: cardInfo(candidate, locationNameById),
       },
     };
   }

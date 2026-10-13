@@ -8,7 +8,7 @@
 import { chromium } from "playwright";
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
-import { BASE, PASSWORD, record, results, sql, provisionOrg, cleanupOrgs, ROOT, localIso } from "./carpool-c5-lib.mjs";
+import { BASE, PASSWORD, record, results, sql, provisionOrg, cleanupOrgs, ROOT, localIso, setTripDates } from "./carpool-c5-lib.mjs";
 
 const OUT = path.join(ROOT, "resultado_de_testes", "design-v2", "implemented-mapa");
 mkdirSync(OUT, { recursive: true });
@@ -67,7 +67,7 @@ async function newPage(user, { width, height, base = BASE, mobile = false, colle
 const hydrated = (page) =>
   page.waitForFunction(() => {
     const f = document.querySelector("main form");
-    return Boolean(f) && Object.keys(f).some((k) => k.startsWith("__reactFiber") || k.startsWith("__reactProps"));
+    return Boolean(f) && Object.keys(f).some((k) => k.startsWith("__reactFiber") || k.startsWith("__reactProps")) && (f.dataset.ready === undefined || f.dataset.ready === "true");
   }, null, { timeout: 60000 });
 async function openForm(page, base = BASE) {
   await page.goto(base + "/trips/new", { waitUntil: "domcontentloaded", timeout: 90000 });
@@ -77,13 +77,11 @@ async function openForm(page, base = BASE) {
 }
 async function fillAndSearch(page, { origin, destination }) {
   const ret = new Date(dep.getTime() + 8 * 3600000);
-  await page.fill('input[name="departureAt"]', localIso(dep));
-  await page.fill('input[name="expectedReturnAt"]', localIso(ret));
+  await setTripDates(page, dep, ret); // date + time are separate inputs now
   await page.fill('input[name="origin"]', origin);
   await page.fill('input[name="destination"]', destination);
   await page.fill('input[name="distanceKm"]', "20");
   await page.fill('input[name="passengerCount"]', "1");
-  await page.fill('textarea[name="justification"]', "Mapa teste");
   await page.click('form button[type="submit"]:has-text("Buscar recomendação")');
 }
 const settle = async (page) => {
@@ -94,7 +92,7 @@ const settle = async (page) => {
   await page.waitForTimeout(1500);
 };
 const planned = (page) =>
-  page.waitForSelector('.rv-vehicle, [data-testid="carpool-offer-card"], [data-testid="carpool-needs-precision"], [data-testid="carpool-unavailable"], .rv-error', { timeout: 120000 });
+  page.waitForSelector('[data-testid="vehicle-card-recommended"], [data-testid="carpool-offer-card"], [data-testid="carpool-needs-precision"], [data-testid="carpool-unavailable"], .rv-error', { timeout: 120000 });
 const mapReady = async (page, id = "route-map") => {
   await page.waitForSelector(`[data-testid="${id}"][data-state="ready"]`, { timeout: 90000 });
   await page.waitForFunction((tid) => { const i = document.querySelector(`[data-testid="${tid}-img"]`); return Boolean(i) && i.complete && i.naturalWidth > 0; }, id, { timeout: 30000 }).catch(() => {});
@@ -187,31 +185,39 @@ try {
   // ======================= /trips/new desktop 1440 =======================
   const d = await newPage(U.owner, { width: 1440, height: 900 });
   await openForm(d);
-  await d.route("**/trips/new", async (route) => {
+  await d.route("**/api/geo/route-map", async (route) => {
     const req = route.request();
-    if (req.method() === "POST" && (req.postData() ?? "").includes('"originText"')) await new Promise((r) => setTimeout(r, 4000)); // slow map
+    if (req.method() === "POST" && (req.postData() ?? "").includes('"originText"')) await new Promise((r) => setTimeout(r, 20000)); // slow map (it starts when both places are filled, before the plan)
     await route.continue();
   });
-  await fillAndSearch(d, { origin: SP_A, destination: SP_B });
-  await planned(d);
-  const vehicleVisible = await d.locator(".rv-vehicle").count();
-  const stateAtPlan = await d.locator('[data-testid="route-map"]').getAttribute("data-state").catch(() => null);
-  record("/trips/new: recommendation is shown while the (slowed 4s) map is still loading - the map never blocks it", vehicleVisible === 1 && (stateAtPlan === "loading" || stateAtPlan === null), { vehicleVisible, stateAtPlan });
+  // "Reservar igual": the map loads as soon as BOTH places are filled (debounced, before the plan). It is a plain fetch to
+  // POST /api/geo/route-map (a route handler, NOT a server action), so it never queues behind / blocks the plan submit.
+  await setTripDates(d, dep, new Date(dep.getTime() + 8 * 3600000));
+  await d.fill('input[name="origin"]', SP_A);
+  await d.fill('input[name="destination"]', SP_B);
+  await d.waitForSelector('[data-testid="route-map"][data-state="loading"]', { timeout: 20000 });
   const busy = await d.locator('[data-testid="route-map"][data-state="loading"]').getAttribute("aria-busy").catch(() => null);
   record("/trips/new: loading state is aria-busy with a status text", busy === "true" && (await d.locator('[data-testid="route-map"] [role="status"]').count()) === 1);
+  await d.fill('input[name="distanceKm"]', "20");
+  await d.fill('input[name="passengerCount"]', "1");
+  await d.click('form button[type="submit"]:has-text("Buscar recomendação")');
+  await planned(d);
+  const vehicleVisible = await d.locator('[data-testid="vehicle-card-recommended"]').count();
+  const stateAtPlan = await d.locator('[data-testid="route-map"]').getAttribute("data-state").catch(() => null);
+  record("/trips/new: recommendation is shown while the (slowed 20s) map is still loading - the map never blocks it", vehicleVisible === 1 && (stateAtPlan === "loading" || stateAtPlan === null), { vehicleVisible, stateAtPlan });
   const confirmBtn = d.locator('button:has-text("Solicitar reserva")');
-  record("/trips/new: the Solicitar reserva button is enabled while the map loads", (await confirmBtn.count()) === 1 && (await confirmBtn.isEnabled()));
+  record("/trips/new: the Solicitar reserva button is enabled", (await confirmBtn.count()) === 1 && (await confirmBtn.isEnabled()));
   await mapReady(d);
-  await d.unroute("**/trips/new");
+  await d.unroute("**/api/geo/route-map");
   const dInfo = await imgInfo(d);
   const dChip = await chipText(d);
-  record("/trips/new desktop: map shows after the plan: image loads, km and time from the Routes API", dInfo && dInfo.w > 0 && /\d[\d.,]* km/.test(dChip) && /\d+\s*(min|h)/.test(dChip), dChip.replace(/\n/g, " | "));
+  record("/trips/new desktop: map loads once both places are set (before the plan): image loads, km and time from the Routes API", dInfo && dInfo.w > 0 && /\d[\d.,]* km/.test(dChip) && /\d+\s*(min|h)/.test(dChip), dChip.replace(/\n/g, " | "));
   const box = await d.evaluate(() => {
     const m = document.querySelector('[data-testid="rv-mapcol"]').getBoundingClientRect();
-    const r = document.querySelector(".rv-results").getBoundingClientRect();
+    const r = document.querySelector('[data-testid="rv-form"]').getBoundingClientRect();
     return { mapLeft: Math.round(m.left), mapTop: Math.round(m.top + scrollY), resRight: Math.round(r.right), resTop: Math.round(r.top + scrollY), mapW: Math.round(m.width) };
   });
-  record("/trips/new desktop 1440: map sits BESIDE the results (right column, aligned top)", box.mapLeft >= box.resRight - 2 && Math.abs(box.mapTop - box.resTop) < 40 && box.mapW >= 340, box);
+  record("/trips/new desktop 1440: map sits at the TOP, BESIDE the 'Detalhes da viagem' form (right column, aligned top)", box.mapLeft >= box.resRight - 2 && Math.abs(box.mapTop - box.resTop) < 40 && box.mapW >= 340, box);
   record("/trips/new desktop: no horizontal scroll", (await hscroll(d)) <= 0);
   const callsAfterFirst = d.mapCalls;
   record("/trips/new: exactly ONE map call for the first plan", callsAfterFirst === 1, callsAfterFirst);
@@ -255,10 +261,10 @@ try {
   await mapReady(m);
   const mBox = await m.evaluate(() => {
     const mc = document.querySelector('[data-testid="rv-mapcol"]').getBoundingClientRect();
-    const r = document.querySelector(".rv-results").getBoundingClientRect();
+    const r = document.querySelector('[data-testid="rv-form"]').getBoundingClientRect();
     return { mapTop: Math.round(mc.top + scrollY), resBottom: Math.round(r.bottom + scrollY), mapW: Math.round(mc.width), vw: innerWidth };
   });
-  record("/trips/new mobile 390: map stacked UNDER the results, fits the viewport width", mBox.mapTop >= mBox.resBottom - 2 && mBox.mapW <= mBox.vw, mBox);
+  record("/trips/new mobile 390: map stacked UNDER the form, fits the viewport width", mBox.mapTop >= mBox.resBottom - 2 && mBox.mapW <= mBox.vw, mBox);
   record("/trips/new mobile: no horizontal scroll", (await hscroll(m)) <= 0);
   const mInfo2 = await imgInfo(m);
   record("/trips/new mobile: image loads", mInfo2 && mInfo2.w > 0);

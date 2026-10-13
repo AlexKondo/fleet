@@ -733,3 +733,273 @@ a.fm-tab:hover {
   color: var(--fm-blue-600);
   font-weight: 700;
 }
+
+/* ---------- "Reservar Veiculo" reference look: topbar search / pills, sidebar assistant panel ---------- */
+.fm-sidebar {
+  overflow-y: auto;
+}
+.fm-brand-org {
+  font-size: 11.5px;
+  max-width: 210px;
+}
+.fm-topbar-search {
+  display: none;
+}
+.fm-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.fm-search-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: var(--fm-text-muted);
+  pointer-events: none;
+}
+.fm-search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 70px 0 40px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--fm-text);
+  background: #eef2f8;
+  border: 1px solid transparent;
+  border-radius: var(--fm-radius-md);
+}
+.fm-search-input::placeholder {
+  color: #566579;
+}
+.fm-search-input:focus-visible {
+  background: var(--fm-surface);
+  border-color: var(--fm-focus);
+  outline: 3px solid color-mix(in srgb, var(--fm-focus) 30%, transparent);
+  outline-offset: 0;
+}
+.fm-search-kbd {
+  position: absolute;
+  right: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-border);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--fm-text-muted);
+}
+.fm-search-pop {
+  position: absolute;
+  z-index: 70;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  min-width: 260px;
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-border-strong);
+  border-radius: var(--fm-radius-md);
+  box-shadow: 0 10px 28px rgba(15, 35, 65, 0.18);
+  overflow: hidden;
+}
+.fm-search-pop[hidden] {
+  display: none;
+}
+.fm-search-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.fm-search-opt,
+.fm-search-empty {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: var(--fm-radius-sm);
+  font-weight: 600;
+  font-size: 14px;
+}
+.fm-search-opt {
+  cursor: pointer;
+}
+.fm-search-opt[data-active="true"],
+.fm-search-opt:hover {
+  background: var(--fm-blue-100);
+}
+.fm-search-empty {
+  color: var(--fm-text-muted);
+  font-weight: 500;
+}
+.fm-tbpill {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-surface);
+  color: var(--fm-navy-900);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fm-tbpill svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--fm-blue-600);
+}
+.fm-tbpill-text {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fm-userbox {
+  display: flex;
+}
+.fm-user {
+  display: none;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+}
+.fm-user-name {
+  font-size: 13.5px;
+  max-width: 150px;
+  color: var(--fm-navy-900);
+}
+
+/* sidebar "Falar com o FleetMind" */
+.fm-assist {
+  margin-top: auto;
+  padding: 14px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--fm-radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.fm-assist-title {
+  align-self: flex-start;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e6edf8;
+}
+.fm-assist-mic {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--fm-blue-500);
+  background: #14284a;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 0 5px rgba(46, 123, 230, 0.18);
+}
+.fm-assist-mic:hover {
+  background: var(--fm-blue-600);
+}
+.fm-assist-mic svg {
+  width: 24px;
+  height: 24px;
+}
+.fm-assist-examples {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  gap: 2px;
+}
+.fm-assist-example {
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--fm-radius-sm);
+  background: transparent;
+  color: #d5deec;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+.fm-assist-example:hover {
+  background: var(--fm-navy-800);
+  color: #fff;
+}
+/* short laptop screens: keep the mic, drop the phrase list so the menu never scrolls behind the panel */
+@media (max-height: 860px) {
+  .fm-assist-examples {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .fm-topbar {
+    justify-content: space-between;
+  }
+  .fm-topbar-search {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 420px;
+  }
+  .fm-topbar-right {
+    margin-left: 12px;
+  }
+  .fm-search-kbd {
+    display: none;
+  }
+}
+@media (min-width: 1100px) {
+  .fm-search-kbd {
+    display: inline-block;
+  }
+  .fm-tbpill {
+    display: inline-flex;
+  }
+  .fm-user {
+    display: flex;
+    flex-direction: column;
+  }
+}
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .fm-tbpill-org {
+    display: none;
+  }
+}
+
+/* topbar crowding: the 240px sidebar leaves (viewport - 240px) for the bar */
+.fm-search-input {
+  min-width: 0;
+}
+.fm-topbar-search {
+  min-width: 180px;
+}
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .fm-tbpill.fm-tbpill-org,
+  .fm-tbpill.fm-tbpill-date {
+    display: none;
+  }
+  .fm-user {
+    display: none;
+  }
+}
+@media (min-width: 1280px) and (max-width: 1379px) {
+  .fm-tbpill.fm-tbpill-org {
+    display: none;
+  }
+}

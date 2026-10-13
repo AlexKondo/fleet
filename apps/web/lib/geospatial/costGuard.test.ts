@@ -98,6 +98,17 @@ describe("withCostGuard", () => {
     }
   });
 
+  it("place_autocomplete has its own org cap (6000) and breaker row", async () => {
+    state.row = { call_count: 6000, consecutive_failure_count: 0, circuit_state: "closed", circuit_opened_at: null };
+    const doCall = vi.fn(async () => ({ status: "ok" as const }));
+    expect(await withCostGuard("org-1", "place_autocomplete", doCall, (r) => r.status === "ok")).toEqual({ status: "blocked", reason: "daily_quota_exceeded" });
+    expect(doCall).not.toHaveBeenCalled();
+    state.row = { call_count: 5999, consecutive_failure_count: 0, circuit_state: "closed", circuit_opened_at: null };
+    expect((await withCostGuard("org-1", "place_autocomplete", doCall, (r) => r.status === "ok")).status).toBe("ok");
+    state.row = { call_count: 1, consecutive_failure_count: 5, circuit_state: "open", circuit_opened_at: new Date().toISOString() };
+    expect(await withCostGuard("org-1", "place_autocomplete", doCall, (r) => r.status === "ok")).toEqual({ status: "blocked", reason: "circuit_open" });
+  });
+
   it("blocks a call once the daily quota is exceeded, and never invokes doCall", async () => {
     state.row = { call_count: 2000, consecutive_failure_count: 0, circuit_state: "closed", circuit_opened_at: null };
     const doCall = vi.fn(async () => ({ status: "ok" as const }));

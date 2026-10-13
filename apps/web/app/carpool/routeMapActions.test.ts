@@ -74,12 +74,11 @@ describe("getTripRouteMap", () => {
     expect(await getTripRouteMap({ originText: "a", destinationText: "b" })).toEqual({ status: "unavailable", reason: "not_authenticated" });
     expect(state.geocode).not.toHaveBeenCalled();
   });
-  it("policy off or unreadable -> disabled (fail closed)", async () => {
+  it("does NOT depend on the carpool policy (a user of an org gets the map even with carpool off / policy unreadable)", async () => {
     state.policy = { ok: true, policy: { carpoolEnabled: false } };
-    expect(await getTripRouteMap({ originText: "a", destinationText: "b" })).toEqual({ status: "unavailable", reason: "disabled" });
+    expect((await getTripRouteMap({ originText: uniq("a"), destinationText: uniq("b") })).status).toBe("ok");
     state.policy = { ok: false };
-    expect(await getTripRouteMap({ originText: "a", destinationText: "b" })).toEqual({ status: "unavailable", reason: "disabled" });
-    expect(state.route).not.toHaveBeenCalled();
+    expect((await getTripRouteMap({ originText: uniq("a"), destinationText: uniq("b") })).status).toBe("ok");
   });
   it("geocoder outage -> geocode_unavailable; not found -> place_not_found", async () => {
     state.geocode = vi.fn(async () => ({ status: "unavailable", reason: "daily_quota_exceeded" }));

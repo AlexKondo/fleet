@@ -46,7 +46,8 @@ export type ProviderCallKind =
   | "routing"
   | "map_geocode"
   | "map_routing"
-  | "static_map";
+  | "static_map"
+  | "place_autocomplete";
 
 // Per organization per UTC day. Map caps are deliberately lower than the carpool ones: one map view = 2 map_geocode
 // + 1 map_routing + 1 static_map, so 600 views/day/org (static_map and map_routing) and 1000 geocodes (> 2 x 500 views
@@ -58,6 +59,9 @@ const DAILY_CALL_CAP: Record<ProviderCallKind, number> = {
   map_geocode: 1000,
   map_routing: 600,
   static_map: 600,
+  // Address autocomplete (migration 0073): own kind, so typing in an address box can never consume the carpool
+  // geocode/routing quotas. The per-USER daily cap (400, consume_user_geo_quota) is the first ceiling; this is the org-wide one.
+  place_autocomplete: 6000,
 };
 
 const FAILURE_THRESHOLD = 5;

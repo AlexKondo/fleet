@@ -45,12 +45,15 @@ export function ChatPanel({
   isOpen,
   onClose,
   initialState,
+  openRequest,
 }: {
   dict: Dictionary;
   locale: Locale;
   isOpen: boolean;
   onClose: () => void;
   initialState: ChatState;
+  /** Set by ChatWidget when the sidebar voice panel asked to open the chat (optionally with a draft and/or the mic). */
+  openRequest?: { id: number; voice?: boolean; draft?: string } | null;
 }) {
   const t = dict.chat;
   const [actionState, formAction, pending] = useActionState(sendChatMessage, initialState);
@@ -166,6 +169,16 @@ export function ChatPanel({
       setMicError(t.micGenericError);
     }
   }
+
+  // The sidebar "Falar com o FleetMind" panel: pre-fill an example phrase and/or start listening.
+  const handledRequestRef = useRef(0);
+  useEffect(() => {
+    if (!openRequest || openRequest.id === handledRequestRef.current) return;
+    handledRequestRef.current = openRequest.id;
+    if (openRequest.draft) setDraft(openRequest.draft);
+    if (openRequest.voice && !isListening) toggleMic();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openRequest]);
 
   function handleSend(formData: FormData) {
     stopListeningIfActive();

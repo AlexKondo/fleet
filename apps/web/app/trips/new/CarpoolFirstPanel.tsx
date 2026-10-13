@@ -17,11 +17,12 @@ type CardOutcome =
   | { kind: "error"; code: string };
 
 /**
- * Phase C5 (pack 05): the carpool-first step of New Trip. Shown BEFORE the vehicle result.
- *  - offers          : compatible cards (departure, detour, seats, Request Ride) + decline button
- *  - none            : nothing fits -> renders nothing; the vehicle result follows automatically (caller)
+ * Phase C5 (pack 05): the carpool-first block of New Trip. Shown ABOVE the vehicle list; both are visible at once (the
+ * vehicle list is never gated behind a "continue" click).
+ *  - offers          : compatible cards (departure, detour, seats, Request Ride)
+ *  - none            : nothing fits -> renders nothing (carpool is optional, no empty block)
  *  - unavailable     : outage banner; the vehicle flow is untouched
- *  - needs_precision : we do NOT guess; the rider is asked for a more precise place
+ *  - needs_precision : we do NOT guess; the rider is told which place needs to be more precise (the vehicles stay visible)
  * Every request carries a client_request_id generated once per offer and REUSED on retry, so a
  * double click / network retry can never create two requests (the DB enforces it too).
  */
@@ -29,13 +30,10 @@ export function CarpoolFirstPanel({
   state,
   dict,
   locale,
-  onContinue,
 }: {
   state: CarpoolFirstState;
   dict: Dictionary;
   locale: Locale;
-  /** Reveals the normal vehicle result (decline / clarification skipped). */
-  onContinue: () => void;
 }) {
   const t = dict.carpool.newTrip;
   const keys = useRef(new Map<string, string>());
@@ -113,9 +111,6 @@ export function CarpoolFirstPanel({
             </li>
           ))}
         </ul>
-        <button type="button" onClick={onContinue} className="fm-btn fm-btn-ghost" style={{ marginTop: 12 }}>
-          {t.continueWithoutCarpool}
-        </button>
       </div>
     );
   }
@@ -129,9 +124,9 @@ export function CarpoolFirstPanel({
         </span>
         <div>
           <h2 id="rv-carpool-title" className="fm-h2">
-            {t.offersTitle}
+            {fillTemplate(dict.trips.reservar.carpoolsFoundTitle, { count: state.offers.length })}
           </h2>
-          <p className="rv-sub">{t.offersIntro}</p>
+          <p className="rv-sub">{dict.trips.reservar.carpoolsFoundHint}</p>
         </div>
       </div>
       <PlacesConfirmation origin={state.origin} destination={state.destination} dict={dict} />
@@ -140,12 +135,19 @@ export function CarpoolFirstPanel({
           const outcome = outcomes[offer.offerId];
           return (
             <li key={offer.offerId} data-testid="carpool-offer-card" className="rv-offer">
-              <p className="rv-offer-time">
-                {fillTemplate(t.cardDeparture, { time: formatDateTimeShort(offer.hostDepartureAt, locale) })}
-              </p>
-              <p className="rv-muted">
-                {fillTemplate(t.cardDetour, { km: offer.additionalDistanceKm, min: offer.additionalTimeMin })}
-              </p>
+              <div className="rv-offer-head">
+                <span className="rv-offer-avatar" aria-hidden="true">
+                  <RvUsersIcon />
+                </span>
+                <div>
+                  <p className="rv-offer-time">
+                    {fillTemplate(t.cardDeparture, { time: formatDateTimeShort(offer.hostDepartureAt, locale) })}
+                  </p>
+                  <p className="rv-muted">
+                    {fillTemplate(t.cardDetour, { km: offer.additionalDistanceKm, min: offer.additionalTimeMin })}
+                  </p>
+                </div>
+              </div>
               <div className="fm-chips">
                 <span className="fm-chip fm-chip-seats">
                   {fillTemplate(offer.seatsAvailable === 1 ? t.seatsOne : t.seatsOther, { count: offer.seatsAvailable })}
@@ -179,9 +181,6 @@ export function CarpoolFirstPanel({
           );
         })}
       </ul>
-      <button type="button" onClick={onContinue} className="fm-btn fm-btn-ghost" style={{ alignSelf: "flex-start" }}>
-        {t.continueWithVehicle}
-      </button>
     </section>
   );
 }

@@ -211,6 +211,19 @@ describe("planTrip gating of the OLD text-matching carpool path", () => {
     expect(result.carpoolGating).toMatchObject({ newEngine: true, carpoolFirst: true, hostStep: true });
     expect(result.vehicle?.maxOfferableSeats).toBe(3);
   });
+
+  it("vehicle cards carry only real facts (capacity from the category; missing values are null, never invented)", async () => {
+    const result = await planTrip(input);
+    expect(result.vehicle?.info).toEqual({
+      energyType: "",
+      passengerCapacity: 5,
+      fuelLevelPercent: null,
+      batteryLevelPercent: null,
+      estimatedRangeKm: null,
+      odometerKm: null,
+      locationName: null,
+    });
+  });
 });
 
 describe("planTripAction (form-bound): carpool-first", () => {
@@ -263,6 +276,23 @@ describe("planTripAction (form-bound): carpool-first", () => {
     const result = await planTripAction(null, formData());
     expect(result.carpoolFirst).toBeUndefined();
     expect(h.geocode).not.toHaveBeenCalled();
+  });
+
+  it('toggle "Buscar caronas compatíveis" OFF (searchCarpool=off) => carpool-first skipped entirely, no provider call, vehicle plan intact', async () => {
+    const f = formData();
+    f.set("searchCarpool", "off");
+    const result = await planTripAction(null, f);
+    expect(result.carpoolFirst).toBeUndefined();
+    expect(h.geocode).not.toHaveBeenCalled();
+    expect(h.search).not.toHaveBeenCalled();
+    expect(result.type).toBe("vehicle");
+    const on = formData();
+    on.set("searchCarpool", "on");
+    h.geocode.mockImplementation(async (text: string) => ({
+      status: "ok",
+      location: { coordinates: { lat: text.startsWith("Fábrica") ? -22.5 : -23.5, lng: -46.6 }, formattedAddress: text, source: "geocoding_provider", placeTypes: ["street_address"] },
+    }));
+    expect((await planTripAction(null, on)).carpoolFirst?.status).toBeDefined();
   });
 
   it("carpool enabled but carpool-first off => no rider-side search", async () => {

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Dictionary } from "../../lib/i18n/dictionaries";
-import { getTripRouteMap, type RouteMapResult } from "./routeMapActions";
+import type { RouteMapResult } from "./routeMapActions";
 import "./routeMap.css";
 
 /**
@@ -14,27 +14,68 @@ import "./routeMap.css";
  */
 
 const memory = new Map<string, RouteMapResult>();
-const inflight = new Map<string, Promise<RouteMapResult>>();
+// One in-flight request per distinct pair, shared by every subscriber (StrictMode double effects, fast re-renders). It is a plain
+// fetch to POST /api/geo/route-map (not a server action, so it never queues behind the plan submit) and it is really aborted
+// when the last subscriber goes away before it settled (the texts changed again).
+const inflight = new Map<string, { promise: Promise<RouteMapResult>; controller: AbortController; subscribers: number }>();
 const DEBOUNCE_MS = 350;
+const UNAVAILABLE: RouteMapResult = { status: "unavailable", reason: "map_unavailable" };
 
-function load(key: string, originText: string, destinationText: string): Promise<RouteMapResult> {
+async function fetchMap(originText: string, destinationText: string, signal: AbortSignal): Promise<RouteMapResult> {
+  try {
+    const res = await fetch("/api/geo/route-map", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ originText, destinationText }),
+      signal,
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+    if (res.status === 401) return { status: "unavailable", reason: "not_authenticated" };
+    if (!res.ok) return UNAVAILABLE;
+    const json = (await res.json()) as RouteMapResult;
+    return json && (json.status === "ok" || json.status === "unavailable") ? json : UNAVAILABLE;
+  } catch {
+    return UNAVAILABLE;
+  }
+}
+
+function load(key: string, originText: string, destinationText: string): { promise: Promise<RouteMapResult>; release: () => void } {
   const cached = memory.get(key);
-  if (cached) return Promise.resolve(cached);
-  const pending = inflight.get(key);
-  if (pending) return pending;
-  const p = getTripRouteMap({ originText, destinationText })
-    .catch((): RouteMapResult => ({ status: "unavailable", reason: "map_unavailable" }))
-    .then((result) => {
-      // Transient failures are not cached: a retry (new plan) may succeed.
+  if (cached) return { promise: Promise.resolve(cached), release: () => {} };
+  let entry = inflight.get(key);
+  if (!entry) {
+    const controller = new AbortController();
+    const promise = fetchMap(originText, destinationText, controller.signal).then((result) => {
+      // Transient failures (and aborted calls) are not cached: a retry may succeed.
       if (result.status === "ok") {
         if (memory.size >= 6) memory.delete(memory.keys().next().value as string);
         memory.set(key, result);
       }
-      inflight.delete(key);
+      if (inflight.get(key)?.controller === controller) inflight.delete(key);
       return result;
     });
-  inflight.set(key, p);
-  return p;
+    entry = { promise, controller, subscribers: 0 };
+    inflight.set(key, entry);
+  }
+  const current = entry;
+  current.subscribers += 1;
+  let released = false;
+  return {
+    promise: current.promise,
+    release: () => {
+      if (released) return;
+      released = true;
+      current.subscribers -= 1;
+      // grace tick: a StrictMode remount re-subscribes immediately and must not cancel the request
+      setTimeout(() => {
+        if (current.subscribers <= 0 && inflight.get(key) === current) {
+          inflight.delete(key);
+          current.controller.abort();
+        }
+      }, 50);
+    },
+  };
 }
 
 function fill(template: string, values: Record<string, string | number>): string {
@@ -58,12 +99,18 @@ export function RouteMapCard({
   originText,
   destinationText,
   testId = "route-map",
+  debounceMs = DEBOUNCE_MS,
+  onResult,
 }: {
   dict: Dictionary;
   locale: string;
   originText: string;
   destinationText: string;
   testId?: string;
+  /** Wait this long after the last change of the texts before asking the server (default 350ms). */
+  debounceMs?: number;
+  /** Called with every settled result for the CURRENT texts (cached or fresh), e.g. to fill the trip distance. */
+  onResult?: (result: RouteMapResult) => void;
 }) {
   const t = dict.routeMap;
   const origin = originText.trim();
@@ -73,6 +120,8 @@ export function RouteMapCard({
     const cached = memory.get(key);
     return cached ? { phase: "done", result: cached } : { phase: "loading" };
   });
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
   const [trackedKey, setTrackedKey] = useState(key);
   if (trackedKey !== key) {
     setTrackedKey(key);
@@ -84,19 +133,25 @@ export function RouteMapCard({
     if (!origin || !destination) return;
     let cancelled = false;
     const cachedNow = memory.has(key);
+    let release: () => void = () => {};
     const timer = setTimeout(
       () => {
-        void load(key, origin, destination).then((result) => {
-          if (!cancelled) setState({ phase: "done", result });
+        const loading = load(key, origin, destination);
+        release = loading.release;
+        void loading.promise.then((result) => {
+          if (cancelled) return;
+          setState({ phase: "done", result });
+          onResultRef.current?.(result);
         });
       },
-      cachedNow ? 0 : DEBOUNCE_MS,
+      cachedNow ? 0 : debounceMs,
     );
     return () => {
       cancelled = true;
       clearTimeout(timer);
+      release();
     };
-  }, [key, origin, destination]);
+  }, [key, origin, destination, debounceMs]);
 
   if (!origin || !destination) return null;
 

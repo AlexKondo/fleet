@@ -7,6 +7,9 @@ import { MobileNav } from "../MobileNav";
 import { NavFeedback } from "./NavFeedback";
 import { NotificationBell } from "../dashboard/NotificationBell";
 import { UserMenu } from "../UserMenu";
+import { GlobalSearch } from "./GlobalSearch";
+import { AssistantPanel } from "./AssistantPanel";
+import { formatDate } from "@/lib/formatDateTime";
 import { LanguageToggle } from "../ui/LanguageToggle";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { FindRideIcon, LogoutIcon, TripsIcon } from "../NavIcons";
@@ -57,6 +60,9 @@ export async function FmShell({
   const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState } =
     await loadShellContext(role);
 
+  // "Hoje, dd/mm/aaaa" in Brasília time (the fleet's time zone, whatever the server runtime's zone is).
+  const todayText = dict.chrome.todayPill.replace("{date}", formatDate(new Date().toISOString(), locale));
+
   const base = buildBaseNavItems(dict, { role, isFleetManager, isAdministrator });
   // The employee's Home (SCR-USR-001) lives at /dashboard; managers keep "Painel" there.
   if (role === "employee") base[0] = { ...base[0]!, label: dict.dashboard.home.navHome, visible: true };
@@ -93,7 +99,7 @@ export async function FmShell({
         <aside className="fm-sidebar">
           <div className="fm-brand">
             <p className="fm-brand-name">FleetMind</p>
-            <p className="fm-brand-org">{orgName}</p>
+            <p className="fm-brand-org">{dict.chrome.brandTagline}</p>
           </div>
           <Link href="/trips/new" className="fm-cta">
             {dict.chrome.requestTrip}
@@ -101,12 +107,18 @@ export async function FmShell({
           <nav className="fm-nav" aria-label={dict.carpool.buscar.navMain}>
             {items.map(link)}
           </nav>
+          <AssistantPanel dict={dict} />
         </aside>
       )}
 
       <div className="fm-main">
         <header className="fm-topbar">
           <p className="fm-topbar-brand">FleetMind</p>
+          {licenseGateActive ? null : (
+            <div className="fm-topbar-search">
+              <GlobalSearch items={items.map(({ href, label }) => ({ href, label }))} dict={dict} />
+            </div>
+          )}
           <div className="fm-topbar-right">
             <LanguageToggle locale={locale} dict={dict} />
             {/* the FleetMind v2.0 look is light-only; the theme toggle would do nothing on these screens */}
@@ -126,10 +138,30 @@ export async function FmShell({
             </div>
           )}
             <div className="fm-topbar-desktop">
+              <span className="fm-tbpill fm-tbpill-date" data-testid="fm-today">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+                  <path d="M8 3v4M16 3v4M3.5 10h17" />
+                </svg>
+                {todayText}
+              </span>
+              {orgName && orgName !== "—" ? (
+                <span className="fm-tbpill fm-tbpill-org" data-testid="fm-org" title={dict.chrome.organizationLabel}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" />
+                    <circle cx="12" cy="10" r="2.3" />
+                  </svg>
+                  <span className="fm-tbpill-text">{orgName}</span>
+                </span>
+              ) : null}
               {licenseGateActive ? null : (
                 <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
               )}
               <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} avatarUrl={avatarUrl} dict={dict} />
+              <div className="fm-user" data-testid="fm-user">
+                <span className="fm-user-name">{userName}</span>
+                <span className="fm-user-role">{roleLabels[role] ?? role}</span>
+              </div>
               <form action={signOut}>
                 <button type="submit" className="fm-icon-btn" aria-label={dict.chrome.signOut}>
                   <LogoutIcon className="" />

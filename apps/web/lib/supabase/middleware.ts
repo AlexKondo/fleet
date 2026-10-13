@@ -48,6 +48,9 @@ function sanitizedHeaders(request: NextRequest): Headers {
  */
 export async function updateSupabaseSession(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname;
+  // /api/geo/* (route map + address autocomplete) are JSON endpoints: they need a session but must answer 401 JSON (never a
+  // redirect to the login page) and are not subject to the UI gates below (password change / CNH) - they only serve typing aids.
+  const isGeoApi = pathname.startsWith("/api/geo/");
   const isPublicRoute = PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (isPublicRoute) {
@@ -80,6 +83,9 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user && isGeoApi) {
+    return NextResponse.json({ error: "not_authenticated" }, { status: 401, headers: { "Cache-Control": "no-store" } });
+  }
   if (!user) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
@@ -90,7 +96,7 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
   // they set their own. Read off the JWT's app_metadata (already fetched above by
   // getUser(), which the client can't forge) instead of a second DB round trip to
   // profiles for every request.
-  if (user.app_metadata?.must_change_password && !pathname.startsWith("/account")) {
+  if (user.app_metadata?.must_change_password && !pathname.startsWith("/account") && !isGeoApi) {
     const accountUrl = new URL("/account", request.url);
     accountUrl.searchParams.set("forcePasswordChange", "1");
     return NextResponse.redirect(accountUrl);
@@ -105,7 +111,7 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
   // "security" is exempt — gate staff record vehicle movements, they don't drive. /account
   // (change password, personal data) stays reachable too — the user menu is visible during
   // this gate specifically so those two screens don't need the CNH uploaded first.
-  if (!pathname.startsWith("/account")) {
+  if (!pathname.startsWith("/account") && !isGeoApi) {
     // 0063: the license columns are revoked from `authenticated`; get_my_license() is the own-row reader.
     const [{ data: ownProfile }, ownLicense] = await Promise.all([
       supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),

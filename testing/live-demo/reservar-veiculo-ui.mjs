@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import {
-  BASE, PASSWORD, record, results, sql, provisionOrg, cleanupOrgs, ROOT, localIso,
+  BASE, PASSWORD, record, results, sql, provisionOrg, cleanupOrgs, ROOT, localIso, setTripDates,
 } from "./carpool-c5-lib.mjs";
 
 const OUT = path.join(ROOT, "resultado_de_testes", "design-v2", "implemented-usr002");
@@ -42,7 +42,7 @@ async function newPage(user, { width, height, base = BASE, mobile = false }) {
 const hydrated = (page) =>
   page.waitForFunction(() => {
     const f = document.querySelector("main form");
-    return Boolean(f) && Object.keys(f).some((k) => k.startsWith("__reactFiber") || k.startsWith("__reactProps"));
+    return Boolean(f) && Object.keys(f).some((k) => k.startsWith("__reactFiber") || k.startsWith("__reactProps")) && (f.dataset.ready === undefined || f.dataset.ready === "true");
   }, null, { timeout: 60000 });
 async function openForm(page, base = BASE) {
   await page.goto(base + "/trips/new", { waitUntil: "domcontentloaded", timeout: 90000 });
@@ -52,20 +52,19 @@ async function openForm(page, base = BASE) {
 }
 async function fillAndSearch(page, { origin, destination, passengers = 1 }) {
   const ret = new Date(dep.getTime() + 8 * 3600000);
-  await page.fill('input[name="departureAt"]', localIso(dep));
-  await page.fill('input[name="expectedReturnAt"]', localIso(ret));
+  await setTripDates(page, dep, ret); // date + time are separate inputs now ("Reservar igual")
   await page.fill('input[name="origin"]', origin);
   await page.fill('input[name="destination"]', destination);
   await page.fill('input[name="distanceKm"]', "20");
   await page.fill('input[name="passengerCount"]', String(passengers));
-  await page.fill('textarea[name="justification"]', "RV teste");
+  await page.selectOption("#rv-motivo", "training"); // "Motivo da viagem" is a select now
   await page.click('form button[type="submit"]:has-text("Buscar recomendação")');
 }
 const outcome = (page) =>
-  page.waitForSelector('[data-testid="carpool-offer-card"], [data-testid="host-offer-step"], .rv-vehicle, [data-testid="carpool-needs-precision"], [data-testid="carpool-unavailable"], .rv-error', { timeout: 120000 });
+  page.waitForSelector('[data-testid="carpool-offer-card"], [data-testid="host-offer-step"], [data-testid="vehicle-card-recommended"], [data-testid="carpool-needs-precision"], [data-testid="carpool-unavailable"], .rv-error', { timeout: 120000 });
 // The embedded route map card (Google Static Maps, added after this script was written) is intentional and
 // is excluded from the "no invented elements" checks; it has its own coverage in mapa-ui.mjs.
-const bodyText = (page) => page.evaluate(() => { const els = [...document.querySelectorAll('[data-testid="route-map"], [data-testid="route-map-unavailable"]')]; const prev = els.map((e) => e.style.display); els.forEach((e) => (e.style.display = "none")); const t = document.body.innerText; els.forEach((e, k) => (e.style.display = prev[k])); return t; });
+const bodyText = (page) => page.evaluate(() => { const els = [...document.querySelectorAll('[data-testid="route-map"], [data-testid="route-map-unavailable"], [data-testid="rv-map-empty"], [data-testid="fm-assistant-panel"]')]; const prev = els.map((e) => e.style.display); els.forEach((e) => (e.style.display = "none")); const t = document.body.innerText; els.forEach((e, k) => (e.style.display = prev[k])); return t; });
 const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 const smallTargets = (page) =>
   page.evaluate(() =>
@@ -82,7 +81,8 @@ const smallTargets = (page) =>
   );
 const stepState = (page) => page.evaluate(() => [...document.querySelectorAll(".rv-step")].map((li) => li.querySelector(".rv-step-label").firstChild.textContent.trim() + ":" + li.dataset.state));
 const lum = (rgb) => { const [r, g, b] = rgb.match(/[0-9]+(?:[.][0-9]+)?/g).slice(0, 3).map((v) => { const c = Number(v) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
-const INVENTED = /match \d|★|\bmapa\b|promo|uso recente|por período|por destino|uso recorrente|minha localização|filtros|km \(elétrico\)|%/i;
+// "Reservar igual": vehicle cards now show REAL energy levels ("Bateria 90%"), so a bare % is no longer a sign of invented data (Match %, stars, promo... remain forbidden).
+const INVENTED = /match \d|★|\bmapa\b|promo|uso recente|por período|por destino|uso recorrente|minha localização|filtros|km \(elétrico\)/i;
 
 try {
   const A = await provisionOrg("rv", [["host", "employee"], ["rider", "employee"], ["rider2", "employee"], ["rider3", "employee"], ["mgr", "fleet_manager"], ["adm", "administrator"]]);
@@ -122,7 +122,7 @@ try {
   await fab.click();
   const strongBorder = await d.evaluate(() => getComputedStyle(document.querySelector('input[name="origin"]')).borderTopColor);
   record("Input edge contrast on white >= 3:1", 1.05 / (lum(strongBorder) + 0.05) >= 3, strongBorder);
-  record("Desktop: step header shows 3 steps, 'Viagem' current", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:current", "Veículo:todo", "Confirmação:todo"]), await stepState(d));
+  record("Desktop: step header shows the 4 art steps (Viagem, Veículo, Carona, Confirmação), 'Viagem' current", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:current", "Veículo:todo", "Carona:todo", "Confirmação:todo"]), await stepState(d));
   record("Desktop: no horizontal scroll", (await hscroll(d)) <= 0);
   const ph = await d.evaluate(() => getComputedStyle(document.querySelector('input[name="destination"]'), "::placeholder").color);
   record("Placeholder contrast on white >= 4.5:1", 1.05 / (lum(ph) + 0.05) >= 4.5, ph);
@@ -139,9 +139,9 @@ try {
   await d.waitForSelector('[data-testid="host-offer-step"]', { timeout: 120000 });
   const noCarpoolTxt = await bodyText(d);
   record("No-carpool state: carpool block does NOT appear at all (no banner either)", (await d.locator('[data-testid="carpool-first"]').count()) === 0 && (await d.locator("#rv-carpool-title").count()) === 0 && !/Não encontramos caronas/i.test(noCarpoolTxt));
-  record("No-carpool state: recommended vehicle + host offer step (Yes/No) shown", (await d.locator(".rv-plate").count()) >= 1 && /Veículo recomendado/.test(noCarpoolTxt) && (await d.locator('input[name="offerChoice"][value="yes"]').count()) === 1 && (await d.locator('input[name="offerChoice"][value="no"]').isChecked()));
-  record("No-carpool state: step header = Viagem done, Veículo current", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:done", "Veículo:current", "Confirmação:todo"]), await stepState(d));
-  record("Other eligible vehicle listed with a Escolher button", (await d.locator(".rv-alt").count()) === 1 && (await d.locator('.rv-alt button:has-text("Escolher")').count()) === 1);
+  record("No-carpool state: recommended vehicle + host offer step (Yes/No) shown", (await d.locator(".rv-plate").count()) >= 1 && /Veículo recomendado/.test(noCarpoolTxt) && /Recomendado/.test(await d.locator('[data-testid="vehicle-card-recommended"]').innerText()) && (await d.locator('input[name="offerChoice"][value="yes"]').count()) === 1 && (await d.locator('input[name="offerChoice"][value="no"]').isChecked()));
+  record("No-carpool state: step header = Viagem done, Veículo current", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:done", "Veículo:current", "Carona:todo", "Confirmação:todo"]), await stepState(d));
+  record("Other eligible vehicle listed as a card with a Selecionar button", (await d.locator('[data-testid="vehicle-card"]').count()) === 1 && (await d.locator('[data-testid="vehicle-card"] button:has-text("Selecionar")').count()) === 1);
   record("Requests-reservation button present", (await d.locator('button:has-text("Solicitar reserva")').count()) === 1);
   record("No invented elements on result (map/photo/rating/match %/image)", !INVENTED.test(noCarpoolTxt) && (await d.locator(".fm-theme main img:not([data-testid=\"route-map-img\"])").count()) === 0, noCarpoolTxt.match(INVENTED)?.[0]);
   await d.check('input[name="offerChoice"][value="yes"]');
@@ -200,19 +200,18 @@ try {
   await d.waitForTimeout(800);
   const cardTxt = await d.locator('[data-testid="carpool-offer-card"]').first().innerText();
   record("Compatible state: 1 offer card with departure, detour, seats, Solicitar carona", (await d.locator('[data-testid="carpool-offer-card"]').count()) === 1 && /\d{2}:\d{2}/.test(cardTxt) && /\+[\d.]+ km/.test(cardTxt) && /vagas?/.test(cardTxt) && /Solicitar carona/.test(cardTxt), cardTxt.replace(/\n/g, " | "));
-  record("Compatible state: vehicle is held back until the rider continues (existing flow)", (await d.locator(".rv-plate").count()) === 0 && (await d.locator('[data-testid="host-offer-step"]').count()) === 0);
-  record("Compatible state: step header has 4 steps, Carona current", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:done", "Carona:current", "Veículo:todo", "Confirmação:todo"]), await stepState(d));
+  record("Compatible state: vehicle list is shown TOGETHER with the carpool block (no 'continue' gating any more)", (await d.locator(".rv-plate").count()) >= 1 && (await d.locator('[data-testid="host-offer-step"]').count()) === 1 && (await d.locator('button:has-text("Continuar com veículo")').count()) === 0);
+  record("Compatible state: step header has 4 steps, Carona current (Veículo is the next step)", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:done", "Veículo:todo", "Carona:current", "Confirmação:todo"]), await stepState(d));
   const all = await bodyText(d);
   record("Compatible state: privacy (no host name) and no invented elements", !all.includes(U.host.fullName) && !INVENTED.test(all) && (await d.locator(".fm-theme main img:not([data-testid=\"route-map-img\"])").count()) === 0, all.match(INVENTED)?.[0]);
   record("Compatible state: places confirmation shown", /origem/i.test(await d.locator('[data-testid="carpool-places"]').innerText()));
   await shot(d, "03-desktop-carpool-compatible");
 
-  await d.click('button:has-text("Continuar com veículo")');
   await d.waitForSelector(".rv-plate", { timeout: 30000 });
   const yCarpool = (await d.locator('[data-testid="carpool-first"]').boundingBox()).y;
   const yVehicle = (await d.locator(".rv-plate").first().boundingBox()).y;
-  record("After continuing: carpool block is rendered BEFORE the vehicle (higher on the page)", yCarpool < yVehicle, { yCarpool, yVehicle });
-  record("After continuing: step header = Viagem/Carona done, Veículo current", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:done", "Carona:done", "Veículo:current", "Confirmação:todo"]), await stepState(d));
+  record("Carpool block is rendered BEFORE the vehicle list (higher on the page)", yCarpool < yVehicle, { yCarpool, yVehicle });
+  record("Step header = Viagem done, Carona current (Veículo is the next step)", JSON.stringify(await stepState(d)) === JSON.stringify(["Viagem:done", "Veículo:todo", "Carona:current", "Confirmação:todo"]), await stepState(d));
   await shot(d, "04-desktop-carpool-then-vehicle");
 
   await d.click('[data-testid="carpool-offer-card"] button:has-text("Solicitar carona")');
@@ -238,11 +237,9 @@ try {
   await fillAndSearch(d, { origin: RIDER_ORIGIN, destination: "São Paulo" });
   await d.waitForSelector('[data-testid="carpool-needs-precision"], [data-testid="carpool-unavailable"]', { timeout: 120000 });
   const np = await bodyText(d);
-  record("Needs-precision state: asks for a precise place, no vehicle yet", /apenas uma cidade/.test(np) && (await d.locator(".rv-plate").count()) === 0);
+  record("Needs-precision state: asks for a precise place and the vehicle list is already visible", /apenas uma cidade/.test(np) && (await d.locator(".rv-plate").count()) >= 1);
   await shot(d, "06-desktop-needs-precision");
-  await d.click('button:has-text("Continuar sem buscar carona")');
-  await d.waitForSelector(".rv-plate, .rv-error", { timeout: 60000 });
-  record("Needs-precision: 'continue without carpool' reveals the vehicle result", (await d.locator(".rv-plate").count()) >= 1);
+  record("Needs-precision: there is no 'continue without carpool' button any more", (await d.locator('button:has-text("Continuar sem buscar carona")').count()) === 0);
 
   // ---- no vehicle available / validation: plan error path is exercised by a far destination with 99 passengers
   await openForm(d);

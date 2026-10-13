@@ -8,24 +8,39 @@ import type { Dictionary } from "../../../lib/i18n/dictionaries";
 import type { CarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { fillTemplate } from "@/lib/carpool/errorText";
 import { CarpoolFirstPanel } from "./CarpoolFirstPanel";
+import { VehicleOptions, type VehicleOption } from "./VehicleOptions";
 import { RouteMapCard } from "../../carpool/RouteMapCard";
+import { PlaceAutocomplete } from "../../carpool/PlaceAutocomplete";
+import type { RouteMapResult } from "../../carpool/routeMapActions";
 import { parseBrasiliaLocalDateTime } from "@/lib/trips/brasiliaLocalDateTime";
-import { RvCarIcon, RvCheckIcon, RvUsersIcon } from "./rvIcons";
+import {
+  composeLocalDateTime,
+  justificationFor,
+  MOTIVO_KEYS,
+  motivoFromJustification,
+  splitLocalDateTime,
+  type MotivoKey,
+  type MotivoLabels,
+} from "@/lib/trips/reservarForm";
+import { RvCheckIcon, RvUsersIcon } from "./rvIcons";
 import "./reservar.css";
 
-/** ISO instant -> "YYYY-MM-DDTHH:mm" in Brasília time (the zone-less datetime-local value is read as Brasília time, see brasiliaLocalDateTime.ts). */
+/** ISO instant -> "YYYY-MM-DDTHH:mm" in Brasília time (the zone-less value is read as Brasília time, see brasiliaLocalDateTime.ts). */
 function toLocalInputValue(iso: string): string {
   return new Date(iso)
     .toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })
     .replace(" ", "T");
 }
 
-type StepKey = "trip" | "carpool" | "vehicle" | "confirm";
+type StepKey = "trip" | "vehicle" | "carpool" | "confirm";
 
 const DRAFT_STORAGE_KEY = "fleet.trip-request-draft.v1";
 // Only worth restoring if it's from moments ago (e.g. a stray remount right after
 // submitting) — an old abandoned draft from a prior visit shouldn't reappear.
 const DRAFT_MAX_AGE_MS = 5 * 60 * 1000;
+/** The route map waits this long after the last change of origin / destination before asking the server. */
+const MAP_DEBOUNCE_MS = 700;
+const MIN_PLACE_CHARS = 3;
 
 interface TripRequestDraft {
   savedAt: number;
@@ -66,6 +81,19 @@ function clearDraft(): void {
   }
 }
 
+const PinIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" />
+    <circle cx="12" cy="10" r="2.3" />
+  </svg>
+);
+const MapIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z" />
+    <path d="M9 4v14M15 6v14" />
+  </svg>
+);
+
 export function TripRequestForm({
   dict,
   locale,
@@ -82,61 +110,108 @@ export function TripRequestForm({
   const rv = dict.trips.reservar;
   const reasonLabel = (reason: string): string =>
     (dict.trips.reasons as Record<string, string>)[reason] ?? reason;
+  const motivoLabels: MotivoLabels = {
+    meeting: rv.reasonMeeting,
+    clientVisit: rv.reasonClientVisit,
+    training: rv.reasonTraining,
+    delivery: rv.reasonDelivery,
+    maintenance: rv.reasonMaintenance,
+    other: rv.reasonOther,
+  };
   const [plan, planAction, isPlanning] = useActionState<PlanTripResult | null, FormData>(
     planTripAction,
     null,
   );
-  const formRef = useRef<HTMLFormElement>(null);
   const [formInput, setFormInput] = useState<TripFormInput | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [isConfirming, startConfirming] = useTransition();
-  // Read once, on mount — see writeDraft/readDraft: a defensive backstop against a stray
-  // client-side remount losing whatever the user had just typed (matches feedback: form
-  // fields reverting to today's date right after clicking "Buscar recomendação").
-  const [draft] = useState(readDraft);
-  // Phase C5: UI state that belongs to ONE plan result. React's "adjust state when a prop/value
-  // changes" pattern: whenever a NEW plan arrives the reveal flag and the host's seat choice
-  // reset (no effect, no stale flash).
+  // Every field is CONTROLLED: React 19 resets an uncontrolled <form action> to its defaults once the action settles, which
+  // would wipe the trip after each search. Controlled state survives it (and the carpool "adjust the field and search again"
+  // prompt keeps the rider's values).
+  // The server render and the first client render use the same STATIC defaults (no sessionStorage, no clock): the draft
+  // (a defensive backstop against a stray remount losing what the user had typed, see writeDraft/readDraft) and the default
+  // dates are applied right after hydration, so the markup can never differ between server and client.
+  const [origin, setOrigin] = useState("Iracemápolis");
+  const [destination, setDestination] = useState("");
+  const [depDate, setDepDate] = useState("");
+  const [depTime, setDepTime] = useState("");
+  const [retDate, setRetDate] = useState("");
+  const [retTime, setRetTime] = useState("");
+  const [motivo, setMotivo] = useState<MotivoKey>("meeting");
+  const [motivoOther, setMotivoOther] = useState("");
+  const [searchCarpool, setSearchCarpool] = useState(true);
+  const [passengers, setPassengers] = useState("1");
+  const [cargo, setCargo] = useState(false);
+  const [allowCarpool, setAllowCarpool] = useState(true);
+  // Distance: filled from the route once it is known, unless the rider typed their own value (then it is never overwritten).
+  const [distance, setDistance] = useState("100");
+  const [distanceAuto, setDistanceAuto] = useState(false);
+  const distanceTouched = useRef(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const draft = readDraft();
+    const now = Date.now();
+    const dep = splitLocalDateTime(draft.departureAt ?? toLocalInputValue(new Date(now + 60 * 60 * 1000).toISOString()));
+    const ret = splitLocalDateTime(draft.expectedReturnAt ?? toLocalInputValue(new Date(now + 9 * 60 * 60 * 1000).toISOString()));
+    setDepDate(dep.date);
+    setDepTime(dep.time);
+    setRetDate(ret.date);
+    setRetTime(ret.time);
+    if (draft.origin !== undefined) setOrigin(draft.origin);
+    if (draft.destination !== undefined) setDestination(draft.destination);
+    if (draft.justification !== undefined) {
+      const m = motivoFromJustification(draft.justification, motivoLabels);
+      setMotivo(m.key);
+      setMotivoOther(m.other);
+    }
+    if (draft.searchCarpool === "off") setSearchCarpool(false);
+    if (draft.passengerCount !== undefined) setPassengers(draft.passengerCount);
+    if (draft.requiresCargo === "on") setCargo(true);
+    if (draft.allowCarpool !== undefined) setAllowCarpool(draft.allowCarpool === "on");
+    if (draft.distanceKm !== undefined) {
+      distanceTouched.current = true;
+      setDistance(draft.distanceKm);
+    }
+    setReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const departureAt = composeLocalDateTime(depDate, depTime);
+  const expectedReturnAt = composeLocalDateTime(retDate, retTime);
+  const justification = justificationFor(motivo, motivoOther, motivoLabels);
+
+  // Map: both places filled -> debounced (700ms after the last change / selection) -> RouteMapCard (server + in-memory caches).
+  const [mapTexts, setMapTexts] = useState<{ origin: string; destination: string } | null>(null);
+  useEffect(() => {
+    const o = origin.trim();
+    const d = destination.trim();
+    if (o.length < MIN_PLACE_CHARS || d.length < MIN_PLACE_CHARS) {
+      setMapTexts(null);
+      return;
+    }
+    const timer = setTimeout(() => setMapTexts({ origin: o, destination: d }), MAP_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [origin, destination]);
+
+  function onRouteResult(result: RouteMapResult) {
+    if (result.status !== "ok" || distanceTouched.current) return;
+    setDistance(String(Math.max(1, Math.round(result.distanceKm))));
+    setDistanceAuto(true);
+  }
+
+  // UI state that belongs to ONE plan result. React's "adjust state when a prop/value changes" pattern: whenever a NEW plan
+  // arrives the host's seat choice and the energy filter reset (no effect, no stale flash).
   const [trackedPlan, setTrackedPlan] = useState(plan);
-  const [vehicleRevealed, setVehicleRevealed] = useState(false);
   const [offer, setOffer] = useState<{ choice: "yes" | "no"; seats: string }>({ choice: "no", seats: "" });
+  const [energyFilter, setEnergyFilter] = useState("all");
   if (plan !== trackedPlan) {
     setTrackedPlan(plan);
-    setVehicleRevealed(false);
     setOffer({ choice: "no", seats: "" });
+    setEnergyFilter("all");
   }
   const carpoolFirst = plan && !plan.error ? plan.carpoolFirst : undefined;
-  // The vehicle result follows automatically unless carpool-first has offers to decide on or is
-  // asking for a more precise place; the rider can always continue with a click.
-  const vehicleVisible =
-    !carpoolFirst ||
-    carpoolFirst.status === "none" ||
-    carpoolFirst.status === "unavailable" ||
-    vehicleRevealed;
   const hostStepEnabled = Boolean(plan?.carpoolGating?.hostStep);
-
-  // React 19 resets an uncontrolled <form action> to its defaults once the action settles. The
-  // carpool clarification prompt asks the rider to "adjust the field and search again", so after
-  // each result the LAST SUBMITTED values are put back (otherwise every search would wipe the
-  // trip and the rider would have to retype everything). Runs after the reset has been applied.
-  useEffect(() => {
-    const form = formRef.current;
-    if (!plan || !formInput || !form) return;
-    const set = (name: string, value: string) => {
-      const el = form.elements.namedItem(name);
-      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) el.value = value;
-    };
-    set("departureAt", toLocalInputValue(formInput.departureAt));
-    set("expectedReturnAt", toLocalInputValue(formInput.expectedReturnAt));
-    set("origin", formInput.origin);
-    set("destination", formInput.destination);
-    set("distanceKm", String(formInput.distanceKm));
-    set("passengerCount", String(formInput.passengerCount));
-    set("justification", formInput.justification);
-    const cargo = form.elements.namedItem("requiresCargo");
-    if (cargo instanceof HTMLInputElement) cargo.checked = formInput.requiresCargo;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan]);
 
   function seatCapFor(targetId: string | undefined): number {
     if (!plan?.vehicle) return 0;
@@ -199,30 +274,27 @@ export function TripRequestForm({
     });
   }
 
-  const now = new Date();
-  const defaultDeparture =
-    draft.departureAt ?? toLocalInputValue(new Date(now.getTime() + 60 * 60 * 1000).toISOString());
-  const defaultReturn =
-    draft.expectedReturnAt ?? toLocalInputValue(new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString());
-
-  // Step header: VISUAL ONLY. It mirrors where this single page currently is; it is not a wizard.
+  // Step header: VISUAL ONLY (art order: Viagem, Veículo, Carona, Confirmação). It mirrors the state of this single page; it is
+  // not a wizard. "Carona" only counts when carpool is on for this search (org policy + the toggle).
+  const planOk = Boolean(plan && !plan.error);
   const legacyCarpoolPlan = Boolean(plan && !plan.error && plan.type === "carpool" && plan.carpoolOptions?.length);
-  const hasCarpoolStep = carpoolFirst?.status === "offers" || legacyCarpoolPlan;
-  const stepKeys: readonly StepKey[] = hasCarpoolStep
-    ? (["trip", "carpool", "vehicle", "confirm"] as const)
-    : (["trip", "vehicle", "confirm"] as const);
-  const currentStep: StepKey = !plan || plan.error
-    ? "trip"
-    : isConfirming
-      ? "confirm"
-      : carpoolFirst?.status === "offers" && !vehicleRevealed
-        ? "carpool"
-        : legacyCarpoolPlan
-          ? "carpool"
-          : plan.type === "vehicle" && plan.vehicle && vehicleVisible
-            ? "vehicle"
-            : "trip";
-  const currentIdx = stepKeys.indexOf(currentStep);
+  const carpoolOn = (carpoolMode.carpoolFirst && searchCarpool) || legacyCarpoolPlan;
+  const stepKeys: readonly StepKey[] = carpoolOn ? ["trip", "vehicle", "carpool", "confirm"] : ["trip", "vehicle", "confirm"];
+  // Exactly ONE step is current: with carpool offers the page is at "Carona" (the vehicle list is visible too, but it is the next step);
+  // otherwise it is at "Veículo".
+  const hasOffers = carpoolFirst?.status === "offers" || legacyCarpoolPlan;
+  const stepState = (key: StepKey): "done" | "current" | "todo" => {
+    switch (key) {
+      case "trip":
+        return planOk ? "done" : "current";
+      case "vehicle":
+        return !planOk ? "todo" : isConfirming ? "done" : hasOffers ? "todo" : "current";
+      case "carpool":
+        return !planOk ? "todo" : isConfirming ? "done" : hasOffers ? "current" : "todo";
+      case "confirm":
+        return isConfirming ? "current" : "todo";
+    }
+  };
   const stepText: Record<StepKey, [string, string]> = {
     trip: [rv.stepTrip, rv.stepTripHint],
     carpool: [rv.stepCarpool, rv.stepCarpoolHint],
@@ -241,109 +313,328 @@ export function TripRequestForm({
     </ul>
   );
 
+  // The vehicle options (real data only): the recommended one first, then every other eligible vehicle.
+  const vehicleOptions: VehicleOption[] =
+    plan && !plan.error && plan.type === "vehicle" && plan.vehicle
+      ? [
+          {
+            vehicleId: plan.vehicle.vehicleId,
+            plate: plan.vehicle.plate,
+            vehicleName: plan.vehicle.vehicleName,
+            categoryName: plan.vehicle.categoryName,
+            info: plan.vehicle.info,
+            energyType: plan.vehicle.info.energyType,
+            recommended: true,
+          },
+          ...plan.vehicle.alternatives.map((alt) => ({
+            vehicleId: alt.vehicleId,
+            plate: alt.plate,
+            vehicleName: alt.vehicleName,
+            categoryName: alt.categoryName,
+            info: alt.info,
+            energyType: alt.info.energyType,
+            recommended: false,
+          })),
+        ]
+      : [];
+
+  const recommendedExtras = plan?.vehicle ? (
+    <>
+      {reasonList(plan.vehicle.reasons)}
+      {plan.vehicle.requiredPreparation && plan.vehicle.requiredPreparation.length > 0 ? (
+        <p className="rv-warn">{t.preparationNote}</p>
+      ) : null}
+      {plan.vehicle.trafficRestriction?.restricted ? (
+        <div className="rv-warn">
+          <p className="rv-warn-title">{t.trafficRestrictionTitle}</p>
+          <p>{t.trafficRestrictionBody}</p>
+        </div>
+      ) : null}
+      {hostStepEnabled ? (
+        <fieldset data-testid="host-offer-step" className="rv-host">
+          <legend>{ct.hostQuestion}</legend>
+          {plan.vehicle.maxOfferableSeats < 1 ? (
+            <p className="rv-hint">{ct.noFreeSeats}</p>
+          ) : (
+            <>
+              <div className="rv-seg-row">
+                <label className="rv-seg">
+                  <input
+                    type="radio"
+                    name="offerChoice"
+                    value="yes"
+                    checked={offer.choice === "yes"}
+                    onChange={() =>
+                      setOffer((o) => ({
+                        choice: "yes",
+                        seats: o.seats || String(plan.vehicle!.maxOfferableSeats),
+                      }))
+                    }
+                  />
+                  {ct.yes}
+                </label>
+                <label className="rv-seg">
+                  <input
+                    type="radio"
+                    name="offerChoice"
+                    value="no"
+                    checked={offer.choice === "no"}
+                    onChange={() => setOffer((o) => ({ ...o, choice: "no" }))}
+                  />
+                  {ct.no}
+                </label>
+              </div>
+              {offer.choice === "yes" ? (
+                <div className="fm-field" role="group" aria-labelledby="rv-offer-seats-label">
+                  <label id="rv-offer-seats-label" htmlFor="rv-offer-seats" className="fm-label">
+                    {fillTemplate(ct.seatsLabel, { max: plan.vehicle.maxOfferableSeats })}
+                  </label>
+                  <div className="rv-stepper">
+                    <button
+                      type="button"
+                      className="rv-stepper-btn"
+                      aria-label={rv.decreaseSeats}
+                      onClick={() => stepSeats(-1, plan.vehicle!.maxOfferableSeats)}
+                    >
+                      −
+                    </button>
+                    <input
+                      id="rv-offer-seats"
+                      type="number"
+                      name="offerSeats"
+                      min={1}
+                      max={plan.vehicle.maxOfferableSeats}
+                      value={offer.seats}
+                      onChange={(e) => setOffer((o) => ({ ...o, seats: e.target.value }))}
+                      className="fm-input"
+                    />
+                    <button
+                      type="button"
+                      className="rv-stepper-btn"
+                      aria-label={rv.increaseSeats}
+                      onClick={() => stepSeats(1, plan.vehicle!.maxOfferableSeats)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+              <p className="rv-hint">{ct.hostHint}</p>
+            </>
+          )}
+        </fieldset>
+      ) : null}
+    </>
+  ) : null;
+
   return (
     <div className="rv">
       <ol className="rv-steps" aria-label={rv.stepsLabel} data-testid="rv-steps">
         {stepKeys.map((key, i) => {
-          const state = i < currentIdx ? "done" : i === currentIdx ? "current" : "todo";
+          const state = stepState(key);
           return (
-            <li key={key} className="rv-step" data-state={state} aria-current={state === "current" ? "step" : undefined}>
+            <li key={key} className="rv-step" data-state={state} data-step={key} aria-current={state === "current" ? "step" : undefined}>
               <span className="rv-step-dot" aria-hidden="true">
                 {state === "done" ? <RvCheckIcon /> : i + 1}
               </span>
-              <span className="rv-step-label">
-                {stepText[key][0]}
-                {state !== "todo" ? (
-                  <span className="fm-sr-only"> ({state === "done" ? rv.stepDone : rv.stepCurrent})</span>
-                ) : null}
+              <span className="rv-step-text">
+                <span className="rv-step-label">
+                  {stepText[key][0]}
+                  {state !== "todo" ? (
+                    <span className="fm-sr-only"> ({state === "done" ? rv.stepDone : rv.stepCurrent})</span>
+                  ) : null}
+                </span>
+                <span className="rv-step-hint">{stepText[key][1]}</span>
               </span>
-              <span className="rv-step-hint">{stepText[key][1]}</span>
             </li>
           );
         })}
       </ol>
 
-      <form ref={formRef} action={planAction} onSubmit={handleFormSubmit} className="fm-card rv-form">
-        <h2 className="fm-h2">{rv.detailsTitle}</h2>
-        <div className="rv-grid">
-          <label className="fm-field">
-            <span className="fm-label">{t.originLabel}</span>
-            <input name="origin" required defaultValue={draft.origin ?? "Iracemápolis"} className="fm-input" />
-          </label>
-          <label className="fm-field">
-            <span className="fm-label">{t.destinationLabel}</span>
-            <input
-              name="destination"
-              required
-              defaultValue={draft.destination}
-              placeholder={t.destinationPlaceholder}
-              className="fm-input"
-            />
-          </label>
-          <label className="fm-field">
-            <span className="fm-label">{t.departureLabel}</span>
-            <input type="datetime-local" name="departureAt" required defaultValue={defaultDeparture} className="fm-input" />
-          </label>
-          <label className="fm-field">
-            <span className="fm-label">{t.expectedReturnLabel}</span>
-            <input type="datetime-local" name="expectedReturnAt" required defaultValue={defaultReturn} className="fm-input" />
-          </label>
-          <label className="fm-field">
-            <span className="fm-label">{t.distanceLabel}</span>
-            <input type="number" name="distanceKm" required min={1} defaultValue={draft.distanceKm ?? 100} className="fm-input" />
-          </label>
-          <label className="fm-field">
-            <span className="fm-label">{t.passengersLabel}</span>
-            <input type="number" name="passengerCount" required min={1} defaultValue={draft.passengerCount ?? 1} className="fm-input" />
-          </label>
-
-          <label className="rv-check rv-span-2">
-            <input type="checkbox" name="requiresCargo" defaultChecked={draft.requiresCargo === "on"} />
-            <span>{t.cargoLabel}</span>
-          </label>
-
-          {carpoolMode.newEngine ? (
-            // Phase C5 decision: with the new carpool engine the old consent checkbox would be a
-            // confusing second carpool question. It is hidden; the value stays "on" so the DB
-            // default (allow_carpool = true) and the chat slot semantics are unchanged. The new
-            // Yes/No "offer seats" step (after the vehicle recommendation) is the only question.
-            <input type="hidden" name="allowCarpool" value="on" />
-          ) : (
-            <label className="rv-check rv-span-2">
-              <input
-                type="checkbox"
-                name="allowCarpool"
-                defaultChecked={draft.allowCarpool !== undefined ? draft.allowCarpool === "on" : true}
+      <div className="rv-top">
+        <form action={planAction} onSubmit={handleFormSubmit} className="fm-card rv-form" data-testid="rv-form" data-ready={ready ? "true" : "false"}>
+          <h2 className="fm-h2">{rv.detailsTitle}</h2>
+          <div className="rv-grid">
+            <div className="fm-field rv-s7">
+              <label className="fm-label" htmlFor="rv-origin">{t.originLabel}</label>
+              <PlaceAutocomplete
+                id="rv-origin"
+                name="origin"
+                value={origin}
+                onChange={setOrigin}
+                dict={dict}
+                required
+                icon={<PinIcon />}
+                clearLabel={`${dict.carpool.buscar.clearField}: ${t.originLabel}`}
+                testId="rv-origin"
               />
-              <span>{t.allowCarpoolLabel}</span>
+            </div>
+            <div className="fm-field rv-s7">
+              <label className="fm-label" htmlFor="rv-destination">{t.destinationLabel}</label>
+              <PlaceAutocomplete
+                id="rv-destination"
+                name="destination"
+                value={destination}
+                onChange={setDestination}
+                dict={dict}
+                required
+                placeholder={t.destinationPlaceholder}
+                icon={<PinIcon />}
+                clearLabel={`${dict.carpool.buscar.clearField}: ${t.destinationLabel}`}
+                testId="rv-destination"
+              />
+            </div>
+
+            <div className="fm-field rv-s4">
+              <label className="fm-label" htmlFor="rv-dep-date">{rv.departureDateLabel}</label>
+              <input id="rv-dep-date" type="date" required value={depDate} onChange={(e) => setDepDate(e.target.value)} className="fm-input" data-testid="rv-dep-date" />
+            </div>
+            <div className="fm-field rv-s3">
+              <label className="fm-label" htmlFor="rv-dep-time">{rv.departureTimeLabel}</label>
+              <input id="rv-dep-time" type="time" required value={depTime} onChange={(e) => setDepTime(e.target.value)} className="fm-input" data-testid="rv-dep-time" />
+            </div>
+            <div className="fm-field rv-s4">
+              <label className="fm-label" htmlFor="rv-ret-date">{rv.returnDateLabel}</label>
+              <input id="rv-ret-date" type="date" required value={retDate} onChange={(e) => setRetDate(e.target.value)} className="fm-input" data-testid="rv-ret-date" />
+            </div>
+            <div className="fm-field rv-s3">
+              <label className="fm-label" htmlFor="rv-ret-time">{rv.returnTimeLabel}</label>
+              <input id="rv-ret-time" type="time" required value={retTime} onChange={(e) => setRetTime(e.target.value)} className="fm-input" data-testid="rv-ret-time" />
+            </div>
+            {/* composed values, same names and Brasília-time semantics as before (parseBrasiliaLocalDateTime) */}
+            <input type="hidden" name="departureAt" value={departureAt} />
+            <input type="hidden" name="expectedReturnAt" value={expectedReturnAt} />
+
+            <div className="fm-field rv-s7">
+              <label className="fm-label" htmlFor="rv-motivo">{rv.reasonLabel}</label>
+              <select id="rv-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value as MotivoKey)} className="fm-input rv-select" data-testid="rv-motivo">
+                {MOTIVO_KEYS.map((k) => (
+                  <option key={k} value={k}>
+                    {motivoLabels[k]}
+                  </option>
+                ))}
+              </select>
+              {motivo === "other" ? (
+                <input
+                  type="text"
+                  aria-label={rv.reasonOtherLabel}
+                  placeholder={rv.reasonOtherPlaceholder}
+                  required
+                  maxLength={200}
+                  value={motivoOther}
+                  onChange={(e) => setMotivoOther(e.target.value)}
+                  className="fm-input"
+                  data-testid="rv-motivo-other"
+                />
+              ) : null}
+              <input type="hidden" name="justification" value={justification} />
+            </div>
+
+            {carpoolMode.carpoolFirst ? (
+            <div className="rv-s7 rv-toggle-box">
+              <label className="rv-toggle" htmlFor="rv-search-carpool">
+                <span className="rv-toggle-text">
+                  <span className="rv-toggle-label">{rv.searchCarpoolLabel}</span>
+                  <span className="rv-toggle-hint">{rv.searchCarpoolHint}</span>
+                </span>
+                <input
+                  id="rv-search-carpool"
+                  type="checkbox"
+                  role="switch"
+                  checked={searchCarpool}
+                  onChange={(e) => setSearchCarpool(e.target.checked)}
+                  data-testid="rv-search-carpool"
+                />
+              </label>
+              <input type="hidden" name="searchCarpool" value={searchCarpool ? "on" : "off"} />
+            </div>
+            ) : null}
+
+            <div className="fm-field rv-s4">
+              <label className="fm-label" htmlFor="rv-distance">{t.distanceLabel}</label>
+              <input
+                id="rv-distance"
+                type="number"
+                name="distanceKm"
+                required
+                min={1}
+                value={distance}
+                onChange={(e) => {
+                  distanceTouched.current = true;
+                  setDistanceAuto(false);
+                  setDistance(e.target.value);
+                }}
+                className="fm-input"
+                aria-describedby={distanceAuto ? "rv-distance-hint" : undefined}
+                data-auto={distanceAuto ? "true" : undefined}
+                data-testid="rv-distance"
+              />
+              {distanceAuto ? (
+                <span id="rv-distance-hint" className="rv-hint" data-testid="rv-distance-auto">
+                  {rv.distanceAuto}
+                </span>
+              ) : null}
+            </div>
+            <div className="fm-field rv-s3">
+              <label className="fm-label" htmlFor="rv-passengers">{t.passengersLabel}</label>
+              <input id="rv-passengers" type="number" name="passengerCount" required min={1} value={passengers} onChange={(e) => setPassengers(e.target.value)} className="fm-input" />
+            </div>
+
+            <label className="rv-check rv-s14">
+              <input type="checkbox" name="requiresCargo" checked={cargo} onChange={(e) => setCargo(e.target.checked)} />
+              <span>{t.cargoLabel}</span>
             </label>
+
+            {carpoolMode.newEngine ? (
+              // Phase C5 decision: with the new carpool engine the old consent checkbox would be a
+              // confusing second carpool question. It is hidden; the value stays "on" so the DB
+              // default (allow_carpool = true) and the chat slot semantics are unchanged. The new
+              // Yes/No "offer seats" step (after the vehicle recommendation) is the only question.
+              <input type="hidden" name="allowCarpool" value="on" />
+            ) : (
+              <label className="rv-check rv-s14">
+                <input type="checkbox" name="allowCarpool" checked={allowCarpool} onChange={(e) => setAllowCarpool(e.target.checked)} />
+                <span>{t.allowCarpoolLabel}</span>
+              </label>
+            )}
+          </div>
+
+          <button type="submit" disabled={isPlanning} className="fm-btn fm-btn-primary rv-submit">
+            {isPlanning ? t.submitPending : t.submit}
+          </button>
+        </form>
+
+        {/* Route map: loads once BOTH places are filled (debounced), independent of the recommendation (never blocks it). */}
+        <aside className="rv-mapcol" data-testid="rv-mapcol">
+          {mapTexts ? (
+            <RouteMapCard
+              dict={dict}
+              locale={locale}
+              originText={mapTexts.origin}
+              destinationText={mapTexts.destination}
+              debounceMs={0}
+              onResult={onRouteResult}
+            />
+          ) : (
+            <div className="fm-card rv-mapempty" data-testid="rv-map-empty">
+              <span className="rv-mapempty-icon" aria-hidden="true">
+                <MapIcon />
+              </span>
+              <p>{rv.mapEmpty}</p>
+            </div>
           )}
+        </aside>
+      </div>
 
-          <label className="fm-field rv-span-4">
-            <span className="fm-label">{t.justificationLabel}</span>
-            <textarea name="justification" required rows={3} defaultValue={draft.justification} className="fm-input" />
-          </label>
-        </div>
-
-        <button type="submit" disabled={isPlanning} className="fm-btn fm-btn-primary rv-submit">
-          {isPlanning ? t.submitPending : t.submit}
-        </button>
-      </form>
-
-      <div className="rv-resultswrap">
       <section className="rv-results" aria-labelledby="rv-results-title">
         <h2 id="rv-results-title" className="fm-sr-only">
           {rv.resultTitle}
         </h2>
 
+        {/* ABOVE the vehicles, and shown together with them (nothing is gated behind a click). */}
         {carpoolFirst && carpoolFirst.status !== "none" ? (
           <div data-testid="carpool-first">
-            <CarpoolFirstPanel
-              state={carpoolFirst}
-              dict={dict}
-              locale={locale}
-              onContinue={() => setVehicleRevealed(true)}
-            />
+            <CarpoolFirstPanel state={carpoolFirst} dict={dict} locale={locale} />
           </div>
         ) : null}
 
@@ -353,7 +644,7 @@ export function TripRequestForm({
           <p className="fm-banner fm-banner-danger" role="alert" style={{ marginTop: 0 }}>
             {t.planError}
           </p>
-        ) : !vehicleVisible ? null : plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0 ? (
+        ) : plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0 ? (
           <section className="fm-card rv-block rv-block-carpool">
             <div className="rv-head">
               <span className="rv-head-icon">
@@ -390,142 +681,16 @@ export function TripRequestForm({
             {reasonList(plan.reasons)}
           </section>
         ) : plan.type === "vehicle" && plan.vehicle ? (
-          <>
-            <section className="fm-card rv-block" aria-labelledby="rv-vehicle-title">
-              <div className="rv-vehicle">
-                <span className="rv-head-icon">
-                  <RvCarIcon />
-                </span>
-                <div>
-                  <div className="rv-badge-row">
-                    <h3 id="rv-vehicle-title" className="fm-badge">
-                      {t.recommendedVehicle}
-                    </h3>
-                  </div>
-                  <p className="rv-plate">{plan.vehicle.plate}</p>
-                  <p className="rv-muted">{plan.vehicle.categoryName}</p>
-                </div>
-              </div>
-              {reasonList(plan.vehicle.reasons)}
-              {plan.vehicle.requiredPreparation && plan.vehicle.requiredPreparation.length > 0 ? (
-                <p className="rv-warn">{t.preparationNote}</p>
-              ) : null}
-              {plan.vehicle.trafficRestriction?.restricted ? (
-                <div className="rv-warn">
-                  <p className="rv-warn-title">{t.trafficRestrictionTitle}</p>
-                  <p>{t.trafficRestrictionBody}</p>
-                </div>
-              ) : null}
-              {hostStepEnabled ? (
-                <fieldset data-testid="host-offer-step" className="rv-host">
-                  <legend>{ct.hostQuestion}</legend>
-                  {plan.vehicle.maxOfferableSeats < 1 ? (
-                    <p className="rv-hint">{ct.noFreeSeats}</p>
-                  ) : (
-                    <>
-                      <div className="rv-seg-row">
-                        <label className="rv-seg">
-                          <input
-                            type="radio"
-                            name="offerChoice"
-                            value="yes"
-                            checked={offer.choice === "yes"}
-                            onChange={() =>
-                              setOffer((o) => ({
-                                choice: "yes",
-                                seats: o.seats || String(plan.vehicle!.maxOfferableSeats),
-                              }))
-                            }
-                          />
-                          {ct.yes}
-                        </label>
-                        <label className="rv-seg">
-                          <input
-                            type="radio"
-                            name="offerChoice"
-                            value="no"
-                            checked={offer.choice === "no"}
-                            onChange={() => setOffer((o) => ({ ...o, choice: "no" }))}
-                          />
-                          {ct.no}
-                        </label>
-                      </div>
-                      {offer.choice === "yes" ? (
-                        <div className="fm-field" role="group" aria-labelledby="rv-offer-seats-label">
-                          <label id="rv-offer-seats-label" htmlFor="rv-offer-seats" className="fm-label">
-                            {fillTemplate(ct.seatsLabel, { max: plan.vehicle.maxOfferableSeats })}
-                          </label>
-                          <div className="rv-stepper">
-                            <button
-                              type="button"
-                              className="rv-stepper-btn"
-                              aria-label={rv.decreaseSeats}
-                              onClick={() => stepSeats(-1, plan.vehicle!.maxOfferableSeats)}
-                            >
-                              −
-                            </button>
-                            <input
-                              id="rv-offer-seats"
-                              type="number"
-                              name="offerSeats"
-                              min={1}
-                              max={plan.vehicle.maxOfferableSeats}
-                              value={offer.seats}
-                              onChange={(e) => setOffer((o) => ({ ...o, seats: e.target.value }))}
-                              className="fm-input"
-                            />
-                            <button
-                              type="button"
-                              className="rv-stepper-btn"
-                              aria-label={rv.increaseSeats}
-                              onClick={() => stepSeats(1, plan.vehicle!.maxOfferableSeats)}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      ) : null}
-                      <p className="rv-hint">{ct.hostHint}</p>
-                    </>
-                  )}
-                </fieldset>
-              ) : null}
-              <button
-                onClick={() => handleConfirm(plan.vehicle!.vehicleId)}
-                disabled={isConfirming}
-                className="fm-btn fm-btn-primary rv-confirm"
-              >
-                {isConfirming ? t.confirming : t.requestReservation}
-              </button>
-            </section>
-
-            {plan.vehicle.alternatives.length > 0 ? (
-              <section className="fm-card rv-block" aria-labelledby="rv-alt-title">
-                <h3 id="rv-alt-title" className="fm-h2">
-                  {plan.bookingMode === "user_choice" ? t.otherEligibleVehicles : t.preferAnotherVehicle}
-                </h3>
-                <ul className="rv-alt-list">
-                  {plan.vehicle.alternatives.map((alt) => (
-                    <li key={alt.vehicleId} className="rv-alt">
-                      <div>
-                        <p className="rv-plate" style={{ fontSize: 17 }}>
-                          {alt.plate}
-                        </p>
-                        <p className="rv-muted">{alt.categoryName}</p>
-                      </div>
-                      <button
-                        onClick={() => handleConfirm(alt.vehicleId)}
-                        disabled={isConfirming}
-                        className="fm-btn fm-btn-ghost"
-                      >
-                        {t.choose}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-          </>
+          <VehicleOptions
+            dict={dict}
+            locale={locale}
+            options={vehicleOptions}
+            filter={energyFilter}
+            onFilter={setEnergyFilter}
+            onConfirm={(id) => handleConfirm(id)}
+            busy={isConfirming}
+            recommendedExtras={recommendedExtras}
+          />
         ) : (
           <section className="fm-card rv-block">
             <p className="rv-error">{t.noOptions}</p>
@@ -543,13 +708,6 @@ export function TripRequestForm({
           </p>
         ) : null}
       </section>
-      {/* Route map: loaded lazily AFTER the plan, independent of the recommendation (never blocks it). */}
-      {plan && !plan.error && formInput ? (
-        <aside className="rv-mapcol" data-testid="rv-mapcol">
-          <RouteMapCard dict={dict} locale={locale} originText={formInput.origin} destinationText={formInput.destination} />
-        </aside>
-      ) : null}
-      </div>
     </div>
   );
 }

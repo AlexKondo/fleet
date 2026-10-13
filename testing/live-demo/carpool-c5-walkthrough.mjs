@@ -88,7 +88,11 @@ try {
   await rider1.waitForTimeout(1500);
   const cardCount = await rider1.locator('[data-testid="carpool-offer-card"]').count();
   const r1Body = await body(rider1);
-  record("Rider (compatible): carpool card appears BEFORE any vehicle option", cardCount === 1 && !has(r1Body, "Veículo recomendado"), { cardCount });
+  // "Reservar igual": the carpool block is shown ABOVE the vehicle list and BOTH are visible at once (no 'continue' gating)
+  await rider1.waitForSelector('[data-testid="vehicle-card-recommended"]', { timeout: 60000 });
+  const yCard = (await rider1.locator('[data-testid="carpool-first"]').boundingBox()).y;
+  const yVeh = (await rider1.locator('[data-testid="vehicle-card-recommended"]').boundingBox()).y;
+  record("Rider (compatible): carpool card appears ABOVE the vehicle options (both visible at once)", cardCount === 1 && has(await body(rider1), "Veículo recomendado") && yCard < yVeh, { cardCount, yCard, yVeh });
   const cardText = await rider1.locator('[data-testid="carpool-offer-card"]').textContent();
   record("Card shows host departure time, estimated detour (km/min), seats available and a Request Ride action - nothing else",
     /Saída do motorista/.test(cardText) && /Desvio estimado: \+[\d.]+ km · \+\d+ min/.test(cardText) && /vagas? dispon/.test(cardText) && /Solicitar carona/.test(cardText), cardText.replace(/\n/g, " | "));
@@ -128,11 +132,9 @@ try {
   await rider4.waitForSelector('[data-testid="carpool-needs-precision"], [data-testid="carpool-unavailable"]', { timeout: 90000 });
   const cityBody = await body(rider4);
   record("City-only destination ('São Paulo'): asks for a more precise place, does NOT guess, no carpool search result", has(cityBody, "Precisamos de um local mais preciso") && /apenas uma cidade/.test(cityBody) && (await rider4.locator('[data-testid="carpool-offer-card"]').count()) === 0);
-  record("While clarification is pending the vehicle result is hidden until the rider explicitly continues", !has(cityBody, "Veículo recomendado"));
+  await rider4.waitForSelector("text=Veículo recomendado", { timeout: 90000 });
+  record("While clarification is pending the vehicle result is shown right away (no 'continue' click needed any more)", has(await body(rider4), "Veículo recomendado") && (await rider4.locator('text=Continuar sem buscar carona').count()) === 0);
   await shot(rider4, "rider-city-only-destination-clarification");
-  await rider4.click("text=Continuar sem buscar carona");
-  await rider4.waitForSelector("text=Veículo recomendado");
-  record("Rider can continue to the normal vehicle flow from the clarification prompt", true);
   await shot(rider4, "rider-clarification-continue-to-vehicle");
 
   await fillTrip(rider4, { departure: dep, origin: RIDER_ORIGIN, destination: "zzqxk wvbn 98765 asdfgh", passengers: 1 });
@@ -334,9 +336,10 @@ try {
   const authed = await fetch(`${BASE}/api/cron/carpool-expiry`, { headers: { authorization: `Bearer ${CRON_SECRET}` } });
   const cronBody = await authed.json();
   record("Cron route: 401 without the secret, 200 with it (sweep incl. reconcile pass runs)", noAuth.status === 401 && authed.status === 200 && typeof cronBody.expired === "number", { noAuth: noAuth.status, authed: authed.status, cronBody });
-  const vj = JSON.parse((await import("node:fs")).readFileSync(`${ROOT}/vercel.json`, "utf8"));
+  // vercel.json lives in apps/web (project root) since commit 3af9ade; the cron registration is read from there
+  const vj = JSON.parse((await import("node:fs")).readFileSync(`${ROOT}/apps/web/vercel.json`, "utf8"));
   // (stale assertion fixed in C7a: since the cron consolidation the daily dispatcher /api/cron/daily runs the expiry sweep)
-  record("vercel.json keeps exactly one daily cron (the /api/cron/daily dispatcher)", vj.crons.length === 1 && vj.crons[0].path === "/api/cron/daily" && vj.crons[0].schedule === "0 12 * * *", vj.crons);
+  record("apps/web/vercel.json keeps exactly one daily cron (the /api/cron/daily dispatcher)", vj.crons.length === 1 && vj.crons[0].path === "/api/cron/daily" && vj.crons[0].schedule === "0 12 * * *", vj.crons);
 } catch (e) {
   record("FATAL (unexpected exception)", false, String(e && e.stack ? e.stack : e));
   try {

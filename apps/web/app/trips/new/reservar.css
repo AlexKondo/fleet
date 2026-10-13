@@ -1,9 +1,10 @@
 /*
- * SCR-USR-002 "Reservar Veiculo" (/trips/new): extra rules on top of carpool/fm-theme.css. Everything is under
- * .fm-theme so no other screen is affected.
+ * SCR-USR-002 "Reservar Veiculo" (/trips/new): extra rules on top of carpool/fm-theme.css, matching the approved art
+ * (design-v2/usr002/art06, art04). Everything is under .fm-theme so no other screen is affected. Breakpoints respect the
+ * 240px sidebar: the page content is roughly (viewport - 304px) wide from 768px up, so "two columns" starts at 1180px.
  */
 .fm-theme .rv {
-  margin-top: 20px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -13,12 +14,13 @@
 .fm-theme .rv-steps {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 4px;
   display: flex;
+  align-items: flex-start;
 }
 .fm-theme .rv-step {
   position: relative;
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -26,10 +28,11 @@
   gap: 6px;
   text-align: center;
 }
+/* connector: from the dot to the next dot */
 .fm-theme .rv-step:not(:last-child)::after {
   content: "";
   position: absolute;
-  top: 19px;
+  top: 17px;
   left: calc(50% + 26px);
   right: calc(-50% + 26px);
   height: 2px;
@@ -39,16 +42,17 @@
   background: var(--fm-blue-600);
 }
 .fm-theme .rv-step-dot {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   background: var(--fm-surface);
-  border: 2px solid var(--fm-border);
+  border: 1.5px solid var(--fm-border);
   color: var(--fm-navy-800);
+  box-shadow: var(--fm-shadow-card);
 }
 .fm-theme .rv-step[data-state="current"] .rv-step-dot {
   background: var(--fm-blue-600);
@@ -61,32 +65,111 @@
   color: var(--fm-blue-600);
 }
 .fm-theme .rv-step-dot svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+}
+.fm-theme .rv-step-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 .fm-theme .rv-step-label {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--fm-navy-900);
   line-height: 1.2;
+}
+.fm-theme .rv-step[data-state="todo"] .rv-step-label {
+  font-weight: 600;
+  color: var(--fm-text);
 }
 .fm-theme .rv-step-hint {
   display: none;
   font-size: 12px;
   color: var(--fm-text-muted);
 }
+@media (min-width: 900px) {
+  .fm-theme .rv-step {
+    flex-direction: row;
+    justify-content: center;
+    text-align: left;
+    gap: 10px;
+  }
+  .fm-theme .rv-step-hint {
+    display: block;
+  }
+  /* wide: the connector runs from the end of the text to the next step */
+  .fm-theme .rv-step:not(:last-child)::after {
+    top: 50%;
+    left: calc(50% + 78px);
+    right: calc(-50% + 56px);
+  }
+}
 
-/* ---------- form card ---------- */
+/* ---------- top: form card + map ---------- */
+.fm-theme .rv-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+@media (min-width: 1180px) {
+  .fm-theme .rv-top {
+    grid-template-columns: minmax(0, 1.28fr) minmax(0, 1fr);
+  }
+}
 .fm-theme .rv-form {
-  padding: 20px;
+  padding: 18px 20px 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  container-type: inline-size;
+  min-width: 0;
 }
 .fm-theme .rv-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 12px;
+}
+.fm-theme .rv-grid > .rv-s7,
+.fm-theme .rv-grid > .rv-s14 {
+  grid-column: 1 / -1;
+}
+.fm-theme .rv-grid > .rv-s4 {
+  grid-column: span 9;
+}
+.fm-theme .rv-grid > .rv-s3 {
+  grid-column: span 5;
+}
+@container (min-width: 560px) {
+  .fm-theme .rv-grid > .rv-s7 {
+    grid-column: span 7;
+  }
+  .fm-theme .rv-grid > .rv-s4 {
+    grid-column: span 4;
+  }
+  .fm-theme .rv-grid > .rv-s3 {
+    grid-column: span 3;
+  }
+}
+.fm-theme .rv-form .fm-field {
+  gap: 4px;
+}
+.fm-theme .rv-form .fm-label {
+  font-size: 12.5px;
+}
+.fm-theme .rv-form .fm-input {
+  height: 44px;
+  font-size: 14.5px;
+}
+.fm-theme .rv-select {
+  appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232369c8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px;
 }
 .fm-theme textarea.fm-input {
   height: auto;
@@ -114,6 +197,134 @@
   width: 100%;
 }
 
+/* "Buscar caronas compatíveis" toggle */
+.fm-theme .rv-toggle-box {
+  display: flex;
+  align-items: stretch;
+}
+.fm-theme .rv-toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  background: #f7faff;
+  cursor: pointer;
+}
+.fm-theme .rv-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.fm-theme .rv-toggle-label {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--fm-navy-900);
+}
+.fm-theme .rv-toggle-hint {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--fm-text-muted);
+}
+.fm-theme .rv-toggle input {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border-radius: 14px;
+  background: var(--fm-border-strong);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.fm-theme .rv-toggle input::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s;
+}
+.fm-theme .rv-toggle input:checked {
+  background: var(--fm-blue-600);
+}
+.fm-theme .rv-toggle input:checked::after {
+  transform: translateX(20px);
+}
+.fm-theme .rv-toggle input:focus-visible {
+  outline: 3px solid var(--fm-focus);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fm-theme .rv-toggle input,
+  .fm-theme .rv-toggle input::after {
+    transition: none;
+  }
+}
+
+/* ---------- map column ---------- */
+.fm-theme .rv-mapcol {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+}
+.fm-theme .rv-mapcol:empty {
+  display: none;
+}
+.fm-theme .rv-mapcol .fm-routemap {
+  flex: 1;
+  padding: 12px;
+}
+/* the card carries no heading in the art: the chip over the map is the title; keep it for screen readers */
+.fm-theme .rv-mapcol .fm-routemap-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.fm-theme .rv-mapempty {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  color: var(--fm-text-muted);
+  border-style: dashed;
+  border-color: var(--fm-border-strong);
+  background: #f7faff;
+}
+.fm-theme .rv-mapempty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fm-blue-100);
+  color: var(--fm-blue-600);
+}
+.fm-theme .rv-mapempty-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
 /* ---------- result blocks ---------- */
 .fm-theme .rv-results {
   display: flex;
@@ -121,7 +332,7 @@
   gap: 20px;
 }
 .fm-theme .rv-block {
-  padding: 20px;
+  padding: 18px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -167,37 +378,57 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 12px;
 }
 .fm-theme .rv-offer {
   background: var(--fm-surface);
   border: 1px solid var(--fm-border);
   border-radius: var(--fm-radius-md);
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+}
+.fm-theme .rv-offer-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fm-theme .rv-offer-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5edf7;
+  color: var(--fm-navy-800);
+}
+.fm-theme .rv-offer-avatar svg {
+  width: 26px;
+  height: 26px;
 }
 .fm-theme .rv-offer-time {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--fm-navy-900);
 }
 .fm-theme .rv-muted {
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--fm-text-muted);
 }
 .fm-theme .rv-offer .fm-btn {
-  margin-top: 4px;
+  margin-top: auto;
   width: 100%;
 }
 .fm-theme .rv-places {
   background: var(--fm-surface);
   border: 1px solid var(--fm-border);
   border-radius: var(--fm-radius-md);
-  padding: 12px 14px;
-  font-size: 14px;
+  padding: 10px 14px;
+  font-size: 13.5px;
 }
 .fm-theme .rv-places ul {
   list-style: none;
@@ -223,27 +454,182 @@
   text-decoration: underline;
 }
 
-/* vehicle */
-.fm-theme .rv-vehicle {
+/* ---------- vehicles ---------- */
+.fm-theme .rv-vehicles {
+  padding: 18px 20px 20px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 14px;
+  container-type: inline-size;
+}
+.fm-theme .rv-vehicles-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+.fm-theme .rv-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fm-theme .rv-filter {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--fm-border-strong);
+  border-radius: var(--fm-radius-sm);
+  background: var(--fm-surface);
+  color: var(--fm-navy-900);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fm-theme .rv-filter[aria-pressed="true"] {
+  background: var(--fm-blue-600);
+  border-color: var(--fm-blue-600);
+  color: #fff;
+}
+.fm-theme .rv-filter:not([aria-pressed="true"]):hover {
+  background: var(--fm-blue-100);
+}
+.fm-theme .rv-vgrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 14px;
 }
-.fm-theme .rv-plate {
-  font-size: 22px;
+.fm-theme .rv-vcard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-surface);
+  min-width: 0;
+}
+.fm-theme .rv-vcard-rec {
+  grid-column: 1 / -1;
+  border: 2px solid var(--fm-blue-600);
+  background: #f7faff;
+}
+.fm-theme .rv-vmain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fm-theme .rv-vmedia {
+  flex-shrink: 0;
+  width: 72px;
+  height: 56px;
+  border-radius: var(--fm-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e8f1fd, #f3f7fd);
+  color: var(--fm-blue-600);
+}
+.fm-theme .rv-vmedia svg {
+  width: 36px;
+  height: 36px;
+}
+.fm-theme .rv-vtitle {
+  min-width: 0;
+}
+.fm-theme .rv-vbadge {
+  display: inline-block;
+  margin-bottom: 3px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--fm-blue-600);
+  color: #fff;
+  font-size: 11.5px;
   font-weight: 700;
-  line-height: 1.1;
+}
+.fm-theme .rv-vchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fm-theme .rv-vchip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: var(--fm-bg);
+  border: 1px solid var(--fm-border);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fm-text);
+}
+.fm-theme .rv-vchip-energy {
+  background: var(--fm-blue-100);
+  border-color: #c8dcf7;
+  color: #1b57ab;
+}
+.fm-theme .rv-vfacts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .rv-vfacts:empty {
+  display: none;
+}
+.fm-theme .rv-vextras {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fm-theme .rv-vaction {
+  width: 100%;
+  margin-top: auto;
+}
+.fm-theme .rv-plate {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.15;
   letter-spacing: 0.02em;
   color: var(--fm-navy-900);
 }
-.fm-theme .rv-badge-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.fm-theme .rv-badge-row .fm-badge {
-  margin-left: 0;
+@container (min-width: 760px) {
+  .fm-theme .rv-vcard-rec {
+    display: grid;
+    grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
+    grid-template-areas:
+      "main extras"
+      "chips extras"
+      "facts extras"
+      "action extras";
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 24px;
+    row-gap: 10px;
+    align-items: start;
+  }
+  .fm-theme .rv-vcard-rec .rv-vmain {
+    grid-area: main;
+  }
+  .fm-theme .rv-vcard-rec .rv-vchips {
+    grid-area: chips;
+  }
+  .fm-theme .rv-vcard-rec .rv-vfacts {
+    grid-area: facts;
+  }
+  .fm-theme .rv-vcard-rec .rv-vextras {
+    grid-area: extras;
+  }
+  .fm-theme .rv-vcard-rec .rv-vaction {
+    grid-area: action;
+    align-self: end;
+  }
 }
 .fm-theme .rv-reasons {
   list-style: none;
@@ -276,11 +662,11 @@
 }
 .fm-theme .rv-host {
   margin: 0;
-  padding: 16px;
+  padding: 14px 16px;
   min-width: 0;
   border: 1px solid var(--fm-border);
   border-radius: var(--fm-radius-md);
-  background: var(--fm-bg);
+  background: var(--fm-surface);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -343,32 +729,8 @@
   color: #174b94;
 }
 .fm-theme .rv-hint {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--fm-text-muted);
-}
-.fm-theme .rv-confirm {
-  width: 100%;
-}
-.fm-theme .rv-alt-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-.fm-theme .rv-alt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--fm-border);
-  border-radius: var(--fm-radius-md);
-  background: var(--fm-surface);
-}
-.fm-theme .rv-alt .fm-btn {
-  flex-shrink: 0;
 }
 .fm-theme .rv-empty {
   padding: 24px 20px;
@@ -381,68 +743,16 @@
 }
 
 @media (min-width: 920px) {
-  .fm-theme .rv-step-hint {
-    display: block;
-  }
-  .fm-theme .rv-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .fm-theme .rv-grid .rv-span-2 {
-    grid-column: span 2;
-  }
-  .fm-theme .rv-offers {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .fm-theme .rv-alt-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .fm-theme .rv-submit,
-  .fm-theme .rv-confirm {
+  .fm-theme .rv-submit {
     width: auto;
     min-width: 260px;
     align-self: flex-start;
   }
-  .fm-theme .rv-offer .fm-btn {
-    width: auto;
-    align-self: flex-start;
-  }
-}
-@media (min-width: 1380px) {
-  .fm-theme .rv-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .fm-theme .rv-grid .rv-span-2 {
-    grid-column: span 2;
-  }
-  .fm-theme .rv-grid .rv-span-4 {
-    grid-column: 1 / -1;
-  }
-  .fm-theme .rv-offers {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .fm-theme .rv-alt-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
-/* ---------- route map column: stacked under the results on narrow screens, beside them on wide ones ---------- */
-.fm-theme .rv-resultswrap {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.fm-theme .rv-mapcol {
-  min-width: 0;
-}
-/* 240px sidebar + page padding are already inside the viewport width: content is ~viewport - 300px. */
-@media (min-width: 1180px) {
-  .fm-theme .rv-resultswrap {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
-    align-items: start;
-  }
-  .fm-theme .rv-mapcol {
-    position: sticky;
-    top: 16px;
+/* single-column layout (< 1180px): do not stretch the 16:9 map across the whole content width */
+@media (max-width: 1179px) {
+  .fm-theme .rv-mapcol .fm-routemap {
+    max-width: 640px;
   }
 }

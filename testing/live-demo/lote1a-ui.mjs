@@ -29,7 +29,7 @@ async function newPage(user, vp, { locale = "pt-BR" } = {}) {
   const page = await context.newPage();
   page.on("dialog", (d) => d.accept());
   page.__errors = [];
-  page.on("pageerror", (e) => page.__errors.push(String(e).slice(0, 200)));
+  page.on("pageerror", (e) => page.__errors.push(new URL(page.url()).pathname + " " + String(e).slice(0, 160)));
   let ok = false;
   for (let i = 0; i < 2 && !ok; i++) {
     try {
@@ -211,7 +211,9 @@ try {
   record("Home: 'Veículos mais reservados' is a real count (the vehicle with 2 own reservations is listed)", /Veículos mais reservados por você/.test(t) && (await emp.locator('[data-testid="home-used-vehicles"]').innerText()).includes(vHist.plate), "");
   record("Home: fleet vehicle cards kept (energy / odometer / location)", (await emp.locator('[data-testid="home-vehicle"]').count()) >= 5 && /combustível/i.test(t) && /bateria/i.test(t) && /odômetro/i.test(t));
   record("Home: attention list kept", /Precisa de Atenção/.test(t));
-  record("Home: no invented elements (match %, rating, CO2, map, driver photo, voice card)", !INVENTED.test(t) && (await emp.locator(".fm-theme img, .fm-theme iframe, .fm-theme canvas").count()) === 0 && !/Falar com o FleetMind/.test(t), t.match(INVENTED)?.[0]);
+  record("Home: no invented elements (match %, rating, CO2, map, driver photo, voice card)", !INVENTED.test(t) && (await emp.locator(".fm-theme img, .fm-theme iframe, .fm-theme canvas").count()) === 0 && (await emp.locator('[data-testid="fm-assistant-panel"]').count()) === 1, t.match(INVENTED)?.[0]);
+  // "Reservar igual" (art06): the sidebar "Falar com o FleetMind" panel is now a real, intentional element on every FmShell page
+  // (its mic and example phrases open the existing chat assistant); it replaces the old "no voice card" assertion.
   record("Home: no unexpected error text", !BAD.some((b) => t.toLowerCase().includes(b)) && emp.__errors.length === 0, emp.__errors);
   const sh = await sideHrefs(emp);
   record("Home: employee sidebar = Início, Buscar Carona, Reservar, Minhas Reservas (no manager items); CTA present", ["/dashboard", "/carpool", "/trips/new", "/trips"].every((h) => sh.includes(h)) && !sh.some((h) => ["/gate", "/analytics", "/fleet", "/settings", "/settings/users"].includes(h)) && (await emp.locator(".fm-sidebar a.fm-cta").count()) === 1, sh);
