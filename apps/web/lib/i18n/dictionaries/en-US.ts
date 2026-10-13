@@ -132,10 +132,6 @@ const dict: Dictionary = {
     assistantExample2: "Is there a carpool to São Paulo?",
     assistantExample3: "Show my reservations this week.",
     assistantExample4: "How does the checklist work?",
-    searchPlaceholder: "Search pages…",
-    searchLabel: "Search FleetMind",
-    searchResultsLabel: "Search results",
-    searchNoResults: "No page found.",
   },
   account: {
     title: "My Account",

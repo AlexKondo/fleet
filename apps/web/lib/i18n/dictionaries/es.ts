@@ -132,10 +132,6 @@ const dict: Dictionary = {
     assistantExample2: "¿Hay viaje compartido a São Paulo?",
     assistantExample3: "Ver mis reservas de la semana.",
     assistantExample4: "¿Cómo funciona el checklist?",
-    searchPlaceholder: "Buscar página…",
-    searchLabel: "Buscar en FleetMind",
-    searchResultsLabel: "Resultados de la búsqueda",
-    searchNoResults: "No se encontró ninguna página.",
   },
   account: {
     title: "Mi Cuenta",

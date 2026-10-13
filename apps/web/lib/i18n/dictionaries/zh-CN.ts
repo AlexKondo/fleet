@@ -130,10 +130,6 @@ const dict: Dictionary = {
     assistantExample2: "有去圣保罗的拼车吗？",
     assistantExample3: "查看我本周的预订。",
     assistantExample4: "检查清单怎么用？",
-    searchPlaceholder: "搜索页面…",
-    searchLabel: "搜索 FleetMind",
-    searchResultsLabel: "搜索结果",
-    searchNoResults: "未找到页面。",
   },
   account: {
     title: "我的账户",

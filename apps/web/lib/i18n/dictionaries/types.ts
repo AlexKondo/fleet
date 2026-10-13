@@ -176,10 +176,6 @@ export type Dictionary = {
     assistantExample2: string;
     assistantExample3: string;
     assistantExample4: string;
-    searchPlaceholder: string;
-    searchLabel: string;
-    searchResultsLabel: string;
-    searchNoResults: string;
   };
   /** Self-service "change my password" screen, reachable by any role from the header. */
   account: {

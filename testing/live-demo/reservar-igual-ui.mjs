@@ -146,16 +146,8 @@ try {
   const sideHrefs = await d.locator(".fm-sidebar nav a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
   record("Menu: only real destinations (no dead links)", sideHrefs.every((h) => h?.startsWith("/")) && !sideHrefs.some((h) => /ocorr|check|sustent|ajuda/i.test(h ?? "")), sideHrefs);
 
-  // global search Ctrl+K
-  await d.keyboard.press("Control+k");
-  record("Ctrl+K focuses the global search", await d.evaluate(() => document.activeElement?.getAttribute("data-testid") === "fm-global-search"));
-  await d.keyboard.type("carona");
-  const resTexts = await d.locator('.fm-search-list [role="option"]').allInnerTexts();
-  record("Global search lists matching app destinations only", resTexts.length >= 1 && resTexts.every((t) => /carona/i.test(t)), resTexts);
-  await shot(d, "02-desktop-global-search", false);
-  await d.keyboard.press("Enter");
-  await d.waitForURL((u) => u.pathname === "/carpool", { timeout: 60000 });
-  record("Global search: Enter navigates to the destination", true);
+  // the topbar search box was removed on request
+  record("No global search box in the topbar", (await d.locator('[data-testid="fm-global-search"]').count()) === 0);
   await openForm(d);
 
   // sidebar voice panel
@@ -404,11 +396,6 @@ try {
   await ac.locator("#rv-origin").focus();
   await ac.keyboard.press("Control+k");
   record("Ctrl+K does not hijack the browser shortcut while typing in another field", await ac.evaluate(() => document.activeElement?.id === "rv-origin"));
-  record("Ctrl+K hint shows 'Ctrl+K' on Windows/Linux", /Ctrl\+K/.test(await ac.locator(".fm-search-kbd").innerText()));
-  const mac = await newPage(U.rider5, { width: 1440, height: 900, init: () => Object.defineProperty(navigator, "platform", { get: () => "MacIntel" }), watch: false });
-  await openForm(mac);
-  record("Ctrl+K hint shows '⌘K' on Mac (after mount, no hydration error)", /⌘K/.test(await mac.locator(".fm-search-kbd").innerText()));
-  await mac.context().close();
   let aborted = 0;
   ac.on("requestfailed", (rq) => { if (/api\/geo\/autocomplete/.test(rq.url()) && /ABORTED/i.test(rq.failure()?.errorText ?? "")) aborted++; });
   await ac.locator("#rv-origin").fill("");

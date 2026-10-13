@@ -7,7 +7,6 @@ import { MobileNav } from "../MobileNav";
 import { NavFeedback } from "./NavFeedback";
 import { NotificationBell } from "../dashboard/NotificationBell";
 import { UserMenu } from "../UserMenu";
-import { GlobalSearch } from "./GlobalSearch";
 import { AssistantPanel } from "./AssistantPanel";
 import { formatDate } from "@/lib/formatDateTime";
 import { LanguageToggle } from "../ui/LanguageToggle";
@@ -114,11 +113,6 @@ export async function FmShell({
       <div className="fm-main">
         <header className="fm-topbar">
           <p className="fm-topbar-brand">FleetMind</p>
-          {licenseGateActive ? null : (
-            <div className="fm-topbar-search">
-              <GlobalSearch items={items.map(({ href, label }) => ({ href, label }))} dict={dict} />
-            </div>
-          )}
           <div className="fm-topbar-right">
             <LanguageToggle locale={locale} dict={dict} />
             {/* the FleetMind v2.0 look is light-only; the theme toggle would do nothing on these screens */}

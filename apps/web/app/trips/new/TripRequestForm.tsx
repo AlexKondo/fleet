@@ -131,7 +131,7 @@ export function TripRequestForm({
   // The server render and the first client render use the same STATIC defaults (no sessionStorage, no clock): the draft
   // (a defensive backstop against a stray remount losing what the user had typed, see writeDraft/readDraft) and the default
   // dates are applied right after hydration, so the markup can never differ between server and client.
-  const [origin, setOrigin] = useState("Iracemápolis");
+  const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [depDate, setDepDate] = useState("");
   const [depTime, setDepTime] = useState("");
@@ -464,6 +464,7 @@ export function TripRequestForm({
                 onChange={setOrigin}
                 dict={dict}
                 required
+                placeholder={dict.carpool.buscar.originPlaceholder}
                 icon={<PinIcon />}
                 clearLabel={`${dict.carpool.buscar.clearField}: ${t.originLabel}`}
                 testId="rv-origin"
