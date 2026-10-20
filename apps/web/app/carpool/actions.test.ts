@@ -143,6 +143,12 @@ describe("searchCompatibleCarpool input validation (C3 carry-over a/b)", () => {
     const result = await searchCompatibleCarpool({ ...draft, requestedDepartureAt: "garbage" });
     expect(result).toEqual({ status: "error", error: "invalid_departure" });
   });
+
+  it("rejects a return that is not after the departure, or unparseable (before any DB / provider work)", async () => {
+    for (const requestedReturnAt of [draft.requestedDepartureAt, "2000-01-01T00:00:00.000Z", "garbage", ""]) {
+      expect(await searchCompatibleCarpool({ ...draft, requestedReturnAt })).toEqual({ status: "error", error: "invalid_return" });
+    }
+  });
 });
 
 describe("searchCompatibleCarpool (wrapper)", () => {

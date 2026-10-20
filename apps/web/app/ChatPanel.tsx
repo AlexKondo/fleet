@@ -46,6 +46,7 @@ export function ChatPanel({
   onClose,
   initialState,
   openRequest,
+  embedded = false,
 }: {
   dict: Dictionary;
   locale: Locale;
@@ -54,6 +55,8 @@ export function ChatPanel({
   initialState: ChatState;
   /** Set by ChatWidget when the sidebar voice panel asked to open the chat (optionally with a draft and/or the mic). */
   openRequest?: { id: number; voice?: boolean; draft?: string } | null;
+  /** FmShell: placement is owned by fm-theme.css (.fm-chat-panel): bottom-left next to the sidebar, full sheet on mobile. */
+  embedded?: boolean;
 }) {
   const t = dict.chat;
   const [actionState, formAction, pending] = useActionState(sendChatMessage, initialState);
@@ -77,6 +80,66 @@ export function ChatPanel({
   const recognitionRef = useRef<InstanceType<SpeechRecognitionCtor> | null>(null);
   const finalizedResultCountRef = useRef(0);
   const listRef = useRef<HTMLDivElement>(null);
+  // a11y: Esc closes; focus moves into the panel on open and returns to the opener on close; the mobile full sheet is modal (aria-modal + Tab trap)
+  const panelRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const [modal, setModal] = useState(false);
+  useEffect(() => {
+    if (!embedded) return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setModal(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [embedded]);
+  useEffect(() => {
+    if (isOpen) {
+      const active = document.activeElement as HTMLElement | null;
+      openerRef.current = active && !panelRef.current?.contains(active) && active !== document.body ? active : null;
+      const t = setTimeout(() => {
+        const target = panelRef.current?.querySelector<HTMLElement>("textarea:not([disabled])") ?? panelRef.current;
+        target?.focus();
+      }, 30);
+      return () => clearTimeout(t);
+    }
+    const opener = openerRef.current;
+    openerRef.current = null;
+    if (opener && document.contains(opener)) opener.focus();
+    else if (!openerRef.current) {
+      // the opener is gone (the mobile menu entry closes its menu before the chat opens): fall back to the menu button, unless focus is already somewhere meaningful
+      const cur = document.activeElement;
+      if (!cur || cur === document.body || panelRef.current?.contains(cur)) document.querySelector<HTMLElement>("[data-chat-return]")?.focus();
+    }
+  }, [isOpen]);
+  // Esc closes the panel even if the focus has not moved into it yet (or is elsewhere on the page) while it is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !e.defaultPrevented) onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+  function onPanelKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      onClose();
+      return;
+    }
+    if (e.key === "Tab" && modal && panelRef.current) {
+      const f = [...panelRef.current.querySelectorAll<HTMLElement>("button:not([disabled]), textarea:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex='-1'])")].filter((el) => el.offsetParent !== null);
+      if (f.length === 0) return;
+      const first = f[0]!;
+      const last = f[f.length - 1]!;
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
   const micSupported = getSpeechRecognitionCtor() !== null;
 
   useEffect(() => {
@@ -264,10 +327,15 @@ export function ChatPanel({
 
   return (
     <div
+      ref={panelRef}
+      tabIndex={-1}
+      onKeyDown={onPanelKeyDown}
+      aria-modal={modal ? "true" : undefined}
       role="dialog"
       aria-label={t.panelTitle}
       aria-hidden={!isOpen}
-      className={`fixed bottom-20 right-5 z-40 flex h-[31rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col rounded-md border border-line-800 bg-panel-900 shadow-xl shadow-black/40 ${
+      data-embedded={embedded ? "true" : undefined}
+      className={`${embedded ? "fm-chat-panel " : ""}fixed bottom-20 right-5 z-40 flex h-[31rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col rounded-md border border-line-800 bg-panel-900 shadow-xl shadow-black/40 ${
         isOpen ? "" : "hidden"
       }`}
     >

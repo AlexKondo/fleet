@@ -18,6 +18,8 @@ import {
 export interface RiderTripDraft {
   /** ISO 8601 */
   requestedDepartureAt: string;
+  /** ISO 8601. Optional round trip: the rider's requested return. Absent = one-way (matching exactly as before). */
+  requestedReturnAt?: string;
   requestedSeats: number;
   requiresCargo: boolean;
   pickup: LatLng;
@@ -54,6 +56,8 @@ export interface CarpoolOfferCandidateRow {
   vehicleSupportsCargo: boolean;
   /** ISO 8601 */
   hostDepartureAt: string;
+  /** ISO 8601. The host trip's expected return (compared with the rider's return when the rider gave one). */
+  hostReturnAt?: string;
   hostOrigin: LatLng;
   hostDestination: LatLng;
 }
@@ -101,7 +105,7 @@ export function toPrefilterInput(
     | "seatsAvailable"
     | "vehicleSupportsCargo"
     | "hostDepartureAt"
-  >,
+  > & { hostReturnAt?: string | null },
   draft: RiderTripDraft,
   policy: CarpoolPolicyConfig,
 ): PrefilterCandidateOffer {
@@ -116,6 +120,14 @@ export function toPrefilterInput(
     hostDepartureAt: candidate.hostDepartureAt,
     riderRequestedDepartureAt: draft.requestedDepartureAt,
     departureWindowMinutes: policy.departureWindowMinutes,
+    // Round trip: only when the rider gave a return (otherwise the object is exactly the one-way input of before).
+    ...(draft.requestedReturnAt
+      ? {
+          riderRequestedReturnAt: draft.requestedReturnAt,
+          hostReturnAt: candidate.hostReturnAt ?? undefined,
+          returnWindowMinutes: policy.returnWindowMinutes,
+        }
+      : {}),
   };
 }
 

@@ -19,6 +19,7 @@ import {
   TripsIcon,
 } from "./NavIcons";
 import type { NavKey } from "./AppShell";
+import { OPEN_CHAT_EVENT, type OpenChatDetail } from "./ChatWidget";
 
 // Icon components are functions, which the AppShell server component can't pass down as
 // props (React Server Components can only serialize data across that boundary) — this
@@ -56,6 +57,7 @@ export function MobileNav({
   dict,
   locale,
   compact = false,
+  assistantLabel,
 }: {
   items: NavItem[];
   active: NavKey;
@@ -66,6 +68,8 @@ export function MobileNav({
   locale: Locale;
   /** FleetMind v2.0 shell: no brand block (the shell's own top bar carries it), 44px controls, panel under the bar. */
   compact?: boolean;
+  /** FleetMind shell only: adds the "Falar com o FleetMind" entry (robot + label) that opens the chat assistant. */
+  assistantLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const roleLabels = getRoleLabels(dict);
@@ -88,6 +92,7 @@ export function MobileNav({
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? dict.common.closeMenu : dict.common.openMenu}
             aria-expanded={open}
+            data-chat-return="true"
             className="flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-1 rounded-sm border border-line-800 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
           >
             <span
@@ -124,6 +129,22 @@ export function MobileNav({
               );
             })}
           </nav>
+
+          {assistantLabel ? (
+            <button
+              type="button"
+              data-testid="fm-mobile-assistant"
+              onClick={() => {
+                setOpen(false);
+                window.dispatchEvent(new CustomEvent<OpenChatDetail>(OPEN_CHAT_EVENT, { detail: {} }));
+              }}
+              className="mt-3 flex min-h-[44px] items-center gap-3 rounded-sm border border-line-800 px-3 py-2 text-left text-sm font-semibold text-paper-50 hover:bg-panel-800"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- small static illustration */}
+              <img src="/illustrations/fleet-agent.jpg" alt="" className="h-8 w-8 rounded-full border-2 border-gwm-accent object-cover" />
+              {assistantLabel}
+            </button>
+          ) : null}
 
           <Link
             href="/trips/new"

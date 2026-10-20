@@ -8,22 +8,23 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
  * trips (they are coworkers' journeys), so this read uses the service-role client. It is only ever
  * called with ids produced by the server-side search for an ALREADY AUTHENTICATED user, is scoped
  * to that user's organization, and returns ONLY what the offer card shows (seats + the host's
- * departure time). The host's origin/destination never leave the server.
+ * departure and return TIMES, no place). The host's origin/destination never leave the server.
  */
 export async function loadOfferCardRows(
   organizationId: string,
   offerIds: string[],
-): Promise<{ id: string; seats_available: number; hostDepartureAt: string | null }[]> {
+): Promise<{ id: string; seats_available: number; hostDepartureAt: string | null; hostReturnAt: string | null }[]> {
   if (offerIds.length === 0) return [];
   const admin = createSupabaseAdminClient();
   const { data } = await admin
     .from("carpool_offers")
-    .select("id, seats_available, trip_request:trip_requests(departure_at)")
+    .select("id, seats_available, trip_request:trip_requests(departure_at, expected_return_at)")
     .eq("organization_id", organizationId)
     .in("id", offerIds);
   return (data ?? []).map((r) => ({
     id: r.id,
     seats_available: r.seats_available,
     hostDepartureAt: r.trip_request?.departure_at ?? null,
+    hostReturnAt: r.trip_request?.expected_return_at ?? null,
   }));
 }

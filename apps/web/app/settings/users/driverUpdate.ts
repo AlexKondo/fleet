@@ -8,6 +8,29 @@
  * submission is never written. Not a "use server" module on purpose (its exports must not be client-callable
  * actions).
  */
+export type LicenseExpirationSource = "ai" | "manual";
+
+/**
+ * profiles.drivers_license_expiration_source (migration 0074): how the stored expiration date got there.
+ *  - the driver confirmed what the vision model read  -> "ai"            (account/license/actions.ts, confirm phase)
+ *  - an administrator saved a DIFFERENT date           -> "manual"
+ *  - the date is unchanged (e.g. only the number/category were edited, or a blur without changes) -> undefined (the stored source is NOT touched)
+ *  - the date was cleared                              -> null (not recorded)
+ * We never guess or backfill: only these transitions write the column.
+ */
+export function decideExpirationSource(currentExpiration: string | null | undefined, nextExpiration: string | null): LicenseExpirationSource | null | undefined {
+  const cur = currentExpiration ? currentExpiration : null;
+  const next = nextExpiration ? nextExpiration : null;
+  if (cur === next) return undefined;
+  if (next === null) return null;
+  return "manual";
+}
+
+/** Postgres error raised by the 0075 trigger for an edit of an AI-locked CNH. */
+export function isLicenseLockedError(error: { code?: string; message?: string } | null | undefined): boolean {
+  return Boolean(error) && (error!.code === "42501" || /license_locked_by_ai/.test(error!.message ?? ""));
+}
+
 export type DriverUpdateIntent = "authorization" | "license";
 
 export interface DriverProfileUpdate {
@@ -15,6 +38,7 @@ export interface DriverProfileUpdate {
   drivers_license_number?: string | null;
   drivers_license_category?: string | null;
   drivers_license_expiration?: string | null;
+  drivers_license_expiration_source?: LicenseExpirationSource | null;
 }
 
 export type DriverUpdateResult =

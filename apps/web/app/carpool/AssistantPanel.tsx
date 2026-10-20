@@ -8,9 +8,10 @@ function open(detail: OpenChatDetail) {
 }
 
 /**
- * "Falar com o FleetMind" (bottom of the sidebar): the mic button and the example phrases OPEN the existing chat assistant
- * (ChatWidget listens for OPEN_CHAT_EVENT; nothing is duplicated). The mic starts the assistant's own voice capture; a phrase
- * pre-fills the assistant's message box so the user only has to send it.
+ * "Falar com o FleetMind" (bottom of the sidebar): the robot mascot, its caption, the mic button and the example phrases all
+ * OPEN the existing chat assistant (ChatWidget listens for OPEN_CHAT_EVENT; nothing is duplicated). The robot is the same
+ * picture and float animation the floating mascot had (animate-chat-agent-float); the floating chat button and mascot are
+ * gone on these pages. The mic starts the assistant's own voice capture; a phrase pre-fills its message box.
  */
 export function AssistantPanel({ dict }: { dict: Dictionary }) {
   const c = dict.chrome;
@@ -20,6 +21,15 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
       <h2 id="fm-assist-title" className="fm-assist-title">
         {c.assistantTitle}
       </h2>
+      <div className="fm-assist-row">
+        <button type="button" className="fm-assist-robot" aria-label={c.assistantTitle} onClick={() => open({})} data-testid="fm-assistant-robot">
+          {/* eslint-disable-next-line @next/next/no-img-element -- small static illustration, next/image is overkill here */}
+          <img src="/illustrations/fleet-agent.jpg" alt="" className="animate-chat-agent-float h-14 w-14 rounded-full border-2 border-gwm-accent object-cover" />
+        </button>
+        <button type="button" className="fm-assist-caption" onClick={() => open({})} data-testid="fm-assistant-caption">
+          {dict.chat.voiceHint}
+        </button>
+      </div>
       <button type="button" className="fm-assist-mic" aria-label={c.assistantMic} title={c.assistantMic} onClick={() => open({ voice: true })} data-testid="fm-assistant-mic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="9" y="3" width="6" height="11" rx="3" />

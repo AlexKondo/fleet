@@ -35,7 +35,7 @@
  */
 
 import type { LatLng } from "../geospatial/providers";
-import { isValidSeatCount } from "./inputValidation";
+import { isValidReturnAfterDeparture, isValidSeatCount } from "./inputValidation";
 
 export interface PrefilterCandidateOffer {
   /** carpool_offers.id */
@@ -53,6 +53,12 @@ export interface PrefilterCandidateOffer {
   /** ISO 8601 */
   riderRequestedDepartureAt: string;
   departureWindowMinutes: number;
+  /** ISO 8601. Optional round trip: the rider's requested return. When absent the match is one-way, exactly as before. */
+  riderRequestedReturnAt?: string;
+  /** ISO 8601. The host trip's expected return (carpool_offers -> trip_requests.expected_return_at). */
+  hostReturnAt?: string;
+  /** Policy `returnWindowMinutes` (± minutes). Required whenever `riderRequestedReturnAt` is present (fail closed otherwise). */
+  returnWindowMinutes?: number;
   hostDestination?: LatLng;
   riderDropoff?: LatLng;
   /** Cheap geographic bound (km, straight-line) — when omitted, the coarse-bounds check is
@@ -67,6 +73,7 @@ export type PrefilterRejectionReason =
   | "capacity_exhausted"
   | "cargo_unsupported"
   | "departure_window_exceeded"
+  | "return_window_exceeded"
   | "coarse_bounds_exceeded";
 
 export interface PrefilterResult {
@@ -113,6 +120,24 @@ export function prefilterCandidate(candidate: PrefilterCandidateOffer): Prefilte
     return { offerId: candidate.offerId, passed: false, reasons: ["invalid_input"] };
   }
 
+  // Round trip (optional): only when the rider gave a return time. Absent => one-way, behaviour unchanged.
+  const roundTrip = candidate.riderRequestedReturnAt !== undefined;
+  let returnDiff: number | null = null;
+  if (roundTrip) {
+    if (
+      !isValidReturnAfterDeparture(candidate.riderRequestedDepartureAt, candidate.riderRequestedReturnAt) ||
+      !Number.isFinite(candidate.returnWindowMinutes)
+    ) {
+      return { offerId: candidate.offerId, passed: false, reasons: ["invalid_input"] };
+    }
+    if (candidate.hostReturnAt !== undefined) {
+      returnDiff = minutesBetween(candidate.riderRequestedReturnAt!, candidate.hostReturnAt);
+      if (!Number.isFinite(returnDiff)) {
+        return { offerId: candidate.offerId, passed: false, reasons: ["invalid_input"] };
+      }
+    }
+  }
+
   if (candidate.offerStatus !== "active") {
     reasons.push("offer_not_active");
   }
@@ -132,6 +157,12 @@ export function prefilterCandidate(candidate: PrefilterCandidateOffer): Prefilte
   const departureDiffMinutes = departureDiff;
   if (departureDiffMinutes > candidate.departureWindowMinutes) {
     reasons.push("departure_window_exceeded");
+  }
+  if (roundTrip) {
+    // The host trip has no return time to compare (should not happen): conservatively NOT compatible with a round trip.
+    if (returnDiff === null || returnDiff > candidate.returnWindowMinutes!) {
+      reasons.push("return_window_exceeded");
+    }
   }
   if (
     candidate.coarseBoundsKm !== undefined &&

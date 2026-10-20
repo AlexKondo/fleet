@@ -179,3 +179,49 @@ describe("prefilterCandidate", () => {
     }
   });
 });
+
+describe("prefilterCandidate: optional round trip (return window)", () => {
+  const rt = (over: Partial<PrefilterCandidateOffer> = {}) =>
+    baseCandidate({
+      riderRequestedReturnAt: "2026-10-01T18:00:00.000Z",
+      hostReturnAt: "2026-10-01T18:00:00.000Z",
+      returnWindowMinutes: 15,
+      ...over,
+    });
+
+  it("one-way (no rider return) is byte-identical to before, even if the host has a return / window", () => {
+    expect(prefilterCandidate(baseCandidate())).toEqual({ offerId: "offer-1", passed: true, reasons: [] });
+    expect(prefilterCandidate(baseCandidate({ hostReturnAt: "2026-10-01T23:00:00.000Z", returnWindowMinutes: 1 }))).toEqual({ offerId: "offer-1", passed: true, reasons: [] });
+  });
+  it("passes when the returns are equal", () => {
+    expect(prefilterCandidate(rt())).toEqual({ offerId: "offer-1", passed: true, reasons: [] });
+  });
+  it("boundary: exactly at the window passes (both directions), one minute over fails", () => {
+    expect(prefilterCandidate(rt({ hostReturnAt: "2026-10-01T18:15:00.000Z" })).passed).toBe(true);
+    expect(prefilterCandidate(rt({ hostReturnAt: "2026-10-01T17:45:00.000Z" })).passed).toBe(true);
+    const over = prefilterCandidate(rt({ hostReturnAt: "2026-10-01T18:16:00.000Z" }));
+    expect(over.passed).toBe(false);
+    expect(over.reasons).toEqual(["return_window_exceeded"]);
+    expect(prefilterCandidate(rt({ hostReturnAt: "2026-10-01T17:44:00.000Z" })).reasons).toEqual(["return_window_exceeded"]);
+  });
+  it("rider gave a return but the host trip has none -> rejected conservatively", () => {
+    const r = prefilterCandidate(rt({ hostReturnAt: undefined }));
+    expect(r.passed).toBe(false);
+    expect(r.reasons).toEqual(["return_window_exceeded"]);
+  });
+  it("combines with the departure rule (both reasons reported)", () => {
+    const r = prefilterCandidate(rt({ hostDepartureAt: "2026-10-01T14:00:00.000Z", hostReturnAt: "2026-10-01T22:00:00.000Z" }));
+    expect(r.reasons).toEqual(["departure_window_exceeded", "return_window_exceeded"]);
+  });
+  it.each([
+    ["invalid rider return", { riderRequestedReturnAt: "garbage" }],
+    ["rider return before departure", { riderRequestedReturnAt: "2026-10-01T11:00:00.000Z" }],
+    ["rider return equals departure", { riderRequestedReturnAt: "2026-10-01T12:00:00.000Z" }],
+    ["invalid host return", { hostReturnAt: "garbage" }],
+    ["missing window", { returnWindowMinutes: undefined }],
+    ["NaN window", { returnWindowMinutes: Number.NaN }],
+  ])("fails closed: %s -> invalid_input", (_n, over) => {
+    const r = prefilterCandidate(rt(over as Partial<PrefilterCandidateOffer>));
+    expect(r).toEqual({ offerId: "offer-1", passed: false, reasons: ["invalid_input"] });
+  });
+});

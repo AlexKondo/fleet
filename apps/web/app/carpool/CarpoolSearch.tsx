@@ -8,7 +8,7 @@ import { RouteMapCard } from "@/app/carpool/RouteMapCard";
 import { PlaceAutocomplete } from "@/app/carpool/PlaceAutocomplete";
 import { searchBuscarCarona, type BuscarCaronaResult } from "@/app/carpool/searchActions";
 import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
-import { localInputToIso, MAX_SEATS } from "@/lib/carpool/buscarCarona";
+import { brasiliaInputToIso, MAX_SEATS } from "@/lib/carpool/buscarCarona";
 import type { CarpoolFirstState, PlaceCheck } from "@/lib/carpool/carpoolFirst";
 import { formatDate, formatDateTimeShort, formatTimeShort } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
@@ -49,6 +49,7 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
   const [destination, setDestination] = useState("");
   // controlled: React resets uncontrolled fields after a form action, which would wipe the rider's date/seats
   const [when, setWhen] = useState("");
+  const [back, setBack] = useState(""); // optional return (round trip)
   const [seats, setSeats] = useState("1");
   const [outcomes, setOutcomes] = useState<Record<string, CardOutcome>>({});
   const [busyOffer, setBusyOffer] = useState<string | null>(null);
@@ -64,14 +65,19 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
     setOutcomes({});
     // a new search may carry different places/time: never reuse an old request key for the same offer
     keys.current = new Map();
-    const departureAt = localInputToIso(String(formData.get("departureAt") ?? ""));
+    // same Brasília-time rule as the trip form (parseBrasiliaLocalDateTime), whatever zone the browser runs in
+    const departureAt = brasiliaInputToIso(String(formData.get("departureAt") ?? ""));
     if (!departureAt) return { status: "invalid" };
+    const returnRaw = String(formData.get("returnAt") ?? "");
+    const returnAt = returnRaw ? brasiliaInputToIso(returnRaw) : undefined;
+    if (returnAt === null || (returnAt && new Date(returnAt).getTime() <= new Date(departureAt).getTime())) return { status: "invalid" };
     setSearched({ origin: String(formData.get("origin") ?? ""), destination: String(formData.get("destination") ?? "") });
     try {
       return await searchBuscarCarona({
         originText: String(formData.get("origin") ?? ""),
         destinationText: String(formData.get("destination") ?? ""),
         departureAt,
+        returnAt,
         passengerCount: Number(formData.get("passengerCount")),
       });
     } catch {
@@ -154,10 +160,6 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
       </div>
 
       <section className="fm-card fm-search" aria-label={b.title}>
-        <div className="fm-tabs">
-          <span className="fm-tab" aria-current="page">{b.tabFind}</span>
-          <Link href="/trips/new" className="fm-tab" data-testid="buscar-tab-offer">{b.tabOffer}</Link>
-        </div>
         <form action={formAction} className="fm-form" data-testid="buscar-form">
           <div className="fm-field fm-span-2">
             <label className="fm-label" htmlFor="fm-origin">{b.originLabel}</label>
@@ -172,6 +174,10 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
           <div className="fm-field">
             <label className="fm-label" htmlFor="fm-when">{b.dateTimeLabel}</label>
             <input id="fm-when" name="departureAt" type="datetime-local" className="fm-input" required value={when} onChange={(e) => setWhen(e.target.value)} />
+          </div>
+          <div className="fm-field">
+            <label className="fm-label" htmlFor="fm-return">{b.returnLabel}</label>
+            <input id="fm-return" name="returnAt" type="datetime-local" className="fm-input" value={back} min={when || undefined} onChange={(e) => setBack(e.target.value)} />
           </div>
           <div className="fm-field">
             <label className="fm-label" htmlFor="fm-seats">{b.seatsLabel}</label>
@@ -286,6 +292,9 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
                           {formatTimeShort(offer.hostDepartureAt, locale)}
                         </p>
                         <p className="fm-offer-date">{b.departureShort} · {formatDate(offer.hostDepartureAt, locale)}</p>
+                        {offer.hostReturnAt ? (
+                          <p className="fm-offer-date" data-testid="offer-host-return">{fillTemplate(b.hostReturnLabel, { time: formatTimeShort(offer.hostReturnAt, locale) })}</p>
+                        ) : null}
                       </div>
                     </div>
                     <div className="fm-chips" style={{ marginTop: 12 }}>
@@ -331,6 +340,12 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
               <dt>{b.requestedTimeLabel}</dt>
               <dd>{formatDateTimeShort(r.draft.requestedDepartureAt, locale)}</dd>
             </div>
+            {r.draft.requestedReturnAt ? (
+              <div>
+                <dt>{b.requestedReturnLabel}</dt>
+                <dd>{formatDateTimeShort(r.draft.requestedReturnAt, locale)}</dd>
+              </div>
+            ) : null}
           </dl>
           <p className="fm-subtitle" style={{ marginTop: 12, fontSize: 13 }}>{t.confirmHint}</p>
         </aside>

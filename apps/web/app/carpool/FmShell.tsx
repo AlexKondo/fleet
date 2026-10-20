@@ -91,7 +91,7 @@ export async function FmShell({
       <SessionBackupSync />
       {licenseGateActive ? null : (
         <div className="fm-chat">
-          <ChatWidget dict={dict} locale={locale} initialState={chatInitialState} />
+          <ChatWidget dict={dict} locale={locale} initialState={chatInitialState} embedded />
         </div>
       )}
       {licenseGateActive ? null : (
@@ -128,6 +128,7 @@ export async function FmShell({
                 role={role}
                 dict={dict}
                 locale={locale}
+                assistantLabel={dict.chrome.assistantTitle}
               />
             </div>
           )}

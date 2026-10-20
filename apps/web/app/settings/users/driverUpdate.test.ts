@@ -50,3 +50,30 @@ describe("buildDriverUpdate (M3: never wipe a CNH with blank hidden inputs)", ()
     expect(buildDriverUpdate(form({ intent: "authorization" }))).toEqual({ ok: false, reason: "invalid_intent" });
   });
 });
+
+import { decideExpirationSource, isLicenseLockedError } from "./driverUpdate";
+
+describe("decideExpirationSource (migration 0074 origin of the expiration date)", () => {
+  it("a different date typed by an administrator -> 'manual'", () => {
+    expect(decideExpirationSource("2030-01-01", "2031-01-01")).toBe("manual");
+    expect(decideExpirationSource(null, "2031-01-01")).toBe("manual");
+  });
+  it("an unchanged date -> undefined (the stored source is NOT touched), also when only the number / category were edited", () => {
+    expect(decideExpirationSource("2030-01-01", "2030-01-01")).toBeUndefined();
+    expect(decideExpirationSource(null, null)).toBeUndefined();
+    expect(decideExpirationSource("", null)).toBeUndefined();
+  });
+  it("a cleared date -> null (not recorded)", () => {
+    expect(decideExpirationSource("2030-01-01", null)).toBeNull();
+    expect(decideExpirationSource("2030-01-01", "")).toBeNull();
+  });
+});
+
+describe("isLicenseLockedError (0075 trigger backstop)", () => {
+  it("recognises the 42501 / license_locked_by_ai error and nothing else", () => {
+    expect(isLicenseLockedError({ code: "42501", message: "license_locked_by_ai" })).toBe(true);
+    expect(isLicenseLockedError({ message: "ERROR: license_locked_by_ai" })).toBe(true);
+    expect(isLicenseLockedError({ code: "23505", message: "dup" })).toBe(false);
+    expect(isLicenseLockedError(null)).toBe(false);
+  });
+});

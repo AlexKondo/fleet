@@ -167,10 +167,8 @@ function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestar
         {isAnalyzed && state.read ? (
           <>
             <input type="hidden" name="phase" value="confirm" />
-            <input type="hidden" name="fullName" value={state.read.fullName} />
-            <input type="hidden" name="number" value={state.read.number} />
-            <input type="hidden" name="category" value={state.read.category} />
-            <input type="hidden" name="expirationDate" value={state.read.expirationDate} />
+            {/* the review values below are display only: the server takes the data from this SIGNED token, not from inputs */}
+            <input type="hidden" name="token" value={state.token ?? ""} />
           </>
         ) : null}
         <div className="flex flex-wrap items-center gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2.5">

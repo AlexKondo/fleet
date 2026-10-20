@@ -153,3 +153,30 @@ describe("deriveCarpoolGating (planTrip gating)", () => {
     expect(deriveCarpoolGating({ ok: false })).toMatchObject({ newEngine: true, carpoolFirst: true, hostStep: false });
   });
 });
+
+describe("carpool-first with a return (round trip)", () => {
+  it("the rider's return travels in the draft and the card carries the host return time", async () => {
+    const d = deps();
+    const spy = vi.spyOn(d, "search");
+    const out = await runCarpoolFirst({ ...input, returnAt: "2026-10-20T20:00:00.000Z" }, d);
+    expect(spy.mock.calls[0]![0]).toMatchObject({ requestedReturnAt: "2026-10-20T20:00:00.000Z" });
+    if (out.status === "offers") expect(out.draft.requestedReturnAt).toBe("2026-10-20T20:00:00.000Z");
+  });
+  it("no return -> no requestedReturnAt key at all (one-way draft unchanged)", async () => {
+    const d = deps();
+    const spy = vi.spyOn(d, "search");
+    await runCarpoolFirst(input, d);
+    expect("requestedReturnAt" in spy.mock.calls[0]![0]).toBe(false);
+  });
+  it("buildOfferCards keeps the host return time only when it exists", () => {
+    const cards = buildOfferCards(
+      [match("a"), match("b")],
+      [
+        { id: "a", seats_available: 2, hostDepartureAt: "2026-10-20T12:00:00.000Z", hostReturnAt: "2026-10-20T20:00:00.000Z" },
+        { id: "b", seats_available: 2, hostDepartureAt: "2026-10-20T12:00:00.000Z", hostReturnAt: null },
+      ],
+    );
+    expect(cards[0]!.hostReturnAt).toBe("2026-10-20T20:00:00.000Z");
+    expect("hostReturnAt" in cards[1]!).toBe(false);
+  });
+});

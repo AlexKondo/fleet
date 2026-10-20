@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidLatLng, isValidSeatCount } from "./inputValidation";
+import { isValidLatLng, isValidReturnAfterDeparture, isValidSeatCount } from "./inputValidation";
 
 describe("isValidSeatCount", () => {
   it("accepts positive integers", () => {
@@ -29,5 +29,26 @@ describe("isValidLatLng", () => {
     ["x"],
   ])("rejects %j", (v) => {
     expect(isValidLatLng(v)).toBe(false);
+  });
+});
+
+describe("isValidReturnAfterDeparture", () => {
+  const dep = "2026-10-01T12:00:00.000Z";
+  it("accepts a return strictly after the departure", () => {
+    expect(isValidReturnAfterDeparture(dep, "2026-10-01T12:01:00.000Z")).toBe(true);
+    expect(isValidReturnAfterDeparture(dep, "2026-10-02T00:00:00.000Z")).toBe(true);
+  });
+  it.each([
+    ["same instant", dep],
+    ["before departure", "2026-10-01T11:59:00.000Z"],
+    ["invalid date", "not-a-date"],
+    ["empty", ""],
+    ["non-string", 5],
+    ["undefined", undefined],
+  ])("rejects %s", (_n, ret) => {
+    expect(isValidReturnAfterDeparture(dep, ret)).toBe(false);
+  });
+  it("rejects an invalid departure", () => {
+    expect(isValidReturnAfterDeparture("nope", "2026-10-01T12:01:00.000Z")).toBe(false);
   });
 });

@@ -18,6 +18,8 @@ export interface CarpoolOfferCard {
   offerId: string;
   /** Host trip departure (ISO) - the rider compares it with their own requested time. */
   hostDepartureAt: string;
+  /** Host trip return (ISO) - a time only, shown when it exists (round trips). */
+  hostReturnAt?: string;
   seatsAvailable: number;
   /** Rounded for display (0.1 km / whole minutes). */
   additionalDistanceKm: number;
@@ -28,6 +30,8 @@ export interface CarpoolOfferCard {
  * and are re-validated + re-evaluated by requestCarpoolRide, never trusted. */
 export interface CarpoolDraftWire {
   requestedDepartureAt: string;
+  /** The rider's optional return (round trip). */
+  requestedReturnAt?: string;
   requestedSeats: number;
   requiresCargo: boolean;
   pickup: LatLng;
@@ -54,6 +58,8 @@ export interface CarpoolFirstInput {
   originText: string;
   destinationText: string;
   departureAt: string;
+  /** Optional rider return (ISO); absent = one-way search. */
+  returnAt?: string;
   passengerCount: number;
   requiresCargo: boolean;
 }
@@ -90,6 +96,7 @@ export async function runCarpoolFirst(
 
   const draft: CarpoolDraftWire = {
     requestedDepartureAt: input.departureAt,
+    ...(input.returnAt ? { requestedReturnAt: input.returnAt } : {}),
     requestedSeats: input.passengerCount,
     requiresCargo: input.requiresCargo,
     pickup: o.place.coordinates,
@@ -114,7 +121,7 @@ export async function runCarpoolFirst(
  * An offer row that could not be loaded is dropped (never shown half-informed). */
 export function buildOfferCards(
   matches: CompatibleCarpoolMatch[],
-  rows: { id: string; seats_available: number; hostDepartureAt: string | null }[],
+  rows: { id: string; seats_available: number; hostDepartureAt: string | null; hostReturnAt?: string | null }[],
 ): CarpoolOfferCard[] {
   const byId = new Map(rows.map((r) => [r.id, r]));
   const cards: CarpoolOfferCard[] = [];
@@ -124,6 +131,7 @@ export function buildOfferCards(
     cards.push({
       offerId: match.offerId,
       hostDepartureAt: row.hostDepartureAt,
+      ...(row.hostReturnAt ? { hostReturnAt: row.hostReturnAt } : {}),
       seatsAvailable: row.seats_available,
       additionalDistanceKm: Math.round(match.additionalDistanceKm * 10) / 10,
       additionalTimeMin: Math.round(match.additionalTimeMin),

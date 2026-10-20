@@ -425,6 +425,7 @@ export type Database = {
           driver_authorized: boolean
           drivers_license_category: string | null
           drivers_license_expiration: string | null
+          drivers_license_expiration_source: string | null
           drivers_license_number: string | null
           full_name: string
           gantt_zoom_preference: string
@@ -441,6 +442,7 @@ export type Database = {
           driver_authorized?: boolean
           drivers_license_category?: string | null
           drivers_license_expiration?: string | null
+          drivers_license_expiration_source?: string | null
           drivers_license_number?: string | null
           full_name: string
           gantt_zoom_preference?: string
@@ -457,6 +459,7 @@ export type Database = {
           driver_authorized?: boolean
           drivers_license_category?: string | null
           drivers_license_expiration?: string | null
+          drivers_license_expiration_source?: string | null
           drivers_license_number?: string | null
           full_name?: string
           gantt_zoom_preference?: string
@@ -1553,6 +1556,28 @@ export type Database = {
           drivers_license_category: string | null
           drivers_license_expiration: string | null
           driver_authorized: boolean
+        }[]
+      }
+      apply_ai_license_read: {
+        Args: {
+          p_user_id: string
+          p_full_name: string
+          p_number: string
+          p_category: string
+          p_expiration: string
+          p_authorized: boolean
+        }
+        Returns: undefined
+      }
+      reset_ai_license: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      list_member_license_sources: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          drivers_license_expiration_source: string | null
         }[]
       }
       list_member_licenses: {

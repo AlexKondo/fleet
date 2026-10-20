@@ -37,13 +37,17 @@ export async function chunked<T, R>(ids: T[], size: number, run: (chunk: T[]) =>
   return out;
 }
 
+const CLOCK_SKEW_GRACE_MS = 5 * 60 * 1000;
+
 export async function loadCarpoolKpis(
   admin: SupabaseClient<Database>,
   organizationId: string,
   days: number,
   now: Date = new Date(),
 ): Promise<KpiReport> {
-  const to = now.toISOString();
+  // The upper bound is the caller's clock, but rows are stamped by the DATABASE clock (now()). Server and database clocks differ by
+  // seconds (a 16 s skew made freshly written events/requests fall "in the future" and vanish from the dashboard), so allow a small grace.
+  const to = new Date(now.getTime() + CLOCK_SKEW_GRACE_MS).toISOString();
   const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
   const fromDay = from.slice(0, 10);
 

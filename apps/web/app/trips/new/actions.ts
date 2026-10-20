@@ -285,6 +285,8 @@ export async function planTripAction(
       originText: input.origin,
       destinationText: input.destination,
       departureAt: input.departureAt,
+      // the trip's return doubles as the rider's return for the round-trip carpool match
+      returnAt: input.expectedReturnAt,
       passengerCount: input.passengerCount,
       requiresCargo: input.requiresCargo,
     },

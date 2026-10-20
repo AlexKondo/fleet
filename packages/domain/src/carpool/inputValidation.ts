@@ -12,6 +12,17 @@ export function isValidSeatCount(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 1;
 }
 
+/**
+ * A rider's optional return time: when present it must be a parseable instant strictly AFTER the departure
+ * (a return before / at the departure is a typo, never a round trip). Both values are ISO 8601 strings.
+ */
+export function isValidReturnAfterDeparture(departureAt: unknown, returnAt: unknown): boolean {
+  if (typeof departureAt !== "string" || typeof returnAt !== "string") return false;
+  const dep = new Date(departureAt).getTime();
+  const ret = new Date(returnAt).getTime();
+  return Number.isFinite(dep) && Number.isFinite(ret) && ret > dep;
+}
+
 /** Finite latitude in [-90, 90] and longitude in [-180, 180]. */
 export function isValidLatLng(value: unknown): value is LatLng {
   if (typeof value !== "object" || value === null) return false;

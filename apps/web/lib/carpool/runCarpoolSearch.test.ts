@@ -232,3 +232,34 @@ describe("runCarpoolSearch", () => {
     expect(result).toEqual({ status: "matches", matches: [] });
   });
 });
+
+describe("runCarpoolSearch: optional round trip (return window)", () => {
+  const policy = { ...defaultCarpoolPolicyConfig, returnWindowMinutes: 15 };
+  const run = (d: RiderTripDraft, c: CarpoolOfferCandidateRow[]) =>
+    runCarpoolSearch(d, c, policy, { computeRoute: vi.fn(), evaluateInsertion: vi.fn(async () => okRoute(1, 1)) });
+  const R = "2026-10-01T20:00:00.000Z";
+
+  it("no rider return = one-way: the host return is ignored (unchanged behaviour)", async () => {
+    const r = await run(draft(), [candidate({ hostReturnAt: "2026-10-02T03:00:00.000Z" })]);
+    expect(r).toMatchObject({ status: "matches" });
+    expect((r as { matches: unknown[] }).matches).toHaveLength(1);
+  });
+  it("return equal to the host return -> match", async () => {
+    const r = await run(draft({ requestedReturnAt: R }), [candidate({ hostReturnAt: R })]);
+    expect((r as { matches: unknown[] }).matches).toHaveLength(1);
+  });
+  it("return exactly at the window passes, one minute over is dropped", async () => {
+    const at = await run(draft({ requestedReturnAt: R }), [candidate({ hostReturnAt: "2026-10-01T20:15:00.000Z" })]);
+    expect((at as { matches: unknown[] }).matches).toHaveLength(1);
+    const over = await run(draft({ requestedReturnAt: R }), [candidate({ hostReturnAt: "2026-10-01T20:16:00.000Z" })]);
+    expect((over as { matches: unknown[] }).matches).toHaveLength(0);
+  });
+  it("rider return but the host trip has none -> no match (conservative)", async () => {
+    const r = await run(draft({ requestedReturnAt: R }), [candidate()]);
+    expect((r as { matches: unknown[] }).matches).toHaveLength(0);
+  });
+  it("rider return before the departure -> nothing matches (fail closed)", async () => {
+    const r = await run(draft({ requestedReturnAt: "2026-10-01T10:00:00.000Z" }), [candidate({ hostReturnAt: R })]);
+    expect((r as { matches: unknown[] }).matches).toHaveLength(0);
+  });
+});

@@ -8,7 +8,7 @@ import { getDictionary } from "@/lib/i18n/getLocale";
 import { renderEmail } from "@/lib/email/renderEmail";
 import { sendEmail } from "@/lib/email/sendEmail";
 import { getAppUrl } from "@/lib/getAppUrl";
-import { buildDriverUpdate } from "./driverUpdate";
+import { buildDriverUpdate, decideExpirationSource, isLicenseLockedError } from "./driverUpdate";
 
 export interface UserActionState {
   status: "idle" | "success" | "error";
@@ -211,18 +211,33 @@ export async function updateDriverAuthorization(
 
   const { data: targetProfile } = await admin
     .from("profiles")
-    .select("organization_id")
+    .select("organization_id, drivers_license_expiration, drivers_license_expiration_source")
     .eq("id", userId)
     .maybeSingle();
   if (!targetProfile || targetProfile.organization_id !== organizationId) {
     return { status: "error", error: dict.errors.users.userNotFound };
   }
 
+  // Anti-fraud (migration 0075): a CNH read by AI is locked. Refuse any license edit BEFORE writing (the DB trigger is the backstop).
+  if (built.update && ("drivers_license_number" in built.update || "drivers_license_category" in built.update || "drivers_license_expiration" in built.update) && targetProfile.drivers_license_expiration_source === "ai") {
+    return { status: "error", error: dict.errors.users.licenseLockedByAi };
+  }
+
+  // The expiration source is only written when the expiration itself changes (manual edit / cleared); an unrelated save never
+  // rewrites it (decideExpirationSource returns undefined = leave the stored value alone).
+  const update = { ...built.update };
+  if ("drivers_license_expiration" in update) {
+    const source = decideExpirationSource(targetProfile.drivers_license_expiration, update.drivers_license_expiration ?? null);
+    if (source !== undefined) update.drivers_license_expiration_source = source;
+  }
+
   const { error } = await admin
     .from("profiles")
-    .update(built.update)
+    .update(update)
     .eq("id", userId);
-  if (error) return { status: "error", error: dict.errors.users.driverAuthorizationSaveFailed };
+  if (error) {
+    return { status: "error", error: isLicenseLockedError(error) ? dict.errors.users.licenseLockedByAi : dict.errors.users.driverAuthorizationSaveFailed };
+  }
 
   await admin.rpc("log_audit_event", {
     p_organization_id: organizationId,
@@ -237,6 +252,57 @@ export async function updateDriverAuthorization(
         ? { drivers_license_expiration: built.update.drivers_license_expiration }
         : {}),
     },
+  });
+
+  revalidatePath("/settings/users");
+  return { status: "success" };
+}
+
+/**
+ * Administrator-only reset of an AI-locked CNH (migration 0075 reset_ai_license, service_role only): clears number / category /
+ * expiration / source and un-authorizes the member, who is sent to /account/license by the CNH gate on the next navigation and must
+ * send a new photo. Audited (who reset whose CNH, when); no CNH values are logged.
+ */
+export async function resetMemberLicense(
+  _prevState: UserActionState,
+  formData: FormData,
+): Promise<UserActionState> {
+  const { organizationId, actingUserId } = await requireAdministrator();
+  if (!organizationId) return { status: "error", error: "not_authorized" };
+
+  const dict = await getDictionary();
+  const userId = String(formData.get("userId") ?? "");
+  if (!userId) return { status: "error", error: dict.errors.users.userInvalid };
+
+  // An administrator can NOT reset their own AI-locked CNH (anti-fraud: someone else must do it), and every reset needs a short reason.
+  if (userId === actingUserId) return { status: "error", error: dict.errors.users.licenseResetSelf };
+  const reason = String(formData.get("reason") ?? "").replace(/\s+/g, " ").trim();
+  if (reason.length < 5 || reason.length > 200) return { status: "error", error: dict.errors.users.licenseResetReasonInvalid };
+
+  const admin = createSupabaseAdminClient();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("organization_id, drivers_license_expiration_source")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!target || target.organization_id !== organizationId) {
+    return { status: "error", error: dict.errors.users.userNotFound };
+  }
+  // only a locked (AI-read) record needs a reset; everything else is directly editable
+  if (target.drivers_license_expiration_source !== "ai") {
+    return { status: "error", error: dict.errors.users.licenseResetFailed };
+  }
+
+  const { error } = await admin.rpc("reset_ai_license", { p_user_id: userId });
+  if (error) return { status: "error", error: dict.errors.users.licenseResetFailed };
+
+  await admin.rpc("log_audit_event", {
+    p_organization_id: organizationId,
+    p_actor_id: actingUserId as string,
+    p_action: "driver_license_reset",
+    p_entity_type: "profile",
+    p_entity_id: userId,
+    p_after: { reset: true, driver_authorized: false, reason },
   });
 
   revalidatePath("/settings/users");

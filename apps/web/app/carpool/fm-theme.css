@@ -273,28 +273,6 @@
   margin-top: 20px;
   overflow: hidden;
 }
-.fm-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--fm-border);
-}
-.fm-tab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 12px;
-  font-weight: 600;
-  color: var(--fm-text-muted);
-  border-bottom: 3px solid transparent;
-}
-.fm-tab[aria-current="page"] {
-  color: var(--fm-blue-600);
-  border-bottom-color: var(--fm-blue-600);
-}
-a.fm-tab:hover {
-  color: var(--fm-blue-600);
-}
 .fm-form {
   display: grid;
   grid-template-columns: 1fr;
@@ -618,26 +596,6 @@ a.fm-tab:hover {
   min-width: 44px;
   min-height: 44px;
 }
-/* chat assistant hint bubble: its dismiss X is 20px in the shared widget; give it a 44px touch target here */
-.fm-chat div[role="button"] button {
-  width: 44px;
-  height: 44px;
-  top: -22px;
-  right: -16px;
-}
-/* chat assistant: keep its floating button/panel above the mobile bottom bar */
-@media (max-width: 767px) {
-  .fm-chat button.fixed {
-    bottom: calc(72px + env(safe-area-inset-bottom));
-  }
-  .fm-chat div.fixed[role="button"] {
-    bottom: calc(128px + env(safe-area-inset-bottom));
-  }
-  .fm-chat div[class*="h-[31rem]"] {
-    bottom: calc(128px + env(safe-area-inset-bottom));
-    max-height: calc(100dvh - 148px);
-  }
-}
 .fm-sr-only {
   position: absolute;
   width: 1px;
@@ -688,7 +646,7 @@ a.fm-tab:hover {
 }
 @media (min-width: 1380px) {
   .fm-form {
-    grid-template-columns: 1.4fr 1.4fr 1fr 0.6fr;
+    grid-template-columns: 1.4fr 1.4fr 1fr 1fr 0.6fr;
     align-items: end;
   }
   .fm-form .fm-span-2 {
@@ -1002,4 +960,91 @@ a.fm-tab:hover {
   .fm-tbpill.fm-tbpill-org {
     display: none;
   }
+}
+
+/* ---------- chat assistant on FmShell pages: no floating button / mascot; the panel opens next to the sidebar ---------- */
+.fm-assist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.fm-assist-robot {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.fm-assist-caption {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--fm-radius-md);
+  background: rgba(255, 255, 255, 0.07);
+  color: #e6edf8;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+.fm-assist-caption:hover,
+.fm-assist-robot:hover + .fm-assist-caption {
+  background: var(--fm-navy-800);
+}
+.fm-assist-mic {
+  width: 44px;
+  height: 44px;
+  box-shadow: 0 0 0 4px rgba(46, 123, 230, 0.18);
+}
+.fm-assist-mic svg {
+  width: 20px;
+  height: 20px;
+}
+.fm-theme .fm-chat-panel {
+  right: auto;
+  left: 256px;
+  bottom: 16px;
+  height: min(31rem, calc(100dvh - 32px));
+  width: 24rem;
+  max-width: calc(100vw - 272px);
+  z-index: 60;
+}
+.fm-theme .fm-chat-panel > div:first-child button {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.fm-theme .fm-chat-panel > div:first-child button svg {
+  width: 20px;
+  height: 20px;
+}
+/* mobile: a full sheet above the bottom bar (the sidebar and its panel are hidden there) */
+@media (max-width: 767px) {
+  .fm-theme .fm-chat-panel {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: calc(57px + env(safe-area-inset-bottom));
+    width: auto;
+    height: auto;
+    max-width: none;
+    border-radius: 0;
+  }
+}
+
+.fm-theme .fm-chat-panel:focus {
+  outline: none;
 }

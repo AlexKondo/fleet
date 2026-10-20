@@ -948,6 +948,19 @@ export type Dictionary = {
       driverAuthorized: string;
       licenseNumberPlaceholder: string;
       licenseCategoryPlaceholder: string;
+      licenseNumberLabel: string;
+      licenseCategoryLabel: string;
+      licenseExpirationLabel: string;
+      licenseSourceAi: string;
+      licenseSourceManual: string;
+      licenseSourceUnknown: string;
+      licenseLockedHint: string;
+      resetLicense: string;
+      resetLicenseConfirm: string;
+      resetLicenseWorking: string;
+      resetLicenseSelfHint: string;
+      resetLicenseReasonLabel: string;
+      resetLicenseReasonPlaceholder: string;
       removing: string;
       /** {name} = the member's full name. */
       removeConfirm: string;
@@ -1130,6 +1143,10 @@ export type Dictionary = {
       userInvalid: string;
       cannotRemoveSelf: string;
       driverAuthorizationSaveFailed: string;
+      licenseLockedByAi: string;
+      licenseResetFailed: string;
+      licenseResetSelf: string;
+      licenseResetReasonInvalid: string;
       removeUserFailed: string;
     };
     reservations: {
@@ -1249,6 +1266,7 @@ export type Dictionary = {
       offersTitle: string;
       offersIntro: string;
       cardDeparture: string;
+      cardReturn: string;
       cardDetour: string;
       seatsOne: string;
       seatsOther: string;
@@ -1279,13 +1297,14 @@ export type Dictionary = {
     buscar: {
       title: string;
       subtitle: string;
-      tabFind: string;
-      tabOffer: string;
       originLabel: string;
       originPlaceholder: string;
       destinationLabel: string;
       destinationPlaceholder: string;
       dateTimeLabel: string;
+      returnLabel: string;
+      hostReturnLabel: string;
+      requestedReturnLabel: string;
       seatsLabel: string;
       clearField: string;
       submit: string;

@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { analyzeDriversLicense } from "@/lib/domain/analyzeDriversLicense";
 import { getDictionary } from "@/lib/i18n/getLocale";
+import { signLicenseToken, verifyLicenseToken } from "@/lib/auth/licenseToken";
 
 export interface LicenseUploadState {
   status: "idle" | "analyzed" | "success" | "success_expired" | "unreadable" | "error";
@@ -15,9 +16,24 @@ export interface LicenseUploadState {
    * with "Emissão" or another printed date) is obvious on screen before it's ever saved,
    * not just after. */
   read?: { fullName: string; number: string; category: string; expirationDate: string };
+  /** Signed result of the analysis (analyzed step only). The confirm phase trusts ONLY this, never client-sent field values. */
+  token?: string;
 }
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+/** created_at of the member's latest administrator CNH reset ("" when none); null when the audit log cannot be read (callers fail closed). */
+async function latestResetAt(userId: string): Promise<string | null> {
+  const { data, error } = await createSupabaseAdminClient()
+    .from("audit_log")
+    .select("created_at")
+    .eq("entity_id", userId)
+    .eq("action", "driver_license_reset")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (error || !data) return null;
+  return data[0]?.created_at ?? "";
+}
 
 /**
  * First-access CNH capture, split into two phases driven by FormData's "phase" field so a
@@ -47,11 +63,19 @@ export async function submitLicensePhoto(
   if (!user) return { status: "error", error: dict.errors.common.not_authenticated };
 
   if (formData.get("phase") === "confirm") {
-    const fullName = String(formData.get("fullName") ?? "");
-    const number = String(formData.get("number") ?? "");
-    const category = String(formData.get("category") ?? "");
-    const expirationDate = String(formData.get("expirationDate") ?? "");
-    if (!fullName || !number || !category || !expirationDate) {
+    // Anti-fraud (migration 0075): every client-sent field value is IGNORED. The data comes only from the signed token that the
+    // analyze phase issued for THIS user (HMAC, 15 min). A bad / expired / foreign token gets the generic save-failed error.
+    const verified = verifyLicenseToken(formData.get("token"), user.id);
+    if (!verified) {
+      return { status: "error", error: dict.account.license.saveFailed };
+    }
+    const { fullName, number, category, expirationDate } = verified;
+
+    // A token issued BEFORE an administrator reset of this member's CNH must not be replayed afterwards (anti-fraud): the token carries
+    // the created_at of the latest reset at issue time; a different (newer) latest reset now means the token is stale. Two database
+    // values are compared (no app/DB clock skew involved). Fail closed when the audit cannot be read.
+    const latestNow = await latestResetAt(user.id);
+    if (latestNow === null || latestNow !== verified.lastReset) {
       return { status: "error", error: dict.account.license.saveFailed };
     }
 
@@ -60,20 +84,17 @@ export async function submitLicensePhoto(
     // profiles has no client-side UPDATE RLS policy (see updateDriverAuthorization's
     // comment in settings/users/actions.ts) — admin client, scoped to the caller's own id.
     const admin = createSupabaseAdminClient();
-    const { error } = await admin
-      .from("profiles")
-      // The CNH is the authoritative source for the driver's legal name — this overwrites
-      // whatever was in profiles.full_name (self-entered, possibly a nickname/typo) with
-      // exactly what the document says, per the user's explicit request that Dados
-      // Pessoais show the CNH's name rather than the free-typed one.
-      .update({
-        full_name: fullName,
-        drivers_license_number: number,
-        drivers_license_category: category,
-        drivers_license_expiration: expirationDate,
-        driver_authorized: isStillValid,
-      })
-      .eq("id", user.id);
+    // The CNH is the authoritative source for the driver's legal name (it overwrites full_name with what the document says).
+    // The ONLY writer of AI-read CNH data: the service_role-only RPC apply_ai_license_read (sets source = 'ai' and works through the
+    // 0075 lock trigger); a plain UPDATE of these columns is refused by the DB for rows already locked by AI.
+    const { error } = await admin.rpc("apply_ai_license_read", {
+      p_user_id: user.id,
+      p_full_name: fullName,
+      p_number: number,
+      p_category: category,
+      p_expiration: expirationDate,
+      p_authorized: isStillValid,
+    });
     if (error) {
       return { status: "error", error: dict.account.license.saveFailed };
     }
@@ -124,5 +145,9 @@ export async function submitLicensePhoto(
     return { status: "unreadable" };
   }
 
-  return { status: "analyzed", read: result.data };
+  const lastReset = await latestResetAt(user.id);
+  if (lastReset === null) return { status: "error", error: dict.account.license.analysisFailed };
+  const token = signLicenseToken({ uid: user.id, ...result.data, lastReset });
+  if (!token) return { status: "error", error: dict.account.license.analysisFailed };
+  return { status: "analyzed", read: result.data, token };
 }

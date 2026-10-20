@@ -30,9 +30,13 @@ export function ChatWidget({
   dict,
   locale,
   initialState,
+  embedded = false,
 }: {
   dict: Dictionary;
   locale: Locale;
+  /** FmShell (FleetMind v2.0 look): no floating button / robot / bubble. The sidebar panel "Falar com o FleetMind" and the
+   * mobile menu entry open this same chat through OPEN_CHAT_EVENT; the legacy AppShell keeps the floating FAB + robot. */
+  embedded?: boolean;
   /** The caller's most recent conversation, fetched server-side (AppShell.tsx) — without
    * this, reloading the page (a fresh React tree, unlike just closing/reopening the panel)
    * always started a brand new conversation even if the previous one was mid-exchange. */
@@ -66,6 +70,7 @@ export function ChatWidget({
   // memory anymore, so it's not something a returning-within-the-same-tab user has to
   // wonder whether they already saw and lost.
   useEffect(() => {
+    if (embedded) return;
     const showTimer = setTimeout(() => setShowHint(true), HINT_SHOW_DELAY_MS);
     return () => clearTimeout(showTimer);
   }, []);
@@ -84,7 +89,7 @@ export function ChatWidget({
 
   return (
     <>
-      {showHint && !isOpen ? (
+      {!embedded && showHint && !isOpen ? (
         // Floats above the FAB rather than beside it — a second click target next to the
         // real button would just be a confusing duplicate. The robot is decorative;
         // clicking the bubble (or the robot) opens the chat, same as clicking the FAB.
@@ -130,6 +135,7 @@ export function ChatWidget({
         </div>
       ) : null}
 
+      {embedded ? null : (
       <button
         type="button"
         onClick={toggle}
@@ -149,6 +155,7 @@ export function ChatWidget({
           </svg>
         )}
       </button>
+      )}
 
       {hasOpenedOnce ? (
         <ChatPanel
@@ -158,6 +165,7 @@ export function ChatWidget({
           onClose={() => setIsOpen(false)}
           initialState={initialState}
           openRequest={openRequest}
+          embedded={embedded}
         />
       ) : null}
     </>

@@ -17,6 +17,10 @@ import { getDictionary } from "../../../lib/i18n/getLocale";
  * vehicles. Administrator-only (see actions.ts requireAdministrator) since this surface
  * can grant 'administrator' itself.
  */
+function toSource(s: string | null | undefined): "ai" | "manual" | null {
+  return s === "ai" ? "ai" : s === "manual" ? "manual" : null;
+}
+
 export default async function UsersPage() {
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
@@ -35,18 +39,22 @@ export default async function UsersPage() {
   // 0063: names/roles come from profiles; the license columns are revoked at column level and are
   // served to fleet_manager/administrator only by the role-checked list_member_licenses() definer
   // function (merged here by id).
-  const [{ data: baseProfiles, error: profilesError }, { data: licenseRows, error: licensesError }] = await Promise.all([
+  const [{ data: baseProfiles, error: profilesError }, { data: licenseRows, error: licensesError }, { data: sourceRows }] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, full_name, role")
       .eq("organization_id", profile.organization_id)
       .order("full_name"),
     supabase.rpc("list_member_licenses"),
+    // migration 0074: how each expiration got there. Fail-soft: on an error every member shows "Origem não registrada"
+    // (the page and the license fields are never affected).
+    supabase.rpc("list_member_license_sources"),
   ]);
   // M3: when the license read fails the page must NOT pretend the licenses are blank (the forms used to post
   // those blanks back and wipe the CNH): surface the error and render the license/authorization controls disabled.
   const licensesAvailable = !licensesError && Array.isArray(licenseRows);
   const licenseById = new Map((licenseRows ?? []).map((l) => [l.id, l]));
+  const sourceById = new Map((Array.isArray(sourceRows) ? sourceRows : []).map((r) => [r.id, r.drivers_license_expiration_source]));
   const profiles = (baseProfiles ?? []).map((p) => {
     const l = licenseById.get(p.id);
     return {
@@ -55,6 +63,7 @@ export default async function UsersPage() {
       drivers_license_number: l?.drivers_license_number ?? null,
       drivers_license_category: l?.drivers_license_category ?? null,
       drivers_license_expiration: l?.drivers_license_expiration ?? null,
+      drivers_license_expiration_source: toSource(sourceById.get(p.id)),
     };
   });
 
@@ -170,6 +179,7 @@ export default async function UsersPage() {
                   drivers_license_number: m.drivers_license_number,
                   drivers_license_category: m.drivers_license_category,
                   drivers_license_expiration: m.drivers_license_expiration,
+                  drivers_license_expiration_source: m.drivers_license_expiration_source,
                 }}
                 isSelf={m.id === user.id}
                 licensesAvailable={licensesAvailable}

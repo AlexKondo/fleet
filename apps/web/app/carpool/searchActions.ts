@@ -29,6 +29,7 @@ export async function searchBuscarCarona(raw: {
   originText: string;
   destinationText: string;
   departureAt: string;
+  returnAt?: string;
   passengerCount: number;
 }): Promise<BuscarCaronaResult> {
   const parsed = parseBuscarInput(raw);
@@ -57,6 +58,7 @@ export async function searchBuscarCarona(raw: {
       originText: parsed.input.originText,
       destinationText: parsed.input.destinationText,
       departureAt: parsed.input.departureAt,
+      returnAt: parsed.input.returnAt,
       passengerCount: parsed.input.passengerCount,
       requiresCargo: false,
     },

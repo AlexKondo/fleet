@@ -7,6 +7,7 @@
  */
 
 import { clampText, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
+import { parseBrasiliaLocalDateTime } from "@/lib/trips/brasiliaLocalDateTime";
 
 export const MAX_SEATS = 8;
 /** A requested departure more than this far in the past is a typo, not a trip. */
@@ -17,6 +18,8 @@ export interface BuscarInput {
   destinationText: string;
   /** ISO instant. */
   departureAt: string;
+  /** ISO instant of the optional return (round trip); absent = one-way. */
+  returnAt?: string;
   passengerCount: number;
 }
 
@@ -35,13 +38,22 @@ export function parseBuscarInput(raw: unknown, now: Date = new Date()): ParsedBu
   if (!Number.isFinite(when.getTime())) return { ok: false };
   if (when.getTime() < now.getTime() - PAST_TOLERANCE_MS) return { ok: false };
 
+  // optional return: empty = one-way; present = a valid instant strictly after the departure
+  let returnAt: string | undefined;
+  if (r.returnAt !== undefined && r.returnAt !== null && r.returnAt !== "") {
+    if (typeof r.returnAt !== "string") return { ok: false };
+    const back = new Date(r.returnAt);
+    if (!Number.isFinite(back.getTime()) || back.getTime() <= when.getTime()) return { ok: false };
+    returnAt = back.toISOString();
+  }
+
   const seats = r.passengerCount;
   if (typeof seats !== "number" || !Number.isInteger(seats) || seats < 1 || seats > MAX_SEATS) {
     return { ok: false };
   }
   return {
     ok: true,
-    input: { originText, destinationText, departureAt: when.toISOString(), passengerCount: seats },
+    input: { originText, destinationText, departureAt: when.toISOString(), ...(returnAt ? { returnAt } : {}), passengerCount: seats },
   };
 }
 
@@ -57,6 +69,21 @@ export function deriveBuscarGate(
 ): BuscarGate {
   if (!load.ok) return "unknown";
   return load.policy.carpoolEnabled ? "enabled" : "disabled";
+}
+
+/**
+ * "2026-10-12T07:30" (a zone-less date+time value) -> ISO instant of that wall-clock time in BRASILIA time (the fleet's zone,
+ * parseBrasiliaLocalDateTime: the same rule as the trip form), whatever zone the browser or the server runs in.
+ * Null when empty / malformed / an impossible date.
+ */
+export function brasiliaInputToIso(value: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
+  const d = parseBrasiliaLocalDateTime(value);
+  if (!Number.isFinite(d.getTime())) return null;
+  const back = d
+    .toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })
+    .replace(" ", "T");
+  return back === value ? d.toISOString() : null;
 }
 
 /**

@@ -143,6 +143,11 @@ export function CarpoolFirstPanel({
                   <p className="rv-offer-time">
                     {fillTemplate(t.cardDeparture, { time: formatDateTimeShort(offer.hostDepartureAt, locale) })}
                   </p>
+                  {offer.hostReturnAt ? (
+                    <p className="rv-offer-time" data-testid="offer-host-return" style={{ fontSize: 14 }}>
+                      {fillTemplate(t.cardReturn, { time: formatDateTimeShort(offer.hostReturnAt, locale) })}
+                    </p>
+                  ) : null}
                   <p className="rv-muted">
                     {fillTemplate(t.cardDetour, { km: offer.additionalDistanceKm, min: offer.additionalTimeMin })}
                   </p>

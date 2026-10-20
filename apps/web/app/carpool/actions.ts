@@ -23,7 +23,7 @@
  */
 
 import type { GeocodingProvider, LatLng } from "@fleet/domain";
-import { isValidLatLng, isValidSeatCount } from "@fleet/domain";
+import { isValidLatLng, isValidReturnAfterDeparture, isValidSeatCount } from "@fleet/domain";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -74,6 +74,11 @@ async function searchInner(
     return { status: "error", error: "invalid_departure" };
   }
 
+  // Optional round trip: a return must be a parseable instant strictly after the departure (never guessed or repaired).
+  if (riderTripDraft.requestedReturnAt !== undefined && !isValidReturnAfterDeparture(riderTripDraft.requestedDepartureAt, riderTripDraft.requestedReturnAt)) {
+    return { status: "error", error: "invalid_return" };
+  }
+
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser(supabase);
   if (!user) {
@@ -113,7 +118,7 @@ async function searchInner(
     .from("carpool_offers")
     .select(
       `id, trip_request_id, status, seats_available,
-       trip_request:trip_requests(departure_at, origin, destination)`,
+       trip_request:trip_requests(departure_at, expected_return_at, origin, destination)`,
     )
     .eq("organization_id", organizationId)
     .eq("status", "active");
@@ -154,6 +159,7 @@ async function searchInner(
     seatsAvailable: row.seats_available,
     vehicleSupportsCargo: cargoSupportByTripRequestId.get(row.trip_request_id) ?? false,
     hostDepartureAt: row.trip_request!.departure_at,
+    hostReturnAt: row.trip_request!.expected_return_at ?? undefined,
   });
 
   stats.offersEvaluated = textRows.length;
