@@ -1,0 +1,88 @@
+{
+  "base_commit_reported_by_kondo": "35e84e42092a0a663cacdc22e6b5198c351dd11e",
+  "current_kondo_checkout_available": false,
+  "source_manifest_entries_verified": 1024,
+  "source_manifest_mismatches": 0,
+  "inputs": [
+    {
+      "file": "FLEETMIND_PACOTE_01_PLANO_TECNICO_2026-10-19.md",
+      "sha256": "627f3e2913156f5cbc891ac5c74f1a26ffc5c6c5d8a149e4b08daded2643d480",
+      "bytes": 6251
+    },
+    {
+      "file": "FleetMind_P01A_Integridade_Mapa_2026-10-19.zip",
+      "sha256": "1adec3a7ae89dbc3e8f5f83ff4f75817eb66094d2e62746535c8de278e09608b",
+      "bytes": 7775
+    },
+    {
+      "file": "FleetMind_P01B_Auditoria_Estatica_Seguranca_2026-10-19.zip",
+      "sha256": "dcd33af1ac6877e90f9c14b29c83dc5b1880efbb068fb7a9ebc93afd5a2e850b",
+      "bytes": 13502
+    },
+    {
+      "file": "FleetMind_P01C_Preflight_Seguranca_2026-10-19.zip",
+      "sha256": "3a520954fc0044233b092d2d5d20d93f7c87f5e0763b1f41238ceffa1b19467d",
+      "bytes": 4253
+    },
+    {
+      "file": "FleetMind_P01D_Patch_Candidato_NAO_EXECUTAR.zip",
+      "sha256": "2b801284881732fff01f127e48bf284edc0b3f11ca4214b246ef92fa4cf0b0d8",
+      "bytes": 6840
+    },
+    {
+      "file": "FleetMind_P01E_SearchPath_Candidato_NAO_EXECUTAR.zip",
+      "sha256": "611a2ebfb0dac0e23a3c6bc0edc929835d50f9db2101bf8a38db37681b920ee6",
+      "bytes": 77448
+    },
+    {
+      "file": "FleetMind_P01F_16_Funcoes_SearchPath_NAO_EXECUTAR.zip",
+      "sha256": "902783604927e8d571c3010323321a9cee82c1fbcae6f41413c266962e9ac07d",
+      "bytes": 22175
+    },
+    {
+      "file": "FleetMind_P01G_Consolidacao_E_F_NAO_EXECUTAR.zip",
+      "sha256": "2e74a036a5ca5072846fc913c2d916e45fa94e1ccb01bf62dad5678100cff297",
+      "bytes": 75723
+    },
+    {
+      "file": "FleetMind_P01H_Dependencias_Estatica_NAO_EXECUTAR.zip",
+      "sha256": "4d21892eb322c3022915fc3180dff8e0544626e98c5b4cd5e11eaed9ba7b40ca",
+      "bytes": 5150
+    },
+    {
+      "file": "FleetMind_P01I_Gates_Funcionais_NAO_EXECUTAR.zip",
+      "sha256": "817be74826687ebed5e1743c7b7baaf879c69f7aa3bfbf53ae759603ff014ffa",
+      "bytes": 4686
+    },
+    {
+      "file": "FleetMind_P01J_DEC03_Compatibilidade_Candidato.zip",
+      "sha256": "006931403a147cf9fa599974e7f900c49611c5fbc5788ee117ee98c6bd4362b4",
+      "bytes": 8155
+    },
+    {
+      "file": "FleetMind_v3_CODIGO_CONSOLIDADO_NAO_HOMOLOGADO.zip",
+      "sha256": "d82965b08774e46285e7ca2fd978a1decd30200abcb0086c303ac48b7ee70dc9",
+      "bytes": 12215406
+    },
+    {
+      "file": "FleetMind_v3_CODIGO_CONSOLIDADO_NAO_HOMOLOGADO.zip.openai-download-5a452a0626d3413b8131f2e510186a36",
+      "sha256": "608ae468063143fcbbb4339c698b996eaffec3ea25ca6e982108b75269517be1",
+      "bytes": 458011
+    },
+    {
+      "file": "FleetMind_v3_Relatorios_Auditoria_2026-10-19 1.zip",
+      "sha256": "80246107fa122418e7b2ff16790b0931352d9366c45b8d4b8504d00b8345d93a",
+      "bytes": 142318
+    },
+    {
+      "file": "FleetMind_v3_Relatorios_Auditoria_2026-10-19.zip",
+      "sha256": "e16787afcea75bdc57d8e266ed1ef7fdc085a6c09be031eddb4f30d71d56bacc",
+      "bytes": 134704
+    },
+    {
+      "file": "FleetMind_v3_Relatorios_Auditoria_2026-10-19.zip.openai-download-5b7c8c3430f2469382a6d4b520e66f38",
+      "sha256": "e16787afcea75bdc57d8e266ed1ef7fdc085a6c09be031eddb4f30d71d56bacc",
+      "bytes": 134704
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import {
   removeUser,
   resetMemberLicense,
+  reactivateUser,
   updateDriverAuthorization,
   updateUserRole,
   type UserActionState,
@@ -43,6 +44,9 @@ export function UserRow({
     full_name: string;
     email: string;
     role: string;
+    enabled?: boolean | null;
+    accessVersion?: number;
+    accessRequestId?: string;
     driver_authorized: boolean;
     drivers_license_number: string | null;
     drivers_license_category: string | null;
@@ -53,7 +57,7 @@ export function UserRow({
   isSelf: boolean;
 }) {
   const [roleState, roleAction] = useActionState(updateUserRole, initialState);
-  const [removeState, removeAction, removePending] = useActionState(removeUser, initialState);
+  const [removeState, removeAction, removePending] = useActionState(member.enabled === false ? reactivateUser : removeUser, initialState);
   const [driverState, driverAction] = useActionState(updateDriverAuthorization, initialState);
   const [licenseState, licenseAction] = useActionState(updateDriverAuthorization, initialState);
   const [resetState, resetAction, resetPending] = useActionState(resetMemberLicense, initialState);
@@ -75,6 +79,7 @@ export function UserRow({
       <td className="min-w-0 px-4 py-3">
         <p className="truncate text-sm text-paper-50">{member.full_name}</p>
         <p className="truncate text-xs text-fog-400">{member.email}</p>
+        <p className="text-xs text-fog-400">{member.enabled === true ? t.accountActive : member.enabled === false ? t.accountInactive : t.accessUnavailable}</p>
       </td>
 
       <td className="px-4 py-3">
@@ -257,12 +262,18 @@ export function UserRow({
         {!isSelf ? (
           <form action={removeAction}>
             <input type="hidden" name="userId" value={member.id} />
+            <input type="hidden" name="accessVersion" value={member.accessVersion ?? ""} />
+            <input type="hidden" name="requestId" value={member.accessRequestId ?? ""} />
+            <label className="block text-left text-xs text-fog-400">
+              {t.reasonLabel}
+              <input name="reason" required minLength={3} maxLength={1000} disabled={typeof member.enabled !== "boolean"} className="my-2 w-44 rounded-sm border border-line-800 bg-panel-800 px-2 py-1 text-paper-50" />
+            </label>
             <ConfirmSubmitButton
-              confirmMessage={t.removeConfirm.replace("{name}", member.full_name)}
-              disabled={removePending}
+              confirmMessage={(member.enabled === false ? t.reactivateConfirm : t.removeConfirm).replace("{name}", member.full_name)}
+              disabled={removePending || typeof member.enabled !== "boolean"}
               className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
             >
-              {removePending ? t.removing : dict.common.remove}
+              {removePending ? t.savingShort : member.enabled === false ? t.reactivate : t.deactivate}
             </ConfirmSubmitButton>
           </form>
         ) : null}

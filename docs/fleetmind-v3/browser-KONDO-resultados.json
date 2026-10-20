@@ -1,0 +1,53 @@
+[
+  {
+    "width": 1536,
+    "scrollWidth": 1536,
+    "offenders": [],
+    "mapRequests": 1,
+    "selection": true,
+    "pagination": true,
+    "empty": true,
+    "keyboard": true
+  },
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "offenders": [
+      {
+        "tag": "BUTTON",
+        "class": "",
+        "right": 412.953125,
+        "display": "block"
+      },
+      {
+        "tag": "BUTTON",
+        "class": "",
+        "right": 490.65625,
+        "display": "block"
+      },
+      {
+        "tag": "BUTTON",
+        "class": "",
+        "right": 560.28125,
+        "display": "block"
+      },
+      {
+        "tag": "BUTTON",
+        "class": "",
+        "right": 668.453125,
+        "display": "block"
+      },
+      {
+        "tag": "BUTTON",
+        "class": "",
+        "right": 843.890625,
+        "display": "block"
+      }
+    ],
+    "mapRequests": 1,
+    "selection": true,
+    "pagination": true,
+    "empty": true,
+    "keyboard": true
+  }
+]

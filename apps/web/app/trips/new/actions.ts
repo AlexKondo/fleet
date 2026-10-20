@@ -149,7 +149,7 @@ async function buildPlanInputs(input: TripFormInput) {
 
   const { data: vehicleRows } = await supabase
     .from("vehicles")
-    .select(`${VEHICLE_DOMAIN_COLUMNS}, name, category:vehicle_categories(${VEHICLE_CATEGORY_DOMAIN_COLUMNS})`)
+    .select(`${VEHICLE_DOMAIN_COLUMNS}, name, category:vehicle_categories(${VEHICLE_CATEGORY_DOMAIN_COLUMNS})`).is("archived_at",null)
     .in("status", ["available", "charging", "cleaning"]);
 
   // toDomainVehicle deliberately excludes `name` (see VEHICLE_DOMAIN_COLUMNS's comment) —
@@ -175,7 +175,8 @@ async function buildPlanInputs(input: TripFormInput) {
   // time, so — regardless of whether the two requested time windows actually overlap —
   // a vehicle with any active reservation can't safely be hand out to another one until
   // its current lifecycle (approve → pickup → return) finishes.
-  const { data: busyWindows } = await supabase.rpc("get_vehicle_busy_windows", { p_from: now });
+  const { data: busyWindows, error: busyError } = await supabase.rpc("fm_availability_windows", { p_from: now });
+  if (busyError || !busyWindows) return {error:"availability_unavailable" as const};
   const vehicleIdsWithActiveReservation = new Set((busyWindows ?? []).map((w) => w.vehicle_id));
 
   const vehicleCandidates: CandidateVehicle[] = (vehicleRows ?? [])

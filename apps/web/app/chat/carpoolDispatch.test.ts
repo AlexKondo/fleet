@@ -72,7 +72,7 @@ function baseRows(): Rows {
   };
 }
 
-function useDb(userId: string, rows: Rows = baseRows()) {
+function configureDb(userId: string, rows: Rows = baseRows()) {
   m.user.id = userId;
   const db = fakeSupabase(rows);
   m.db = db;
@@ -98,25 +98,25 @@ beforeEach(() => {
 
 describe("dispatchIntent: carpool intents reach the same services as the web UI", () => {
   it("is refused when there is no session", async () => {
-    useDb("");
+    configureDb("");
     expect(await dispatchIntent("ACCEPT_CARPOOL_REQUEST", { requestId: REQ })).toEqual({ success: false, message: "not_authenticated" });
     expect(m.accept).not.toHaveBeenCalled();
   });
 
   it("OFFER_CARPOOL -> updateCarpoolOffer/enableCarpoolOffer", async () => {
-    useDb(HOST);
+    configureDb(HOST);
     expect((await dispatchIntent("OFFER_CARPOOL", { seats: "2", tripRequestId: TRIP })).success).toBe(true);
     expect(m.update).toHaveBeenCalledWith(OFFER, 2, RES);
   });
 
   it("DISABLE_CARPOOL -> disableCarpoolOffer", async () => {
-    useDb(HOST);
+    configureDb(HOST);
     expect((await dispatchIntent("DISABLE_CARPOOL", { offerId: OFFER })).success).toBe(true);
     expect(m.disable).toHaveBeenCalledWith(OFFER);
   });
 
   it("FIND_CARPOOL -> read-only search (no mutating service)", async () => {
-    useDb(RIDER);
+    configureDb(RIDER);
     const r = await dispatchIntent("FIND_CARPOOL", { origin: "A", destination: "B", departureAt: "2026-10-02T08:00:00-03:00" });
     expect(r.success).toBe(true);
     expect(m.search).toHaveBeenCalled();
@@ -124,35 +124,35 @@ describe("dispatchIntent: carpool intents reach the same services as the web UI"
   });
 
   it("REQUEST_CARPOOL -> requestCarpoolRide", async () => {
-    useDb(RIDER);
+    configureDb(RIDER);
     const r = await dispatchIntent("REQUEST_CARPOOL", { offerId: OFFER, origin: "A", destination: "B", departureAt: "2026-10-02T08:00:00-03:00" });
     expect(r.success).toBe(true);
     expect(m.requestRide).toHaveBeenCalledTimes(1);
   });
 
   it("ACCEPT_CARPOOL_REQUEST (host) -> acceptCarpoolRequest; as the RIDER it is refused", async () => {
-    useDb(HOST);
+    configureDb(HOST);
     expect((await dispatchIntent("ACCEPT_CARPOOL_REQUEST", { requestId: REQ })).success).toBe(true);
     expect(m.accept).toHaveBeenCalledWith(REQ);
     m.accept.mockClear();
-    useDb(RIDER);
+    configureDb(RIDER);
     const refused = await dispatchIntent("ACCEPT_CARPOOL_REQUEST", { requestId: REQ });
     expect(refused).toMatchObject({ success: false, message: "CARPOOL_REQUEST_NOT_FOUND" });
     expect(m.accept).not.toHaveBeenCalled();
   });
 
   it("REJECT_CARPOOL_REQUEST -> rejectCarpoolRequest", async () => {
-    useDb(HOST);
+    configureDb(HOST);
     expect((await dispatchIntent("REJECT_CARPOOL_REQUEST", { requestId: REQ, reason: "lotado" })).success).toBe(true);
     expect(m.reject).toHaveBeenCalledWith(REQ, "lotado");
   });
 
   it("CANCEL_CARPOOL_REQUEST (rider) -> cancelCarpoolRequest; as the host (not the rider) it is refused", async () => {
-    useDb(RIDER);
+    configureDb(RIDER);
     expect((await dispatchIntent("CANCEL_CARPOOL_REQUEST", { requestId: REQ })).success).toBe(true);
     expect(m.cancel).toHaveBeenCalledWith(REQ);
     m.cancel.mockClear();
-    useDb(HOST);
+    configureDb(HOST);
     expect(await dispatchIntent("CANCEL_CARPOOL_REQUEST", { requestId: REQ })).toMatchObject({ success: false });
     expect(m.cancel).not.toHaveBeenCalled();
   });
@@ -182,7 +182,7 @@ describe("dispatchIntent CREATE_RESERVATION: host offer step (answer Yes to 'Des
       reservations: [{ id: "res-new", trip_request_id: "trip-new" }],
       ...extra,
     };
-    const db = useDb(HOST, rows);
+    const db = configureDb(HOST, rows);
     db.rpc.mockResolvedValue({ data: "res-new", error: null });
     return db;
   }

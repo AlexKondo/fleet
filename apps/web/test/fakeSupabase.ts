@@ -20,6 +20,7 @@ export function fakeSupabase(rows: Rows) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const q: any = {
       select: () => q,
+      is: (col:string,value:unknown)=>{data=data.filter(r=>(get(r,col)??null)===value);return q;},
       eq: (col: string, value: unknown) => {
         data = data.filter((r) => get(r, col) === value);
         return q;

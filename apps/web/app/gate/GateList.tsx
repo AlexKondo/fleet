@@ -17,7 +17,7 @@ export interface GateRow {
   statusClass: string;
   /** vehicles.status, drives the colour dot next to the label */
   status: string;
-  action: "pickup" | "return";
+  action: "pickup" | "return" | "movement" | "arrival" | "waiting";
 }
 
 type View = "all" | "pickup" | "return";
@@ -128,11 +128,13 @@ export function GateList({ rows, dict, capped = false }: { rows: GateRow[]; dict
                   <Link href={`/reservations/${r.id}/pickup`} className="fm-btn fm-btn-primary">
                     {dict.gate.pickupAction}
                   </Link>
-                ) : (
+                ) : r.action === "return" ? (
                   <Link href={`/reservations/${r.id}/return`} className="fm-btn fm-btn-primary">
                     {dict.gate.returnAction}
                   </Link>
-                )}
+                ) : r.action === "movement" || r.action === "arrival" ? (
+                  <Link href={`/gate/history?reservation=${r.id}&kind=${r.action === "arrival" ? "arrival" : "departure"}`} className="fm-btn fm-btn-primary">{g.recordMovement}</Link>
+                ) : <span className="fm-muted">{g.waitingChecklist}</span>}
               </div>
             </li>
           ))}

@@ -1,129 +1,38 @@
 "use client";
-
-import { useMemo, useState } from "react";
-import type { Dictionary } from "@/lib/i18n/dictionaries";
-
+import {useMemo,useState} from "react";
+import Image from "next/image";
+import Link from "next/link";
+import type {Dictionary} from "@/lib/i18n/dictionaries";
+import {filterVehicles,selectFilteredVehicle} from "@/lib/operations/vehicleSelection";
+import {AssistantTrigger} from "../carpool/AssistantTrigger";
+import "./vehicle-workspace.css";
 export interface FilterableVehicle {
-  id: string;
-  plate: string;
-  name: string | null;
-  status: string;
-  categoryName: string;
-  /** The already-built <VehicleRow /> element — kept in the Server Component so this
-   * client wrapper only needs the few plain fields it actually filters on. */
-  node: React.ReactNode;
+ id:string;plate:string;name:string|null;status:string;categoryName:string;node:React.ReactNode;
+ unitId?:string;unitName?:string;photoUrl?:string|null;vin?:string|null;nextServiceDate?:string|null;energyType?:string;locationName?:string;odometerKm?:number;
+ nextServiceKm?:number|null;fuelPercent?:number|null;batteryPercent?:number|null;rangeKm?:number|null;
 }
-
-/**
- * Plate/name search + status and category filters over the vehicle card grid. Filtering is
- * client-side on the full list: this app's fleets are tens of vehicles, not thousands, so
- * a server round-trip (and pagination) per keystroke would be strictly worse. No state
- * library — plain useState, same as every other client component here.
- */
-export function VehicleFilterGrid({
-  vehicles,
-  statusOptions,
-  dict,
-}: {
-  vehicles: FilterableVehicle[];
-  statusOptions: { value: string; label: string }[];
-  dict: Dictionary;
-}) {
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("");
-  const [category, setCategory] = useState("");
-
-  const categoryOptions = useMemo(
-    () => Array.from(new Set(vehicles.map((v) => v.categoryName))).sort((a, b) => a.localeCompare(b)),
-    [vehicles],
-  );
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return vehicles.filter((v) => {
-      if (status && v.status !== status) return false;
-      if (category && v.categoryName !== category) return false;
-      if (!q) return true;
-      return (
-        v.plate.toLowerCase().includes(q) || (v.name ?? "").toLowerCase().includes(q)
-      );
-    });
-  }, [vehicles, query, status, category]);
-
-  const selectClass =
-    "rounded-sm border border-line-800 bg-panel-900 px-2 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent";
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={dict.fleet.filters.searchPlaceholder}
-          aria-label={dict.fleet.filters.searchPlaceholder}
-          className="min-w-[14rem] flex-1 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
-        />
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          aria-label={dict.common.status}
-          className={selectClass}
-        >
-          <option value="">{dict.fleet.filters.statusAll}</option>
-          {statusOptions.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        {categoryOptions.length > 1 ? (
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            aria-label={dict.fleet.tabs.categories}
-            className={selectClass}
-          >
-            <option value="">{dict.fleet.filters.categoryAll}</option>
-            {categoryOptions.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {query || status || category ? (
-          <button
-            type="button"
-            onClick={() => {
-              setQuery("");
-              setStatus("");
-              setCategory("");
-            }}
-            className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
-          >
-            {dict.fleet.filters.clear}
-          </button>
-        ) : null}
-      </div>
-
-      <p className="text-xs text-fog-600">
-        {dict.fleet.filters.resultCount
-          .replace("{shown}", String(filtered.length))
-          .replace("{total}", String(vehicles.length))}
-      </p>
-
-      {filtered.length > 0 ? (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {/* Each node is a <VehicleRow />, which renders its own <li> and carries its
-              own key from fleet/page.tsx. */}
-          {filtered.map((v) => v.node)}
-        </ul>
-      ) : (
-        <p className="rounded-md border border-dashed border-line-800 px-6 py-8 text-center text-sm text-fog-400">
-          {dict.fleet.filters.noMatches}
-        </p>
-      )}
-    </div>
-  );
+const tabs=[['overview','Visão geral'],['location','Localização'],['utilization','Utilização'],['maintenance','Manutenção'],['trips','Viagens'],['costs','Custos'],['documents','Documentos'],['intelligence','FleetMind Intelligence']] as const;
+type Tab=typeof tabs[number][0];
+export function VehicleFilterGrid({vehicles,statusOptions,dict,dimensionsAvailable=true}:{dimensionsAvailable?:boolean;vehicles:FilterableVehicle[];statusOptions:{value:string;label:string}[];dict:Dictionary}){
+ const [query,setQuery]=useState(''),[status,setStatus]=useState(''),[category,setCategory]=useState(''),[selectedId,setSelectedId]=useState<string|null>(null),[page,setPage]=useState(1),[unit,setUnit]=useState(''),[tab,setTab]=useState<Tab>('overview');
+ const categories=useMemo(()=>Array.from(new Set(vehicles.map(v=>v.categoryName))).sort((a,b)=>a.localeCompare(b)),[vehicles]);
+ const filtered=useMemo(()=>filterVehicles(vehicles,query,status,category,unit),[vehicles,query,status,category,unit]);
+ const selection=selectFilteredVehicle(filtered,selectedId,page),v=selection.selected;
+ const label=(s:string)=>statusOptions.find(o=>o.value===s)?.label??s;
+ const changeFilter=()=>{setPage(1);setSelectedId(null);};
+ const km=(n:number|undefined|null)=>n==null?'—':`${n.toLocaleString('pt-BR')} km`;
+ const maintenanceDue=v?.nextServiceKm!=null&&v.odometerKm!=null?v.nextServiceKm-v.odometerKm:null;
+ return <div className="vw"><div className="vw-layout"><section className="vw-list" aria-label="Seleção de veículo"><div className="vw-filters"><input type="search" value={query} onChange={e=>{setQuery(e.target.value);changeFilter();}} placeholder={dict.fleet.filters.searchPlaceholder} aria-label={dict.fleet.filters.searchPlaceholder}/><select value={status} onChange={e=>{setStatus(e.target.value);changeFilter();}} aria-label={dict.common.status}><option value="">{dict.fleet.filters.statusAll}</option>{statusOptions.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select><select value={category} onChange={e=>{setCategory(e.target.value);changeFilter();}} aria-label={dict.fleet.tabs.categories}><option value="">{dict.fleet.filters.categoryAll}</option>{categories.map(c=><option key={c}>{c}</option>)}</select><select aria-label="Unidade-base" value={unit} disabled={!dimensionsAvailable} onChange={e=>{setUnit(e.target.value);changeFilter();}}><option value="">{dimensionsAvailable?'Todas as unidades do escopo':'Unidades indisponíveis'}</option>{Array.from(new Map(vehicles.filter(v=>v.unitId).map(v=>[v.unitId!,v.unitName??'Unidade'])).entries()).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select>{(query||status||category||unit)&&<button type="button" onClick={()=>{setQuery('');setStatus('');setCategory('');setUnit('');changeFilter();}}>{dict.fleet.filters.clear}</button>}</div><div className="vw-list-heading"><strong>Veículo / Placa</strong><span>Propulsão · Status</span></div>
+ <ul>{selection.visible.map(row=><li key={row.id}><button type="button" className="vw-select" aria-pressed={row.id===v?.id} onClick={()=>{setSelectedId(row.id);setTab('overview');}}><span className="vw-thumb">{row.photoUrl?<Image src={row.photoUrl} alt="" fill sizes="64px"/>:<span aria-hidden="true">◇</span>}</span><span><strong>{row.name??row.categoryName}</strong><small>{row.plate}</small></span><span><small>{row.energyType??'—'}</small><span className="vw-status" data-status={row.status}>{label(row.status)}</span></span></button></li>)}</ul>
+ {filtered.length===0&&<p className="vw-empty">{dict.fleet.filters.noMatches}</p>}<footer className="vw-pagination"><span>{filtered.length} veículo(s) · {selection.page}/{selection.pages}</span><button type="button" disabled={selection.page<=1} onClick={()=>{setPage(selection.page-1);setSelectedId(null);}}>Anterior</button><button type="button" disabled={selection.page>=selection.pages} onClick={()=>{setPage(selection.page+1);setSelectedId(null);}}>Próxima</button></footer></section>
+ <section className="vw-detail" aria-label="Detalhes do veículo" aria-live="polite">{v?<><header className="vw-profile"><div className="vw-photo">{v.photoUrl?<Image src={v.photoUrl} alt={v.name??v.plate} fill sizes="(min-width:1000px) 180px, 40vw"/>:<span>Foto não cadastrada</span>}</div><div className="vw-identity"><h2>{v.name??v.categoryName}</h2><span className="vw-status" data-status={v.status}>{label(v.status)}</span><p>Placa: <strong>{v.plate}</strong></p><p>Categoria: {v.categoryName}</p><p>VIN: {v.vin??"Não cadastrado"}</p><p>Propulsão: {v.energyType??'—'}</p><p>Unidade-base: {v.unitName??(dimensionsAvailable?"Não vinculada":"Indisponível")}</p><p>Local físico: {v.locationName??'—'}</p></div><div className="vw-quick"><strong>Ações rápidas</strong><Link href={`/fleet/vehicles/${v.id}`}>Ver reservas e histórico</Link><Link href={`/maintenance/vehicles?vehicle=${v.id}`}>Prontuário e manutenção</Link><Link href={`/documents?target=vehicle&id=${v.id}`}>Documentos</Link><a href={`/api/exports/vehicle/${v.id}`}>Exportar prontuário</a></div></header>
+ <div className="vw-tabs" onKeyDown={e=>{const index=tabs.findIndex(([key])=>key===tab);const next=e.key==="ArrowRight"?(index+1)%tabs.length:e.key==="ArrowLeft"?(index+tabs.length-1)%tabs.length:e.key==="Home"?0:e.key==="End"?tabs.length-1:null;if(next!==null){e.preventDefault();const nextTab=tabs[next];if(!nextTab)return;setTab(nextTab[0]);(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next])?.focus();}}} role="tablist" aria-label="Informações do veículo">{tabs.map(([key,title])=><button type="button" role="tab" key={key} id={`vw-tab-${key}`} aria-selected={tab===key} tabIndex={tab===key?0:-1} aria-controls="vw-tab-panel" onClick={()=>setTab(key)}>{title}</button>)}</div><div role="tabpanel" id="vw-tab-panel" aria-labelledby={`vw-tab-${tab}`} tabIndex={0} className="vw-panel" key={`${v.id}-${tab}`}>
+ {tab==='overview'?<><div className="vw-cards"><article><h3>Localização atual</h3><strong>{v.locationName??'Não informada'}</strong><p>Local operacional registrado. Rastreamento GPS ao vivo indisponível.</p></article><article><h3>Informações do veículo</h3><dl><dt>Quilometragem total</dt><dd>{km(v.odometerKm)}</dd><dt>Combustível</dt><dd>{v.fuelPercent==null?'—':`${v.fuelPercent}%`}</dd><dt>Bateria</dt><dd>{v.batteryPercent==null?'—':`${v.batteryPercent}%`}</dd><dt>Autonomia registrada</dt><dd>{km(v.rangeKm)}</dd></dl></article><article><h3>Próxima revisão por km</h3><strong>{km(v.nextServiceKm)}</strong><p>Revisão por data: {v.nextServiceDate?new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(`${v.nextServiceDate}T12:00:00-03:00`)):"Não configurada"}</p><p>{maintenanceDue===null?'Limite não configurado.':maintenanceDue<=0?'Limite atingido. Consulte o prontuário e os bloqueios.':`Faltam ${km(maintenanceDue)} para o limite cadastrado.`}</p><Link href={`/maintenance/vehicles?vehicle=${v.id}`}>Consultar planejamento</Link></article></div><div className="vw-cards"><article><h3>Utilização</h3><p>Taxa de utilização e comparação histórica indisponíveis.</p><Link href={`/fleet/vehicles/${v.id}`}>Consultar agenda real</Link></article><article><h3>Viagens recentes</h3><p>Reservas e viagens deste veículo estão disponíveis na agenda.</p><Link href={`/fleet/vehicles/${v.id}`}>Ver reservas</Link></article><article><h3>FleetMind Intelligence</h3><p>{maintenanceDue!==null&&maintenanceDue<=0?'Atenção: revisão por quilometragem atingida.':'Confira manutenção, equipamentos e documentos antes de liberar o veículo.'}</p><AssistantTrigger draft={`Analisar o veículo ${v.plate}, sua manutenção e disponibilidade.`}>Analisar com FleetMind</AssistantTrigger></article></div></>:null}
+ {tab==='location'&&<article><h3>Localização registrada</h3><strong>{v.locationName??'Não informada'}</strong><p>Este é o local físico cadastrado; não representa a unidade-base de gestão. GPS ao vivo e mapa de rastreamento não estão integrados.</p></article>}
+ {tab==='utilization'&&<article><h3>Utilização e disponibilidade</h3><p>A agenda mostra os intervalos reais das reservas. Não há taxa de utilização validada para exibir.</p><Link href={`/fleet/vehicles/${v.id}`}>Abrir agenda do veículo</Link></article>}
+ {(tab==='maintenance'||tab==='costs')&&<article><h3>{tab==='costs'?'Custos executados e orçados':'Manutenção e revisões'}</h3><p>O prontuário mantém orçamento, execução e garantia separados, com histórico e documentos.</p><Link href={`/maintenance/vehicles?vehicle=${v.id}`}>Abrir prontuário de {v.plate}</Link></article>}
+ {tab==='trips'&&<article><h3>Viagens e reservas</h3><Link href={`/fleet/vehicles/${v.id}`}>Abrir agenda e histórico de {v.plate}</Link></article>}
+ {tab==='documents'&&<article><h3>Documentos e equipamentos</h3><p>Arquivos privados e configuração específica deste veículo.</p><Link href={`/documents?target=vehicle&id=${v.id}`}>Abrir documentos</Link><Link href={`/fleet/equipment?vehicle=${v.id}`}>Configurar equipamentos</Link></article>}
+ {tab==='intelligence'&&<article><h3>FleetMind Intelligence</h3><p>{maintenanceDue!==null&&maintenanceDue<=0?'O odômetro atingiu o limite de revisão cadastrado.':'Sem alerta de revisão por km atingida nos dados exibidos; isso não constitui liberação automática.'}</p><AssistantTrigger draft={`Verificar manutenção e disponibilidade do veículo ${v.plate}.`}>Consultar FleetMind sobre {v.plate}</AssistantTrigger></article>}
+ </div><details className="vw-admin" key={v.id}><summary>Cadastro e ações administrativas de {v.plate}</summary><ul>{v.node}</ul></details></>:<p className="vw-empty">Selecione um veículo nos resultados.</p>}</section></div></div>;
 }

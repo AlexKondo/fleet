@@ -1,14 +1,13 @@
 "use server";
 
+import { loadChecklistState } from "@/lib/operations/checklistState";
+
 import { deriveReturnOutcome, MAINTENANCE_DUE_SOON_KM, type EnergyType } from "@fleet/domain";
 import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { uploadInspectionPhotos } from "@/lib/domain/uploadInspectionPhotos";
-import { getFleetManagerEmails } from "@/lib/email/recipients";
-import { renderEmail } from "@/lib/email/renderEmail";
-import { sendEmail } from "@/lib/email/sendEmail";
-import { getAppUrl } from "@/lib/getAppUrl";
+import { notifyReturnTasks } from "@/lib/email/notifyReturnTasks";
 
 export interface ReturnFormInput {
   reservationId: string;
@@ -70,6 +69,8 @@ export async function submitReturn(
 
   // See the equivalent comment in reservations/[id]/pickup/actions.ts: the generated RPC
   // arg types omit `| null` even though these Postgres parameters accept NULL.
+  const checklistState=await loadChecklistState(supabase,input.reservationId);
+  if(!checklistState?.inspection_role) return {success:false,error:"checklist_not_authorized"};
   const { data: inspectionId, error } = await supabase.rpc("record_return", {
     p_reservation_id: input.reservationId,
     p_odometer_km: input.odometerKm,
@@ -80,7 +81,7 @@ export async function submitReturn(
     p_missing_safety_equipment: input.missingSafetyEquipment,
     p_is_dirty_exterior: input.isDirtyExterior,
     p_is_dirty_interior: input.isDirtyInterior,
-    p_role: profile?.role === "security" ? "security" : "traveler",
+    p_role: checklistState.inspection_role,
     p_vehicle_event: outcome.vehicleEvent,
     p_workflow_tasks: outcome.workflowTasks,
     p_current_location_id: input.currentLocationId,
@@ -95,23 +96,6 @@ export async function submitReturn(
   // before navigating away; the client component performs the redirect once it has.
   if (!profile?.organization_id) return { success: true };
 
-  // Mirrors record_return's own in-app notification (0008_notifications.sql): one email
-  // per return that created tasks, not one per task, to the org's fleet managers/
-  // administrators. `outcome.workflowTasks` is the exact same list the RPC call above
-  // was given (p_workflow_tasks), so there's no need to re-derive or re-query it.
-  if (outcome.workflowTasks.length > 0) {
-    const managerEmails = await getFleetManagerEmails(supabase, profile.organization_id);
-    if (managerEmails.length > 0) {
-      const { html, text } = renderEmail({
-        heading: "Novas tarefas operacionais",
-        bodyLines: ["Uma devolução de veículo gerou novas tarefas operacionais."],
-        ctaLabel: "Abrir Painel",
-        ctaUrl: `${getAppUrl()}/dashboard`,
-      });
-      await sendEmail({ to: managerEmails, subject: "Novas tarefas operacionais", html, text });
-    }
-  }
-
   const failedPhotoAngles = await uploadInspectionPhotos(
     supabase,
     profile.organization_id,
@@ -125,6 +109,9 @@ export async function submitReturn(
     (!(damagePhotoFile instanceof File) ||
       damagePhotoFile.size === 0 ||
       failedPhotoAngles.includes("damage"));
+
+  await notifyReturnTasks(supabase,input.reservationId,profile.organization_id);
+
 
   return {
     success: true,

@@ -1,0 +1,50 @@
+[
+  {
+    "view": "keys",
+    "name": "desktop",
+    "viewport": 1536,
+    "document": 1536,
+    "horizontalOverflow": false,
+    "historyRowHeight": 42.390625
+  },
+  {
+    "view": "keys",
+    "name": "mobile",
+    "viewport": 390,
+    "document": 390,
+    "horizontalOverflow": false,
+    "historyRowHeight": 77.171875
+  },
+  {
+    "view": "units",
+    "name": "desktop",
+    "viewport": 1536,
+    "document": 1536,
+    "horizontalOverflow": false,
+    "historyRowHeight": null
+  },
+  {
+    "view": "units",
+    "name": "mobile",
+    "viewport": 390,
+    "document": 390,
+    "horizontalOverflow": false,
+    "historyRowHeight": null
+  },
+  {
+    "view": "management",
+    "name": "desktop",
+    "viewport": 1536,
+    "document": 1536,
+    "horizontalOverflow": false,
+    "historyRowHeight": 59.78125
+  },
+  {
+    "view": "management",
+    "name": "mobile",
+    "viewport": 390,
+    "document": 390,
+    "horizontalOverflow": false,
+    "historyRowHeight": 77.171875
+  }
+]

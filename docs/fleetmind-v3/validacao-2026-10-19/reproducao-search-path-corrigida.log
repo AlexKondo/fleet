@@ -1,0 +1,37 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ❯ lib/operations/managerScope.test.ts (12 tests | 1 failed) 2032ms
+   × fleet management scopes with actual SQL and RLS > does not let a temporary table shadow the management authorization source 29ms
+     → expected true to be false // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/operations/managerScope.test.ts > fleet management scopes with actual SQL and RLS > does not let a temporary table shadow the management authorization source
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ lib/operations/managerScope.test.ts:119:105
+    117|    await db.exec('create temporary table fm_manager_scopes (user_id uu…
+    118|    await db.query("insert into pg_temp.fm_manager_scopes(user_id,organ…
+    119|    expect((await db.query<{ok:boolean}>('select public.fm_can_manage_v…
+       |                                                                                                         ^
+    120|   }finally{await db.exec('drop table if exists pg_temp.fm_manager_scop…
+    121|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  09:22:17
+   Duration  2.40s (transform 59ms, setup 0ms, collect 72ms, tests 2.03s, environment 0ms, prepare 69ms)
+
+undefined
+/workspace/scratch/7e2402800f4f/source/fleet-main/apps/web:
+[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run lib/operations/managerScope.test.ts

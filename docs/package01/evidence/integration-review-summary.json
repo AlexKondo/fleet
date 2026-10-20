@@ -1,0 +1,12 @@
+{
+  "mode": "read_only",
+  "target": "supplied_original_snapshot_not_current_kondo",
+  "status_counts": {
+    "equal": 981,
+    "manual_merge": 14,
+    "candidate": 70,
+    "manual_merge_preserve_kondo": 2
+  },
+  "current_kondo_checkout_tested": false,
+  "no_files_copied": true
+}

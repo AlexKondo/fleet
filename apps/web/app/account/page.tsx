@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -31,7 +32,8 @@ export default async function AccountPage({
     .eq("id", user.id)
     .single();
 
-  const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const isFleetManager =
+    profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
 
   return (
@@ -55,7 +57,16 @@ export default async function AccountPage({
         ) : null}
         <p className="mb-6 text-sm text-fog-400">{dict.account.description}</p>
         <Card>
-          <ChangePasswordForm dict={dict} forced={forcePasswordChange === "1"} />
+          <ChangePasswordForm
+            dict={dict}
+            forced={forcePasswordChange === "1"}
+          />
+          <Link
+            href="/account/privacy"
+            className="mt-4 block text-sm underline"
+          >
+            Perfil e Privacidade
+          </Link>
         </Card>
       </section>
     </AppShell>

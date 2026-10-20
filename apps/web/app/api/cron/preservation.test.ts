@@ -1,0 +1,12 @@
+import {beforeEach,afterEach,it,expect,vi} from 'vitest';
+import {NextRequest} from 'next/server';
+const m=vi.hoisted(()=>{const q:{update:ReturnType<typeof vi.fn>;eq:ReturnType<typeof vi.fn>;lt:ReturnType<typeof vi.fn>;delete:ReturnType<typeof vi.fn>;then:(resolve:(value:unknown)=>unknown)=>unknown}={update:vi.fn(),eq:vi.fn(),lt:vi.fn(),delete:vi.fn(),then:resolve=>resolve({data:[],error:null})};for(const k of ['update','eq','lt'] as const)q[k].mockImplementation(()=>q);return{q,from:vi.fn(()=>q),rpc:vi.fn()};});
+vi.mock('@/lib/supabase/admin',()=>({createSupabaseAdminClient:()=>({from:m.from,rpc:m.rpc})}));
+import {GET as chat} from './chat-cleanup/route';
+import {GET as locations} from './carpool-retention/route';
+const saved=process.env.CRON_SECRET;
+beforeEach(()=>{vi.clearAllMocks();process.env.CRON_SECRET='test-cron';});
+afterEach(()=>{if(saved===undefined)delete process.env.CRON_SECRET;else process.env.CRON_SECRET=saved;});
+const req=()=>new NextRequest('https://test.invalid/api/cron',{headers:{authorization:'Bearer test-cron'}});
+it('keeps chat messages and conversations instead of deleting historical records',async()=>{const res=await chat(req());expect(res.status).toBe(200);expect(await res.json()).toMatchObject({deleted:0,preserved:true,reason:'retention_policy_required'});expect(m.q.delete).not.toHaveBeenCalled();});
+it('does not invoke a destructive coordinate purge without an approved retention policy',async()=>{expect(await (await locations(req())).json()).toMatchObject({purged:0,preserved:true});expect(m.rpc).not.toHaveBeenCalled();expect(m.from).not.toHaveBeenCalled();});

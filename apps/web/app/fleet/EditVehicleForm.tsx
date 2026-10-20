@@ -10,6 +10,7 @@ import { errorLabel } from "@/lib/i18n/errorLabel";
 const initialState: FleetActionState = { status: "idle" };
 
 export interface EditableVehicle {
+  lifecycle_version?:number;
   id: string;
   plate: string;
   name: string | null;

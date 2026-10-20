@@ -1,0 +1,13 @@
+$ vitest run lib/domain/signUpOrganization.test.ts app/settings/users/access.test.ts
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ✓ lib/domain/signUpOrganization.test.ts (3 tests) 8ms
+ ✓ app/settings/users/access.test.ts (4 tests) 9ms
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  10:41:48
+   Duration  1.22s (transform 652ms, setup 0ms, collect 880ms, tests 17ms, environment 0ms, prepare 342ms)
+

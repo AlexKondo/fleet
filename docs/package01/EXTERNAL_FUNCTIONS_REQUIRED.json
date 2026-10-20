@@ -1,0 +1,5 @@
+[
+  "apply_ai_license_read(uuid,text,text,text,date,boolean)",
+  "list_member_license_sources()",
+  "reset_ai_license(uuid)"
+]

@@ -5,9 +5,10 @@ import { ThemeToggle } from "../ui/ThemeToggle";
 import { LanguageToggle } from "../ui/LanguageToggle";
 import { getLocale, getDictionary } from "../../lib/i18n/getLocale";
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams?: Promise<{access?:string}> }) {
   const locale = await getLocale();
   const dict = await getDictionary();
+  const accessUnavailable = (await searchParams)?.access === "unavailable";
 
   return (
     <LoginRecovery dict={dict}>
@@ -24,6 +25,7 @@ export default async function LoginPage() {
             <p className="mt-1 text-xs uppercase tracking-[0.2em] text-fog-400">{dict.login.tagline}</p>
           </div>
           <Card>
+            {accessUnavailable ? <p role="alert" className="mb-4 text-sm text-signal-red">{dict.team.row.accessUnavailable}</p> : null}
             <LoginForm dict={dict} />
           </Card>
         </div>

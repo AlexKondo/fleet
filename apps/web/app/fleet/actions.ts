@@ -1,4 +1,5 @@
 "use server";
+import { uploadImmutablePhoto } from "@/lib/domain/immutablePhoto";
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -14,13 +15,8 @@ export interface FleetActionState {
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
-/**
- * Uploads the vehicle's own reference photo to the same private `vehicle-photos` bucket
- * the pickup/return checklists use (0002_operational_cycle.sql) — its RLS policy only
- * checks that the first path segment equals the uploader's organization_id, so a
- * `<org_id>/vehicles/<vehicle_id>.<ext>` path needs no new bucket or policy. `upsert:
- * true` lets re-uploading replace the previous photo at the same path.
- */
+/** Private immutable reference photo: journal before upload, content-addressed path,
+ * no overwrite/delete, atomic link finalization. Failed links remain recoverable. */
 async function uploadVehiclePhoto(
   supabase: TypedSupabaseClient,
   organizationId: string,
@@ -34,16 +30,8 @@ async function uploadVehiclePhoto(
   if (file.size > MAX_PHOTO_BYTES) {
     return { error: dict.errors.fleet.photoTooLarge };
   }
-  const extensionMatch = /\.([a-zA-Z0-9]+)$/.exec(file.name);
-  const extension = extensionMatch ? extensionMatch[1] : "jpg";
-  const storagePath = `${organizationId}/vehicles/${vehicleId}.${extension}`;
-
-  const { error } = await supabase.storage
-    .from("vehicle-photos")
-    .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
-  if (error) return { error: dict.errors.fleet.photoUploadFailed };
-
-  return { path: storagePath };
+  try { return await uploadImmutablePhoto(supabase,"vehicle",vehicleId,null,file); }
+  catch { return {error:dict.errors.fleet.photoUploadFailed}; }
 }
 
 async function requireFleetManager() {
@@ -104,37 +92,15 @@ export async function updateLocation(
   return { status: "success" };
 }
 
-export async function deleteLocation(
-  _prevState: FleetActionState,
-  formData: FormData,
-): Promise<FleetActionState> {
-  const { supabase, organizationId } = await requireFleetManager();
-  if (!organizationId) return { status: "error", error: "not_authorized" };
-
-  const dict = await getDictionary();
-  const id = String(formData.get("id") ?? "");
-  if (!id) return { status: "error", error: dict.errors.fleet.locationInvalid };
-
-  const { error } = await supabase
-    .from("vehicle_locations")
-    .delete()
-    .eq("id", id)
-    .eq("organization_id", organizationId);
-  if (error) {
-    // 23503 = foreign_key_violation (Postgres error code) — a vehicle still has this
-    // as its home or current location. Deleting reference data out from under an
-    // existing vehicle would silently orphan that vehicle's location, so the DB
-    // correctly refuses it; translate that into something a fleet manager can act on.
-    const inUse = error.code === "23503";
-    return {
-      status: "error",
-      error: inUse ? dict.errors.fleet.locationInUse : error.message,
-    };
-  }
-
-  revalidatePath("/fleet");
-  return { status: "success" };
+async function lifecycleAction(kind:string,formData:FormData):Promise<FleetActionState>{
+ const {supabase,organizationId}=await requireFleetManager();if(!organizationId)return{status:"error",error:"not_authorized"};
+ const id=String(formData.get("id")??"");const version=Number(formData.get("lifecycleVersion")??1);
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!Number.isSafeInteger(version)||version<1)return{status:"error",error:"Confira o registro e recarregue a página."};
+ const {error}=await supabase.rpc("fm_fleet_lifecycle",{p_kind:kind,p_id:id,p_enabled:false,p_version:version,p_reason:String(formData.get("archiveReason")??"").trim()||"Desativação solicitada pela gestão de frota",p_request_id:crypto.randomUUID()});
+ if(error)return{status:"error",error:({ACTIVE_OPERATION:"Há reserva, chaves ou manutenção em andamento. Regularize a operação antes de arquivar.",ACTIVE_REFERENCE:"Este cadastro ainda está vinculado a veículo ativo.",CONCURRENT_UPDATE:"O registro mudou. Recarregue e confira o estado atual.",NOT_AUTHORIZED:"Seu acesso não permite esta alteração."} as Record<string,string>)[error.message]??"Não foi possível alterar o estado do registro."};
+ revalidatePath("/fleet","layout");revalidatePath("/dashboard","layout");return{status:"success"};
 }
+export async function deleteLocation(_prevState:FleetActionState,formData:FormData):Promise<FleetActionState>{return lifecycleAction("location",formData);}
 
 export async function createCategory(
   _prevState: FleetActionState,
@@ -206,33 +172,7 @@ export async function updateCategory(
   return { status: "success" };
 }
 
-export async function deleteCategory(
-  _prevState: FleetActionState,
-  formData: FormData,
-): Promise<FleetActionState> {
-  const { supabase, organizationId } = await requireFleetManager();
-  if (!organizationId) return { status: "error", error: "not_authorized" };
-
-  const dict = await getDictionary();
-  const id = String(formData.get("id") ?? "");
-  if (!id) return { status: "error", error: dict.errors.fleet.categoryInvalid };
-
-  const { error } = await supabase
-    .from("vehicle_categories")
-    .delete()
-    .eq("id", id)
-    .eq("organization_id", organizationId);
-  if (error) {
-    const inUse = error.code === "23503";
-    return {
-      status: "error",
-      error: inUse ? dict.errors.fleet.categoryInUse : error.message,
-    };
-  }
-
-  revalidatePath("/fleet");
-  return { status: "success" };
-}
+export async function deleteCategory(_prevState:FleetActionState,formData:FormData):Promise<FleetActionState>{return lifecycleAction("category",formData);}
 
 export async function createVehicle(
   _prevState: FleetActionState,
@@ -300,29 +240,20 @@ export async function createVehicle(
     return { status: "error", error: dict.errors.fleet.categoryOrLocationInvalid };
   }
 
-  const { data: inserted, error } = await supabase
-    .from("vehicles")
-    .insert({
-      organization_id: organizationId,
-      plate,
-      category_id: categoryId,
-      status: "available",
-      odometer_km: odometerKm,
-      next_service_odometer_km: nextServiceOdometerKm,
-      estimated_range_km: estimatedRangeKm,
-      fuel_level_percent: fuelLevelPercent,
-      battery_level_percent: batteryLevelPercent,
-      home_location_id: locationId,
-      current_location_id: locationId,
-      name,
-      color,
-    })
-    .select("id")
-    .single();
+  const { data: createdId, error } = await supabase.rpc("fm_management_create_vehicle", {
+    p_unit_id: String(formData.get("unitId") ?? "").trim() || null,
+    p_values: {
+      plate, category_id: categoryId, odometer_km: odometerKm,
+      next_service_odometer_km: nextServiceOdometerKm, estimated_range_km: estimatedRangeKm,
+      fuel_level_percent: fuelLevelPercent, battery_level_percent: batteryLevelPercent,
+      home_location_id: locationId, name, color,
+    },
+  });
+  const inserted = createdId ? {id: createdId} : null;
   if (error || !inserted) {
     const friendlyError = error?.message.includes("duplicate") || error?.message.includes("unique")
       ? dict.errors.fleet.duplicatePlate
-      : (error?.message ?? dict.errors.fleet.vehicleCreateFailed);
+      : error?.message === "MANAGEMENT_SCOPE_DENIED" ? "Selecione uma unidade-base autorizada para sua gestão." : dict.errors.fleet.vehicleCreateFailed;
     return { status: "error", error: friendlyError };
   }
 
@@ -331,8 +262,9 @@ export async function createVehicle(
   // it just leaves the photo unset (the fleet manager can add it via Editar).
   if (photo instanceof File && photo.size > 0) {
     const uploadResult = await uploadVehiclePhoto(supabase, organizationId, inserted.id, photo, dict);
-    if ("path" in uploadResult) {
-      await supabase.from("vehicles").update({ photo_storage_path: uploadResult.path }).eq("id", inserted.id);
+    if ("error" in uploadResult) {
+      revalidatePath("/fleet");
+      return {status:"error",error:"Veículo criado. A foto não foi concluída; use Editar neste veículo para tentar novamente, sem repetir o cadastro."};
     }
   }
 
@@ -410,11 +342,11 @@ export async function updateVehicle(
 
   // Uploaded before the row update so a failed upload can report an error without
   // silently discarding the rest of the (already-validated) form on write.
-  let photoStoragePath: string | undefined;
+  
   if (photo instanceof File && photo.size > 0) {
     const uploadResult = await uploadVehiclePhoto(supabase, organizationId, id, photo, dict);
     if ("error" in uploadResult) return { status: "error", error: uploadResult.error };
-    photoStoragePath = uploadResult.path;
+
   }
 
   const { error } = await supabase
@@ -430,7 +362,7 @@ export async function updateVehicle(
       home_location_id: homeLocationId,
       name,
       color,
-      ...(photoStoragePath ? { photo_storage_path: photoStoragePath } : {}),
+
     })
     .eq("id", id)
     .eq("organization_id", organizationId);
@@ -446,36 +378,4 @@ export async function updateVehicle(
   return { status: "success" };
 }
 
-export async function deleteVehicle(
-  _prevState: FleetActionState,
-  formData: FormData,
-): Promise<FleetActionState> {
-  const { supabase, organizationId } = await requireFleetManager();
-  if (!organizationId) return { status: "error", error: "not_authorized" };
-
-  const dict = await getDictionary();
-  const id = String(formData.get("id") ?? "");
-  if (!id) return { status: "error", error: dict.errors.fleet.vehicleInvalid };
-
-  const { error } = await supabase
-    .from("vehicles")
-    .delete()
-    .eq("id", id)
-    .eq("organization_id", organizationId);
-  if (error) {
-    // 23503: reservations/inspections/workflow_tasks reference this vehicle with no
-    // cascade (0001/0002_*.sql) — by design, so operational history is never silently
-    // lost. A vehicle that has actually been used can't be hard-deleted; "Bloquear" on
-    // the dashboard (block_vehicle RPC, 0004_operational_actions.sql) is the correct way
-    // to take it out of rotation without destroying its evidence trail.
-    const hasHistory = error.code === "23503";
-    return {
-      status: "error",
-      error: hasHistory ? dict.errors.fleet.vehicleHasHistory : error.message,
-    };
-  }
-
-  revalidatePath("/fleet");
-  revalidatePath("/dashboard");
-  return { status: "success" };
-}
+export async function deleteVehicle(_prevState:FleetActionState,formData:FormData):Promise<FleetActionState>{return lifecycleAction("vehicle",formData);}

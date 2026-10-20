@@ -1,0 +1,25 @@
+$ turbo run lint
+• turbo 2.10.12
+
+   • Packages in scope: @fleet/domain, @fleet/supabase-client, @fleet/web
+   • Running lint in 3 packages
+   • Remote caching disabled
+
+ WARNING  failed to get git status for dirty hash: Git error: fatal: not a git repository (or any of the parent directories): .git
+
+@fleet/domain:lint: cache hit, replaying logs 0b4306c14b5fdbab
+@fleet/domain:lint: $ echo "no lint configured yet"
+@fleet/domain:lint: no lint configured yet
+@fleet/web:lint: cache miss, executing 699d7ef6e7505c47
+@fleet/web:lint: $ next lint
+@fleet/web:lint: `next lint` is deprecated and will be removed in Next.js 16.
+@fleet/web:lint: For new projects, use create-next-app to choose your preferred linter.
+@fleet/web:lint: For existing projects, migrate to the ESLint CLI:
+@fleet/web:lint: npx @next/codemod@canary next-lint-to-eslint-cli .
+@fleet/web:lint: 
+@fleet/web:lint: ✔ No ESLint warnings or errors
+
+ Tasks:    2 successful, 2 total
+Cached:    1 cached, 2 total
+  Time:    4.563s 
+

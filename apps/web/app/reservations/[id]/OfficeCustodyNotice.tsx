@@ -1,0 +1,5 @@
+import type {ChecklistState} from "@/lib/operations/checklistState";
+export function OfficeCustodyNotice({state}:{state:ChecklistState|null}){
+ if(state?.workflow!=="key_custody")return null;
+ return <aside className="fm-banner" role="status"><strong>Chaves no escritório · checklist no estacionamento</strong><p>{!state.keys_delivered?"Retire as chaves com o responsável local designado. Após a confirmação da entrega, faça seu checklist no veículo.":!state.pickup_traveler?(state.keys_received?"As chaves já foram recebidas de volta; esta entrega não permite iniciar uma viagem.":"Entrega de chaves confirmada. Faça o checklist de retirada no veículo antes de iniciar a viagem."):!state.return_traveler?"Ao retornar, faça seu checklist no estacionamento e devolva as chaves ao responsável no escritório.":!state.keys_received?"Checklist de devolução registrado. Falta a confirmação do responsável de que recebeu as chaves.":"Checklist de devolução e recebimento das chaves registrados."}</p></aside>;
+}

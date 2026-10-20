@@ -91,7 +91,7 @@ vi.mock("@/lib/supabase/server", () => ({
     from: (table: string) => builder(table),
     // 0063: the busy-window read is a definer RPC; everything else goes to the shared rpc mock.
     rpc: (name: string, ...rest: unknown[]) =>
-      name === "get_vehicle_busy_windows" ? Promise.resolve({ data: h.busy, error: null }) : h.rpc(name, ...rest),
+      name === "fm_availability_windows" ? Promise.resolve({ data: h.busy, error: null }) : h.rpc(name, ...rest),
   }),
 }));
 vi.mock("@/lib/carpool/offerCardRows", () => ({ loadOfferCardRows: async () => [] }));

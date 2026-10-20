@@ -75,7 +75,7 @@ export default async function DashboardPage({
         `${VEHICLE_DOMAIN_COLUMNS}, color,
          category:vehicle_categories(name, energy_type),
          current_location:vehicle_locations!vehicles_current_location_id_fkey(name)`,
-      )
+      ).is("archived_at",null)
       .order("plate"),
   ]);
 
@@ -230,6 +230,14 @@ export default async function DashboardPage({
       legacy
       wide
     >
+      {isFleetManager ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+          <div><strong className="text-slate-900">Fleet Command Center 360°</strong>
+            <p className="text-sm text-slate-700">Indicadores por unidade, distribuição operacional e veículos que exigem atenção.</p>
+          </div>
+          <Link href="/dashboard/command-center" className="inline-flex min-h-11 items-center rounded-lg bg-blue-700 px-4 font-semibold text-white hover:bg-blue-800">Abrir Central de Comando →</Link>
+        </div>
+      ) : null}
       {fleetActionError ? (
         <div
           role="alert"
@@ -259,14 +267,21 @@ export default async function DashboardPage({
         </div>
       ) : null}
 
+      {/* A failed fleet query must never be reported as a real zero in the command center. */}
+      {vehiclesError ? (
+        <div role="alert" className="fm-banner fm-banner-danger cc-banner" data-testid="cc-fleet-load-error">
+          {t.vehicles.loadError}
+        </div>
+      ) : null}
+
       <section className="fm-kpis" aria-label={cc.kpisLabel} data-testid="cc-kpis">
         <div className="fm-kpi fm-kpi-wide" data-testid="cc-kpi-vehicles">
           <span className="fm-kpi-icon"><FmCarIcon /></span>
           <div className="fm-kpi-body">
-            <p className="fm-kpi-value">{vehicles.length}</p>
+            <p className="fm-kpi-value" data-testid="cc-vehicles-value">{vehiclesError ? "—" : vehicles.length}</p>
             <p className="fm-kpi-label">{cc.kpiVehicles}</p>
           </div>
-          {vehicles.length > 0 ? (
+          {!vehiclesError && vehicles.length > 0 ? (
             <>
               <div className="fm-seg" role="img" aria-label={cc.kpiVehiclesBar}>
                 {[...statusCounts.entries()].map(([status, n]) => (
@@ -321,7 +336,7 @@ export default async function DashboardPage({
         <a href="#attention" className="fm-kpi" data-testid="cc-kpi-attention">
           <span className="fm-kpi-icon" data-tone={attentionVehicleCount > 0 ? "bad" : "ok"}><FmAlertIcon /></span>
           <div className="fm-kpi-body">
-            <p className="fm-kpi-value">{attentionVehicleCount}</p>
+            <p className="fm-kpi-value" data-testid="cc-attention-value">{vehiclesError ? "—" : attentionVehicleCount}</p>
             <p className="fm-kpi-label">{cc.kpiAttention}</p>
           </div>
         </a>
@@ -332,7 +347,9 @@ export default async function DashboardPage({
         <h2 className="fm-h2">
           {t.attention.heading}
         </h2>
-        {Object.keys(vehiclesByAttentionReason).length === 0 ? (
+        {vehiclesError ? (
+          <p role="status" className="text-sm text-signal-red">{t.vehicles.loadError}</p>
+        ) : Object.keys(vehiclesByAttentionReason).length === 0 ? (
           <p className="text-sm text-fog-400">{t.attention.empty}</p>
         ) : (
           <ul className="flex flex-col gap-2">

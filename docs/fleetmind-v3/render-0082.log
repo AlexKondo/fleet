@@ -1,0 +1,11 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ✓ lib/operations/keyCustodyRender.test.ts (10 tests) 134ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  18:24:40
+   Duration  1.18s (transform 495ms, setup 0ms, collect 796ms, tests 134ms, environment 0ms, prepare 58ms)
+

@@ -1,0 +1,12 @@
+$ vitest run app/settings/users/access.test.ts
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ✓ app/settings/users/access.test.ts (4 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  10:32:52
+   Duration  1.17s (transform 475ms, setup 0ms, collect 618ms, tests 6ms, environment 0ms, prepare 123ms)
+

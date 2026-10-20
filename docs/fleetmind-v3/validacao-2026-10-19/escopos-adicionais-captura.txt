@@ -1,0 +1,11 @@
+Resultado capturado da execução direta pela ferramenta de processo; o arquivo escopos-adicionais.log estava vazio e não foi utilizado como prova de aprovação.
+
+Comando: pnpm --filter @fleet/web exec vitest run lib/operations/managerScope.test.ts
+Código de saída observado: 0
+ ✓ lib/operations/managerScope.test.ts (11 tests) 2183ms
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  09:09:26
+   Duration  2.55s
+
+A suíte inclui o teste adicionado nesta rodada: fronteira de unidade para ocorrências/dimensões e negação de chamada direta às funções financeiras privadas. A execução direta foi necessária porque o log redirecionado anterior não continha evidência recuperável. Não é execução atribuída ao Claude/Kondo.

@@ -1,0 +1,20 @@
+$ turbo run typecheck
+• turbo 2.10.12
+
+   • Packages in scope: @fleet/domain, @fleet/supabase-client, @fleet/web
+   • Running typecheck in 3 packages
+   • Remote caching disabled
+
+ WARNING  failed to get git status for dirty hash: Git error: fatal: not a git repository (or any of the parent directories): .git
+
+@fleet/web:typecheck: cache miss, executing aa229f6551f24a28
+@fleet/supabase-client:typecheck: cache hit, replaying logs b698475de45d7f34
+@fleet/supabase-client:typecheck: $ tsc --noEmit
+@fleet/domain:typecheck: cache hit, replaying logs 9b0267bafa2f6748
+@fleet/domain:typecheck: $ tsc --noEmit
+@fleet/web:typecheck: $ tsc --noEmit
+
+ Tasks:    3 successful, 3 total
+Cached:    2 cached, 3 total
+  Time:    22.555s 
+

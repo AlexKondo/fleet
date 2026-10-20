@@ -1,0 +1,44 @@
+[
+  {
+    "page": "documents",
+    "label": "desktop",
+    "width": 1536,
+    "scroll": 1536,
+    "client": 1536
+  },
+  {
+    "page": "documents",
+    "label": "mobile",
+    "width": 390,
+    "scroll": 390,
+    "client": 390
+  },
+  {
+    "page": "equipment",
+    "label": "desktop",
+    "width": 1536,
+    "scroll": 1536,
+    "client": 1536
+  },
+  {
+    "page": "equipment",
+    "label": "mobile",
+    "width": 390,
+    "scroll": 390,
+    "client": 390
+  },
+  {
+    "page": "archive",
+    "label": "desktop",
+    "width": 1536,
+    "scroll": 1536,
+    "client": 1536
+  },
+  {
+    "page": "archive",
+    "label": "mobile",
+    "width": 390,
+    "scroll": 390,
+    "client": 390
+  }
+]

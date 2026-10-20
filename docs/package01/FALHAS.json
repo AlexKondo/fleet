@@ -1,0 +1,92 @@
+[
+  {
+    "id": "P01-001",
+    "severity": "critical",
+    "status": "corrected_in_candidate",
+    "finding": "Collision of migration numbers",
+    "evidence": "V3_MIGRATION_MAP.json",
+    "probable_cause": "Independent 0074/0075 histories",
+    "recommended_correction": "Use 0174–0188; preserve applied Kondo files and reconcile ledger read-only."
+  },
+  {
+    "id": "P01-002",
+    "severity": "high",
+    "status": "corrected_in_candidate",
+    "finding": "Unsafe function resolution",
+    "evidence": "supabase/migrations/0192_explicit_legacy_function_hardening.sql; package01.test.ts",
+    "probable_cause": "Implicit pg_temp precedence",
+    "recommended_correction": "Explicit allowlist and public,pg_temp; review external Kondo functions separately."
+  },
+  {
+    "id": "P01-003",
+    "severity": "high",
+    "status": "corrected_in_candidate",
+    "finding": "Incomplete driving license gate",
+    "evidence": "drivingValidity.test.ts; package01.test.ts; keyCustody.test.ts",
+    "probable_cause": "Number-only UX and inconsistent status checks",
+    "recommended_correction": "Use canDrive and internal fm_assert_can_drive; preserve nondriving access."
+  },
+  {
+    "id": "P01-004",
+    "severity": "high",
+    "status": "corrected_in_candidate",
+    "finding": "Upload succeeds but link fails",
+    "evidence": "immutablePhoto.test.ts; package01.test.ts",
+    "probable_cause": "No durable upload intent/retry identity",
+    "recommended_correction": "Journal before upload; SHA identity; finalize atomically; no removal."
+  },
+  {
+    "id": "P01-005",
+    "severity": "medium",
+    "status": "corrected_in_candidate",
+    "finding": "Maintenance represented as confirmed reservation",
+    "evidence": "package01.test.ts",
+    "probable_cause": "Busy-window union reused reservation status",
+    "recommended_correction": "Separate availability kind from reservation-only RPC."
+  },
+  {
+    "id": "P01-006",
+    "severity": "high",
+    "status": "partially_verified",
+    "finding": "Operational lock inversion",
+    "evidence": "0194_consistent_operational_lock_order.sql",
+    "probable_cause": "Reservation/task before vehicle; org FOR UPDATE versus FK",
+    "recommended_correction": "Consistent ordering and NO KEY UPDATE implemented; run real parallel connections."
+  },
+  {
+    "id": "P01-007",
+    "severity": "high",
+    "status": "corrected_in_candidate",
+    "finding": "Tenant-wide notification fan-out",
+    "evidence": "0193_scoped_staff_notifications.sql; package01.test.ts",
+    "probable_cause": "Recipient selection ignored unit scope",
+    "recommended_correction": "Suppress unauthorized staff alerts; classify entity for unitless emitters."
+  },
+  {
+    "id": "P01-008",
+    "severity": "critical",
+    "status": "pending_external_source",
+    "finding": "Latest Kondo source/antifraud absent",
+    "evidence": "PROVENIENCIA.json; EXTERNAL_FUNCTIONS_REQUIRED.json",
+    "probable_cause": "Local uncommitted files not provided",
+    "recommended_correction": "Manual merge protected paths and external functions; do not overwrite."
+  },
+  {
+    "id": "P01-009",
+    "severity": "high",
+    "status": "pending_environment",
+    "finding": "Real Supabase integration and equipment readiness",
+    "evidence": "INTEGRACAO.md",
+    "probable_cause": "Only local disposable scaffold available",
+    "recommended_correction": "Use isolated actual-schema clone; configure profiles/units; HTTP/storage/concurrency checks."
+  },
+  {
+    "id": "P01-010",
+    "severity": "medium",
+    "status": "pending_visual_acceptance",
+    "finding": "28-screen integrated acceptance",
+    "evidence": "MATRIZ_28_TELAS.md historical; source integrity comparison",
+    "probable_cause": "No integrated browser session with latest Kondo code",
+    "recommended_correction": "Preserve current visual files; validate 28 screens after merge."
+  }
+]

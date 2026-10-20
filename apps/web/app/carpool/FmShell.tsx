@@ -36,6 +36,10 @@ export async function FmShell({
   headerActions,
   legacy = false,
   wide = false,
+  commandCenter = false,
+  workspace,
+  searchContent,
+  nonDrivingWorkspace = false,
   children,
 }: {
   orgName: string;
@@ -54,38 +58,113 @@ export async function FmShell({
   legacy?: boolean;
   /** Wider content column (dashboards, tables). */
   wide?: boolean;
+  commandCenter?: boolean;
+  workspace?: "manager" | "operations";
+  searchContent?: React.ReactNode;
+  /** Only the authorized local-custody page: custody does not require a CNH. */
+  nonDrivingWorkspace?: boolean;
   children: React.ReactNode;
 }) {
-  const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState } =
-    await loadShellContext(role);
+  const {
+    locale,
+    dict,
+    roleLabels,
+    licenseMissing,
+    avatarUrl,
+    licenseGateActive: driverLicenseGateActive,
+    chatInitialState,
+    canKeyCustody,
+    canBudgetApproval,
+  } = await loadShellContext(role);
+  const licenseGateActive=driverLicenseGateActive && !(nonDrivingWorkspace && (canKeyCustody||canBudgetApproval||isFleetManager||role==="maintenance_operator"));
 
   // "Hoje, dd/mm/aaaa" in Brasília time (the fleet's time zone, whatever the server runtime's zone is).
-  const todayText = dict.chrome.todayPill.replace("{date}", formatDate(new Date().toISOString(), locale));
+  const todayText = dict.chrome.todayPill.replace(
+    "{date}",
+    formatDate(new Date().toISOString(), locale),
+  );
 
-  const base = buildBaseNavItems(dict, { role, isFleetManager, isAdministrator });
+  const base = buildBaseNavItems(dict, {
+    role,
+    isFleetManager,
+    isAdministrator,
+    canKeyCustody,
+    canBudgetApproval,
+  });
   // The employee's Home (SCR-USR-001) lives at /dashboard; managers keep "Painel" there.
-  if (role === "employee") base[0] = { ...base[0]!, label: dict.dashboard.home.navHome, visible: true };
-  const extra = [
-    { key: "carpool" as NavKey, href: "/carpool", label: dict.carpool.buscar.navFind, icon: FindRideIcon, visible: true },
-    { key: "book" as NavKey, href: "/trips/new", label: dict.trips.reservar.navBook, icon: TripsIcon, visible: true },
+  if (role === "employee")
+    base[0] = {
+      ...base[0]!,
+      label: dict.dashboard.home.navHome,
+      visible: true,
+    };
+  const extra: {
+    key: NavKey;
+    href: string;
+    label: string;
+    icon: typeof FindRideIcon;
+    visible: boolean;
+  }[] = [
+    {
+      key: "carpool" as NavKey,
+      href: isFleetManager ? "/fleet/carpools" : "/carpool",
+      label: isFleetManager ? "Gestão de caronas" : dict.carpool.buscar.navFind,
+      icon: FindRideIcon,
+      visible: true,
+    },
+    {
+      key: "book" as NavKey,
+      href: "/trips/new",
+      label: dict.trips.reservar.navBook,
+      icon: TripsIcon,
+      visible: true,
+    },
   ];
+  extra.push({
+    key: "myCarpools",
+    href: "/carpool/mine",
+    label: "Minhas Caronas",
+    icon: FindRideIcon,
+    visible: true,
+  });
   // dashboard first, then the two rider destinations, then the shared items
   const items = [base[0]!, ...extra, ...base.slice(1)].filter((i) => i.visible);
   // the bottom bar only fits the main destinations; the hamburger menu (MobileNav) lists everything
   // (employees: home + rider destinations; operations roles: their own working screens)
   const isOps = role !== "employee";
-  const bottomKeys: NavKey[] = isOps ? ["dashboard", "gate", "fleet", "trips", "carpool"] : ["dashboard", "carpool", "book", "trips"];
+  const bottomKeys: NavKey[] = isOps
+    ? ["dashboard", "gate", "fleet", "trips", "carpool"]
+    : ["dashboard", "carpool", "book", "trips"];
   const bottomItems = items.filter((i) => bottomKeys.includes(i.key));
 
   const link = ({ key, href, label, icon: Icon }: (typeof items)[number]) => (
-    <Link key={key} href={href} aria-current={key === active ? "page" : undefined}>
+    <Link
+      key={key}
+      href={href}
+      aria-current={key === active ? "page" : undefined}
+    >
       <Icon className="" />
       <span>{label}</span>
     </Link>
   );
 
   return (
-    <div className="fm-theme" data-testid="fm-theme">
+    <div
+      className={
+        commandCenter
+          ? "fm-theme fm-command"
+          : workspace
+            ? `fm-theme fm-workspace fm-workspace-${workspace}`
+            : "fm-theme"
+      }
+      data-testid="fm-theme"
+    >
+      <a
+        href="#fleetmind-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-white focus:px-4 focus:py-3 focus:text-black focus:shadow-lg"
+      >
+        Ir para o conteúdo principal
+      </a>
       <NavFeedback />
       <InactivityLogout />
       <SessionBackupSync />
@@ -113,6 +192,7 @@ export async function FmShell({
       <div className="fm-main">
         <header className="fm-topbar">
           <p className="fm-topbar-brand">FleetMind</p>
+          {licenseGateActive ? null : searchContent}
           <div className="fm-topbar-right">
             <LanguageToggle locale={locale} dict={dict} />
             {/* the FleetMind v2.0 look is light-only; the theme toggle would do nothing on these screens */}
@@ -134,15 +214,35 @@ export async function FmShell({
           )}
             <div className="fm-topbar-desktop">
               <span className="fm-tbpill fm-tbpill-date" data-testid="fm-today">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
                   <path d="M8 3v4M16 3v4M3.5 10h17" />
                 </svg>
                 {todayText}
               </span>
               {orgName && orgName !== "—" ? (
-                <span className="fm-tbpill fm-tbpill-org" data-testid="fm-org" title={dict.chrome.organizationLabel}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <span
+                  className="fm-tbpill fm-tbpill-org"
+                  data-testid="fm-org"
+                  title={dict.chrome.organizationLabel}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" />
                     <circle cx="12" cy="10" r="2.3" />
                   </svg>
@@ -150,15 +250,29 @@ export async function FmShell({
                 </span>
               ) : null}
               {licenseGateActive ? null : (
-                <NotificationBell align="right" dict={dict} locale={locale} licenseMissing={licenseMissing} />
+                <NotificationBell
+                  align="right"
+                  dict={dict}
+                  locale={locale}
+                  licenseMissing={licenseMissing}
+                />
               )}
-              <UserMenu userName={userName} roleLabel={roleLabels[role] ?? role} avatarUrl={avatarUrl} dict={dict} />
+              <UserMenu
+                userName={userName}
+                roleLabel={roleLabels[role] ?? role}
+                avatarUrl={avatarUrl}
+                dict={dict}
+              />
               <div className="fm-user" data-testid="fm-user">
                 <span className="fm-user-name">{userName}</span>
                 <span className="fm-user-role">{roleLabels[role] ?? role}</span>
               </div>
               <form action={signOut}>
-                <button type="submit" className="fm-icon-btn" aria-label={dict.chrome.signOut}>
+                <button
+                  type="submit"
+                  className="fm-icon-btn"
+                  aria-label={dict.chrome.signOut}
+                >
                   <LogoutIcon className="" />
                 </button>
               </form>
@@ -166,18 +280,29 @@ export async function FmShell({
           </div>
         </header>
         {licenseGateActive ? (
-          <p role="alert" className="fm-banner" style={{ margin: "16px 16px 0" }}>
+          <p
+            role="alert"
+            className="fm-banner"
+            style={{ margin: "16px 16px 0" }}
+          >
             {dict.chrome.licenseGateNotice}
+            {canKeyCustody ? <Link href="/account/keys" className="fm-btn fm-btn-ghost">Abrir custódia de chaves (não exige CNH)</Link> : null}{canBudgetApproval ? <Link href="/account/maintenance-approvals" className="fm-btn fm-btn-ghost">Abrir aprovação de orçamentos</Link> : null}
           </p>
         ) : null}
-        <main className={wide ? "fm-content fm-content-wide" : "fm-content"}>
+        <main
+          id="fleetmind-main"
+          tabIndex={-1}
+          className={wide ? "fm-content fm-content-wide" : "fm-content"}
+        >
           {title ? (
             <div className="fm-ops-head">
               <div className="fm-ops-head-text">
                 <h1 className="fm-title">{title}</h1>
                 {subtitle ? <p className="fm-subtitle">{subtitle}</p> : null}
               </div>
-              {headerActions && !licenseGateActive ? <div className="fm-ops-actions fm-legacy">{headerActions}</div> : null}
+              {headerActions && !licenseGateActive ? (
+                <div className="fm-ops-actions fm-legacy">{headerActions}</div>
+              ) : null}
             </div>
           ) : null}
           {legacy ? <div className="fm-legacy">{children}</div> : children}

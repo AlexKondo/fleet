@@ -1,0 +1,12 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ✓ lib/equipment/equipmentSql.test.ts (6 tests) 2897ms
+   ✓ preserves a return observation path for a journey recorded before equipment contracts 1100ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  18:42:05
+   Duration  3.25s (transform 45ms, setup 0ms, collect 68ms, tests 2.90s, environment 0ms, prepare 67ms)
+

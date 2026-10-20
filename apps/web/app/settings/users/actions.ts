@@ -92,7 +92,8 @@ export async function inviteUser(
     role: role as Role,
   });
   if (profileError) {
-    await admin.auth.admin.deleteUser(authData.user.id);
+    // Preserve failed provisioning identities too; do not delete an account.
+    await admin.auth.admin.updateUserById(authData.user.id, { ban_duration: "876000h", app_metadata: { provisioning_failed: true, must_change_password: true } });
     return { status: "error", error: dict.errors.users.profileCreateFailed };
   }
 
@@ -309,109 +310,42 @@ export async function resetMemberLicense(
   return { status: "success" };
 }
 
-export async function removeUser(
-  _prevState: UserActionState,
-  formData: FormData,
+/** Compatibility entry point: removing access now deactivates, never deletes. */
+export async function removeUser(previous: UserActionState, form: FormData): Promise<UserActionState> {
+  return changeMemberAccess(previous, form, false);
+}
+export async function reactivateUser(previous: UserActionState, form: FormData): Promise<UserActionState> {
+  return changeMemberAccess(previous, form, true);
+}
+async function changeMemberAccess(
+  _previous: UserActionState, form: FormData, enabled: boolean,
 ): Promise<UserActionState> {
-  const { organizationId, actingUserId } = await requireAdministrator();
+  const { organizationId } = await requireAdministrator();
   if (!organizationId) return { status: "error", error: "not_authorized" };
-
-  const dict = await getDictionary();
-  const userId = String(formData.get("userId") ?? "");
-  if (!userId) return { status: "error", error: dict.errors.users.userInvalid };
-  if (userId === actingUserId) {
-    return { status: "error", error: dict.errors.users.cannotRemoveSelf };
-  }
-
-  const admin = createSupabaseAdminClient();
-
-  const { data: targetProfile } = await admin
-    .from("profiles")
-    .select("organization_id, role, full_name")
-    .eq("id", userId)
-    .maybeSingle();
-  if (!targetProfile || targetProfile.organization_id !== organizationId) {
-    return { status: "error", error: dict.errors.users.userNotFound };
-  }
-
-  // Fetched before the delete below removes the auth.users row (and the email address
-  // along with it) — needed only for the notification email, so no point holding it if
-  // that lookup itself fails.
-  const { data: targetAuthUser } = await admin.auth.admin.getUserById(userId);
-  const targetEmail = targetAuthUser?.user?.email ?? null;
-
-  // lock_and_require_multiple_administrators (0013_atomic_last_administrator_guard.sql)
-  // narrows, but cannot fully close, the same last-administrator race updateUserRole has
-  // — it takes a row lock and raises inside one transaction, so a concurrent call has to
-  // wait for this one to commit before it can even count. But the actual removal below
-  // (auth.admin.deleteUser) is a GoTrue Admin API call, not SQL, so it runs in a separate
-  // transaction *after* this guard's lock is already released. Two administrators
-  // removing each other at the exact same instant could still both pass this guard
-  // before either deleteUser call completes. A fully atomic fix would need the org's
-  // membership to support deactivation without deleting the auth.users row at all —
-  // out of scope here; this is a known, documented residual risk, not a claimed fix.
-  if (targetProfile.role === "administrator") {
-    const { error: guardError } = await admin.rpc("lock_and_require_multiple_administrators", {
-      p_organization_id: organizationId,
-    });
-    if (guardError) {
-      return { status: "error", error: dict.errors.users.lastAdministrator };
-    }
-  }
-
-  // profiles.id references auth.users(id) on delete cascade (0001_init_schema.sql), so
-  // deleting the auth user is enough — but trip_requests.requester_id references
-  // profiles(id) with no cascade, by design (losing a trip's requester would corrupt
-  // its own operational history). A user who has ever requested a trip therefore can't
-  // be hard-deleted; changing their role (e.g. back to 'employee') is the way to revoke
-  // their access without destroying that history.
-  const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) {
-    // The most common cause here is trip_requests.requester_id blocking the cascade
-    // (see comment above) — GoTrue's admin API doesn't reliably surface the underlying
-    // Postgres error text, so this message names both the likely cause and the fix
-    // instead of guessing from the raw error string.
-    return { status: "error", error: dict.errors.users.removeUserFailed };
-  }
-
-  await admin.rpc("log_audit_event", {
-    p_organization_id: organizationId,
-    p_actor_id: actingUserId as string,
-    p_action: "user_removed",
-    p_entity_type: "profile",
-    p_entity_id: userId,
-    p_before: { role: targetProfile.role },
+  const db = await createSupabaseServerClient();
+  const version = String(form.get("accessVersion") ?? "");
+  const reason = String(form.get("reason") ?? "").trim();
+  const userId = String(form.get("userId") ?? "");
+  const requestId = String(form.get("requestId") ?? "");
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuid.test(userId) || !uuid.test(requestId) || !/^\d+$/.test(version) || !Number.isSafeInteger(Number(version)) || reason.length < 3 || reason.length > 1000)
+    return { status: "error", error: "Confira o usuário, a versão e a justificativa." };
+  const { error } = await db.rpc("fm_member_access_command", {
+    p_user_id: userId, p_enabled: enabled, p_version: Number(version), p_reason: reason, p_request_id: requestId,
   });
-
-  // Best-effort, same reasoning as inviteUser's welcome email: the removal itself already
-  // happened and must stand regardless of whether this notification goes out.
-  if (targetEmail) {
-    const { data: actingProfile } = await admin
-      .from("profiles")
-      .select("full_name")
-      .eq("id", actingUserId as string)
-      .maybeSingle();
-    const actorName = actingProfile?.full_name ?? "um administrador do Fleet";
-
-    const { html, text } = renderEmail({
-      heading: "Seu acesso ao Fleet foi removido",
-      bodyLines: [
-        `Olá, ${targetProfile.full_name ?? ""}.`,
-        `Seu acesso ao Fleet foi removido por <strong>${actorName}</strong>.`,
-        `Se isso não era esperado, entre em contato com o gestor de frota ou administrador da sua empresa.`,
-      ],
-    });
-    const emailResult = await sendEmail({
-      to: targetEmail,
-      subject: "Seu acesso ao Fleet foi removido",
-      html,
-      text,
-    });
-    if (!emailResult.success) {
-      console.error("removeUser: removal notice email failed to send:", emailResult.error);
-    }
+  if (error) {
+    const code = ["NOT_AUTHORIZED", "NOT_FOUND", "CANNOT_DEACTIVATE_SELF", "CONCURRENT_UPDATE", "LAST_ACTIVE_ADMINISTRATOR", "IDEMPOTENCY_CONFLICT"].find(c=>error.message.includes(c));
+    const messages: Record<string,string> = {
+      NOT_AUTHORIZED: "Seu perfil não pode alterar este acesso.",
+      NOT_FOUND: "Usuário não encontrado na sua organização.",
+      CANNOT_DEACTIVATE_SELF: "Você não pode desativar o próprio acesso.",
+      CONCURRENT_UPDATE: "O acesso foi alterado. Recarregue a página antes de tentar novamente.",
+      LAST_ACTIVE_ADMINISTRATOR: "É necessário manter ao menos um administrador ativo.",
+      IDEMPOTENCY_CONFLICT: "Recarregue a página para iniciar uma nova solicitação.",
+    };
+    return { status: "error", error: code ? messages[code] : "Não foi possível alterar o acesso. Nenhuma conta foi excluída." };
   }
-
   revalidatePath("/settings/users");
+  revalidatePath("/admin");
   return { status: "success" };
 }

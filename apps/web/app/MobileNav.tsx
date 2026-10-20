@@ -24,7 +24,10 @@ import { OPEN_CHAT_EVENT, type OpenChatDetail } from "./ChatWidget";
 // Icon components are functions, which the AppShell server component can't pass down as
 // props (React Server Components can only serialize data across that boundary) — this
 // client component looks its own icon up by `key` instead.
-const ICONS_BY_KEY: Record<NavKey, (props: { className?: string }) => React.ReactElement> = {
+const ICONS_BY_KEY: Record<
+  NavKey,
+  (props: { className?: string }) => React.ReactElement
+> = {
   dashboard: DashboardIcon,
   trips: TripsIcon,
   gate: GateIcon,
@@ -34,6 +37,20 @@ const ICONS_BY_KEY: Record<NavKey, (props: { className?: string }) => React.Reac
   settings: SettingsIcon,
   carpool: FindRideIcon,
   book: TripsIcon,
+  admin: SettingsIcon,
+  myCarpools: FindRideIcon,
+  maintenance: FleetIcon,
+  planning: DashboardIcon,
+  orders: TripsIcon,
+  vehicleHistory: FleetIcon,
+  energy: AnalyticsIcon,
+  drivers: TeamIcon,
+  incidents: GateIcon,
+  gateExceptions: GateIcon,
+  gateHistory: TripsIcon,
+  keys: GateIcon,
+  keyManagement: GateIcon,
+  budgetApprovals: FleetIcon,
 };
 
 interface NavItem {
@@ -76,15 +93,23 @@ export function MobileNav({
 
   return (
     <div className="md:hidden">
-      <div className={compact ? "flex items-center" : "flex items-center justify-between border-b border-line-800 bg-panel-900/40 px-4 py-3"}>
-        {compact ? null : <div className="min-w-0">
-          <p className="font-display text-lg font-extrabold uppercase tracking-tight text-paper-50">
-            Fleet<span className="text-gwm-accent">.</span>
-          </p>
-          <p className="max-w-[10rem] truncate text-[11px] uppercase tracking-widest text-fog-600">
-            {orgName}
-          </p>
-        </div>}
+      <div
+        className={
+          compact
+            ? "flex items-center"
+            : "flex items-center justify-between border-b border-line-800 bg-panel-900/40 px-4 py-3"
+        }
+      >
+        {compact ? null : (
+          <div className="min-w-0">
+            <p className="font-display text-lg font-extrabold uppercase tracking-tight text-paper-50">
+              Fleet<span className="text-gwm-accent">.</span>
+            </p>
+            <p className="max-w-[10rem] truncate text-[11px] uppercase tracking-widest text-fog-600">
+              {orgName}
+            </p>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <NotificationBell align="right" dict={dict} locale={locale} />
           <button
@@ -98,7 +123,9 @@ export function MobileNav({
             <span
               className={`h-0.5 w-4 rounded-full bg-current transition-transform ${open ? "translate-y-1.5 rotate-45" : ""}`}
             />
-            <span className={`h-0.5 w-4 rounded-full bg-current transition-opacity ${open ? "opacity-0" : ""}`} />
+            <span
+              className={`h-0.5 w-4 rounded-full bg-current transition-opacity ${open ? "opacity-0" : ""}`}
+            />
             <span
               className={`h-0.5 w-4 rounded-full bg-current transition-transform ${open ? "-translate-y-1.5 -rotate-45" : ""}`}
             />
@@ -107,7 +134,13 @@ export function MobileNav({
       </div>
 
       {open ? (
-        <div className={compact ? "fm-mobilepanel flex flex-col border-b border-line-800 bg-ink-950 px-4 py-4" : "flex flex-col border-b border-line-800 bg-ink-950 px-4 py-4"}>
+        <div
+          className={
+            compact
+              ? "fm-mobilepanel flex flex-col border-b border-line-800 bg-ink-950 px-4 py-4"
+              : "flex flex-col border-b border-line-800 bg-ink-950 px-4 py-4"
+          }
+        >
           <nav className="flex flex-col gap-1">
             {items.map((item) => {
               const isActive = item.key === active;
@@ -154,8 +187,14 @@ export function MobileNav({
           </Link>
 
           <div className="mt-4 flex items-center justify-between border-t border-line-800 pt-4">
-            <Link href="/account" className="min-w-0" title={dict.chrome.accountLink}>
-              <p className="truncate text-sm text-paper-50 hover:text-gwm-accent">{userName}</p>
+            <Link
+              href="/account"
+              className="min-w-0"
+              title={dict.chrome.accountLink}
+            >
+              <p className="truncate text-sm text-paper-50 hover:text-gwm-accent">
+                {userName}
+              </p>
               <p className="text-xs uppercase tracking-widest text-fog-600">
                 {roleLabels[role] ?? role}
               </p>

@@ -1048,3 +1048,4 @@
 .fm-theme .fm-chat-panel:focus {
   outline: none;
 }
+.fm-sidebar .fm-nav{min-height:0;overflow-y:auto;scrollbar-width:thin}

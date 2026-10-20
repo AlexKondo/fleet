@@ -1,0 +1,88 @@
+   ▲ Next.js 15.5.9
+   - Experiments (use with caution):
+     · serverActions
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 12.5s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/48) ...
+   Generating static pages (12/48) 
+   Generating static pages (24/48) 
+   Generating static pages (36/48) 
+ ✓ Generating static pages (48/48)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                        Size  First Load JS
+┌ ƒ /                                             174 B         102 kB
+├ ƒ /_not-found                                   999 B         103 kB
+├ ƒ /account                                    1.76 kB         118 kB
+├ ƒ /account/keys                               1.38 kB         117 kB
+├ ƒ /account/license                            3.85 kB         120 kB
+├ ƒ /account/maintenance-approvals              1.38 kB         117 kB
+├ ƒ /account/privacy                            1.38 kB         117 kB
+├ ƒ /account/profile                            1.85 kB         118 kB
+├ ƒ /admin                                      1.38 kB         117 kB
+├ ƒ /admin/ai                                   1.38 kB         117 kB
+├ ƒ /admin/audit                                1.38 kB         117 kB
+├ ƒ /admin/integrations                         1.38 kB         117 kB
+├ ƒ /admin/units                                1.38 kB         117 kB
+├ ƒ /analytics                                  1.31 kB         117 kB
+├ ƒ /analytics/carpool                          1.31 kB         117 kB
+├ ƒ /api/chat/abandon                             174 B         102 kB
+├ ƒ /api/cron/carpool-expiry                      174 B         102 kB
+├ ƒ /api/cron/carpool-retention                   174 B         102 kB
+├ ƒ /api/cron/chat-cleanup                        174 B         102 kB
+├ ƒ /api/cron/daily                               174 B         102 kB
+├ ƒ /api/cron/license-reminders                   174 B         102 kB
+├ ƒ /api/exports/vehicle/[id]                     174 B         102 kB
+├ ƒ /api/geo/autocomplete                         174 B         102 kB
+├ ƒ /api/geo/route-map                            174 B         102 kB
+├ ƒ /auth/callback                                174 B         102 kB
+├ ƒ /carpool                                    3.49 kB         124 kB
+├ ƒ /carpool/mine                                 272 B         119 kB
+├ ƒ /dashboard                                    928 B         120 kB
+├ ƒ /dashboard/command-center                      2 kB         118 kB
+├ ƒ /documents                                  1.38 kB         117 kB
+├ ƒ /documents/[id]                               174 B         102 kB
+├ ƒ /fleet                                      13.8 kB         130 kB
+├ ƒ /fleet/archive                              1.38 kB         117 kB
+├ ƒ /fleet/carpools                             1.32 kB         117 kB
+├ ƒ /fleet/drivers                              1.38 kB         117 kB
+├ ƒ /fleet/energy                               1.38 kB         117 kB
+├ ƒ /fleet/equipment                            1.38 kB         117 kB
+├ ƒ /fleet/incidents                            1.38 kB         117 kB
+├ ƒ /fleet/keys                                 1.38 kB         117 kB
+├ ƒ /fleet/maintenance                          1.38 kB         117 kB
+├ ƒ /fleet/vehicles/[id]                        1.31 kB         117 kB
+├ ƒ /forgot-password                            2.26 kB         108 kB
+├ ƒ /gate                                       2.74 kB         118 kB
+├ ƒ /gate/exceptions                            1.38 kB         117 kB
+├ ƒ /gate/history                               1.38 kB         117 kB
+├ ƒ /login                                      3.37 kB         109 kB
+├ ƒ /maintenance                                1.38 kB         117 kB
+├ ƒ /maintenance/planning                       1.38 kB         117 kB
+├ ƒ /maintenance/vehicles                       1.38 kB         117 kB
+├ ƒ /maintenance/work-orders                    1.38 kB         117 kB
+├ ƒ /reservations/[id]                          4.12 kB         120 kB
+├ ƒ /reservations/[id]/evidence/[inspectionId]  2.11 kB         118 kB
+├ ƒ /reservations/[id]/pickup                   1.94 kB         122 kB
+├ ƒ /reservations/[id]/return                   2.06 kB         122 kB
+├ ƒ /reset-password                             2.79 kB         105 kB
+├ ƒ /settings                                   4.64 kB         120 kB
+├ ƒ /settings/mobility-points                   2.55 kB         118 kB
+├ ƒ /settings/users                             4.41 kB         120 kB
+├ ƒ /signup                                     3.01 kB         109 kB
+├ ƒ /trips                                        272 B         119 kB
+└ ƒ /trips/new                                  7.73 kB         128 kB
++ First Load JS shared by all                    102 kB
+  ├ chunks/1939-a021fe2d31737373.js             45.6 kB
+  ├ chunks/82560d59-1a1d51bff83b97c3.js         54.2 kB
+  └ other shared chunks (total)                 2.12 kB
+
+
+ƒ Middleware                                    93.3 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+

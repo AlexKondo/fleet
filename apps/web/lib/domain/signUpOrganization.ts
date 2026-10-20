@@ -42,16 +42,17 @@ export async function signUpOrganization(
     return { success: false, error: alreadyRegistered ? "email_already_registered" : "user_creation_failed" };
   }
 
-  // Every self-registered user is an administrator: there's no SSO/invite flow yet to
-  // hand out lesser roles, and the org is a single trusted team until that lands.
+  // Approved 2026-10-16: self-registration never grants administrative privileges.
+  // Only the existing administrator-controlled team flow may grant another role.
   const { error: profileError } = await admin.from("profiles").insert({
     id: authData.user.id,
     organization_id: SINGLE_ORGANIZATION_ID,
     full_name: input.fullName,
-    role: "administrator",
+    role: "employee",
   });
   if (profileError) {
-    await admin.auth.admin.deleteUser(authData.user.id);
+    // Failed provisioning is retained and blocked for administrative recovery.
+    await admin.auth.admin.updateUserById(authData.user.id, { ban_duration: "876000h", app_metadata: { provisioning_failed: true } });
     return { success: false, error: "profile_creation_failed" };
   }
 

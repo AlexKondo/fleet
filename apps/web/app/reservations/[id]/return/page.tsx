@@ -1,3 +1,6 @@
+import {loadEquipmentContract} from "@/lib/equipment/contract";
+import { GateVisualForm } from "@/app/gate/GateVisualForm";
+import { loadChecklistState } from "@/lib/operations/checklistState";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -30,7 +33,7 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
       )
       .eq("id", id)
       .single(),
-    supabase.from("vehicle_locations").select("id, name").order("name"),
+    supabase.from("vehicle_locations").select("id, name").eq("enabled",true).order("name"),
   ]);
 
   if (!reservation || !reservation.vehicle || !reservation.trip_request) notFound();
@@ -50,26 +53,21 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
     redirect(`${fallbackPath}?tripActionError=checklist_not_authorized`);
   }
 
-  // Mirrors record_return's own preconditions: there's nothing to return until the vehicle
-  // has actually been picked up, and a cancelled/completed reservation is already closed.
-  const canReturn =
-    reservation.status === "confirmed" &&
-    (vehicle.status === "in_use" || vehicle.status === "returning");
-  if (!canReturn) redirect(`${fallbackPath}?tripActionError=return_wrong_status`);
+  const state=await loadChecklistState(supabase,id);
+  if(!state) redirect(`${fallbackPath}?tripActionError=checklist_unavailable`);
+  if(state.own_return_id) redirect(`/reservations/${id}/evidence/${state.own_return_id}`);
+  if(!state.can_return) redirect(`${fallbackPath}?tripActionError=return_wrong_status`);
   const energyType = vehicle.category?.energy_type ?? "ICE";
   const showElectricRange = energyType === "BEV" || energyType === "PHEV";
 
-  const { data: equipmentItems } = await supabase
-    .from("safety_equipment_items")
-    .select("id, name")
-    .eq("organization_id", profile?.organization_id ?? "")
-    .order("created_at");
+  const equipmentContract=state.inspection_role==="security"?null:await loadEquipmentContract(supabase,id);
+  const equipmentItems=equipmentContract?.required_names.map((name,index)=>({id:`${equipmentContract.id}-${index}`,name}))??[];
 
   return (
     <ChecklistFrame
       dict={dict}
-      title={dict.reservations.return.title}
-      intro={dict.reservations.checklist.returnIntro}
+      title={state.inspection_role==="security" ? dict.ops.gate.visualTitle : dict.reservations.return.title}
+      intro={state.inspection_role==="security" ? dict.ops.gate.visualDescription : dict.reservations.checklist.returnIntro}
       shell={{
         orgName: profile?.organization?.name ?? "—",
         userName: profile?.full_name ?? user.email ?? "—",
@@ -83,9 +81,11 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
         energyType,
         estimatedRangeKm: vehicle.estimated_range_km,
       }}
-      showElectricRange={showElectricRange}
+      showElectricRange={state.inspection_role==="security" ? false : showElectricRange}
       route={{ origin: reservation.trip_request?.origin, destination: reservation.trip_request?.destination }}
     >
+        {state.inspection_role==="security" ? <GateVisualForm reservationId={id} phase="return" dict={dict}/> : (
+        equipmentContract?<><p>Equipamentos: {equipmentContract.source==="legacy_return_observation"?"Observações do processo legado; requisitos específicos ainda não verificados":`Conjunto ${equipmentContract.source==="vehicle"?"do veículo":"do modelo"} · revisão ${equipmentContract.configuration_version}`}</p>{equipmentContract.optional_names.length>0&&<p>Itens disponíveis sem exigência de ausência no checklist: {equipmentContract.optional_names.join(", ")}</p>}
         <ReturnForm
           reservationId={reservation.id}
           energyType={energyType}
@@ -95,7 +95,8 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
           equipmentItems={equipmentItems ?? []}
           dict={dict}
           locale={locale}
-        />
+        /></>:<p role="alert">Não foi possível preparar a configuração de equipamentos. Solicite ao gestor a configuração deste veículo antes de uma nova retirada. O registro físico de chegada continua disponível na unidade.</p>
+        )}
     </ChecklistFrame>
   );
 }

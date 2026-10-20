@@ -1,0 +1,75 @@
+{
+  "release_status": "NOT_APPROVED",
+  "failures": [
+    {
+      "id": "VAL-001",
+      "severity": "Alta",
+      "evidence_and_probable_cause": "`supabase/migrations/0089_recurring_carpool_plans.sql` existia sem consumidor na interface, declaração RPC ou fluxo completo de reserva. Causa: desenvolvimento interrompido antes da integração. A presença do SQL podia ser confundida com funcionalidade pronta.",
+      "correction_and_state": "**Implantação do rascunho bloqueada:** arquivo preservado em `supabase/pending/`, fora da sequência ativa. Recorrência continua pendente; não foi eliminada uma funcionalidade já disponível. O rascunho não é homologado por testes das migrations ativas.",
+      "kind": "source_or_delivery_inspection"
+    },
+    {
+      "id": "VAL-002",
+      "severity": "Média",
+      "evidence_and_probable_cause": "Fórmula anterior de `lineTotal`: `(+500)/1000` truncava o produto negativo em direção a zero; crédito de R$ 20,01 podia resultar em R$ 20,00. Contraprova e resultado corrigido em `forms.test.ts`.",
+      "correction_and_state": "**Correção incluída e validada:** arredondamento simétrico com inteiros. Ajuste aprovado de −20,01 sobre custo 100 resulta em 79,99 no snapshot; originais permanecem intactos. CSV mostra valor efetivo apenas para ajustes aprovados.",
+      "kind": "test_reproduced"
+    },
+    {
+      "id": "VAL-003",
+      "severity": "Alta",
+      "evidence_and_probable_cause": "Teste inicial esperava acesso gerencial e recebeu redirecionamento 307 para CNH: `reproducao-cnh-antes.log` (1 falha/3 aprovações). Causa: middleware ignorava o contrato `nonDrivingWorkspace` já declarado nas páginas `/fleet` e `/fleet/carpools`.",
+      "correction_and_state": "**Corrigida e validada:** exceção limitada a essas duas rotas e aos papéis gestor/administrador verificados. Reserva própria ainda exige CNH; empregado não ganha acesso; conta desativada e troca obrigatória de senha permanecem bloqueadas. Evidência final em `cnh-depois-e-regressao.log` e `vinculo-os-e-gestao-final.log`.",
+      "kind": "test_reproduced"
+    },
+    {
+      "id": "VAL-004",
+      "severity": "Alta",
+      "evidence_and_probable_cause": "Guia anterior afirmava “sem nova migration”, mas as mudanças locais passaram a depender de 0086–0088. Sem publicação coordenada, RPCs faltantes tornariam os novos painéis/filtros indisponíveis.",
+      "correction_and_state": "**Documentação corrigida:** preflight e publicação coordenada de 0086–0088 e 0090 são obrigatórios. 0089 não deve ser aplicada. O ledger real ainda não foi consultado; implantação permanece não verificada.",
+      "kind": "source_or_delivery_inspection"
+    },
+    {
+      "id": "VAL-009",
+      "severity": "Alta (segurança)",
+      "evidence_and_probable_cause": "Em conexão SQL autenticada com permissão TEMP, uma tabela temporária `fm_manager_scopes` fez `fm_can_manage_vehicle` retornar `true` para veículo fora da unidade autorizada. Resultado esperado `false`; reprodução em `reproducao-search-path-corrigida.log`. Causa: `search_path=public` sem `pg_temp` explícito. Não foi demonstrada exploração por HTTP/PostgREST.",
+      "correction_and_state": "**Corrigida em 0090:** funções privilegiadas da aplicação resolvem catálogos/schemas confiáveis antes de tabelas temporárias; CREATE no schema público é negado a papéis de aplicação. Regressão SQL de 89 casos aprovada (73 no schema atual + 16 na fixture legada), sem repetir toda a aplicação. Caso final verifica escopo e negação de CREATE; `search-path-final.log`. A primeira tentativa (`reproducao-search-path-antes.log`) falhou no setup por usar LIKE numa tabela sem SELECT e não é prova do defeito.",
+      "kind": "test_reproduced"
+    },
+    {
+      "id": "VAL-005",
+      "severity": "Alta",
+      "evidence_and_probable_cause": "Ausência de comparação executada e completa das 28 telas com as referências. Existe fonte/rota, mas isso não prova comportamento, navegação ou fidelidade.",
+      "correction_and_state": "**Aberta:** executar comparação autenticada por tela e corrigir desvios no código, sem redesenhar. Não declarar as 28 telas concluídas.",
+      "kind": "source_or_delivery_inspection"
+    },
+    {
+      "id": "VAL-006",
+      "severity": "Alta",
+      "evidence_and_probable_cause": "Lacunas conhecidas na matriz: múltiplos papéis gerais, governança granular de IA por unidade, recorrência integrada e compatibilidade gerencial detalhada.",
+      "correction_and_state": "**Aberta:** requer implementação pelo GPT. Atribuições restritas de chaves/aprovação não equivalem a múltiplos papéis completos. Não transferir ao Claude como “teste pendente”.",
+      "kind": "source_or_delivery_inspection"
+    },
+    {
+      "id": "VAL-007",
+      "severity": "Alta",
+      "evidence_and_probable_cause": "Painéis sem fontes/métodos completos: indicadores históricos, utilização, impacto/emissões, mapa consolidado e rastreamento. Dados não foram inventados, mas o contrato funcional/visual não está fechado.",
+      "correction_and_state": "**Aberta:** implementar fontes e metodologia explicitamente versionadas e aprovadas, mantendo indisponibilidade enquanto ausentes. Configurar Maps não implementa GPS ao vivo.",
+      "kind": "source_or_delivery_inspection"
+    },
+    {
+      "id": "VAL-008",
+      "severity": "Média",
+      "evidence_and_probable_cause": "OCR/voz específicos de portaria, extração automática de comprovantes, planejamento avançado e exportação pessoal com binários continuam incompletos.",
+      "correction_and_state": "**Aberta:** completar os respectivos fluxos e validações. A exportação JSON 0088 é estruturada e declara `binary_files_included=false`.",
+      "kind": "source_or_delivery_inspection"
+    }
+  ],
+  "not_tested": [
+    "Latest Kondo HEAD/execution evidence",
+    "Live Supabase migration ledger/Auth/PostgREST/Storage",
+    "Real simultaneous connections",
+    "SMTP/Maps/IA/voice/OCR providers",
+    "Full visual/E2E acceptance of all 28 screens"
+  ]
+}

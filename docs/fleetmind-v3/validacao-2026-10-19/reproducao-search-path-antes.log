@@ -1,0 +1,33 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ❯ lib/operations/managerScope.test.ts (12 tests | 1 failed) 2445ms
+   × fleet management scopes with actual SQL and RLS > does not let a temporary table shadow the management authorization source 41ms
+     → permission denied for table fm_manager_scopes
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/operations/managerScope.test.ts > fleet management scopes with actual SQL and RLS > does not let a temporary table shadow the management authorization source
+error: permission denied for table fm_manager_scopes
+ ❯ ye.Ve ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:11
+ ❯ ye.nt ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:16
+ ❯ ye.parse ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:25
+ ❯ ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/src/pglite.ts:398:28
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:2608882
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:2609769
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:5283187
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:366756
+ ❯ invoke_v ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/release/pglite.js:9:389208
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:368873
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  09:22:00
+   Duration  2.79s (transform 50ms, setup 0ms, collect 72ms, tests 2.44s, environment 0ms, prepare 60ms)
+
+undefined
+/workspace/scratch/7e2402800f4f/source/fleet-main/apps/web:
+[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run lib/operations/managerScope.test.ts

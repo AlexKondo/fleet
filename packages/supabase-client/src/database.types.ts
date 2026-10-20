@@ -135,16 +135,19 @@ export type Database = {
       }
       inspections: {
         Row: {
+          observation_kind: string
+          actor_role_at_recording: Database["public"]["Enums"]["user_role"] | null
+          recorded_location_id: string | null
           battery_level_percent: number | null
           created_at: string
           damage_notes: string | null
           fuel_level_percent: number | null
           has_new_damage: boolean
           id: string
-          is_dirty_exterior: boolean
-          is_dirty_interior: boolean
-          missing_safety_equipment: string[]
-          odometer_km: number
+          is_dirty_exterior: boolean | null
+          is_dirty_interior: boolean | null
+          missing_safety_equipment: string[] | null
+          odometer_km: number | null
           organization_id: string
           performed_by: string
           performed_by_role: Database["public"]["Enums"]["inspection_role"]
@@ -153,16 +156,19 @@ export type Database = {
           vehicle_id: string
         }
         Insert: {
+          observation_kind?: string
+          actor_role_at_recording?: Database["public"]["Enums"]["user_role"] | null
+          recorded_location_id?: string | null
           battery_level_percent?: number | null
           created_at?: string
           damage_notes?: string | null
           fuel_level_percent?: number | null
           has_new_damage?: boolean
           id?: string
-          is_dirty_exterior?: boolean
-          is_dirty_interior?: boolean
-          missing_safety_equipment?: string[]
-          odometer_km: number
+          is_dirty_exterior?: boolean | null
+          is_dirty_interior?: boolean | null
+          missing_safety_equipment?: string[] | null
+          odometer_km: number | null
           organization_id: string
           performed_by: string
           performed_by_role: Database["public"]["Enums"]["inspection_role"]
@@ -171,16 +177,19 @@ export type Database = {
           vehicle_id: string
         }
         Update: {
+          observation_kind?: string
+          actor_role_at_recording?: Database["public"]["Enums"]["user_role"] | null
+          recorded_location_id?: string | null
           battery_level_percent?: number | null
           created_at?: string
           damage_notes?: string | null
           fuel_level_percent?: number | null
           has_new_damage?: boolean
           id?: string
-          is_dirty_exterior?: boolean
-          is_dirty_interior?: boolean
-          missing_safety_equipment?: string[]
-          odometer_km?: number
+          is_dirty_exterior?: boolean | null
+          is_dirty_interior?: boolean | null
+          missing_safety_equipment?: string[] | null
+          odometer_km?: number | null
           organization_id?: string
           performed_by?: string
           performed_by_role?: Database["public"]["Enums"]["inspection_role"]
@@ -595,18 +604,21 @@ export type Database = {
       }
       safety_equipment_items: {
         Row: {
+          enabled: boolean
           created_at: string
           id: string
           name: string
           organization_id: string
         }
         Insert: {
+          enabled?: boolean
           created_at?: string
           id?: string
           name: string
           organization_id: string
         }
         Update: {
+          enabled?: boolean
           created_at?: string
           id?: string
           name?: string
@@ -1176,6 +1188,8 @@ export type Database = {
       }
       trip_participants: {
         Row: {
+          left_at: string | null
+          left_by: string | null
           id: string
           joined_at: string
           organization_id: string
@@ -1185,6 +1199,8 @@ export type Database = {
           trip_request_id: string
         }
         Insert: {
+          left_at?: string | null
+          left_by?: string | null
           id?: string
           joined_at?: string
           organization_id: string
@@ -1194,6 +1210,8 @@ export type Database = {
           trip_request_id: string
         }
         Update: {
+          left_at?: string | null
+          left_by?: string | null
           id?: string
           joined_at?: string
           organization_id?: string
@@ -1291,6 +1309,8 @@ export type Database = {
       }
       vehicle_categories: {
         Row: {
+          enabled: boolean
+          lifecycle_version: number
           energy_type: Database["public"]["Enums"]["energy_type"]
           id: string
           name: string
@@ -1299,6 +1319,8 @@ export type Database = {
           supports_cargo: boolean
         }
         Insert: {
+          enabled?: boolean
+          lifecycle_version?: number
           energy_type: Database["public"]["Enums"]["energy_type"]
           id?: string
           name: string
@@ -1307,6 +1329,8 @@ export type Database = {
           supports_cargo?: boolean
         }
         Update: {
+          enabled?: boolean
+          lifecycle_version?: number
           energy_type?: Database["public"]["Enums"]["energy_type"]
           id?: string
           name?: string
@@ -1326,16 +1350,22 @@ export type Database = {
       }
       vehicle_locations: {
         Row: {
+          enabled: boolean
+          lifecycle_version: number
           id: string
           name: string
           organization_id: string
         }
         Insert: {
+          enabled?: boolean
+          lifecycle_version?: number
           id?: string
           name: string
           organization_id: string
         }
         Update: {
+          enabled?: boolean
+          lifecycle_version?: number
           id?: string
           name?: string
           organization_id?: string
@@ -1352,6 +1382,13 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          archived_at: string | null
+          archived_by: string | null
+          archive_reason: string | null
+          pre_archive_status: Database["public"]["Enums"]["vehicle_status"] | null
+          lifecycle_version: number
+          vin: string | null
+          next_service_date: string | null
           battery_level_percent: number | null
           category_id: string
           color: string | null
@@ -1377,6 +1414,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
+          archive_reason?: string | null
+          pre_archive_status?: Database["public"]["Enums"]["vehicle_status"] | null
+          lifecycle_version?: number
+          vin?: string | null
+          next_service_date?: string | null
           battery_level_percent?: number | null
           category_id: string
           color?: string | null
@@ -1404,6 +1448,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
+          archived_by?: string | null
+          archive_reason?: string | null
+          pre_archive_status?: Database["public"]["Enums"]["vehicle_status"] | null
+          lifecycle_version?: number
+          vin?: string | null
+          next_service_date?: string | null
           battery_level_percent?: number | null
           category_id?: string
           color?: string | null
@@ -1534,9 +1585,71 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      fm_managed_vehicles: { Row:Database["public"]["Tables"]["vehicles"]["Row"]; Relationships:Database["public"]["Tables"]["vehicles"]["Relationships"] };
+      fm_managed_reservations: { Row:Database["public"]["Tables"]["reservations"]["Row"]; Relationships:Database["public"]["Tables"]["reservations"]["Relationships"] };
+      fm_managed_trip_requests: { Row:Database["public"]["Tables"]["trip_requests"]["Row"]; Relationships:Database["public"]["Tables"]["trip_requests"]["Relationships"] };
+      fm_managed_inspections: { Row:Database["public"]["Tables"]["inspections"]["Row"]; Relationships:Database["public"]["Tables"]["inspections"]["Relationships"] };
+      fm_managed_workflow_tasks: { Row:Database["public"]["Tables"]["workflow_tasks"]["Row"]; Relationships:Database["public"]["Tables"]["workflow_tasks"]["Relationships"] };
+      fm_managed_carpool_offers: { Row:Database["public"]["Tables"]["carpool_offers"]["Row"]; Relationships:Database["public"]["Tables"]["carpool_offers"]["Relationships"] };
+      fm_managed_people: {Row:Pick<Database["public"]["Tables"]["profiles"]["Row"],"id"|"organization_id"|"full_name"|"role">;Relationships:Database["public"]["Tables"]["profiles"]["Relationships"]};
+      fm_managed_ride_requests: {Row:Pick<Database["public"]["Tables"]["carpool_ride_requests"]["Row"],"id"|"organization_id"|"carpool_offer_id"|"rider_id"|"status"|"requested_seats"|"created_at">;Relationships:Database["public"]["Tables"]["carpool_ride_requests"]["Relationships"]};
     }
     Functions: {
+      fm_photo_begin: { Args: {p_kind:string;p_target:string;p_angle:Database["public"]["Enums"]["photo_angle"]|null;p_sha256:string;p_size:number;p_mime:string}; Returns: Json };
+      fm_photo_finalize: { Args: {p_id:string}; Returns: undefined };
+      fm_photo_pending: { Args: Record<PropertyKey,never>; Returns: Json };
+      fm_availability_windows: { Args: {p_from?:string}; Returns: {vehicle_id:string;start_at:string;end_at:string;kind:string}[] };
+
+      fm_equipment_profile_save: {Args:{p_kind:string;p_target_id:string;p_required_ids:string[];p_optional_ids:string[];p_enabled:boolean;p_version:number;p_reason:string;p_request_id:string};Returns:Json};
+      fm_equipment_vehicle_snapshot: {Args:{p_vehicle_id:string};Returns:Json};
+      fm_prepare_equipment_checklist: {Args:{p_reservation_id:string};Returns:Json};
+      leave_legacy_participation: {Args:{p_id:string};Returns:undefined};
+      fm_fleet_lifecycle: {Args:{p_kind:string;p_id:string;p_enabled:boolean;p_version:number;p_reason:string;p_request_id:string};Returns:Json};
+      fm_order_adjustment_workspace: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_order_adjustment_command: {Args:{p_command:string;p_payload:Json;p_request_id:string};Returns:Json};
+      fm_management_unit_dimension: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_export_my_data: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_incident_workspace: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_incident_command: {Args:{p_command:string;p_payload:Json;p_request_id:string};Returns:Json};
+      fm_fleet_archive_workspace: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_vehicle_dossier: {Args:{p_vehicle_id:string};Returns:Json};
+      fm_document_begin: {Args:{p_kind:string;p_target_id:string;p_category:string;p_filename:string;p_mime:string;p_size:number;p_sha256:string;p_request_id:string};Returns:Json};
+      fm_document_finalize: {Args:{p_id:string};Returns:Json};
+      fm_document_list: {Args:{p_kind:string;p_target_id:string};Returns:Json};
+      fm_document_get: {Args:{p_id:string};Returns:Json};
+      fm_document_invalidate: {Args:{p_id:string;p_version:number;p_reason:string;p_request_id:string};Returns:Json};
+      fm_budget_approval_queue: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_has_budget_approval_assignment: {Args:Record<PropertyKey,never>;Returns:boolean};
+      fm_budget_approve: {Args:{p_order_id:string;p_version:number;p_request_id:string};Returns:Json};
+      fm_maintenance_policy_save: {Args:{p_unit_id:string;p_mode:string;p_approver_ids:string[];p_superior_ids:string[];p_version:number;p_reason:string;p_request_id:string};Returns:Json};
+      fm_maintenance_policy_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_my_management_scope: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_manager_scope_admin_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_manager_scope_command: {Args:{p_user_id:string;p_mode:string;p_unit_ids:string[];p_version:number;p_reason:string;p_request_id:string};Returns:Json};
+      fm_management_create_vehicle: {Args:{p_unit_id:string|null;p_values:Json};Returns:string};
+      fm_can_manage_vehicle: {Args:{p_vehicle_id:string};Returns:boolean};
+      fm_has_key_custody: {Args:Record<PropertyKey,never>;Returns:boolean};
+      fm_unit_admin_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_key_workspace: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_key_management_workspace: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_unit_admin_command: {Args:{p_command:string;p_payload:Json;p_request_id:string};Returns:Json};
+      fm_key_command: {Args:{p_reservation_id:string;p_kind:string;p_reason:string|null;p_request_id:string};Returns:Json};
+      fm_my_privacy_requests: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_ai_policy_read: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_admin_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_admin_command: {Args:{p_command:string;p_payload:Json;p_request_id:string};Returns:Json};
+      fm_privacy_submit: {Args:{p_kind:string;p_summary:string;p_request_id:string};Returns:string};
+
+      fm_v3_command: { Args: { p_command: string; p_payload: Json; p_request_id: string }; Returns: Json };
+      fm_v3_snapshot: { Args: Record<PropertyKey, never>; Returns: Json };
+      fm_checklist_state: { Args: { p_reservation_id: string }; Returns: Json };
+      fm_gate_checklist_states: { Args: { p_reservation_ids: string[] }; Returns: Json };
+      fm_my_checklist_states: { Args: { p_reservation_ids: string[] }; Returns: Json };
+      fm_claim_return_notice: { Args: { p_reservation_id: string }; Returns: boolean };
+      fm_account_enabled: { Args: Record<PropertyKey, never>; Returns: boolean };
+      fm_member_access_snapshot: { Args: Record<PropertyKey, never>; Returns: Json };
+      fm_member_access_command: { Args: { p_user_id: string; p_enabled: boolean; p_version: number; p_reason: string; p_request_id: string }; Returns: Json };
+
       // Phase C7 (0063): privacy definer functions.
       host_ride_request_places: {
         Args: { p_trip_request_id: string }
@@ -1752,14 +1865,14 @@ export type Database = {
       }
       record_pickup: {
         Args: {
-          p_battery_level_percent: number
-          p_damage_notes: string
-          p_fuel_level_percent: number
+          p_battery_level_percent: number | null
+          p_damage_notes: string | null
+          p_fuel_level_percent: number | null
           p_has_damage: boolean
-          p_is_dirty_exterior: boolean
-          p_is_dirty_interior: boolean
-          p_missing_safety_equipment: string[]
-          p_odometer_km: number
+          p_is_dirty_exterior: boolean | null
+          p_is_dirty_interior: boolean | null
+          p_missing_safety_equipment: string[] | null
+          p_odometer_km: number | null
           p_reservation_id: string
           p_role: Database["public"]["Enums"]["inspection_role"]
         }
@@ -1779,15 +1892,15 @@ export type Database = {
       }
       record_return: {
         Args: {
-          p_battery_level_percent: number
-          p_current_location_id?: string
-          p_damage_notes: string
-          p_fuel_level_percent: number
+          p_battery_level_percent: number | null
+          p_current_location_id?: string | null
+          p_damage_notes: string | null
+          p_fuel_level_percent: number | null
           p_has_new_damage: boolean
-          p_is_dirty_exterior: boolean
-          p_is_dirty_interior: boolean
-          p_missing_safety_equipment: string[]
-          p_odometer_km: number
+          p_is_dirty_exterior: boolean | null
+          p_is_dirty_interior: boolean | null
+          p_missing_safety_equipment: string[] | null
+          p_odometer_km: number | null
           p_reservation_id: string
           p_role: Database["public"]["Enums"]["inspection_role"]
           p_vehicle_event: string

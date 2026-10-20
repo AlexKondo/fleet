@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isMissingEnvVarError } from "@/lib/supabase/env";
 import { getDictionary } from "@/lib/i18n/getLocale";
+import { accountEnabled } from "@/lib/auth/accountAccess";
 
 export interface SignInState {
   error: string | null;
@@ -26,6 +27,10 @@ export async function signIn(_prevState: SignInState, formData: FormData): Promi
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       return { error: dict.errors.auth.invalidCredentials };
+    }
+    if (!(await accountEnabled(supabase))) {
+      await supabase.auth.signOut();
+      return { error: dict.team.row.accessUnavailable };
     }
   } catch (err) {
     console.error("signIn: unexpected error", err);

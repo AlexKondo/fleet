@@ -1,0 +1,19 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ✓ lib/operations/forms.test.ts (6 tests) 9ms
+ ✓ lib/carpool/management.test.ts (6 tests) 43ms
+ ✓ lib/carpool/managementActions.test.ts (4 tests) 8ms
+ ✓ lib/operations/vehicleSelection.test.ts (3 tests) 13ms
+ ✓ lib/carpool/managementRender.test.ts (4 tests) 86ms
+ ✓ app/operations/workspaces.test.ts (9 tests) 168ms
+ ✓ lib/operations/keyCustodyRender.test.ts (14 tests) 218ms
+ ✓ lib/operations/financialAdjustments.test.ts (3 tests) 2406ms
+ ✓ lib/operations/incidentCases.test.ts (7 tests) 2623ms
+
+ Test Files  9 passed (9)
+      Tests  56 passed (56)
+   Start at  09:07:15
+   Duration  3.13s (transform 2.68s, setup 0ms, collect 5.16s, tests 5.58s, environment 2ms, prepare 775ms)
+

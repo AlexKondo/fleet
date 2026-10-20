@@ -45,14 +45,14 @@ export default async function VehicleSchedulePage({ params }: { params: Promise<
       .eq("id", user.id)
       .single(),
     supabase
-      .from("vehicles")
+      .from("fm_managed_vehicles")
       .select(
         "id, plate, name, color, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, category:vehicle_categories(name, energy_type), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
       )
       .eq("id", id)
       .single(),
     supabase
-      .from("reservations")
+      .from("fm_managed_reservations")
       .select(
         `id, status, start_at, end_at, impacted_at,
        trip_request:trip_requests(origin, destination, requester:profiles(full_name))`,

@@ -1,3 +1,8 @@
+import Link from "next/link";
+import {loadUnitDimension} from "@/lib/operations/unitDimension";
+import {AssistantTrigger} from "../carpool/AssistantTrigger";
+import {pageAll} from "@/lib/carpool/kpi/loadKpis";
+import {loadManagementScope} from "@/lib/operations/managerScope";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -24,6 +29,7 @@ import { EmptyState } from "./EmptyState";
  */
 export default async function FleetPage() {
   const supabase = await createSupabaseServerClient();
+  const [managementScope,unitDimension]=await Promise.all([loadManagementScope(supabase),loadUnitDimension(supabase)]);
   const dict = await getDictionary();
   const locale = await getLocale();
   const statusMeta = getStatusMeta(dict);
@@ -50,14 +56,14 @@ export default async function FleetPage() {
       .select("full_name, role, organization_id, organization:organizations(name)")
       .eq("id", user.id)
       .single(),
-    supabase.from("vehicle_locations").select("id, name").order("name"),
-    supabase.from("vehicle_categories").select("id, name, passenger_capacity, supports_cargo, energy_type").order("name"),
-    supabase
-      .from("vehicles")
+    supabase.from("vehicle_locations").select("id, name,lifecycle_version").eq("enabled",true).order("name"),
+    supabase.from("vehicle_categories").select("id, name, passenger_capacity, supports_cargo, energy_type,lifecycle_version").eq("enabled",true).order("name"),
+    pageAll("fleet vehicles",(a,b)=>supabase
+      .from("fm_managed_vehicles")
       .select(
-        "id, plate, name, color, photo_storage_path, category_id, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name, energy_type), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
-      )
-      .order("plate"),
+        "id, plate, name, vin, next_service_date, color, photo_storage_path, lifecycle_version, category_id, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name, energy_type), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
+      ).is("archived_at",null)
+      .order("plate").order("id").range(a,b)).then(data=>({data,error:null})).catch(()=>({data:null,error:{message:"fleet_unavailable"}})),
   ]);
 
   // Checklist items (0041_safety_equipment_items.sql) shown right here — a fleet manager
@@ -66,7 +72,7 @@ export default async function FleetPage() {
   const { data: equipmentItems } = profile?.organization_id
     ? await supabase
         .from("safety_equipment_items")
-        .select("id, name")
+        .select("id, name").eq("enabled",true)
         .eq("organization_id", profile.organization_id)
         .order("created_at")
     : { data: [] as { id: string; name: string }[] };
@@ -118,16 +124,18 @@ export default async function FleetPage() {
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title={dict.fleet.title}
+      title="Gestão Inteligente de Veículos"
       subtitle={o.subtitle}
+      nonDrivingWorkspace
       legacy
+      headerActions={<AssistantTrigger voice className="fm-btn fm-btn-primary">Falar com o FleetMind</AssistantTrigger>}
       wide
     >
       <section className="fm-kpis" aria-label={o.kpisLabel} data-testid="fleet-kpis">
         <div className="fm-kpi fm-kpi-wide" data-testid="fleet-kpi-total">
           <span className="fm-kpi-icon"><FmCarIcon /></span>
           <div className="fm-kpi-body">
-            <p className="fm-kpi-value">{vehicles?.length ?? 0}</p>
+            <p className="fm-kpi-value">{vehiclesError ? "—" : vehicles?.length ?? 0}</p>
             <p className="fm-kpi-label">{o.kpiTotal}</p>
           </div>
           {(vehicles?.length ?? 0) > 0 ? (
@@ -172,6 +180,7 @@ export default async function FleetPage() {
         </div>
       ) : null}
 
+      <p><Link href="/fleet/archive">Arquivo da frota e cadastros desativados</Link></p>
       <section>
         <FleetTabs
           tabs={[
@@ -184,6 +193,7 @@ export default async function FleetPage() {
                   {vehicles && vehicles.length > 0 ? (
                     <VehicleFilterGrid
                       dict={dict}
+                      dimensionsAvailable={unitDimension!==null}
                       statusOptions={statusOptions}
                       vehicles={vehicles.map((v) => ({
                         id: v.id,
@@ -191,12 +201,20 @@ export default async function FleetPage() {
                         name: v.name,
                         status: v.status,
                         categoryName: v.category?.name ?? "—",
+                        energyType:v.category?.energy_type,
+                        unitId:unitDimension?.bindings.find(b=>b.vehicle_id===v.id)?.unit_id,
+                        unitName:unitDimension?.units.find(u=>u.id===unitDimension.bindings.find(b=>b.vehicle_id===v.id)?.unit_id)?.name,
+                        photoUrl:v.photo_storage_path?(photoUrlByPath.get(v.photo_storage_path)??null):null,
+                        locationName:v.current_location?.name??"—",
+                        odometerKm:v.odometer_km,nextServiceKm:v.next_service_odometer_km,vin:v.vin,nextServiceDate:v.next_service_date,
+                        fuelPercent:v.fuel_level_percent,batteryPercent:v.battery_level_percent,rangeKm:v.estimated_range_km,
                         node: (
                           <VehicleRow
                             key={v.id}
                             locale={locale}
                             vehicle={{
                               id: v.id,
+                              lifecycle_version:v.lifecycle_version,
                               plate: v.plate,
                               name: v.name,
                               color: v.color,
@@ -221,13 +239,14 @@ export default async function FleetPage() {
                         ),
                       }))}
                     />
-                  ) : (
+                  ) : vehiclesError ? <p role="status">Lista de veículos indisponível. Recarregue para consultar os dados.</p> : (
                     <EmptyState
                       lead={dict.fleet.emptyState.vehiclesLead}
                       hint={dict.fleet.emptyState.vehiclesHint}
                     />
                   )}
                   <AddVehicleSection
+                    managementScope={managementScope}
                     categories={categoriesForVehicleForms}
                     locations={locations ?? []}
                     equipmentItems={equipmentItems ?? []}

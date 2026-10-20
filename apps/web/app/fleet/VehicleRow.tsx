@@ -109,12 +109,14 @@ export function VehicleRow({
         </button>
         <form action={deleteAction}>
           <input type="hidden" name="id" value={vehicle.id} />
+          <input type="hidden" name="lifecycleVersion" value={vehicle.lifecycle_version??1}/>
+          <input name="archiveReason" aria-label="Motivo da desativação" placeholder="Motivo da desativação" required minLength={3} maxLength={1000}/>
           <ConfirmSubmitButton
-            confirmMessage={dict.fleet.vehicleRow.deleteConfirm.replace("{plate}", vehicle.plate)}
+            confirmMessage={"Arquivar ou desativar este registro preservando seus históricos?"}
             disabled={deletePending}
             className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
           >
-            {deletePending ? dict.common.deleting : dict.common.delete}
+            {deletePending ? "Registrando…" : "Arquivar"}
           </ConfirmSubmitButton>
         </form>
       </div>

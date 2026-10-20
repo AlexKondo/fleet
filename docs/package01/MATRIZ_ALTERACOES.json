@@ -1,0 +1,772 @@
+[
+  {
+    "path": "00_LEIA_PRIMEIRO_KONDO.md",
+    "change": "modify",
+    "before_sha256": "bc0fbf2770699a2fc64cff9ff53c41faf074b238819ba6f1dd34a8d399259913",
+    "after_sha256": "b58c1d5361621b7e008bca42213c7618d2035fc7600cf86e0887d7a9a3d1a1cb",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "00_LEIA_PRIMEIRO_PACOTE01.md",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "b58c1d5361621b7e008bca42213c7618d2035fc7600cf86e0887d7a9a3d1a1cb",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "FLEETMIND_RETOMADA.md",
+    "change": "modify",
+    "before_sha256": "a0262358b7b52653bc70bfade3a9865042939d1e3a427a53bfe1ffe54fad1f1d",
+    "after_sha256": "a69784184bebda6dd1b87125916c51c1cea9957348e16336bfcd94267f5af54d",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "V3_MIGRATION_MAP.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "710df100150b8e6bf3f52dfe45beadf0b7bbe3fdd75ffa78dcef9cdad745effd",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/app/fleet/actions.ts",
+    "change": "modify",
+    "before_sha256": "47b9859822d4501abe4a42aa260e086daa9dc2ba52a4ad7f47d97048ae494e4a",
+    "after_sha256": "de1b1d237dbd9f80c1ab6c37356d28f6d7cbc59b3a153cc2f847df361f5c1485",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/app/shellData.ts",
+    "change": "modify",
+    "before_sha256": "f8084f73d40f84ea5f1959bea0e5fb395eee2bd8cae3fa3d61d7a96596550f86",
+    "after_sha256": "af17922c6cc4eb0350842a83d49260a288c8fc6a0260e028e449b0091f3bdea2",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/app/trips/new/actions.test.ts",
+    "change": "modify",
+    "before_sha256": "d63f44e4c83e1457977b949469234d21cd97dbd107a5d78ee4a26a2873561731",
+    "after_sha256": "b6841767340bba94cd2cffc63c6c78e5c3db3e8e1b78af72b6d9cbfb78d2fbfc",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/app/trips/new/actions.ts",
+    "change": "modify",
+    "before_sha256": "908c6b66b37dfaa769735e2f69fdeba1ab53dce1ad93b68f8459379746f81a08",
+    "after_sha256": "21b4f701c5f7dad2a9600e6801bab88f2d96287bcc917041b033930aaa9cbb58",
+    "integration": "manual_preserve_kondo"
+  },
+  {
+    "path": "apps/web/lib/auth/drivingValidity.test.ts",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "c9c94aa168467d09be20b3377677bc6302e0e8b1f80378043910416fd86b3af4",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/auth/ownLicense.ts",
+    "change": "modify",
+    "before_sha256": "3c3df01882c479bb7f306023179ee0b0eaba429b72e2afd9edef2921f50d5691",
+    "after_sha256": "0952cc73fc6104b88198ebc92bbd15ac7e6354eca429e400016d14a7f56420e1",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/domain/immutablePhoto.test.ts",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "2eb0210fcf8c7de6a57f823f934c248e3c76848bfcba90a0e7ed87c4b6d121c2",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/domain/immutablePhoto.ts",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "42548ccf10412134933599d9f7a2fcf15beec8c9e1822b9c2c2b8b4a9d6a9219",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/domain/uploadInspectionPhotos.ts",
+    "change": "modify",
+    "before_sha256": "07099a9f2fe1348d944414c2465bce822eefc93c858189665fdb9aee1d51e2ab",
+    "after_sha256": "57b357dbd2a5a5c4c3ede6339405c645844665e9f277b27279186312e4fdfc1e",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/equipment/equipmentSql.test.ts",
+    "change": "modify",
+    "before_sha256": "ecfb745b1723de74ec5026f53f02ad8e6411bd8c2941d5cec7e8104170f7bdd9",
+    "after_sha256": "acd0531b6d907119e67ab4ec2ef5ebf0d9c8649116a1213ba7dd01fecec529ab",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/operations/database.test.ts",
+    "change": "modify",
+    "before_sha256": "16a0d6facaeb51e4ba2a13bf5d0f2f34e668e48293fcc5ea03df033244d0c3f2",
+    "after_sha256": "27b3e7e8fbe622db817c79e58b37f667972bd575df356f12acf89c61a4ca5577",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/operations/inspectionFlow.test.ts",
+    "change": "modify",
+    "before_sha256": "c8ca3987980ebcf22541df50e4dbc33b2764835e5a26ea43ad10e09e8be06fc2",
+    "after_sha256": "1d04cde79bc71c2a1530086c6296358edfd16a7343568d12135c75757dde540d",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/operations/keyCustody.test.ts",
+    "change": "modify",
+    "before_sha256": "ef46c1a031da82f453a434035fa387a81194017486067c10171e183de4f8e839",
+    "after_sha256": "ae1bd5ed4fff3614f48aea9fcc9530596c894b248dcb9e5d58b34281ab853cad",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/operations/managerScope.test.ts",
+    "change": "modify",
+    "before_sha256": "ec2abad5f55a2c4f499ef3aadaf94cd403abeea990ed791022ddc1f78935260d",
+    "after_sha256": "4886356e58ff9a6cbcfcb1d01826ec9b13ff32e8efb27f150e740e839a624054",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/operations/migrationChain.test.ts",
+    "change": "modify",
+    "before_sha256": "b3b832f4cb00c756bcd435ae5ac0acdda12af32823f0d722077f4575e6bd5843",
+    "after_sha256": "3d5943be2b84289c92fc921b8e6791ce791ed047a5b2939dd78ce862f34c040c",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/operations/package01.test.ts",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "7b8bfa6b527e12a8657a40785589777edabd2ccc1658af83efce53fd8e2cac98",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/supabase/managementLicenseBoundary.test.ts",
+    "change": "modify",
+    "before_sha256": "f28e6ecc92b63c2682a5008d76fc0349292467c5b8dcf094d7a1ab47bd279641",
+    "after_sha256": "b422d5debeafd1fdc08ccd822fd6f33334459c5a6d7577c48a31c27d524f2f88",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "apps/web/lib/supabase/middleware.ts",
+    "change": "modify",
+    "before_sha256": "4ed92a9bb5b3af77bdd018e3bdb3cae96458c826994b3dfb34c65575ae47c0ad",
+    "after_sha256": "7d5f1e1c4873e8df9349ac35202a022999f0093828c11cdb07001ee379c1f563",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/Additional Pack for Voice & Conversational UX Incremental-20260930T010130Z-1-001/Additional Pack for Voice & Conversational UX Incremental/FLEET_VOICE_CONVERSATIONAL_UX_INCREMENTAL_IMPLEMENTATION_PACK_v1.0.md",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "69578e9c39a8a96b6596a6deb8147a358d10729d5022b2403d489acbe6c5a70c",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/DOCUMENT_PATH_MAP.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "4e841f10424a1469bc137399ebd2e59176277d6f6923e4be60e98db07b1620f5",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/EXTERNAL_FUNCTIONS_REQUIRED.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "bfb55b762d9cd21c51fb4dbeac3c2924d103ee50d60fbcb5a677708b2520390b",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/FALHAS.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "903dafe001ce39783a65fea1524af32c0ee3569b694a631fc1197608fa87a9f7",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/INTEGRACAO.md",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "e59ab514d5a8e1050541ce399189b12710e6e9a25677e6da4a78bf45fd85b6a7",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/PROVENIENCIA.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "da256a36d2035caaca3ef03cc2b492f07e11f4f918d1bdb8cd4dddf94679016d",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/RELATORIO.md",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "0e67600d0553d793e15dcfecddb39ca9bd804b1d9907fca5355c6321c0b17a0f",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/RETOMADA.md",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "f63864b434a50f35a569e61b10207b0daa146c1ed21a957ec8a66c507a8d0453",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/VERIFICACOES.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "5c497f640de24a74fa43c6dc34621d9905b22a5a6135f12207cb9faa5458ea5a",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/build-final.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "fe496a0ac952535b28a25aa53b8e46843f5d560139cc01cbfcde8f91442845a5",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/build-status.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "90721ee8cfbbada11325a02087f2bf75a3da384f5d70f17c34bc7261c5f8d903",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/build.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "6fd72da781d1c1e38b6f7d660ff8424fe2afef2ba1b66de1933d0546bd2b60aa",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/comparison-tests.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "888a0c0ed615e57d32cf72be501b0c355f33b8613c81dfdaa99db33d7959487e",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/compatibility-fix.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "a7a6e475d176a2b18dccf2229b9a210b56e735445df806317a1e66cbc1ccddff",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/initial-tests.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "2eb8ae86db732f26592da8fb70ee3b2e71ae00f2c28c5422247427d7b8e58c39",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/integration-review-summary.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "14f0b116837a00020a0755a30de6212ffdd95e2f91ad75ca4c41921736f088e0",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/legacy-fixture-final.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "d186f5472f1fe3d6ef14fb61d6fd7556dcd9fd1ca72256d1c38ace5f83324128",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/lint-final.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "126461655dea274e8fd1cbc5d718d82dc6d4bec6d9cc7a0696270bf8b8130728",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/lint.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "abe2f260731cc7c52745aef1063f20b5f3cbfe5d9028e3050fa0deb522004734",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/migration-preflight-final.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "7f604ed57eee215897dfc7758a1ff299db55ff4d1d038ba8660f9031421e0c91",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/migration-preflight-tests.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "90912b22c9081e33417e566575c475d5bd0a2df4cd1d5f533b0a9470eee41891",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/new-tests-first.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "8e4f02f7b2195adee37a3aacfa37e60de512c1a29ff8557d5cedc08aa66ebb9b",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/regression-final.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "6df17b202fbfc6ed1ea89952fcf0703397505439f3133daad75b0484cbcfd261",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/regression-first.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "7fda8d58b6ea04a1a8462585000cba2d67ffc34ac632e270b7451a8c71f38bb5",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/regression-second.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "498c31287f4e7625c4f13328ea46b55c0fe9f54b3474152047f076fb9f3425c6",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/return-access-final.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "e244630629646044ecb9b032e4e9f593f98c069bed31d311cefad61bc49f2247",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/typecheck-final.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/typecheck.log",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/package01/evidence/vitest-final.json",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "b53267c944414b8071e10d93f2360f9fd49c42a7e0855ae7a71f55b0552922d8",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "docs/references/VOICE_INCREMENTAL_v1.md",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "69578e9c39a8a96b6596a6deb8147a358d10729d5022b2403d489acbe6c5a70c",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "packages/supabase-client/src/database.types.ts",
+    "change": "modify",
+    "before_sha256": "e5585948cddbe7af506a61cbe990f4c00596ca0c9fbdb63c9494e2c05a2f34c2",
+    "after_sha256": "6e8a62372ba555e153b0a171c9aa7b8d93bccbd3868258fca33fda6653eab259",
+    "integration": "manual_preserve_kondo"
+  },
+  {
+    "path": "scripts/migration-preflight.test.mjs",
+    "change": "modify",
+    "before_sha256": "2797c8dd27421fd65243f808a1d95b00244693ad8554d62dcaf77c054695cfe9",
+    "after_sha256": "f2f48ff8fed1da0a520e75988e339fae2072f2d3ff49920fc766e1a5455c1808",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "scripts/package01_preflight.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "ebad417fc91ac6f46ec798495f6b846f797ea059302aee1633f1827c1e0639f3",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "scripts/package01_review.py",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "c8422ca3f43af5f535b0b38a18cc398f40564e5d795ca9248886a0ae2759b2fd",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations-pending/0090_SUPERSEDED_DO_NOT_APPLY.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "f9031469fbfa700de91b5cede062e9355d25ca8b522af6e132a1d49d25a66c81",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations-pending/0190_P01D_PATCH_CANDIDATE_DO_NOT_EXECUTE.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "8284a83c39496ca0bcd4ed55dc89bb260a5622b6bd863bf4ef00cda94e67878e",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations-pending/0190_P01D_ROLLBACK_CANDIDATE_DO_NOT_EXECUTE.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "dbefc69194b7fcc680a2ef30b0e7b0037a46ce6ab812bfd1573c3667e6648b97",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0074_fleetmind_operational_workspaces.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "f0a497833953aaa37f2fe3f23b1cd282e4015ece2e9cb0f6d43a481243f4225a",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0075_admin_ai_and_privacy.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "a5fa1c92c5222f0d3c9665389f690efc470e942022c24b146b4315201e019789",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0076_preserve_member_accounts.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "79665ccf9c493e3b54628dae3315b2677efc5bd9cfb85c273a825915e09a4c08",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0077_independent_pickup_checks.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "4b466602b0f37ed4270b7108a48f4c4734c75bfeffe0bef7b1ce9ccac8c7fa2c",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0078_local_key_custody.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "7d7c71ca1997fe77c3321730b4ce1181f892c47aff2f7b90aca18dc90b390db9",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0079_office_checklist_workflow.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "0bcbeb26b95d7df6cd2be9e1446d917aba0de4658f304f2959fed8e5edbb97be",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0080_manager_unit_scopes.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "ef2708593219abacc2118ebb075a07354ed67ece7bf908ab0561e5aec2c97c80",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0081_scoped_management_functions.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "c023fe32ab3a3cd59003e182f4b910ccd301df1a190b7ee8e32d210c89d92cdf",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0082_maintenance_approval_policy.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "108e0589a71c1e1900c1030611c1b182bfd05b0a774e035c3ee7c8343a6d43f6",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0083_operational_documents_and_exports.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "b5d72e7ea582ee17d03fb3c1145c5c52247c5b2c63ddcd5a3f6dc6f6bcdfad8e",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0084_vehicle_equipment_contracts.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "22133fa328bda0297ea1dfa12ba5d148dd45b9359f3f5fa59404f9bff3502f97",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0085_preserve_fleet_records.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "21b5d27a9cc0c8e4e187ace5e34bfc1500925039db35ed13b27c3e50bd4cbe93",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0086_incident_cases.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "c7eae43621f5764a8272f7d96b31228f077da03269217d82a65b66343a7b8946",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0087_closed_order_adjustments.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "24fe9ba0641e919f068d46e10aaa90071a4026068c05f3a4aa6eeef6cd83ccd3",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0088_scoped_dimensions_and_personal_export.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "be80efdcf98a214426b8da6331f6e85f58445af0e8810a00fbdbb82094d92adb",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0090_security_definer_resolution.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "f9031469fbfa700de91b5cede062e9355d25ca8b522af6e132a1d49d25a66c81",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0174_fleetmind_operational_workspaces.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "f291ada92b0bb8438605508e952a9d70b10220d70990ed135e42eccb4f576a5e",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0175_admin_ai_and_privacy.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "2cf28e8f5f7bf6b35ffb5855cfe9f0334b70c2072c9551fea392adb9e1e19115",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0176_preserve_member_accounts.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "518e7953545fef731c19e80962552903ce7f3245e1016d3eb35c2ffec7058bdb",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0177_independent_pickup_checks.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "9e1561345550ce1aedbd27beeadeefc7dd98f6d2e4331d6b26550ff42e9b052a",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0178_local_key_custody.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "1c177380f72d961e541432ead140227a7fbcf16222fefa4253fcc023d23cba37",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0179_office_checklist_workflow.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "b66841a98e970cd70b71c85bc944755ef1e84183899acaef084e541b179b652e",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0180_manager_unit_scopes.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "dfb3bbc1646a28cd7fb1088da3b3f56fa5c6a069dc5694d279c06b58c9976aaa",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0181_scoped_management_functions.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "d50c75294534d6b0417cf60dd379d36a403249ee280d4f2a71360fc20014436a",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0182_maintenance_approval_policy.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "741d930154a0cfa50bf663791de6b087ca4044dfb6d03277b7eef58d45de462f",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0183_operational_documents_and_exports.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "6147a8a2e41b86a71f07aa8b138ebeaff5fbdfb1f16651a6ff2f2b9d5631f4cd",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0184_vehicle_equipment_contracts.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "9824e82bf36368ce3e13a16192b742d09d2c90f27815cfee2e2062a2e3e8ecd8",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0185_preserve_fleet_records.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "1bead18b623326e48d93643e1722c1c55a1a8e587fd60dbee90611719bd4e37e",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0186_incident_cases.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "cc9cffdf23b921c4aeba9a0c1056b4fbe600318bbc558200f500ffb19434902f",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0187_closed_order_adjustments.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "ccc0993a19552d759870a9afdffdec78ad9cd8f956cdd87482f81c96395c99a1",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0188_scoped_dimensions_and_personal_export.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "59a1046ca3ee9b4491c0d4055e92e344fdd5b04a6f7eb13ce984978af055ad6b",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0191_package01_evidence_and_availability.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "57a16c1f01238dcf23fb9f3079216c354931573f95f19886b57e7615016d68b4",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0192_explicit_legacy_function_hardening.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "7892aef9de4f0afb09a3a0153140b5fd434fd8655e5262c6a942b3af125c9187",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0193_scoped_staff_notifications.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "aa43f6c8834862fd0df1c5f2ffe1b2847bf74090053b1c3eb4ac61769c0ca84c",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/0194_consistent_operational_lock_order.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "d699b7872ad16ba9d3d4f424b3623b45b490ba05e0433b42395f2950f7599d4d",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0074_fleetmind_operational_workspaces.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "b6034ca0518c6f03527df54d8331b9f98c0ad84518dc4462bc7762e9dd9f761e",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0075_admin_ai_and_privacy.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "11fcbd205a0d4bb41d4c1e18846972a53d61ae0a19ca674ada453bd06cd90ca8",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0076_preserve_member_accounts.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "876b95710aadc142c4eb9c83e885d251d4cf9131e40c5cce1d2a357521e3dacb",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0077_independent_pickup_checks.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "2353b8f5b081fccfa80cf97d26031c43664aa38086fc2c835b292012e549bf63",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0078_local_key_custody.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "70108930d49663b517c9421b464ef09f55935190a07eb8b4cb98bed845fcd23c",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0079_office_checklist_workflow.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "3928aec4fdb15c0572c30972dde2b6dfe5464782108510d84431984c1061cfca",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0080_manager_unit_scopes.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "3928aec4fdb15c0572c30972dde2b6dfe5464782108510d84431984c1061cfca",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0081_scoped_management_functions.sql",
+    "change": "remove_unapplied_v3_candidate_or_relocate",
+    "before_sha256": "3928aec4fdb15c0572c30972dde2b6dfe5464782108510d84431984c1061cfca",
+    "after_sha256": null,
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0174_fleetmind_operational_workspaces.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "b6034ca0518c6f03527df54d8331b9f98c0ad84518dc4462bc7762e9dd9f761e",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0175_admin_ai_and_privacy.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "11fcbd205a0d4bb41d4c1e18846972a53d61ae0a19ca674ada453bd06cd90ca8",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0176_preserve_member_accounts.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "876b95710aadc142c4eb9c83e885d251d4cf9131e40c5cce1d2a357521e3dacb",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0177_independent_pickup_checks.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "2353b8f5b081fccfa80cf97d26031c43664aa38086fc2c835b292012e549bf63",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0178_local_key_custody.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "70108930d49663b517c9421b464ef09f55935190a07eb8b4cb98bed845fcd23c",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0179_office_checklist_workflow.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "3928aec4fdb15c0572c30972dde2b6dfe5464782108510d84431984c1061cfca",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0180_manager_unit_scopes.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "3928aec4fdb15c0572c30972dde2b6dfe5464782108510d84431984c1061cfca",
+    "integration": "review_candidate"
+  },
+  {
+    "path": "supabase/migrations/rollback/0181_scoped_management_functions.sql",
+    "change": "add",
+    "before_sha256": null,
+    "after_sha256": "3928aec4fdb15c0572c30972dde2b6dfe5464782108510d84431984c1061cfca",
+    "integration": "review_candidate"
+  }
+]

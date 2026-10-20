@@ -1,3 +1,5 @@
+import {organizationMetricsAllowed} from "@/lib/operations/organizationMetrics";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -41,6 +43,8 @@ export default async function SettingsPage() {
     redirect("/dashboard");
   }
 
+  if(!(await organizationMetricsAllowed(supabase)))return <FmShell active="settings" orgName={profile.organization?.name??"—"} userName={profile.full_name} role={profile.role} isFleetManager isAdministrator={isAdministrator} wide><p role="status">As configurações e métricas desta página abrangem toda a organização. Seu acesso de gestão é por unidade ou não pôde ser confirmado. Solicite as alterações globais ao administrador.</p><Link href="/fleet">Voltar à frota autorizada</Link></FmShell>;
+
   const [{ data: settings }, { data: equipmentItems }, chatUsageStats, { data: policyRows }] = await Promise.all([
     supabase
       .from("organization_settings")
@@ -51,7 +55,7 @@ export default async function SettingsPage() {
       .single(),
     supabase
       .from("safety_equipment_items")
-      .select("id, name")
+      .select("id, name").eq("enabled",true)
       .eq("organization_id", profile.organization_id)
       .order("created_at"),
     // RLS on chat_conversations/chat_messages only exposes a user's own rows — this org-wide

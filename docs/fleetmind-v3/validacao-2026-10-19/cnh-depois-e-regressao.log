@@ -1,0 +1,12 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ✓ lib/supabase/managementLicenseBoundary.test.ts (4 tests) 9ms
+ ✓ lib/supabase/middleware.test.ts (3 tests) 22ms
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  09:13:22
+   Duration  392ms (transform 105ms, setup 0ms, collect 208ms, tests 31ms, environment 0ms, prepare 119ms)
+

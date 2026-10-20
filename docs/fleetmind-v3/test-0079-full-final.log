@@ -1,0 +1,141 @@
+$ node --test scripts/migration-preflight.test.mjs && turbo run test
+✔ missing, numeric and duplicate history fail closed (1.621685ms)
+✔ actual historical wipe is blocked when pending (7.972165ms)
+✔ function bodies/comments/literals are not top-level deletes (0.432354ms)
+✔ procedural blocks, destructive DDL and history gaps need review (17.233631ms)
+✔ actual complete baseline leaves only 0074/0075, no destructive migrations (14.916169ms)
+✔ account access migration requires review of its procedural RLS block (0.671431ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 190.465042
+• turbo 2.10.12
+
+   • Packages in scope: @fleet/domain, @fleet/supabase-client, @fleet/web
+   • Running test in 3 packages
+   • Remote caching disabled
+
+ WARNING  failed to get git status for dirty hash: Git error: fatal: not a git repository (or any of the parent directories): .git
+
+@fleet/web:test: cache miss, executing c75fd2b1b47cabc9
+@fleet/domain:test: cache hit, replaying logs 88e3f360416f8eb4
+@fleet/domain:test: $ vitest run
+@fleet/domain:test: 
+@fleet/domain:test:  RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/packages/domain
+@fleet/domain:test: 
+@fleet/domain:test:  ✓ src/carpool/findCarpoolMatches.test.ts (12 tests) 30ms
+@fleet/domain:test:  ✓ src/maintenance/predictMaintenance.test.ts (10 tests) 29ms
+@fleet/domain:test:  ✓ src/readiness/assessTripReadiness.test.ts (8 tests) 37ms
+@fleet/domain:test:  ✓ src/mobility-engine/recommend.test.ts (9 tests) 38ms
+@fleet/domain:test:  ✓ src/mobility-engine/planMobility.test.ts (6 tests) 35ms
+@fleet/domain:test:  ✓ src/carpool/prefilterCandidates.test.ts (28 tests) 56ms
+@fleet/domain:test:  ✓ src/carpool/evaluateRouteMatch.test.ts (34 tests) 75ms
+@fleet/domain:test:  ✓ src/carpool/locationResolution.test.ts (14 tests) 46ms
+@fleet/domain:test:  ✓ src/carpool/carpoolOffer.test.ts (15 tests) 31ms
+@fleet/domain:test:  ✓ src/carpool/events.test.ts (7 tests) 22ms
+@fleet/domain:test:  ✓ src/carpool/carpoolPolicy.test.ts (8 tests) 21ms
+@fleet/domain:test:  ✓ src/workflow/deriveReturnOutcome.test.ts (8 tests) 19ms
+@fleet/domain:test:  ✓ src/chat/intentCatalog.test.ts (6 tests) 25ms
+@fleet/domain:test:  ✓ src/carpool/revalidation.test.ts (12 tests) 22ms
+@fleet/domain:test:  ✓ src/carpool/rideRequest.test.ts (16 tests) 26ms
+@fleet/domain:test:  ✓ src/traffic-restriction/checkTrafficRestriction.test.ts (5 tests) 12ms
+@fleet/domain:test:  ✓ src/carpool/inputValidation.test.ts (20 tests) 20ms
+@fleet/domain:test:  ✓ src/reservation/availability.test.ts (7 tests) 11ms
+@fleet/domain:test:  ✓ src/readiness/assessVehicleReadiness.test.ts (9 tests) 26ms
+@fleet/domain:test:  ✓ src/state-machine/vehicleTransitions.test.ts (18 tests) 26ms
+@fleet/domain:test: 
+@fleet/domain:test:  Test Files  20 passed (20)
+@fleet/domain:test:       Tests  252 passed (252)
+@fleet/domain:test:    Start at  09:01:03
+@fleet/domain:test:    Duration  2.54s (transform 2.01s, setup 0ms, collect 3.47s, tests 607ms, environment 8ms, prepare 4.09s)
+@fleet/domain:test: 
+@fleet/web:test: $ vitest run
+@fleet/web:test: [33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+@fleet/web:test: 
+@fleet/web:test:  RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+@fleet/web:test: 
+@fleet/web:test:  ✓ app/carpool/actions.test.ts (24 tests) 49ms
+@fleet/web:test:  ✓ app/trips/new/actions.test.ts (21 tests) 49ms
+@fleet/web:test:  ✓ app/chat/carpoolChatSecurity.test.ts (20 tests) 94ms
+@fleet/web:test:  ✓ app/chat/carpoolChat.test.ts (55 tests) 155ms
+@fleet/web:test:  ✓ lib/carpool/resolveLocationText.test.ts (27 tests) 77ms
+@fleet/web:test:  ✓ app/chat/carpoolDispatch.test.ts (14 tests) 147ms
+@fleet/web:test:  ✓ app/carpool/routeMapActions.test.ts (20 tests) 100ms
+@fleet/web:test:  ✓ lib/carpool/runCarpoolSearch.test.ts (12 tests) 262ms
+@fleet/web:test:  ✓ lib/carpool/sqlMirror.test.ts (15 tests) 13ms
+@fleet/web:test:  ✓ lib/geospatial/costGuard.test.ts (8 tests) 43ms
+@fleet/web:test:  ✓ lib/carpool/carpoolFirst.test.ts (14 tests) 24ms
+@fleet/web:test: stderr | app/carpool/requestActions.test.ts > requestCarpoolRide > maps an RPC exception to a stable code (raw message not leaked)
+@fleet/web:test: create_carpool_ride_request_as_rider failed: CARPOOL_NO_SEATS_AVAILABLE
+@fleet/web:test: 
+@fleet/web:test:  ✓ app/carpool/requestActions.test.ts (9 tests) 23ms
+@fleet/web:test:  ✓ lib/geospatial/placeAutocomplete.test.ts (9 tests) 65ms
+@fleet/web:test:  ✓ lib/operations/database.test.ts (16 tests) 3760ms
+@fleet/web:test:  ✓ app/carpool/placeAutocompleteActions.test.ts (11 tests) 52ms
+@fleet/web:test:  ✓ lib/geospatial/keyLeak.test.ts (24 tests) 35ms
+@fleet/web:test:  ✓ lib/geospatial/googlePlacesProvider.test.ts (10 tests) 14ms
+@fleet/web:test:  ✓ lib/carpool/kpi/aggregate.test.ts (11 tests) 8ms
+@fleet/web:test:  ✓ lib/dashboard/loadCommandCenter.test.ts (4 tests) 49ms
+@fleet/web:test:  ✓ app/chat/persistedPending.test.ts (9 tests) 13ms
+@fleet/web:test:  ✓ lib/operations/inspectionFlow.test.ts (9 tests) 4864ms
+@fleet/web:test:  ✓ app/dashboard/command-center/render.test.ts (6 tests) 154ms
+@fleet/web:test:  ✓ lib/geospatial/routeMap.test.ts (11 tests) 266ms
+@fleet/web:test:  ✓ lib/carpool/policyInput.test.ts (24 tests) 18ms
+@fleet/web:test:  ✓ app/operations/workspaces.test.ts (9 tests) 306ms
+@fleet/web:test:  ✓ lib/geospatial/googleRoutingProvider.test.ts (8 tests) 12ms
+@fleet/web:test: stderr | app/settings/carpoolPolicyActions.test.ts > publishCarpoolPolicy > a concurrent publish (unique violation) is reported as a conflict, not swallowed
+@fleet/web:test: publishCarpoolPolicy failed: dup
+@fleet/web:test: 
+@fleet/web:test: stderr | app/settings/carpoolPolicyActions.test.ts > publishCarpoolPolicy > an RLS/DB failure is a generic save error
+@fleet/web:test: publishCarpoolPolicy failed: rls
+@fleet/web:test: 
+@fleet/web:test:  ✓ app/settings/carpoolPolicyActions.test.ts (8 tests) 19ms
+@fleet/web:test:  ✓ lib/operations/keyCustody.test.ts (14 tests) 5439ms
+@fleet/web:test:  ✓ app/carpool/formActions.test.ts (8 tests) 26ms
+@fleet/web:test:  ✓ app/api/geo/geoRoutes.test.ts (32 tests) 64ms
+@fleet/web:test:  ✓ app/chat/loadLatestChatState.test.ts (6 tests) 11ms
+@fleet/web:test:  ✓ lib/trips/reservarForm.test.ts (7 tests) 13ms
+@fleet/web:test:  ✓ lib/carpool/notificationBodies.test.ts (14 tests) 22ms
+@fleet/web:test:  ✓ lib/geospatial/polyline.test.ts (8 tests) 138ms
+@fleet/web:test:  ✓ lib/operations/keyCustodyRender.test.ts (5 tests) 133ms
+@fleet/web:test:  ✓ app/api/cron/daily-dispatcher.test.ts (3 tests) 24ms
+@fleet/web:test:  ✓ lib/carpool/buscarCarona.test.ts (8 tests) 12ms
+@fleet/web:test:  ✓ app/chat/dispatch.test.ts (2 tests) 10ms
+@fleet/web:test:  ✓ lib/operations/forms.test.ts (6 tests) 15ms
+@fleet/web:test:  ✓ app/settings/users/driverUpdate.test.ts (6 tests) 6ms
+@fleet/web:test:  ✓ lib/operations/keyCustodyModels.test.ts (4 tests) 18ms
+@fleet/web:test:  ✓ lib/carpool/kpi/loadKpis.test.ts (4 tests) 15ms
+@fleet/web:test:  ✓ lib/supabase/middleware.test.ts (3 tests) 55ms
+@fleet/web:test:  ✓ app/gate/visualChecks.test.ts (3 tests) 26ms
+@fleet/web:test:  ✓ lib/domain/signUpOrganization.test.ts (3 tests) 14ms
+@fleet/web:test:  ✓ app/settings/users/access.test.ts (4 tests) 10ms
+@fleet/web:test:  ✓ app/api/cron/cron-auth.test.ts (12 tests) 36ms
+@fleet/web:test:  ✓ app/ganttZoomActions.test.ts (4 tests) 24ms
+@fleet/web:test:  ✓ lib/operations/checklistState.test.ts (3 tests) 7ms
+@fleet/web:test:  ✓ lib/trips/brasiliaLocalDateTime.test.ts (3 tests) 5ms
+@fleet/web:test:  ✓ lib/carpool/rpcErrors.test.ts (3 tests) 10ms
+@fleet/web:test:  ✓ app/reservations/[id]/loadHostCarpool.test.ts (8 tests) 19ms
+@fleet/web:test:  ✓ lib/geospatial/routeMapCache.test.ts (3 tests) 6ms
+@fleet/web:test:  ✓ lib/dashboard/period.test.ts (4 tests) 31ms
+@fleet/web:test:  ✓ lib/operations/aiPolicy.test.ts (2 tests) 7ms
+@fleet/web:test:  ✓ app/dashboard/energyGaugeModel.test.ts (3 tests) 7ms
+@fleet/web:test:  ✓ lib/auth/accountAccess.test.ts (2 tests) 6ms
+@fleet/web:test:  ✓ lib/trips/textLimits.test.ts (1 test) 9ms
+@fleet/web:test:  ✓ lib/auth/ownLicense.test.ts (2 tests) 9ms
+@fleet/web:test:  ✓ lib/operations/migrationChain.test.ts (1 test) 2216ms
+@fleet/web:test:    ✓ applies the actual migration chain to a disposable platform scaffold 2214ms
+@fleet/web:test: 
+@fleet/web:test:  Test Files  60 passed (60)
+@fleet/web:test:       Tests  599 passed (599)
+@fleet/web:test:    Start at  16:41:40
+@fleet/web:test:    Duration  10.63s (transform 5.29s, setup 0ms, collect 13.98s, tests 19.11s, environment 20ms, prepare 7.25s)
+@fleet/web:test: 
+
+ Tasks:    2 successful, 2 total
+Cached:    1 cached, 2 total
+  Time:    11.695s 
+

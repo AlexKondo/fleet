@@ -9,9 +9,11 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "test": "turbo run test",
+    "test": "node --test scripts/migration-preflight.test.mjs && turbo run test",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "migration:preflight": "node scripts/migration-preflight.mjs",
+    "test:deployment": "node --test scripts/migration-preflight.test.mjs"
   },
   "devDependencies": {
     "supabase": "^2.116.0",

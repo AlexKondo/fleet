@@ -1,5 +1,7 @@
 "use server";
 
+import { loadChecklistState } from "@/lib/operations/checklistState";
+
 import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -57,6 +59,8 @@ export async function submitPickup(
   // Supabase's generated RPC arg types don't mark these as nullable even though the
   // Postgres function parameters happily accept NULL (no NOT NULL constraint on args) —
   // the casts below are for the generated types only, not a runtime concern.
+  const checklistState=await loadChecklistState(supabase,input.reservationId);
+  if(!checklistState?.inspection_role) return {success:false,error:"checklist_not_authorized"};
   const { data: inspectionId, error } = await supabase.rpc("record_pickup", {
     p_reservation_id: input.reservationId,
     p_odometer_km: input.odometerKm,
@@ -67,7 +71,7 @@ export async function submitPickup(
     p_missing_safety_equipment: input.missingSafetyEquipment,
     p_is_dirty_exterior: input.isDirtyExterior,
     p_is_dirty_interior: input.isDirtyInterior,
-    p_role: profile?.role === "security" ? "security" : "traveler",
+    p_role: checklistState.inspection_role,
   });
 
   if (error) {

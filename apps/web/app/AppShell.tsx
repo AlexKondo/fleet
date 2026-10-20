@@ -45,15 +45,18 @@ export async function AppShell({
   headerActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState } =
+  const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState, canKeyCustody } =
     await loadShellContext(role);
 
-  const items = buildBaseNavItems(dict, { role, isFleetManager, isAdministrator });
+  const items = buildBaseNavItems(dict, { role, isFleetManager, isAdministrator, canKeyCustody });
 
   const visibleItems = items.filter((i) => i.visible);
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
+      <a href="#fleetmind-main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-white focus:px-4 focus:py-3 focus:text-black focus:shadow-lg">
+        Ir para o conteúdo principal
+      </a>
       <InactivityLogout />
       <SessionBackupSync />
       {licenseGateActive ? null : (
@@ -149,9 +152,10 @@ export async function AppShell({
             className="mx-6 mt-4 rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 px-4 py-3 text-sm text-gwm-accent"
           >
             {dict.chrome.licenseGateNotice}
+            {canKeyCustody ? <Link href="/account/keys">Abrir custódia de chaves (não exige CNH)</Link> : null}
           </p>
         ) : null}
-        <main className="min-w-0 flex-1">{children}</main>
+        <main id="fleetmind-main" tabIndex={-1} className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
   );

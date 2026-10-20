@@ -1,0 +1,6 @@
+{
+  "reason": "Avoid Windows path length extraction failure reported by Kondo",
+  "old": "docs/Additional Pack for Voice & Conversational UX Incremental-20260930T010130Z-1-001/Additional Pack for Voice & Conversational UX Incremental/FLEET_VOICE_CONVERSATIONAL_UX_INCREMENTAL_IMPLEMENTATION_PACK_v1.0.md",
+  "new": "docs/references/VOICE_INCREMENTAL_v1.md",
+  "sha256_unchanged": "69578e9c39a8a96b6596a6deb8147a358d10729d5022b2403d489acbe6c5a70c"
+}

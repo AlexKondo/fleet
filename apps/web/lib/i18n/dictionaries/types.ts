@@ -964,6 +964,13 @@ export type Dictionary = {
       removing: string;
       /** {name} = the member's full name. */
       removeConfirm: string;
+      deactivate: string;
+      reactivate: string;
+      reactivateConfirm: string;
+      accountActive: string;
+      accountInactive: string;
+      accessUnavailable: string;
+      reasonLabel: string;
     };
   };
   /** Reservation detail screen, message thread, photo capture and pickup/return checklists. */
@@ -1482,6 +1489,13 @@ export type Dictionary = {
       tabReturn: string;
       noneInView: string;
       capNote: string;
+      visualTitle: string;
+      visualDescription: string;
+      observedDamage: string;
+      confirmVisual: string;
+      waitingChecklist: string;
+      recordMovement: string;
+      checklistUnavailable: string;
     };
     fleet: {
       subtitle: string;

@@ -12,7 +12,7 @@ export function LocationRow({
   location,
   dict,
 }: {
-  location: { id: string; name: string };
+  location: { id: string; name: string;lifecycle_version?:number };
   dict: Dictionary;
 }) {
   const [editing, setEditing] = useState(false);
@@ -75,12 +75,14 @@ export function LocationRow({
         </button>
         <form action={deleteAction}>
           <input type="hidden" name="id" value={location.id} />
+          <input type="hidden" name="lifecycleVersion" value={location.lifecycle_version??1}/>
+          <input name="archiveReason" aria-label="Motivo da desativação" placeholder="Motivo da desativação" required minLength={3} maxLength={1000}/>
           <ConfirmSubmitButton
-            confirmMessage={dict.fleet.locations.deleteConfirm.replace("{name}", location.name)}
+            confirmMessage={"Arquivar ou desativar este registro preservando seus históricos?"}
             disabled={deletePending}
             className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
           >
-            {deletePending ? dict.common.deleting : dict.common.delete}
+            {deletePending ? "Registrando…" : "Desativar"}
           </ConfirmSubmitButton>
         </form>
       </div>

@@ -1,0 +1,433 @@
+{
+  "date": "2026-10-19",
+  "origin": "Last delivered ZIP, sha256 8c827fbb5901783c7215bfff40cee9aba910d6fae6b4095c285f91f55afd383b; not Kondo current HEAD.",
+  "automatic_apply": false,
+  "note": "This inventory is relative to the last delivered ZIP. compare_kondo_source.py defaults to the original fleet-main.zip baseline, deliberately conservative. SOURCE_MANIFEST and inventory are excluded from their own change list.",
+  "counts": {
+    "added": 47,
+    "modified": 23
+  },
+  "deleted_files": [],
+  "files": [
+    {
+      "path": "00_LEIA_PRIMEIRO_KONDO.md",
+      "change": "modified",
+      "last_delivery_sha256": "dac7d2cd1fef1b243a22caa3d9c5ae0c2c271718e641df8a4c1d0ec1c6a85b70",
+      "current_sha256": "bc0fbf2770699a2fc64cff9ff53c41faf074b238819ba6f1dd34a8d399259913"
+    },
+    {
+      "path": "FLEETMIND_RETOMADA.md",
+      "change": "modified",
+      "last_delivery_sha256": "93b5c92778f20f6344701dbd2862783d5459d1041c4d39f30eb042a992deaecd",
+      "current_sha256": "a0262358b7b52653bc70bfade3a9865042939d1e3a427a53bfe1ffe54fad1f1d"
+    },
+    {
+      "path": "apps/web/app/account/maintenance-approvals/page.tsx",
+      "change": "modified",
+      "last_delivery_sha256": "e7449a9e0d3dc1f59f98e188f21b7aa47c98e0dd7fe4cf5adbbeccd2de16a93d",
+      "current_sha256": "3e2316a7928db4a1d178c84722085ed3cfaf6fe7aee72c3c0fc9fbb694af85ee"
+    },
+    {
+      "path": "apps/web/app/account/privacy/page.tsx",
+      "change": "modified",
+      "last_delivery_sha256": "0d8d7897826171fb71db213a3adcbd3bffc315a2641b1bdf36866ade8784a038",
+      "current_sha256": "bf07cd5474c82a3571f8a578df695372f081ea4fff7dbf5082eee9af3d6a6b0a"
+    },
+    {
+      "path": "apps/web/app/api/exports/personal/route.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "a6afda17b46746709a65d7bf62e7a5ff2c122319121a9c65844faf82b299e603"
+    },
+    {
+      "path": "apps/web/app/fleet/VehicleFilterGrid.tsx",
+      "change": "modified",
+      "last_delivery_sha256": "d44543bb700d9f0672d290e6fc2c1663badc7b752afef68a9315a62d468ee72c",
+      "current_sha256": "aec7163808229151f756fbd8d51bf939d7e277d87a55164646b5b365544610ae"
+    },
+    {
+      "path": "apps/web/app/fleet/carpools/actions.ts",
+      "change": "modified",
+      "last_delivery_sha256": "85a555900761601383cde34f4975f056fe23b8e6e1873b3c73e2980349f7ab5a",
+      "current_sha256": "439c6ca3a000496992cc8c29889e6952e0c35f7442d2f3ab990a0cc3c9523033"
+    },
+    {
+      "path": "apps/web/app/fleet/carpools/page.tsx",
+      "change": "modified",
+      "last_delivery_sha256": "1cf43eedbc6862f24f0b6b93b9055c26e732e9016e5b89487099e82de6e28a57",
+      "current_sha256": "60bc1ed30fffecb02e76691f9490dce4e7ab56f0c0006090dc414da74ad1d407"
+    },
+    {
+      "path": "apps/web/app/fleet/incidents/actions.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "807eafcfa2fcb85a294f5acf51ba0ccacfb3e0feed840058f3076a84f86f8b7a"
+    },
+    {
+      "path": "apps/web/app/fleet/incidents/page.tsx",
+      "change": "modified",
+      "last_delivery_sha256": "fb29173e4f9ed106861c66894347a62b8656f6e1d0453861d2d1d8f5e58a56d9",
+      "current_sha256": "3eb3350d7d91e5eb052f7414ab183f785f2b70cf571cbdd0978c50054dde2041"
+    },
+    {
+      "path": "apps/web/app/fleet/page.tsx",
+      "change": "modified",
+      "last_delivery_sha256": "bc54c198f06f5917956b29afe713091fc4d41f2fe716d614b556d9ef7e741e5a",
+      "current_sha256": "dafc3189ece885fe3082fe8b8b8938b9ef49fbe37b1352ec48f2e7601f9fb47f"
+    },
+    {
+      "path": "apps/web/app/operations/IncidentCases.tsx",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "b0e6ec94de31e9d17521f05318f2635998345ac08706acf522c8a58cc2516afc"
+    },
+    {
+      "path": "apps/web/app/operations/IncidentsWorkspace.tsx",
+      "change": "modified",
+      "last_delivery_sha256": "dc146cb6de4891047f4c050665330541d751098e2e94dbbee74f74ce8fa2e3f0",
+      "current_sha256": "61c0bb34a5d832ed92a1f21be3ee4bab0ffe2516b8339162426c2f03889c0973"
+    },
+    {
+      "path": "apps/web/app/operations/MaintenanceWorkspace.tsx",
+      "change": "modified",
+      "last_delivery_sha256": "f8517cfdb9023db14ca4813c2125898094b5e6b8f3a145d08bd79b549d62a6ff",
+      "current_sha256": "d39dccc122389cd5c97ddfcbb77ef0a128dead956ca91eea57fbb43a308b8216"
+    },
+    {
+      "path": "apps/web/app/operations/OrderAdjustments.tsx",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "80f9ac2402a94890573164e7b68401fb83c2516b963f1e56c51b3c803b1ee2ce"
+    },
+    {
+      "path": "apps/web/app/operations/adjustmentActions.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "bcc7de99a915265adf0cd942d8fac36436e24933c335643d38bba32859129474"
+    },
+    {
+      "path": "apps/web/lib/carpool/management.test.ts",
+      "change": "modified",
+      "last_delivery_sha256": "7b46c25e5a8c8cf009eedbc138f76c42a25ce6215a10e990074d759eea1f9753",
+      "current_sha256": "4930622b10020208a5386efe7e0c3da3055bfc1d4b808014f081962777e120ce"
+    },
+    {
+      "path": "apps/web/lib/carpool/management.ts",
+      "change": "modified",
+      "last_delivery_sha256": "6b4da505fc1573613d389ddc6a4a78bf63f6fb143bf54265bb8c548c8c2db2a3",
+      "current_sha256": "000708d0b6e79b0627d3ffc8b91b9285f5c1df941c32d8efc6e822e5402fcab2"
+    },
+    {
+      "path": "apps/web/lib/documents/export.ts",
+      "change": "modified",
+      "last_delivery_sha256": "30bc0f0e8d30be1ef8b86b949d6df4dba70132e576155574d22d1dbbe2acd671",
+      "current_sha256": "b83523359bb2554316251ef9009b4c1fedcdc3699ca2f17f25d95256c55d6899"
+    },
+    {
+      "path": "apps/web/lib/documents/files.test.ts",
+      "change": "modified",
+      "last_delivery_sha256": "22464517195ce423d338d3a0a69ede07452e432444df05c920d4fed490d16d97",
+      "current_sha256": "6249bf463bcc5524ab61e433636fda1184b6de4f4abfc69fd22d5225755bc53c"
+    },
+    {
+      "path": "apps/web/lib/documents/personalExport.test.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "3818647039a40ea7364e2e3b4573b02a64851e801b5c9f50ad06d2496370d3fa"
+    },
+    {
+      "path": "apps/web/lib/operations/financialAdjustments.test.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "0876ff725e01cfa4fd41a903aec4b0d260a20a95510a58b2723c8d91567f885f"
+    },
+    {
+      "path": "apps/web/lib/operations/forms.test.ts",
+      "change": "modified",
+      "last_delivery_sha256": "18e3cfbe748fc252f1249c90ee2f0352d12aae317d3db47464fdce6f63449f19",
+      "current_sha256": "267b248a5320e805576c83448ec5f9791b8fb4fb7672d327cc98bf63f2095cf4"
+    },
+    {
+      "path": "apps/web/lib/operations/incidentCases.test.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "47897fbaede7263e9f656403883c104417ee6fb63c3982cdb9f3c6734dc46546"
+    },
+    {
+      "path": "apps/web/lib/operations/incidents.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "426c66fe6d344b61cb939c5805794e5a6b160f79d9a5dab9bde2c63b98668591"
+    },
+    {
+      "path": "apps/web/lib/operations/managerScope.test.ts",
+      "change": "modified",
+      "last_delivery_sha256": "00e09a23c381bc33d8de2be6fd376d007a0012e3d03d52cfb03c9edee3feaebe",
+      "current_sha256": "ec2abad5f55a2c4f499ef3aadaf94cd403abeea990ed791022ddc1f78935260d"
+    },
+    {
+      "path": "apps/web/lib/operations/models.ts",
+      "change": "modified",
+      "last_delivery_sha256": "fc9c9d058f3e4ccdd83833e3df14d03241d229ea9d87f5aa5462c63b3c3c2108",
+      "current_sha256": "10586404d16b3a954dda26dee3f5e202b449c964494911201e00f7355d4004e5"
+    },
+    {
+      "path": "apps/web/lib/operations/newPanelsValidation.test.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "293cd68a5e9601ffbe640e097cea6cce021ef5ae35a9745ef175d5e2542b59bf"
+    },
+    {
+      "path": "apps/web/lib/operations/unitDimension.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "9357b21ac741915fc8b6819b5a182b55345a46b61d33da766ed73b2520349147"
+    },
+    {
+      "path": "apps/web/lib/operations/vehicleSelection.ts",
+      "change": "modified",
+      "last_delivery_sha256": "1f0b6ffd45db1046c8c74ef627ac749e9d7239ceea8c6a06733fe31e591795b3",
+      "current_sha256": "1b9616402cba092ef002e93dde6906de707b090ed55c8641cc6414f11fde7216"
+    },
+    {
+      "path": "apps/web/lib/supabase/managementLicenseBoundary.test.ts",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "f28e6ecc92b63c2682a5008d76fc0349292467c5b8dcf094d7a1ab47bd279641"
+    },
+    {
+      "path": "apps/web/lib/supabase/middleware.ts",
+      "change": "modified",
+      "last_delivery_sha256": "5c91f2bf6888075aa1db51eb3b56324649476a1e6c88b0f480c34e251e579563",
+      "current_sha256": "4ed92a9bb5b3af77bdd018e3bdb3cae96458c826994b3dfb34c65575ae47c0ad"
+    },
+    {
+      "path": "docs/fleetmind-v3/BASELINE_ULTIMA_ENTREGA_SHA256.json",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "31fdcd8b456d183c1892609278a17f564faef99a0d9c820d412d4e90e0eaefc0"
+    },
+    {
+      "path": "docs/fleetmind-v3/IMPLANTACAO_0086_0088.md",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "8f1da87ac5a872e96f0d6576f6c3016b3153f97563ba065d225b3b8030080dcf"
+    },
+    {
+      "path": "docs/fleetmind-v3/MATRIZ_28_TELAS.md",
+      "change": "modified",
+      "last_delivery_sha256": "4e4bf51bdfa52129e5811c912006b62fb09247fce6e76bd032bb718ae4cc352f",
+      "current_sha256": "53dbc453f1acca67a4962f618c3194f8bb7e7ef7cff4480437eee819f2d387c7"
+    },
+    {
+      "path": "docs/fleetmind-v3/PENDENCIAS_IMPLEMENTACAO_GPT.md",
+      "change": "modified",
+      "last_delivery_sha256": "881fee340396ba8192af378320596177af6b6c0780d6016e4e71f3ba84555d81",
+      "current_sha256": "7cef6f39e480e8e0c157dd5e41c1ed9a9f1fe9701d9eae84c0f79a52a9fca906"
+    },
+    {
+      "path": "docs/fleetmind-v3/RELATORIO_VALIDACAO_2026-10-19.md",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "c83471132cce02762d6376ea740a11c88ee2eb26bf6591bf8d894267227adabc"
+    },
+    {
+      "path": "docs/fleetmind-v3/RETOMADA_VALIDACAO_2026-10-19.md",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "9934db1e09a88946e064102aa6378dd0078a7557a9843afb421e5db3f26e2daa"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/build-final.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "1e23155fa3d949b7fdd0560addda480dc55e041d590ebb2a3535fc936321d9fb"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/build.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "e6fea843619e5b812eccd598d25d844bcdd7d75ef7c8470d01835dcdfbf60e54"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/cnh-depois-e-regressao.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "b4c82c18ae7b6318bb7fdc0d88005def6d18be1745f6cb77321acc1d6aa1c643"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/escopos-adicionais-captura.txt",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "11764fdd4cf31e4e2a058cca9a5012c2ed12eb3c2f722b4332e9652637e66dff"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/escopos-adicionais.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/exportacoes-e-arredondamento.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "4cb30d9a3dfc86ff39b2b56720a415c62e03336c861d470bfadb68ef0a7fd4bc"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/financeiro-exportacao-final.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "de5239f0393829f9179d94fc16186475dd15805a17c3acc6967a5977afc2ae7e"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/indice-testes.json",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "7b529392668c323580d6fb21c76cc58be0c855672e6d2733c7b03708d80e5789"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/isolation-e-exportacoes-final.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "5ba1103008b7c423d411272d5c5ffc6d27e89c37cac98567a81240702e020732"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/lint-final.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "126461655dea274e8fd1cbc5d718d82dc6d4bec6d9cc7a0696270bf8b8130728"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/lint.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "abe2f260731cc7c52745aef1063f20b5f3cbfe5d9028e3050fa0deb522004734"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/paineis-inspecao.json",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "4af9d8f6e796da91bbf5573a5f30623d867cce978cc2d60dbef88d81e79a35ee"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/paineis-novos.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "7005f5d75090a38e094bacc180b054d4ba25b4bfa3f601536e7a00d5ca308c1a"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/registro-falhas.json",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "ecd64780786f62bc3149e613ee9893211b0390059b490551444a66bb1ccdfe2c"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/regressao-seguranca-sql.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "0d2f05cdcae3c935b251aa4d87d9bac81e1c4136e39cfe2f130dd4f0dededb68"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/reproducao-cnh-antes.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "0a69fcb05fb7f23b3a15eae8c852d255aaf40d5a9a2d2fd6b51ba3aeedf5925c"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/reproducao-search-path-antes.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "85dc486c3a280a534baa05dfd6aad5d5d7a6aa0318a2e169418388e025012063"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/reproducao-search-path-corrigida.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "dad5ca941ba1b41a39c39a52bd6bd7df4b83cc46bd23fe560ccf0abff56a1c71"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/rotas-e-referencias.json",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "1f2b31051f72f847d813ddd22dd649b69ddb311951b7d29c7f8c31848ac18b00"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/search-path-final.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "23b2b6991699346c15184228af8f986af042aef3b4192e73e8ef8bcb5d39dc19"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/testes-focais-inicial.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "e6b26e838f372adca9170adb21099db50576f27ad46a8ea8c23ec017182057a2"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/tipos-final.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/tipos-inicial.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/tipos-pos-seguranca.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/fleetmind-v3/validacao-2026-10-19/vinculo-os-e-gestao-final.log",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "42bf50860b8cec989301d6fbc59c2b429b730bf2c21714953d235405dee629aa"
+    },
+    {
+      "path": "packages/supabase-client/src/database.types.ts",
+      "change": "modified",
+      "last_delivery_sha256": "953d10e47a90ab9cf88288ceb87252eeb52632b5d7f2cf4c1ed9ccf3b716fcbd",
+      "current_sha256": "e5585948cddbe7af506a61cbe990f4c00596ca0c9fbdb63c9494e2c05a2f34c2"
+    },
+    {
+      "path": "supabase/migrations/0086_incident_cases.sql",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "c7eae43621f5764a8272f7d96b31228f077da03269217d82a65b66343a7b8946"
+    },
+    {
+      "path": "supabase/migrations/0087_closed_order_adjustments.sql",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "24fe9ba0641e919f068d46e10aaa90071a4026068c05f3a4aa6eeef6cd83ccd3"
+    },
+    {
+      "path": "supabase/migrations/0088_scoped_dimensions_and_personal_export.sql",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "be80efdcf98a214426b8da6331f6e85f58445af0e8810a00fbdbb82094d92adb"
+    },
+    {
+      "path": "supabase/migrations/0090_security_definer_resolution.sql",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "f9031469fbfa700de91b5cede062e9355d25ca8b522af6e132a1d49d25a66c81"
+    },
+    {
+      "path": "supabase/pending/0089_recurring_carpool_plans.sql",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "0ca99bb76392c4c3f66bff363fe8952cc9e6d708bc98b2a232079f65671e73cb"
+    },
+    {
+      "path": "supabase/pending/README.md",
+      "change": "added",
+      "last_delivery_sha256": null,
+      "current_sha256": "b29d293290c5f56775995f916826fab129d4b32ea37b020e63118723716f159b"
+    }
+  ]
+}

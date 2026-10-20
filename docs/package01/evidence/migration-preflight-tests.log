@@ -1,0 +1,59 @@
+✔ missing, numeric and duplicate history fail closed (1.409799ms)
+✔ actual historical wipe is blocked when pending (0.959018ms)
+✔ function bodies/comments/literals are not top-level deletes (0.402638ms)
+✔ procedural blocks, destructive DDL and history gaps need review (9.305742ms)
+✖ actual complete baseline leaves only 0074/0075, no destructive migrations (6.562019ms)
+✖ account access migration requires review of its procedural RLS block (0.186862ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 4
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 133.893957
+
+✖ failing tests:
+
+test at scripts/migration-preflight.test.mjs:29:1
+✖ actual complete baseline leaves only 0074/0075, no destructive migrations (6.562019ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   '0074',
+  -   '0075'
+  - ]
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7e2402800f4f/p01-work/fleet-main/scripts/migration-preflight.test.mjs:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ '0074', '0075' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/migration-preflight.test.mjs:39:1
+✖ account access migration requires review of its procedural RLS block (0.186862ms)
+  Error: ENOENT: no such file or directory, open '/workspace/scratch/7e2402800f4f/p01-work/fleet-main/supabase/migrations/0076_preserve_member_accounts.sql'
+      at readFileSync (node:fs:484:20)
+      at TestContext.<anonymous> (file:///workspace/scratch/7e2402800f4f/p01-work/fleet-main/scripts/migration-preflight.test.mjs:40:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/workspace/scratch/7e2402800f4f/p01-work/fleet-main/supabase/migrations/0076_preserve_member_accounts.sql'
+  }

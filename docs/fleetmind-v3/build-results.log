@@ -1,0 +1,93 @@
+$ turbo run build
+• turbo 2.10.12
+
+   • Packages in scope: @fleet/domain, @fleet/supabase-client, @fleet/web
+   • Running build in 3 packages
+   • Remote caching disabled
+
+ WARNING  failed to get git status for dirty hash: Git error: fatal: not a git repository (or any of the parent directories): .git
+
+@fleet/web:build: cache miss, executing 9f1202fbb3e7af60
+@fleet/web:build: $ next build
+@fleet/web:build:    ▲ Next.js 15.5.9
+@fleet/web:build:    - Experiments (use with caution):
+@fleet/web:build:      · serverActions
+@fleet/web:build: 
+@fleet/web:build:    Creating an optimized production build ...
+@fleet/web:build:  ✓ Compiled successfully in 10.7s
+@fleet/web:build:    Linting and checking validity of types ...
+@fleet/web:build:    Collecting page data ...
+@fleet/web:build:    Generating static pages (0/40) ...
+@fleet/web:build:    Generating static pages (10/40) 
+@fleet/web:build:    Generating static pages (20/40) 
+@fleet/web:build:    Generating static pages (30/40) 
+@fleet/web:build:  ✓ Generating static pages (40/40)
+@fleet/web:build:    Finalizing page optimization ...
+@fleet/web:build:    Collecting build traces ...
+@fleet/web:build: 
+@fleet/web:build: Route (app)                                 Size  First Load JS
+@fleet/web:build: ┌ ƒ /                                      169 B         102 kB
+@fleet/web:build: ├ ƒ /_not-found                            999 B         103 kB
+@fleet/web:build: ├ ƒ /account                             1.76 kB         117 kB
+@fleet/web:build: ├ ƒ /account/license                     3.85 kB         120 kB
+@fleet/web:build: ├ ƒ /account/privacy                     1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /account/profile                     1.85 kB         118 kB
+@fleet/web:build: ├ ƒ /admin                               1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /admin/ai                            1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /admin/audit                         1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /admin/integrations                  1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /analytics                           1.31 kB         117 kB
+@fleet/web:build: ├ ƒ /analytics/carpool                   1.31 kB         117 kB
+@fleet/web:build: ├ ƒ /api/chat/abandon                      169 B         102 kB
+@fleet/web:build: ├ ƒ /api/cron/carpool-expiry               169 B         102 kB
+@fleet/web:build: ├ ƒ /api/cron/carpool-retention            169 B         102 kB
+@fleet/web:build: ├ ƒ /api/cron/chat-cleanup                 169 B         102 kB
+@fleet/web:build: ├ ƒ /api/cron/daily                        169 B         102 kB
+@fleet/web:build: ├ ƒ /api/cron/license-reminders            169 B         102 kB
+@fleet/web:build: ├ ƒ /api/geo/autocomplete                  169 B         102 kB
+@fleet/web:build: ├ ƒ /api/geo/route-map                     169 B         102 kB
+@fleet/web:build: ├ ƒ /auth/callback                         169 B         102 kB
+@fleet/web:build: ├ ƒ /carpool                             3.49 kB         124 kB
+@fleet/web:build: ├ ƒ /carpool/mine                          272 B         119 kB
+@fleet/web:build: ├ ƒ /dashboard                             928 B         120 kB
+@fleet/web:build: ├ ƒ /dashboard/command-center               2 kB         118 kB
+@fleet/web:build: ├ ƒ /fleet                               13.2 kB         129 kB
+@fleet/web:build: ├ ƒ /fleet/drivers                       1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /fleet/energy                        1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /fleet/incidents                     1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /fleet/maintenance                   1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /fleet/vehicles/[id]                 1.31 kB         117 kB
+@fleet/web:build: ├ ƒ /forgot-password                     2.26 kB         108 kB
+@fleet/web:build: ├ ƒ /gate                                2.65 kB         118 kB
+@fleet/web:build: ├ ƒ /gate/exceptions                     1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /gate/history                        1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /login                               3.37 kB         109 kB
+@fleet/web:build: ├ ƒ /maintenance                         1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /maintenance/planning                1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /maintenance/vehicles                1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /maintenance/work-orders             1.36 kB         117 kB
+@fleet/web:build: ├ ƒ /reservations/[id]                   4.12 kB         120 kB
+@fleet/web:build: ├ ƒ /reservations/[id]/pickup            1.94 kB         121 kB
+@fleet/web:build: ├ ƒ /reservations/[id]/return            2.06 kB         121 kB
+@fleet/web:build: ├ ƒ /reset-password                      2.79 kB         105 kB
+@fleet/web:build: ├ ƒ /settings                            4.63 kB         120 kB
+@fleet/web:build: ├ ƒ /settings/mobility-points            2.55 kB         118 kB
+@fleet/web:build: ├ ƒ /settings/users                      4.16 kB         120 kB
+@fleet/web:build: ├ ƒ /signup                              3.01 kB         109 kB
+@fleet/web:build: ├ ƒ /trips                                 272 B         119 kB
+@fleet/web:build: └ ƒ /trips/new                           7.73 kB         128 kB
+@fleet/web:build: + First Load JS shared by all             102 kB
+@fleet/web:build:   ├ chunks/1939-a021fe2d31737373.js      45.6 kB
+@fleet/web:build:   ├ chunks/82560d59-1a1d51bff83b97c3.js  54.2 kB
+@fleet/web:build:   └ other shared chunks (total)          2.11 kB
+@fleet/web:build: 
+@fleet/web:build: 
+@fleet/web:build: ƒ Middleware                             93.4 kB
+@fleet/web:build: 
+@fleet/web:build: ƒ  (Dynamic)  server-rendered on demand
+@fleet/web:build: 
+
+ Tasks:    1 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    54.362s 
+

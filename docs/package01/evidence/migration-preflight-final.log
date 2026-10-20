@@ -1,0 +1,14 @@
+✔ missing, numeric and duplicate history fail closed (1.046881ms)
+✔ actual historical wipe is blocked when pending (0.878056ms)
+✔ function bodies/comments/literals are not top-level deletes (0.290879ms)
+✔ procedural blocks, destructive DDL and history gaps need review (6.858638ms)
+✔ renumbered package keeps legacy history and plans only 0174/0175 (7.731085ms)
+✔ account access migration requires review of its procedural RLS block (0.428457ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 104.439432

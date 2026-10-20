@@ -1,0 +1,13 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ✓ lib/dashboard/loadCommandCenter.test.ts (4 tests) 24ms
+ ✓ lib/operations/managerScope.test.ts (10 tests) 1966ms
+ ✓ lib/operations/keyCustody.test.ts (14 tests) 2223ms
+
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Start at  18:08:36
+   Duration  2.60s (transform 187ms, setup 0ms, collect 314ms, tests 4.21s, environment 1ms, prepare 187ms)
+

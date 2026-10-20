@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@fleet/supabase-client";
 import { getSupabasePublicEnv } from "./env";
 import { LICENSE_MISSING_HEADER, VERIFIED_USER_EMAIL_HEADER, VERIFIED_USER_ID_HEADER } from "../auth/headers";
-import { getOwnLicense } from "../auth/ownLicense";
+import { getOwnLicense, canDrive } from "../auth/ownLicense";
+import { accountEnabled } from "../auth/accountAccess";
 
 const PUBLIC_ROUTE_PREFIXES = [
   "/login",
@@ -91,6 +92,13 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     return NextResponse.redirect(loginUrl);
   }
 
+  if (!(await accountEnabled(supabase))) {
+    if (pathname.startsWith("/api/")) return NextResponse.json({ error: "account_unavailable" }, { status: 403, headers: { "Cache-Control": "no-store" } });
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("access", "unavailable");
+    return NextResponse.redirect(loginUrl);
+  }
+
   // Admin-created accounts (InviteUserForm) start with a temporary password the admin
   // chose, not the member — every route except /account itself redirects there until
   // they set their own. Read off the JWT's app_metadata (already fetched above by
@@ -111,20 +119,24 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
   // "security" is exempt — gate staff record vehicle movements, they don't drive. /account
   // (change password, personal data) stays reachable too — the user menu is visible during
   // this gate specifically so those two screens don't need the CNH uploaded first.
-  if (!pathname.startsWith("/account") && !isGeoApi) {
+  const returnOrEvidence = /^\/reservations\/[^/]+\/(?:return|evidence\/[^/]+)\/?$/.test(pathname);
+  const nonDrivingDocuments = returnOrEvidence || pathname === "/fleet/archive" || pathname === "/fleet/equipment" || pathname === "/documents" || pathname.startsWith("/documents/") || pathname.startsWith("/api/exports/");
+  if (!pathname.startsWith("/account") && !isGeoApi && !nonDrivingDocuments) {
     // 0063: the license columns are revoked from `authenticated`; get_my_license() is the own-row reader.
     const [{ data: ownProfile }, ownLicense] = await Promise.all([
       supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
       getOwnLicense(supabase),
     ]);
-    // ownLicense === null means the read FAILED (not "no license"): fail open like the rest of this
-    // gate (a transient error must not lock every user out), exactly as a missing profile row does.
-    if (ownProfile && ownLicense && ownProfile.role !== "security" && !ownLicense.number) {
-      const licenseUrl = new URL("/account/license", request.url);
-      return NextResponse.redirect(licenseUrl);
+    // Driving requires a successful license read; administrative workspaces remain separate.
+    // These exact pages explicitly set FmShell.nonDrivingWorkspace. Match that
+    // existing contract here; driving routes and other roles keep the CNH gate.
+    const administrativePath = pathname === "/fleet" || pathname.startsWith("/fleet/") || pathname === "/settings" || pathname.startsWith("/settings/") || pathname === "/maintenance" || pathname.startsWith("/maintenance/");
+    const explicitManagerWorkspace = administrativePath && ["fleet_manager", "administrator", "maintenance_operator"].includes(ownProfile?.role ?? "");
+    if (ownProfile?.role !== "security" && !explicitManagerWorkspace && !canDrive(ownLicense)) {
+      return NextResponse.redirect(new URL("/account/license", request.url));
     }
     // L6: hand the result to the render so AppShell does not repeat the same RPC for this request.
-    if (ownLicense) responseHeaders.set(LICENSE_MISSING_HEADER, ownLicense.number ? "0" : "1");
+    if (ownLicense) responseHeaders.set(LICENSE_MISSING_HEADER, canDrive(ownLicense) ? "0" : "1");
   }
 
   responseHeaders.set(VERIFIED_USER_ID_HEADER, user.id);

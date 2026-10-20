@@ -1,3 +1,4 @@
+import { gateAction,loadGateChecklistStates } from "@/lib/operations/checklistState";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -22,8 +23,8 @@ import { GateList, type GateRow } from "./GateList";
  * at the gate" is: reservation confirmed AND vehicle in one of those four states, the
  * same pairing /trips uses to decide its own Pickup/Return buttons.
  */
-const PICKUP_VEHICLE_STATUSES = ["reserved", "awaiting_pickup"] as const;
-const RETURN_VEHICLE_STATUSES = ["in_use", "returning"] as const;
+const PICKUP_VEHICLE_STATUSES = ["available", "reserved", "awaiting_pickup"] as const;
+const RETURN_VEHICLE_STATUSES = ["in_use", "returning", "blocked"] as const;
 
 export default async function GatePage() {
   const supabase = await createSupabaseServerClient();
@@ -67,6 +68,7 @@ export default async function GatePage() {
   // role), deliberately NOT narrowed to the reservations a given manager approved and not
   // date-filtered — the gate cares about the current actionable set, whatever day it
   // started on. Fetched in the Promise.all above.
+  const checklistStates=await loadGateChecklistStates(supabase,(reservations??[]).map(r=>r.id));
   const rows: GateRow[] = (reservations ?? [])
     .filter((r) => {
       const s = r.vehicle?.status;
@@ -88,9 +90,7 @@ export default async function GatePage() {
         statusLabel: meta?.label ?? vehicleStatus,
         statusClass: meta?.text ?? "text-fog-400",
         status: vehicleStatus,
-        action: (PICKUP_VEHICLE_STATUSES as readonly string[]).includes(vehicleStatus)
-          ? "pickup"
-          : "return",
+        action: gateAction(checklistStates?.get(r.id)),
       };
     });
 
@@ -116,7 +116,7 @@ export default async function GatePage() {
       legacy
       wide
     >
-      {loadError ? (
+      {loadError || checklistStates===null ? (
         <div role="alert" className="fm-banner fm-banner-danger" style={{ marginTop: 0, marginBottom: 16 }}>
           {dict.gate.loadError}
         </div>

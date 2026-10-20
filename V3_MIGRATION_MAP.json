@@ -1,0 +1,77 @@
+[
+  {
+    "source": "0074_fleetmind_operational_workspaces.sql",
+    "integrated": "0174_fleetmind_operational_workspaces.sql",
+    "original_sha256": "f0a497833953aaa37f2fe3f23b1cd282e4015ece2e9cb0f6d43a481243f4225a"
+  },
+  {
+    "source": "0075_admin_ai_and_privacy.sql",
+    "integrated": "0175_admin_ai_and_privacy.sql",
+    "original_sha256": "a5fa1c92c5222f0d3c9665389f690efc470e942022c24b146b4315201e019789"
+  },
+  {
+    "source": "0076_preserve_member_accounts.sql",
+    "integrated": "0176_preserve_member_accounts.sql",
+    "original_sha256": "79665ccf9c493e3b54628dae3315b2677efc5bd9cfb85c273a825915e09a4c08"
+  },
+  {
+    "source": "0077_independent_pickup_checks.sql",
+    "integrated": "0177_independent_pickup_checks.sql",
+    "original_sha256": "4b466602b0f37ed4270b7108a48f4c4734c75bfeffe0bef7b1ce9ccac8c7fa2c"
+  },
+  {
+    "source": "0078_local_key_custody.sql",
+    "integrated": "0178_local_key_custody.sql",
+    "original_sha256": "7d7c71ca1997fe77c3321730b4ce1181f892c47aff2f7b90aca18dc90b390db9"
+  },
+  {
+    "source": "0079_office_checklist_workflow.sql",
+    "integrated": "0179_office_checklist_workflow.sql",
+    "original_sha256": "0bcbeb26b95d7df6cd2be9e1446d917aba0de4658f304f2959fed8e5edbb97be"
+  },
+  {
+    "source": "0080_manager_unit_scopes.sql",
+    "integrated": "0180_manager_unit_scopes.sql",
+    "original_sha256": "ef2708593219abacc2118ebb075a07354ed67ece7bf908ab0561e5aec2c97c80"
+  },
+  {
+    "source": "0081_scoped_management_functions.sql",
+    "integrated": "0181_scoped_management_functions.sql",
+    "original_sha256": "c023fe32ab3a3cd59003e182f4b910ccd301df1a190b7ee8e32d210c89d92cdf"
+  },
+  {
+    "source": "0082_maintenance_approval_policy.sql",
+    "integrated": "0182_maintenance_approval_policy.sql",
+    "original_sha256": "108e0589a71c1e1900c1030611c1b182bfd05b0a774e035c3ee7c8343a6d43f6"
+  },
+  {
+    "source": "0083_operational_documents_and_exports.sql",
+    "integrated": "0183_operational_documents_and_exports.sql",
+    "original_sha256": "b5d72e7ea582ee17d03fb3c1145c5c52247c5b2c63ddcd5a3f6dc6f6bcdfad8e"
+  },
+  {
+    "source": "0084_vehicle_equipment_contracts.sql",
+    "integrated": "0184_vehicle_equipment_contracts.sql",
+    "original_sha256": "22133fa328bda0297ea1dfa12ba5d148dd45b9359f3f5fa59404f9bff3502f97"
+  },
+  {
+    "source": "0085_preserve_fleet_records.sql",
+    "integrated": "0185_preserve_fleet_records.sql",
+    "original_sha256": "21b5d27a9cc0c8e4e187ace5e34bfc1500925039db35ed13b27c3e50bd4cbe93"
+  },
+  {
+    "source": "0086_incident_cases.sql",
+    "integrated": "0186_incident_cases.sql",
+    "original_sha256": "c7eae43621f5764a8272f7d96b31228f077da03269217d82a65b66343a7b8946"
+  },
+  {
+    "source": "0087_closed_order_adjustments.sql",
+    "integrated": "0187_closed_order_adjustments.sql",
+    "original_sha256": "24fe9ba0641e919f068d46e10aaa90071a4026068c05f3a4aa6eeef6cd83ccd3"
+  },
+  {
+    "source": "0088_scoped_dimensions_and_personal_export.sql",
+    "integrated": "0188_scoped_dimensions_and_personal_export.sql",
+    "original_sha256": "be80efdcf98a214426b8da6331f6e85f58445af0e8810a00fbdbb82094d92adb"
+  }
+]

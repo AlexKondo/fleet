@@ -1,0 +1,16 @@
+import {describe,it,expect,vi} from 'vitest';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
+import path from 'node:path';
+import type {OperationalData} from './load';
+vi.mock('@/app/fleet/incidents/actions',()=>({incidentCommand:async()=>{}}));
+vi.mock('@/app/operations/adjustmentActions',()=>({financialAdjustment:async()=>{}}));
+import {IncidentCases} from '@/app/operations/IncidentCases';
+import {OrderAdjustments} from '@/app/operations/OrderAdjustments';
+const id='00000000-0000-4000-8000-000000000001';
+function data(fail=false):OperationalData{return {db:{rpc:async()=>({error:fail?{message:'unavailable'}:null,data:{incidents:[{id,vehicle_id:id,inspection_id:null,reservation_id:null,work_order_id:null,kind:'mechanical',severity:'medium',title:'Ruído observado',description:'Relato de teste preservado para análise.',status:'analyzing',assignee_id:null,resolution:null,version:2,created_at:'2026-10-19T12:00:00Z'}],events:[{id,incident_id:id,status:'analyzing',command:'analyze',notes:'Análise registrada na fixture.',created_at:'2026-10-19T12:00:00Z'}],assignees:[{id,name:'Responsável de teste'}]}})},vehicles:[{id,plate:'TEST123',name:'Veículo de teste'}],records:{orders:[]}} as unknown as OperationalData;}
+describe('new incident and financial panels — source states',()=>{
+ it('renders actual case controls and preserves an explicit unavailable state',async()=>{const html=renderToStaticMarkup(await IncidentCases({data:data(),params:{case:id}}));expect(html).toContain('Registrar resolução');expect(html).toContain('Histórico preservado');expect(html).not.toContain('Encerrar ocorrência');const failure=renderToStaticMarkup(await IncidentCases({data:data(true),params:{}}));expect(failure).toContain('Nenhum estado ou encerramento foi presumido');expect(failure).not.toContain('Registrar ocorrência independente');const dir=process.env.FLEET_VISUAL_DIR;if(dir){mkdirSync(dir,{recursive:true});const css=['app/carpool/fm-theme.css','app/operations/operations.css'].map(f=>readFileSync(path.resolve(f),'utf8')).join('\n');writeFileSync(path.join(dir,'incidents.html'),`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:12px;font-family:Arial,sans-serif}*{box-sizing:border-box}${css}</style><div class="fm-theme" style="display:block"><div class="ow">${html}</div></div></html>`);}});
+ it('shows pending corrections without granting review and offers approval only when the source permits it',()=>{const adjustment={id,work_order_id:id,delta:-20.01,reason:'Crédito conferido em teste',status:'pending' as const,proposed_by:id,reviewed_by:null,review_notes:null,version:1,created_at:'2026-10-19T12:00:00Z',can_review:false};const denied=renderToStaticMarkup(createElement(OrderAdjustments,{adjustments:[adjustment],queue:true}));expect(denied).not.toContain('Aprovar ajuste');expect(denied).toContain('Pendente');const allowed=renderToStaticMarkup(createElement(OrderAdjustments,{adjustments:[{...adjustment,can_review:true}],queue:true}));expect(allowed).toContain('Aprovar ajuste');expect(allowed).toContain('Recusar ajuste');});
+});

@@ -1,0 +1,11 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/p01-work/fleet-main/apps/web
+
+ ✓ lib/operations/database.test.ts (16 tests) 1299ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  14:22:04
+   Duration  1.66s (transform 52ms, setup 0ms, collect 65ms, tests 1.30s, environment 0ms, prepare 59ms)
+

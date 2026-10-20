@@ -1,0 +1,32 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ❯ lib/supabase/managementLicenseBoundary.test.ts (4 tests | 1 failed) 17ms
+   × explicit non-driving manager workspaces versus driving gate > lets a verified manager reach the two pages that explicitly declare nonDrivingWorkspace 12ms
+     → expected 307 to be 200 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/supabase/managementLicenseBoundary.test.ts > explicit non-driving manager workspaces versus driving gate > lets a verified manager reach the two pages that explicitly declare nonDrivingWorkspace
+AssertionError: expected 307 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 307
+
+ ❯ lib/supabase/managementLicenseBoundary.test.ts:13:241
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  09:12:42
+   Duration  394ms (transform 69ms, setup 0ms, collect 101ms, tests 17ms, environment 0ms, prepare 97ms)
+
+undefined
+/workspace/scratch/7e2402800f4f/source/fleet-main/apps/web:
+[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run lib/supabase/managementLicenseBoundary.test.ts

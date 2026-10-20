@@ -40,7 +40,7 @@ export function SafetyEquipmentSection({
                 type="submit"
                 className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red"
               >
-                {dict.common.remove}
+                Desativar
               </button>
             </form>
           </li>

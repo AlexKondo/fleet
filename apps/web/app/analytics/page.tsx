@@ -64,18 +64,18 @@ export default async function AnalyticsPage() {
       .eq("id", user.id)
       .single(),
     supabase
-      .from("vehicles")
+      .from("fm_managed_vehicles")
       .select("id, plate, status, odometer_km, next_service_odometer_km")
       .order("plate"),
     supabase
-      .from("inspections")
+      .from("fm_managed_inspections")
       .select("vehicle_id, reservation_id, type, odometer_km, created_at")
       .order("created_at"),
     supabase
-      .from("reservations")
+      .from("fm_managed_reservations")
       .select("id, vehicle_id, status, trip_request:trip_requests(destination)"),
     // `id` was selected but never read — this page only counts destinations.
-    supabase.from("trip_requests").select("destination"),
+    supabase.from("fm_managed_trip_requests").select("destination"),
     // Only the row count is ever used — `head: true` returns it without shipping a row
     // (and without a single id) per carpool participation in the whole organization.
     supabase.from("trip_participants").select("id", { count: "exact", head: true }),
@@ -100,6 +100,7 @@ export default async function AnalyticsPage() {
   const readingsByVehicle = new Map<string, number[]>();
   const odometerHistoryByVehicle = new Map<string, { odometerKm: number; recordedAt: string }[]>();
   for (const insp of inspections ?? []) {
+    if(insp.odometer_km===null) continue;
     const readings = readingsByVehicle.get(insp.vehicle_id) ?? [];
     readings.push(insp.odometer_km);
     readingsByVehicle.set(insp.vehicle_id, readings);
@@ -155,6 +156,7 @@ export default async function AnalyticsPage() {
   // --- Km per trip: pair each reservation's pickup and return inspection.
   const readingPairsByReservation = new Map<string, { pickup?: number; return?: number }>();
   for (const insp of inspections ?? []) {
+    if(insp.odometer_km===null) continue;
     const entry = readingPairsByReservation.get(insp.reservation_id) ?? {};
     if (insp.type === "pickup") entry.pickup = insp.odometer_km;
     if (insp.type === "return") entry.return = insp.odometer_km;

@@ -16,6 +16,7 @@ import { defineConfig } from "vitest/config";
  * still deliberately scoped rather than bringing the whole `app/` tree under test.
  */
 export default defineConfig({
+  esbuild: { jsx: "automatic" },
   test: {
     environment: "node",
     include: [
@@ -28,8 +29,15 @@ export default defineConfig({
       "app/*.test.ts",
       "lib/trips/**/*.test.ts",
       "lib/auth/**/*.test.ts",
+      "lib/domain/**/*.test.ts",
+      "lib/dashboard/**/*.test.ts",
+      "lib/operations/**/*.test.ts",
+      "lib/documents/**/*.test.ts",
+      "lib/equipment/**/*.test.ts",
       "lib/supabase/**/*.test.ts",
       "app/account/**/*.test.ts",
+      "app/dashboard/**/*.test.ts",
+      "app/operations/**/*.test.ts",
       "app/analytics/**/*.test.ts",
       "app/gate/**/*.test.ts",
       "app/reservations/**/*.test.ts",

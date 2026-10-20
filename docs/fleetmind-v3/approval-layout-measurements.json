@@ -1,0 +1,30 @@
+[
+  {
+    "page": "budget",
+    "label": "desktop",
+    "width": 1536,
+    "scroll": 1536,
+    "client": 1536
+  },
+  {
+    "page": "budget",
+    "label": "mobile",
+    "width": 390,
+    "scroll": 390,
+    "client": 390
+  },
+  {
+    "page": "units",
+    "label": "desktop",
+    "width": 1536,
+    "scroll": 1536,
+    "client": 1536
+  },
+  {
+    "page": "units",
+    "label": "mobile",
+    "width": 390,
+    "scroll": 390,
+    "client": 390
+  }
+]

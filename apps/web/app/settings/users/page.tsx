@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -8,10 +9,11 @@ import { InviteUserModal } from "./InviteUserModal";
 import { UserRow } from "./UserRow";
 import { UserTable } from "./UserTable";
 import { getRoleLabels } from "./ROLE_LABELS";
+import { pageAll } from "@/lib/carpool/kpi/loadKpis";
 import { getDictionary } from "../../../lib/i18n/getLocale";
 
 /**
- * Team management: create/read/update/delete for the people inside an organization —
+ * Team management: create/read/update/deactivate for the people inside an organization —
  * until this page existed, the only way to add a second user to an org (or change
  * anyone's role) was a direct SQL insert/update, same gap fleet/page.tsx closed for
  * vehicles. Administrator-only (see actions.ts requireAdministrator) since this surface
@@ -39,17 +41,22 @@ export default async function UsersPage() {
   // 0063: names/roles come from profiles; the license columns are revoked at column level and are
   // served to fleet_manager/administrator only by the role-checked list_member_licenses() definer
   // function (merged here by id).
-  const [{ data: baseProfiles, error: profilesError }, { data: licenseRows, error: licensesError }, { data: sourceRows }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, full_name, role")
-      .eq("organization_id", profile.organization_id)
-      .order("full_name"),
+  const [profileResult, { data: licenseRows, error: licensesError }, { data: sourceRows }, accessResult] = await Promise.all([
+    pageAll("team profiles", (a,b)=>supabase.from("profiles").select("id, full_name, role").eq("organization_id", profile.organization_id).order("id").range(a,b)).then(data=>({data,error:false})).catch(()=>({data:null,error:true})),
     supabase.rpc("list_member_licenses"),
-    // migration 0074: how each expiration got there. Fail-soft: on an error every member shows "Origem não registrada"
+    // migration 0074: how each expiration got there. Fail-soft: on an error every member shows "Origem nao registrada"
     // (the page and the license fields are never affected).
     supabase.rpc("list_member_license_sources"),
+    supabase.rpc("fm_member_access_snapshot"),
   ]);
+  const {data: baseProfiles,error: profilesError}=profileResult;
+  const accessById = new Map<string,{enabled:boolean;version:number}>();
+  if (!accessResult.error && Array.isArray(accessResult.data)) {
+    for (const row of accessResult.data) {
+      if (row && typeof row === "object" && !Array.isArray(row) && typeof row.id === "string" && typeof row.enabled === "boolean" && typeof row.version === "number")
+        accessById.set(row.id,{enabled:row.enabled,version:row.version});
+    }
+  }
   // M3: when the license read fails the page must NOT pretend the licenses are blank (the forms used to post
   // those blanks back and wipe the CNH): surface the error and render the license/authorization controls disabled.
   const licensesAvailable = !licensesError && Array.isArray(licenseRows);
@@ -59,6 +66,9 @@ export default async function UsersPage() {
     const l = licenseById.get(p.id);
     return {
       ...p,
+      enabled: accessById.get(p.id)?.enabled ?? null,
+      accessVersion: accessById.get(p.id)?.version,
+      accessRequestId: randomUUID(),
       driver_authorized: l?.driver_authorized ?? false,
       drivers_license_number: l?.drivers_license_number ?? null,
       drivers_license_category: l?.drivers_license_category ?? null,
@@ -175,6 +185,9 @@ export default async function UsersPage() {
                   full_name: m.full_name,
                   email: m.email,
                   role: m.role,
+                  enabled: m.enabled,
+                  accessVersion: m.accessVersion,
+                  accessRequestId: m.accessRequestId,
                   driver_authorized: m.driver_authorized,
                   drivers_license_number: m.drivers_license_number,
                   drivers_license_category: m.drivers_license_category,

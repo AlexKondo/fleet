@@ -1,3 +1,5 @@
+import { loadChecklistState } from "@/lib/operations/checklistState";
+import { OfficeCustodyNotice } from "./OfficeCustodyNotice";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -114,11 +116,9 @@ export default async function ReservationDetailPage({
   // the driver acts on a trip from the same screen where they see its conversation, instead
   // of a separate row of buttons with no context.
   const vehicleStatus = reservation.vehicle?.status;
-  const canPickup =
-    isOwnReservation &&
-    reservation.status === "confirmed" &&
-    (vehicleStatus === "reserved" || vehicleStatus === "awaiting_pickup");
-  const canReturn = isOwnReservation && reservation.status === "confirmed" && vehicleStatus === "in_use";
+  const checklistState=await loadChecklistState(supabase,id);
+  const canPickup=checklistState?.can_pickup ?? false;
+  const canReturn=checklistState?.can_return ?? false;
   // Mirrors cancel_reservation's own guard (0010_cancel_reservation.sql): once the vehicle
   // is in_use/returning the trip is already underway and can only be finished via Return,
   // not cancelled. This is a convenience gate — the RPC re-checks authoritatively regardless.
@@ -299,7 +299,12 @@ export default async function ReservationDetailPage({
               </div>
             </div>
 
-            {canPickup || canReturn || canCancel ? (
+            {checklistState?.own_pickup_id || checklistState?.own_return_id ? <nav aria-label="Evidências registradas" className="fm-actions">
+          {checklistState.own_pickup_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_pickup_id}`}>Fotos da retirada</Link> : null}
+          {checklistState.own_return_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_return_id}`}>Fotos da devolução</Link> : null}
+        </nav> : null}
+        <OfficeCustodyNotice state={checklistState}/>
+        {canPickup || canReturn || canCancel ? (
               <div className="rd-actions">
                 {canPickup ? (
                   <Link href={`/reservations/${id}/pickup`} className="fm-btn fm-btn-primary">
@@ -391,6 +396,7 @@ export default async function ReservationDetailPage({
           </div>
         </div>
 
+        <OfficeCustodyNotice state={checklistState}/>
         {canPickup || canReturn || canCancel ? (
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line-800 pt-4">
             {canPickup ? (

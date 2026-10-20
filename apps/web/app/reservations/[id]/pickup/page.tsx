@@ -1,3 +1,6 @@
+import {loadEquipmentContract} from "@/lib/equipment/contract";
+import { GateVisualForm } from "@/app/gate/GateVisualForm";
+import { loadChecklistState } from "@/lib/operations/checklistState";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -43,26 +46,21 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
     redirect(`${fallbackPath}?tripActionError=checklist_not_authorized`);
   }
 
-  // Mirrors record_pickup's own preconditions so the user learns the pickup doesn't apply
-  // here *before* filling in the whole checklist, not after the submit fails server-side.
-  const canPickUp =
-    reservation.status === "confirmed" &&
-    (vehicle.status === "reserved" || vehicle.status === "awaiting_pickup");
-  if (!canPickUp) redirect(`${fallbackPath}?tripActionError=pickup_wrong_status`);
+  const state=await loadChecklistState(supabase,id);
+  if(!state) redirect(`${fallbackPath}?tripActionError=checklist_unavailable`);
+  if(state.own_pickup_id) redirect(`/reservations/${id}/evidence/${state.own_pickup_id}`);
+  if(!state.can_pickup) redirect(`${fallbackPath}?tripActionError=pickup_wrong_status`);
   const energyType = vehicle.category?.energy_type ?? "ICE";
   const showElectricRange = energyType === "BEV" || energyType === "PHEV";
 
-  const { data: equipmentItems } = await supabase
-    .from("safety_equipment_items")
-    .select("id, name")
-    .eq("organization_id", profile?.organization_id ?? "")
-    .order("created_at");
+  const equipmentContract=state.inspection_role==="security"?null:await loadEquipmentContract(supabase,id);
+  const equipmentItems=equipmentContract?.required_names.map((name,index)=>({id:`${equipmentContract.id}-${index}`,name}))??[];
 
   return (
     <ChecklistFrame
       dict={dict}
-      title={dict.reservations.pickup.title}
-      intro={dict.reservations.checklist.pickupIntro}
+      title={state.inspection_role==="security" ? dict.ops.gate.visualTitle : dict.reservations.pickup.title}
+      intro={state.inspection_role==="security" ? dict.ops.gate.visualDescription : dict.reservations.checklist.pickupIntro}
       shell={{
         orgName: profile?.organization?.name ?? "—",
         userName: profile?.full_name ?? user.email ?? "—",
@@ -76,16 +74,19 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
         energyType,
         estimatedRangeKm: vehicle.estimated_range_km,
       }}
-      showElectricRange={showElectricRange}
+      showElectricRange={state.inspection_role==="security" ? false : showElectricRange}
       route={{ origin: reservation.trip_request?.origin, destination: reservation.trip_request?.destination }}
     >
+        {state.inspection_role==="security" ? <GateVisualForm reservationId={id} phase="pickup" dict={dict}/> : (
+        equipmentContract?<><p>Equipamentos: {equipmentContract.source==="legacy_return_observation"?"Observações do processo legado; requisitos específicos ainda não verificados":`Conjunto ${equipmentContract.source==="vehicle"?"do veículo":"do modelo"} · revisão ${equipmentContract.configuration_version}`}</p>{equipmentContract.optional_names.length>0&&<p>Itens disponíveis sem exigência de ausência no checklist: {equipmentContract.optional_names.join(", ")}</p>}
         <PickupForm
           reservationId={reservation.id}
           energyType={energyType}
           currentOdometer={vehicle.odometer_km}
           equipmentItems={equipmentItems ?? []}
           dict={dict}
-        />
+        /></>:<p role="alert">Não foi possível preparar a configuração de equipamentos. Solicite ao gestor a configuração deste veículo antes de uma nova retirada. O registro físico de chegada continua disponível na unidade.</p>
+        )}
     </ChecklistFrame>
   );
 }

@@ -1,0 +1,7 @@
+{
+  "isolated": true,
+  "sourceMigration": "0024",
+  "secondIndependentChecklistBlocked": true,
+  "travelerCanDeclareSecurityRole": true,
+  "cancelledReservationAccepted": true
+}

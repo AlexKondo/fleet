@@ -2,6 +2,7 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { VERIFIED_USER_EMAIL_HEADER, VERIFIED_USER_ID_HEADER } from "./headers";
+import { accountEnabled } from "./accountAccess";
 
 export interface CurrentUser {
   id: string;
@@ -34,6 +35,6 @@ export const getCurrentUser = cache(
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    return user ? { id: user.id, email: user.email ?? null } : null;
+    return user && await accountEnabled(supabase) ? { id: user.id, email: user.email ?? null } : null;
   },
 );

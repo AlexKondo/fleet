@@ -36,3 +36,19 @@ describe("/api/geo/* without a session", () => {
     vi.doUnmock("@supabase/ssr");
   });
 });
+
+describe("deactivated session",()=>{
+  it("blocks pages and API requests before forwarding verified identity",async()=>{
+    vi.resetModules();
+    vi.doMock("@supabase/ssr",()=>({createServerClient:()=>({auth:{getUser:async()=>({data:{user:{id:"disabled",email:"member@example.invalid"}}})},rpc:async()=>({data:false,error:null})})}));
+    const {updateSupabaseSession:run}=await import("./middleware");
+    const page=await run(new NextRequest("http://localhost/dashboard",{headers:{"x-fleet-user-id":"forged"}}));
+    expect(page.status).toBe(307);
+    expect(page.headers.get("location")).toContain("/login?access=unavailable");
+    expect(fwd(page,"x-fleet-user-id")).toBeNull();
+    const api=await run(new NextRequest("http://localhost/api/geo/autocomplete"));
+    expect(api.status).toBe(403);
+    expect(await api.json()).toEqual({error:"account_unavailable"});
+    vi.doUnmock("@supabase/ssr");
+  });
+});

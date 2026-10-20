@@ -1,14 +1,26 @@
 import { headers } from "next/headers";
 import { getLocale, getDictionary } from "../lib/i18n/getLocale";
 import { getCurrentUser } from "../lib/auth/currentUser";
-import { getOwnLicense, licenseMissingFromHeader } from "../lib/auth/ownLicense";
+import {
+  getOwnLicense,
+  canDrive,
+  licenseMissingFromHeader,
+} from "../lib/auth/ownLicense";
 import { LICENSE_MISSING_HEADER } from "../lib/auth/headers";
 import { createSupabaseServerClient } from "../lib/supabase/server";
 import { loadLatestChatState } from "./chat/queries";
 import type { ChatState } from "./chat/actions";
 import { getRoleLabels } from "./settings/users/ROLE_LABELS";
 import type { Dictionary } from "../lib/i18n/dictionaries";
-import { AnalyticsIcon, DashboardIcon, FleetIcon, GateIcon, SettingsIcon, TeamIcon, TripsIcon } from "./NavIcons";
+import {
+  AnalyticsIcon,
+  DashboardIcon,
+  FleetIcon,
+  GateIcon,
+  SettingsIcon,
+  TeamIcon,
+  TripsIcon,
+} from "./NavIcons";
 
 /** "carpool" / "book" are the destinations the scoped FleetMind v2.0 shell (FmShell) adds. */
 export type NavKey =
@@ -20,7 +32,21 @@ export type NavKey =
   | "team"
   | "settings"
   | "carpool"
-  | "book";
+  | "book"
+  | "maintenance"
+  | "planning"
+  | "orders"
+  | "vehicleHistory"
+  | "energy"
+  | "drivers"
+  | "incidents"
+  | "gateExceptions"
+  | "gateHistory"
+  | "admin"
+  | "myCarpools"
+  | "keys"
+  | "keyManagement"
+  | "budgetApprovals";
 
 export interface ShellNavItem {
   key: NavKey;
@@ -33,7 +59,13 @@ export interface ShellNavItem {
 /** The shared navigation items (same order and visibility rules for every shell). */
 export function buildBaseNavItems(
   dict: Dictionary,
-  { role, isFleetManager, isAdministrator }: { role: string; isFleetManager: boolean; isAdministrator: boolean },
+  {
+    role,
+    isFleetManager,
+    isAdministrator,
+    canKeyCustody = false,
+    canBudgetApproval = false,
+  }: { role: string; isFleetManager: boolean; isAdministrator: boolean; canKeyCustody?: boolean;canBudgetApproval?:boolean },
 ): ShellNavItem[] {
   const isSecurity = role === "security";
   return [
@@ -42,13 +74,130 @@ export function buildBaseNavItems(
     // user's whole job is pickup/return checklists on "Movimentações", nothing on Painel
     // is theirs to approve or manage either, so it's hidden for pure security too (not for
     // fleet_manager/administrator, who also carry security's own gate duties sometimes).
-    { key: "dashboard", href: "/dashboard", label: dict.nav.dashboard, icon: DashboardIcon, visible: isFleetManager },
-    { key: "trips", href: "/trips", label: dict.nav.trips, icon: TripsIcon, visible: true },
-    { key: "gate", href: "/gate", label: dict.nav.gate, icon: GateIcon, visible: isSecurity || isFleetManager },
-    { key: "analytics", href: "/analytics", label: dict.nav.analytics, icon: AnalyticsIcon, visible: isFleetManager },
-    { key: "fleet", href: "/fleet", label: dict.nav.fleet, icon: FleetIcon, visible: isFleetManager },
-    { key: "team", href: "/settings/users", label: dict.nav.team, icon: TeamIcon, visible: isAdministrator },
-    { key: "settings", href: "/settings", label: dict.nav.settings, icon: SettingsIcon, visible: isFleetManager },
+    {
+      key: "dashboard",
+      href: isFleetManager ? "/dashboard/command-center" : "/dashboard",
+      label: dict.nav.dashboard,
+      icon: DashboardIcon,
+      visible: isFleetManager,
+    },
+    {
+      key: "trips",
+      href: "/trips",
+      label: dict.nav.trips,
+      icon: TripsIcon,
+      visible: true,
+    },
+    {
+      key: "gate",
+      href: "/gate",
+      label: dict.nav.gate,
+      icon: GateIcon,
+      visible: isSecurity || isFleetManager,
+    },
+    {
+      key: "analytics",
+      href: "/analytics",
+      label: dict.nav.analytics,
+      icon: AnalyticsIcon,
+      visible: isFleetManager,
+    },
+    {
+      key: "fleet",
+      href: "/fleet",
+      label: dict.nav.fleet,
+      icon: FleetIcon,
+      visible: isFleetManager,
+    },
+    {
+      key: "team",
+      href: "/settings/users",
+      label: dict.nav.team,
+      icon: TeamIcon,
+      visible: isAdministrator,
+    },
+    {
+      key: "maintenance",
+      href: isFleetManager ? "/fleet/maintenance" : "/maintenance",
+      label: "Manutenção",
+      icon: FleetIcon,
+      visible: isFleetManager || role === "maintenance_operator",
+    },
+    {
+      key: "planning",
+      href: "/maintenance/planning",
+      label: "Planejamento",
+      icon: DashboardIcon,
+      visible: isFleetManager || role === "maintenance_operator",
+    },
+    {
+      key: "orders",
+      href: "/maintenance/work-orders",
+      label: "Ordens de Serviço",
+      icon: TripsIcon,
+      visible: isFleetManager || role === "maintenance_operator",
+    },
+    {
+      key: "vehicleHistory",
+      href: "/maintenance/vehicles",
+      label: "Prontuário Digital",
+      icon: FleetIcon,
+      visible: isFleetManager || role === "maintenance_operator",
+    },
+    {
+      key: "energy",
+      href: "/fleet/energy",
+      label: "Abastecimento / Recarga",
+      icon: AnalyticsIcon,
+      visible: isFleetManager,
+    },
+    {
+      key: "drivers",
+      href: "/fleet/drivers",
+      label: "Motoristas",
+      icon: TeamIcon,
+      visible: isFleetManager,
+    },
+    {
+      key: "incidents",
+      href: "/fleet/incidents",
+      label: "Ocorrências e Checklists",
+      icon: GateIcon,
+      visible: isFleetManager,
+    },
+    {
+      key: "gateExceptions",
+      href: "/gate/exceptions",
+      label: "Ocorrências da Portaria",
+      icon: GateIcon,
+      visible: isSecurity || isFleetManager,
+    },
+    {
+      key: "gateHistory",
+      href: "/gate/history",
+      label: "Histórico da Portaria",
+      icon: TripsIcon,
+      visible: isSecurity || isFleetManager,
+    },
+    {
+      key: "keys",href:"/account/keys",label:"Custódia de chaves",icon:GateIcon,visible:canKeyCustody,
+    },
+    {key:"budgetApprovals",href:"/account/maintenance-approvals",label:"Aprovar orçamentos",icon:TripsIcon,visible:canBudgetApproval||isFleetManager},
+    {key:"keyManagement",href:"/fleet/keys",label:"Acompanhamento das chaves",icon:GateIcon,visible:isFleetManager},
+    {
+      key: "admin",
+      href: "/admin",
+      label: "Administração",
+      icon: SettingsIcon,
+      visible: isAdministrator,
+    },
+    {
+      key: "settings",
+      href: "/settings",
+      label: dict.nav.settings,
+      icon: SettingsIcon,
+      visible: isFleetManager,
+    },
   ];
 }
 
@@ -68,17 +217,35 @@ export async function loadShellContext(role: string) {
   const currentUser = await getCurrentUser(supabase);
   let licenseMissing = false;
   let avatarUrl: string | null = null;
+  let canKeyCustody = false;
+  let canBudgetApproval = false;
   if (currentUser) {
+    try {
+      const result=await supabase.rpc("fm_has_key_custody");
+      canKeyCustody=!result.error && result.data===true;
+    } catch { canKeyCustody=false; }
+    try{const result=await supabase.rpc("fm_has_budget_approval_assignment");canBudgetApproval=!result.error&&result.data===true;}catch{canBudgetApproval=false;}
     // License columns are not directly readable since 0063: get_my_license() answers for the caller only.
     // L6: middleware already read it for this request (one RPC per request, not two); only when it did not
     // (/account routes skip the gate, or the read failed there) does the shell read it itself.
-    const fromMiddleware = licenseMissingFromHeader((await headers()).get(LICENSE_MISSING_HEADER));
+    const fromMiddleware = licenseMissingFromHeader(
+      (await headers()).get(LICENSE_MISSING_HEADER),
+    );
     const [{ data: ownProfile }, ownLicense] = await Promise.all([
-      supabase.from("profiles").select("avatar_url").eq("id", currentUser.id).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", currentUser.id)
+        .maybeSingle(),
       fromMiddleware === null ? getOwnLicense(supabase) : Promise.resolve(null),
     ]);
-    // null = the read failed: do not lock the UI down on a transient error (the middleware gate fails open too).
-    licenseMissing = fromMiddleware !== null ? fromMiddleware : ownLicense ? !ownLicense.number : false;
+    // Failed license lookup denies driving; non-driving administrative work remains reachable.
+    licenseMissing =
+      fromMiddleware !== null
+        ? fromMiddleware
+        : ownLicense
+          ? !canDrive(ownLicense)
+          : true;
     avatarUrl = ownProfile?.avatar_url ?? null;
   }
 
@@ -87,11 +254,21 @@ export async function loadShellContext(role: string) {
 
   // The actual navigation block lives in middleware.ts (redirects any other route to /account/license before it
   // ever renders) — this only decides what the one page that survives that redirect looks like.
-  const licenseGateActive = licenseMissing && !isSecurity;
+  const licenseGateActive = licenseMissing && !isSecurity && !["fleet_manager", "administrator", "maintenance_operator"].includes(role ?? "");
 
   const chatInitialState: ChatState = currentUser
     ? await loadLatestChatState(supabase, currentUser.id)
     : { status: "idle", messages: [] };
 
-  return { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState };
+  return {
+    locale,
+    dict,
+    roleLabels,
+    licenseMissing,
+    avatarUrl,
+    licenseGateActive,
+    chatInitialState,
+    canKeyCustody,
+    canBudgetApproval,
+  };
 }

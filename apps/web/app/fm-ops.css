@@ -266,7 +266,7 @@
 }
 
 /* buttons / action links */
-.fm-theme .fm-legacy button:not(.fm-btn):not(.fm-clear),
+.fm-theme .fm-legacy button:not(.fm-btn):not(.fm-clear):not(.vw button),
 .fm-theme .fm-ops-actions button:not(.fm-btn),
 .fm-theme .fm-legacy a[class*="rounded-sm"][class*="border"] {
   display: inline-flex;

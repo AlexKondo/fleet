@@ -1,4 +1,5 @@
 "use server";
+import {assistantPolicy} from "@/lib/operations/aiPolicy";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -122,6 +123,9 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     .eq("id", user.id)
     .single();
   if (!profile) return { status: "error", messages: prevState.messages, error: "not_authenticated" };
+
+  const policy = await assistantPolicy(supabase);
+  if (!policy.enabled) return { status: "error", messages: [...prevState.messages, {role:"assistant",content:policy.available?"O assistente FleetMind foi desativado pelo administrador. Os fluxos operacionais permanecem disponíveis no menu.":"Não foi possível confirmar a política do assistente. Tente novamente em instantes."}], error: "assistant_disabled" };
 
   const phase = String(formData.get("phase") ?? "message");
   const admin = createSupabaseAdminClient();

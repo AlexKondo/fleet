@@ -79,7 +79,7 @@ export async function EmployeeHome({
   // Next reservation: the earliest still-open one that has not ended (own query, so it never depends on how many past rows exist).
   // Most-reserved ranking: a count per vehicle over ALL the employee's non-cancelled reservations, read page by page
   // (1000 rows each, only the vehicle columns) instead of a capped list.
-  const [{ data: nextRows }, { data: myRequests }, usageRows] = await Promise.all([
+  const [{ data: nextRows, error: nextReservationError }, { data: myRequests, error: carpoolRequestsError }, usageRows] = await Promise.all([
     supabase
       .from("reservations")
       .select(
@@ -102,14 +102,15 @@ export async function EmployeeHome({
       .limit(3),
     (async () => {
       const rows: { vehicle: { id: string; plate: string; name: string | null } | null }[] = [];
-      for (let page = 0; page < 50; page++) {
-        const { data } = await supabase
+      for (let page = 0; ; page++) {
+        const { data, error } = await supabase
           .from("reservations")
           .select("id, vehicle:vehicles(id, plate, name), trip_request:trip_requests!inner(requester_id)")
           .eq("trip_request.requester_id", userId)
           .neq("status", "cancelled")
           .order("id", { ascending: true })
           .range(page * 1000, page * 1000 + 999);
+        if (error) return null;
         rows.push(...(data ?? []));
         if (!data || data.length < 1000) break;
       }
@@ -128,7 +129,7 @@ export async function EmployeeHome({
 
   // "Veículos mais reservados por você": reservations per vehicle (what is counted is reservations, not trips taken).
   const counts = new Map<string, { id: string; plate: string; name: string | null; count: number }>();
-  for (const r of usageRows) {
+  for (const r of usageRows ?? []) {
     if (!r.vehicle) continue;
     const c = counts.get(r.vehicle.id) ?? { id: r.vehicle.id, plate: r.vehicle.plate, name: r.vehicle.name, count: 0 };
     c.count += 1;
@@ -194,7 +195,12 @@ export async function EmployeeHome({
               <NextReservation idSuffix="m" />
             </section>
 
-            {myRequests && myRequests.length > 0 ? (
+            {carpoolRequestsError ? (
+              <section className="fm-card hm-card" role="alert" data-testid="home-carpools-error">
+                <h2 className="fm-h2">{h.carpoolTitle}</h2>
+                <p className="fm-error">{t.vehicles.loadError}</p>
+              </section>
+            ) : myRequests && myRequests.length > 0 ? (
               <section className="fm-card hm-card" aria-labelledby="hm-carpool" data-testid="home-carpools">
                 <div className="hm-card-head">
                   <h2 id="hm-carpool" className="fm-h2">{h.carpoolTitle}</h2>
@@ -233,7 +239,9 @@ export async function EmployeeHome({
                   <span>{h.alertAwaiting}</span>
                 </p>
               ) : null}
-              {Object.keys(attentionByReason).length === 0 ? (
+              {vehiclesError ? (
+                <p className="fm-error" role="alert" data-testid="home-attention-error">{t.vehicles.loadError}</p>
+              ) : Object.keys(attentionByReason).length === 0 ? (
                 <p className="hm-muted">{t.attention.empty}</p>
               ) : (
                 <ul className="hm-attention-list">
@@ -252,7 +260,12 @@ export async function EmployeeHome({
               )}
             </section>
 
-            {used.length > 0 ? (
+            {usageRows === null ? (
+              <section className="fm-card hm-card" role="alert" data-testid="home-usage-error">
+                <h2 className="fm-h2">{h.usedTitle}</h2>
+                <p className="fm-error">{t.vehicles.loadError}</p>
+              </section>
+            ) : used.length > 0 ? (
               <section className="fm-card hm-card" aria-labelledby="hm-used" data-testid="home-used-vehicles">
                 <h2 id="hm-used" className="fm-h2">{h.usedTitle}</h2>
                 <ul className="hm-used">
@@ -351,7 +364,9 @@ export async function EmployeeHome({
           <h2 id={`hm-next-${idSuffix}`} className="fm-h2">{h.nextTitle}</h2>
           <Link href="/trips" className="hm-link">{h.viewAll}</Link>
         </div>
-        {next ? (
+        {nextReservationError ? (
+          <p className="fm-error" role="alert" data-testid={`home-next-error-${idSuffix}`}>{t.vehicles.loadError}</p>
+        ) : next ? (
           <div className="hm-next-body" data-testid={idSuffix === "d" ? "home-next-reservation" : "home-next-reservation-mobile"}>
             <div className="hm-next-when">
               <span className="hm-next-icon"><FmCalendarIcon /></span>

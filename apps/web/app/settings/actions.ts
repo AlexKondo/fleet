@@ -162,6 +162,6 @@ export async function removeSafetyEquipmentItem(itemId: string): Promise<void> {
   const user = await getCurrentUser(supabase);
   if (!user) return;
 
-  await supabase.from("safety_equipment_items").delete().eq("id", itemId);
+  await supabase.from("safety_equipment_items").update({enabled:false}).eq("id", itemId);
   revalidatePath("/settings");
 }

@@ -1,3 +1,4 @@
+import {organizationMetricsAllowed} from "@/lib/operations/organizationMetrics";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getDictionary } from "@/lib/i18n/getLocale";
@@ -37,9 +38,10 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
   const requested = Number(range);
   const days = (KPI_RANGE_DAYS as readonly number[]).includes(requested) ? requested : 30;
 
+  const organizationScope=await organizationMetricsAllowed(supabase);
   let report: Awaited<ReturnType<typeof loadCarpoolKpis>> | null = null;
   try {
-    report = await loadCarpoolKpis(createSupabaseAdminClient(), profile.organization_id, days);
+    if(organizationScope)report = await loadCarpoolKpis(createSupabaseAdminClient(), profile.organization_id, days);
   } catch {
     report = null;
   }
@@ -84,6 +86,7 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
         </Link>
       }
     >
+      {!organizationScope&&<p role="status">Os registros históricos de busca e provedor não possuem atribuição confiável por unidade. Esta consulta organizacional está restrita à gestão central.</p>}
       <div data-testid="carpool-kpi-page">
         <div className="rp-range" role="group" aria-label={t.rangeLabel}>
           <span className="rp-range-label">{t.rangeLabel}</span>

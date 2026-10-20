@@ -1,0 +1,415 @@
+{
+  "note": "Static route/source and reference-hash check only; not authenticated navigation, visual acceptance or functionality approval. Route logs depend on the executor clock; record ordering does not rely on timestamp monotonicity.",
+  "screens": [
+    {
+      "screen": "SCR-FM-001",
+      "surfaces": [
+        {
+          "route": "/dashboard/command-center",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Implementação conectada às fontes existentes; taxas históricas, mapa e sustentabilidade pendentes. Composição verificada; não homologada.",
+      "reference_file_verified": "SCR-FM-001_APPROVED.png"
+    },
+    {
+      "screen": "SCR-FM-002",
+      "surfaces": [
+        {
+          "route": "/fleet",
+          "page_exists": true
+        },
+        {
+          "route": "/fleet/vehicles/[id]",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Cadastro e ficha existentes; imagem 41 vinculada por confronto com a aprovação recuperada de 09/10 (Rev.04, seleção individual/painel dinâmico/Intelligence/dois acessos de voz); 0084 acrescenta configuração de equipamentos por veículo/modelo e 0085 arquivamento auditado. Nesta entrega, lista lateral, seleção individual, painel dinâmico, abas, VIN, revisão por data/km e links do veículo selecionado foram implementados preservando edição/arquivamento. Faltam os painéis históricos completos, rastreamento ao vivo e conferência visual integral.",
+      "reference_file_verified": "SCR-FM-002_REV04_REFERENCE.png"
+    },
+    {
+      "screen": "SCR-FM-003",
+      "surfaces": [
+        {
+          "route": "/dashboard",
+          "page_exists": true
+        },
+        {
+          "route": "/trips",
+          "page_exists": true
+        },
+        {
+          "route": "/reservations/[id]",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Reservas, aprovação e ações existentes; conferir composição, agenda e contrato completo.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-FM-004",
+      "surfaces": [
+        {
+          "route": "/fleet/carpools",
+          "page_exists": true
+        },
+        {
+          "route": "/analytics/carpool",
+          "page_exists": true
+        },
+        {
+          "route": "/carpool",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Opção A/imagem 15 confirmada em 19/10. Gestão própria com seis indicadores identificados conforme disponibilidade, abas, busca/data, paginação, lista/detalhe e decisões pelos RPCs existentes. Views de sessão respeitam unidades. Nesta entrega foram acrescentados filtros de destino/horário/status e mapa da rota da oferta sob solicitação, pelo adapter existente. 0088 acrescenta filtro por unidade-base com dimensão protegida no servidor. Faltam recorrência, compatibilidade detalhada de passageiros, metodologia de impacto e homologação visual integral. Métricas globais continuam restritas à gestão central.",
+      "reference_file_verified": "SCR-FM-004_REV02_APPROVED.png"
+    },
+    {
+      "screen": "SCR-FM-005",
+      "surfaces": [
+        {
+          "route": "/fleet/maintenance",
+          "page_exists": true
+        },
+        {
+          "route": "/maintenance/planning",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Superfície operacional implementada com OS, disponibilidade, revisões por data ou km e janelas; depende de migração 0074 e homologação visual.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-FM-006",
+      "surfaces": [
+        {
+          "route": "/fleet/energy",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Lançamentos reais de combustível e recarga, custo, motorização, filtros e anulação auditada implementados. 0083 acrescenta vínculo de comprovantes privados. Extração automática dos comprovantes e metodologia de eficiência/emissões permanecem pendentes.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-FM-007",
+      "surfaces": [
+        {
+          "route": "/fleet/drivers",
+          "page_exists": true
+        },
+        {
+          "route": "/settings/users",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Consulta dedicada com CNH mascarada, validade e autorização. Alterações permanecem restritas ao administrador para preservar a permissão existente; confirmar alinhamento dessa regra ao contrato.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-FM-008",
+      "surfaces": [
+        {
+          "route": "/fleet/incidents",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Fila real de relatos dos checklists, equipamentos, dano/limpeza e ciência auditada; tratamento continua nos fluxos existentes. 0086 acrescenta ocorrência independente com análise, encaminhamento, resolução, encerramento/reabertura versionados e histórico preservado; checagem local não equivale a aceite integral da arte.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-FM-009",
+      "surfaces": [
+        {
+          "route": "/analytics",
+          "page_exists": true
+        },
+        {
+          "route": "/analytics/carpool",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Análises existentes; custos, energia e emissões com metodologia ainda incompletos.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-USR-001",
+      "surfaces": [
+        {
+          "route": "/dashboard",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Home existente; incorporadas falhas explícitas em próxima reserva, caronas, atenção e ranking. Conferência visual pendente.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-USR-002",
+      "surfaces": [
+        {
+          "route": "/trips/new",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Fluxo existente; implementação preservada, sem homologação contra arte nesta retomada.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-USR-003",
+      "surfaces": [
+        {
+          "route": "/carpool",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Busca e solicitação existentes; implementação preservada, sem homologação contra arte nesta retomada.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-USR-004",
+      "surfaces": [
+        {
+          "route": "/trips",
+          "page_exists": true
+        },
+        {
+          "route": "/reservations/[id]",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Listagem e detalhes existentes; conferir todos os estados previstos.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-USR-005",
+      "surfaces": [
+        {
+          "route": "/reservations/[id]/pickup",
+          "page_exists": true
+        },
+        {
+          "route": "/reservations/[id]/return",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "0077 corrige papel forjado, estado de reserva, checklist do colaborador, conferência visual rápida de Segurança e preservação de evidências; estados da UI ligados ao banco. 0078–0079 acrescentam checklist do colaborador no escritório com custódia local independente e encerramento após checklist de retorno + chaves recebidas. 0084 implementa equipamentos específicos e contrato imutável por viagem, com tratamento explícito do legado. Configuração da frota real e homologação permanecem pendentes.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-USR-006",
+      "surfaces": [
+        {
+          "route": "/carpool/mine",
+          "page_exists": true
+        },
+        {
+          "route": "/trips",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Rota própria reutiliza o fluxo funcional de solicitações/participações existente. Gestão de ofertas do motorista continua nos detalhes de sua reserva; composição integral da arte pendente.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-SEC-001",
+      "surfaces": [
+        {
+          "route": "/gate",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Fila ligada às etapas verificadas; checklist e saída/chegada física separados em 0077. SP usa custódia de chaves separada em 0078–0079, sem inspeção fictícia de Segurança. OCR/voz e homologação integral permanecem pendentes.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-SEC-002",
+      "surfaces": [
+        {
+          "route": "/gate/exceptions",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Relatos de checklist, análise e ciência persistente implementados; sem encerramento/liberação indevida. Fotos e registro de dano usam os checklists existentes.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-SEC-003",
+      "surfaces": [
+        {
+          "route": "/gate/history",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Registro físico separado de saída/chegada/impedimento, linha do tempo e auditoria implementados. Checklists independentes obrigatórios para saída; chegada bloqueada pode ser registrada.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-MNT-001",
+      "surfaces": [
+        {
+          "route": "/maintenance",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Painel de operação conectado à frota, OS, custos executados, revisões e alertas. Homologação visual e integração com Supabase pendentes.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-MNT-002",
+      "surfaces": [
+        {
+          "route": "/maintenance/planning",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Calendário real de janelas; conflitos com reservas protegidos em ambas as direções no banco. Previsão/capacidade avançada e recomendação de agenda ainda não implementadas.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-MNT-003",
+      "surfaces": [
+        {
+          "route": "/maintenance/work-orders",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "OS, orçamento, aprovação, programação, execução parcial, garantia, custos, anulação e revisão de orçamento implementados. Orçado separado de executado. 0082 acrescenta política configurável por unidade, superior com atribuição restrita, segregação de autoria, revisão pendente e histórico da aprovação. 0083 acrescenta anexos privados e anulação sem apagar evidências. 0087 acrescenta correções financeiras separadas dos itens originais, aprovação independente e custo efetivo corrigido; homologação integrada permanece pendente.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-MNT-004",
+      "surfaces": [
+        {
+          "route": "/maintenance/vehicles",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Prontuário com VIN imutável, revisões por data/km, histórico de OS e custos executados. 0083 implementa documentos/anexos e prontuário exportável CSV/JSON; 0084 acrescenta conjunto de equipamentos por veículo/modelo. Homologação real e visual permanece pendente.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-ADM-001",
+      "surfaces": [
+        {
+          "route": "/admin",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Painel e navegação administrativa com contagens reais e atividade recente. Homologação integral pendente.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-ADM-002",
+      "surfaces": [
+        {
+          "route": "/settings/users",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Gestão de usuários com desativação/reativação auditada, preservação de identidades e bloqueio de sessão (0076). 0078–0079 acrescentam designação restrita de custódia por unidade sem mudar o papel principal. Escopos gerais de gestão por unidade implementados em 0080–0081 com validação local; 0082 acrescenta atribuição restrita para aprovação de orçamento por superior designado. Múltiplos papéis gerais continuam pendentes. Cadastro público agora cria Colaborador conforme aprovação; papéis atuais preservados.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-ADM-003",
+      "surfaces": [
+        {
+          "route": "/settings",
+          "page_exists": true
+        },
+        {
+          "route": "/settings/mobility-points",
+          "page_exists": true
+        },
+        {
+          "route": "/admin/units",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Configuração de unidades reais, processo operacional, vínculo de veículo e responsáveis de chaves versionados/auditados em 0078–0079. 0080–0081 acrescentam escopos de gestão reais, views, RLS, comandos e configuração administrativa; homologação integrada ainda pendente.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-ADM-004",
+      "surfaces": [
+        {
+          "route": "/admin/integrations",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Inventário de adapters, configuração sem expor segredos e leituras reais do provedor. Não há prova automática de entrega SMTP nem retry arbitrário de integrações.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-ADM-005",
+      "surfaces": [
+        {
+          "route": "/admin/audit",
+          "page_exists": true
+        },
+        {
+          "route": "/account/privacy",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Auditoria consultável e solicitações LGPD com submissão pelo titular e tratamento versionado pelo administrador. 0088 acrescenta exportação estruturada do próprio titular; não inclui binários nem equivale a exportação pessoal integral com anexos. Não há exclusão automática.",
+      "reference_file_verified": null
+    },
+    {
+      "screen": "SCR-ADM-006",
+      "surfaces": [
+        {
+          "route": "/admin/ai",
+          "page_exists": true
+        }
+      ],
+      "full_visual_acceptance_this_run": false,
+      "current_state_description": "Política versionada do assistente aplicada ao chat no servidor; histórico e confirmação humana preservados. Granularidade por unidade e governança/custos de todos os modelos permanecem pendentes.",
+      "reference_file_verified": null
+    }
+  ],
+  "references": [
+    {
+      "file": "docs/fleetmind-v3/SCR-FM-001_APPROVED.png",
+      "sha256": "90d035e0224ddae657578b0d079cd0040e7f3830205b47c6e2d8c7e328920936",
+      "unchanged_from_last_delivery": true
+    },
+    {
+      "file": "docs/fleetmind-v3/SCR-FM-002_REV04_REFERENCE.png",
+      "sha256": "cb5d0ec6ab0aceb82271bf0c4197e1a78c2c6baedf57f91be9a0f0a050e1c785",
+      "unchanged_from_last_delivery": true
+    },
+    {
+      "file": "docs/fleetmind-v3/SCR-FM-004_REV02_APPROVED.png",
+      "sha256": "2b353f439d2c2310645966cbb25c4023abe3056c9dac2ac24883b2868c94162c",
+      "unchanged_from_last_delivery": true
+    }
+  ],
+  "active_migration_files": 83
+}

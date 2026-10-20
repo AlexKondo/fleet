@@ -1,3 +1,4 @@
+import { uploadImmutablePhoto } from "./immutablePhoto";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { ALL_PHOTO_ANGLES, type PhotoAngle } from "./checklist";
 
@@ -15,9 +16,8 @@ const ALLOWED_MIME_PREFIX = "image/";
  * Multiple photos per angle are allowed (FormData carries several entries under the same
  * `photo_<angle>` key — see PhotoCapture.tsx) — `inspection_photos` has no uniqueness
  * constraint on (inspection_id, angle) (0002_operational_cycle.sql), so each just gets its
- * own row; only the storage path needed a per-photo index to stop colliding (it used to be
- * one fixed `${angle}.${ext}` path, `upsert: true`, so a second photo silently overwrote
- * the first one in storage even though the DB accepted both rows).
+ * own row per distinct content. Retries use a durable content-addressed journal; they never
+ * replace a previous object's bytes. Database policy also checks ownership.
  *
  * Uploads run concurrently (Promise.allSettled) since each photo is independent — no
  * shared state, no ordering requirement — so a slow mobile connection pays for one
@@ -44,25 +44,8 @@ export async function uploadInspectionPhotos(
         return angle;
       }
 
-      const extensionMatch = /\.([a-zA-Z0-9]+)$/.exec(file.name);
-      const extension = extensionMatch ? extensionMatch[1] : "jpg";
-      // Path shape enforced by the storage RLS policy (supabase/migrations/0002_operational_cycle.sql):
-      // the first folder segment must equal the uploader's organization_id. Indexed so a
-      // second photo for the same angle gets its own object instead of overwriting the first.
-      const storagePath = `${organizationId}/${inspectionId}/${angle}_${index}.${extension}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("vehicle-photos")
-        .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
-      if (uploadError) return angle;
-
-      const { error: insertError } = await supabase.from("inspection_photos").insert({
-        organization_id: organizationId,
-        inspection_id: inspectionId,
-        angle,
-        storage_path: storagePath,
-      });
-      return insertError ? angle : null;
+      await uploadImmutablePhoto(supabase,"inspection",inspectionId,angle,file);
+      return null;
     }),
   );
 

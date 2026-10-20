@@ -1,0 +1,336 @@
+{
+  "status": "local_scoped_validation_passed_not_production_homologation",
+  "unique_test_cases": 152,
+  "test_files": 22,
+  "counting": "Unique file/case pairs, not sum of repeated runs. Historic 923/66 are not added. Initial CNH and search-path failures are counted only by their final corrected cases.",
+  "files": [
+    {
+      "file": "apps/web/lib/operations/forms.test.ts",
+      "source_sha256": "267b248a5320e805576c83448ec5f9791b8fb4fb7672d327cc98bf63f2095cf4",
+      "final_passed_test_cases": 6,
+      "case_names": [
+        "preserves the requested Brasília maintenance time without accepting invalid calendar dates",
+        "cannot redirect an operational action to an external address",
+        "rejects NaN and other nondecimal costs before calling the database",
+        "calculates warranty and effective costs without including voided lines",
+        "does not offer approval to maintenance operators or actions on terminal states",
+        "distinguishes a restricted snapshot from an invalid response"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/carpool/management.test.ts",
+      "source_sha256": "4930622b10020208a5386efe7e0c3da3055bfc1d4b808014f081962777e120ce",
+      "final_passed_test_cases": 6,
+      "case_names": [
+        "uses São Paulo departure date at the UTC day boundary",
+        "filters routes without case sensitivity and never treats history as active offers",
+        "normalizes unknown tabs",
+        "combines independent destination and local-time filters",
+        "allows explicit archived-state consultation without turning it into an actionable offer",
+        "fails the whole snapshot on a denied source rather than showing zero"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/carpool/managementActions.test.ts",
+      "source_sha256": "9d635e58dd09deec11e68eaad5337203452799402c19fb775824cb188ec01eef",
+      "final_passed_test_cases": 4,
+      "case_names": [
+        "denies employee calls before the RPC",
+        "rejects invalid input before mutation",
+        "uses the existing acceptance action and refreshes the management page",
+        "preserves rejection reasons and reports authorization failures without success"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/vehicleSelection.test.ts",
+      "source_sha256": "b647dbbf9f268d188c6ec376a202b74cca6e59b700910ccbab16eeacf25674c7",
+      "final_passed_test_cases": 3,
+      "case_names": [
+        "matches accents, plate and model without broadening status filters",
+        "drops hidden selection when changing page or filters",
+        "clamps pagination and renders no stale detail for an empty result"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/carpool/managementRender.test.ts",
+      "source_sha256": "c507d4d1510196facbec5c34e07387184c0e798857a9997856cdad8cdc6143b7",
+      "final_passed_test_cases": 4,
+      "case_names": [
+        "renders master/detail, pending decisions and unavailable environmental calculations",
+        "does not show decisions on the manager's own request",
+        "does not show decisions or invented totals on source failure",
+        "rejects employee access before loading management data"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/app/operations/workspaces.test.ts",
+      "source_sha256": "5d84453264ad912e0005e237a22d0de729ec510b45f4f0c870f4bb58a3ca6484",
+      "final_passed_test_cases": 9,
+      "case_names": [
+        "offers no approval control to an operator and preserves real financial line totals",
+        "renders maintenance overview without turning absent data into a successful operation",
+        "renders maintenance planning without turning absent data into a successful operation",
+        "renders maintenance orders without turning absent data into a successful operation",
+        "renders maintenance vehicle without turning absent data into a successful operation",
+        "renders administration overview from the actual view",
+        "renders administration integrations from the actual view",
+        "renders administration audit from the actual view",
+        "renders administration ai from the actual view"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/keyCustodyRender.test.ts",
+      "source_sha256": "80abaec0833487fb896c19cff3fbc3c9b4e9d0616959eef9cbb65c956e9d2503",
+      "final_passed_test_cases": 14,
+      "case_names": [
+        "renders local confirmation without requiring the custodian to provide a driver's license",
+        "hides physical confirmation for the driver's own reservation",
+        "fails closed when the workspace cannot be read",
+        "renders the actual administrative configuration",
+        "renders versioned management scopes independently of key custody",
+        "does not offer grant forms when the scope source fails",
+        "renders configurable maintenance approvers independently of key designation",
+        "renders the superior's budget-only confirmation without a driving license requirement",
+        "does not render approval forms when the budget queue is unavailable",
+        "renders private document uploads, protected downloads and non-destructive invalidation",
+        "renders per-vehicle equipment classifications and model inheritance",
+        "renders the archive with audited restoration and preserved historical links",
+        "fails closed when document metadata cannot be loaded",
+        "lets a remote manager read custody without a physical confirmation form"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/financialAdjustments.test.ts",
+      "source_sha256": "0876ff725e01cfa4fd41a903aec4b0d260a20a95510a58b2723c8d91567f885f",
+      "final_passed_test_cases": 4,
+      "case_names": [
+        "keeps pending changes out of costs, then includes independently approved signed deltas",
+        "prevents self approval, replay mutation and cost below zero",
+        "requires a designated superior when a manager submits, even if another administrator reviews",
+        "allows a designated superior to review without granting general fleet management"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/incidentCases.test.ts",
+      "source_sha256": "47897fbaede7263e9f656403883c104417ee6fb63c3982cdb9f3c6734dc46546",
+      "final_passed_test_cases": 9,
+      "case_names": [
+        "exports populated records only for the authenticated subject",
+        "returns only authorized management unit dimensions",
+        "preserves versioned transitions/history without releasing the vehicle",
+        "retries exactly once and rejects changed idempotency payloads",
+        "rejects skipped states and stale versions",
+        "denies employee, cross-organization and forged vehicle references",
+        "requires a real assignment or a same-vehicle work order and preserves history against direct mutation",
+        "does not export personal records after account deactivation",
+        "cannot resolve a referred case before its linked work order is completed"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/managerScope.test.ts",
+      "source_sha256": "ec2abad5f55a2c4f499ef3aadaf94cd403abeea990ed791022ddc1f78935260d",
+      "final_passed_test_cases": 12,
+      "case_names": [
+        "preserves existing managers explicitly and gives new managers no implicit global scope",
+        "authorizes one or multiple units and revokes access without changing historical records",
+        "blocks direct vehicle edits and checked reservation overrides outside scope",
+        "does not allow moving a managed reservation onto an unmanaged vehicle",
+        "allows a designated key custodian outside their separate fleet management portfolio",
+        "limits the remote key management report to the authorized vehicle portfolio",
+        "requires administrative authority, versions and organization-safe grants",
+        "creates a vehicle atomically only in an authorized unit, without changing shared catalogs",
+        "scopes storage reference uploads without exposing inspection evidence",
+        "keeps the personal booking catalog and sanitized availability separate from fleet management",
+        "applies the same unit boundary to new incident commands, dimensions and financial sources",
+        "does not let a temporary table shadow the management authorization source"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/documents/files.test.ts",
+      "source_sha256": "6249bf463bcc5524ab61e433636fda1184b6de4f4abfc69fd22d5225755bc53c",
+      "final_passed_test_cases": 5,
+      "case_names": [
+        "validates signature and bounded bytes instead of trusting MIME or extension",
+        "normalizes path and header controls without changing the original object",
+        "quotes delimiters and neutralizes spreadsheet formula execution",
+        "keeps planned, voided and warranty lines out of realized net costs",
+        "exports approved versus pending financial corrections without changing original lines"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/documents/personalExport.test.ts",
+      "source_sha256": "3818647039a40ea7364e2e3b4573b02a64851e801b5c9f50ad06d2496370d3fa",
+      "final_passed_test_cases": 3,
+      "case_names": [
+        "does not reach the export RPC without authentication",
+        "uses no client-supplied subject or organization and sends a private attachment",
+        "returns an explicit failure without a partial success document"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/supabase/managementLicenseBoundary.test.ts",
+      "source_sha256": "f28e6ecc92b63c2682a5008d76fc0349292467c5b8dcf094d7a1ab47bd279641",
+      "final_passed_test_cases": 4,
+      "case_names": [
+        "lets a verified manager reach the two pages that explicitly declare nonDrivingWorkspace",
+        "keeps the driving gate for the manager’s own booking and employee access",
+        "does not bypass account deactivation",
+        "does not bypass the required initial password change"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/supabase/middleware.test.ts",
+      "source_sha256": "5a717cb356c0d5cf8235a703e90f0d15a5c88e0a12f63fb530df29d65f34fd1d",
+      "final_passed_test_cases": 3,
+      "case_names": [
+        "strips client-supplied identity / license headers on public routes",
+        "answers 401 JSON (no-store), never a redirect to /login",
+        "blocks pages and API requests before forwarding verified identity"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/newPanelsValidation.test.ts",
+      "source_sha256": "293cd68a5e9601ffbe640e097cea6cce021ef5ae35a9745ef175d5e2542b59bf",
+      "final_passed_test_cases": 2,
+      "case_names": [
+        "renders actual case controls and preserves an explicit unavailable state",
+        "shows pending corrections without granting review and offers approval only when the source permits it"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/database.test.ts",
+      "source_sha256": "16a0d6facaeb51e4ba2a13bf5d0f2f34e668e48293fcc5ea03df033244d0c3f2",
+      "final_passed_test_cases": 16,
+      "case_names": [
+        "rejects employee writes, cross-tenant vehicles and direct table mutations",
+        "deduplicates identical requests and rejects a reused key with different payload",
+        "enforces approval role, version and valid state transitions",
+        "prevents conflicts in both reservation-to-maintenance directions",
+        "keeps financial records append-only and checks motorizations",
+        "never records a blocked departure, but accepts a real arrival with legacy reason",
+        "requires budget revision before completing an overrun and preserves warranty costs",
+        "rejects NaN costs even through a direct RPC",
+        "does not disclose maintenance costs through the gate snapshot",
+        "keeps the technical identity immutable and writes the audit with session actor",
+        "versions governance, rejects non-admin changes and isolates privacy requests",
+        "deactivates without deleting a profile or its records, blocks JWT access and reactivates",
+        "prevents self-deactivation and another organization's target",
+        "counts active admins across role changes and deactivation",
+        "rejects hard deletion of identities and truncation even by the table owner",
+        "does not undo recorded access decisions through rollback"
+      ],
+      "schema_scope": "isolated legacy fixture 0074–0076"
+    },
+    {
+      "file": "apps/web/lib/operations/inspectionFlow.test.ts",
+      "source_sha256": "c8ca3987980ebcf22541df50e4dbc33b2764835e5a26ea43ad10e09e8be06fc2",
+      "final_passed_test_cases": 9,
+      "case_names": [
+        "allows distinct traveler and security pickup in either order and deduplicates retries",
+        "rejects forged roles, another traveler, cancelled/pending/completed reservations and direct inserts",
+        "holds a return until both independent observations and derives damage tasks on the server",
+        "preserves observations, rejects cross-actor photos and cannot alter existing evidence",
+        "requires a real stored object owned by the inspector and prevents bystander reads",
+        "does not disclose another person's checklist state through batch endpoints",
+        "rechecks current driver authorization at physical departure",
+        "records arrival and independent returns for a blocked vehicle without releasing its block",
+        "does not record a plug-in charge for a self-charging HEV"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/keyCustody.test.ts",
+      "source_sha256": "ef46c1a031da82f453a434035fa387a81194017486067c10171e183de4f8e839",
+      "final_passed_test_cases": 14,
+      "case_names": [
+        "requires explicit assignment even for a fleet manager and does not promote a custodian",
+        "supports a separately designated local fleet manager",
+        "completes only after both driver return and key receipt, in either order",
+        "revokes new confirmations without deleting custody evidence",
+        "blocks self-confirmation and wrong units, and guards configuration versions",
+        "keeps damage blocked after return and derives repair tasks without client commands",
+        "denies forged Security inspections and calls to private implementations",
+        "rejects disabled accounts and preserves unreturned keys from cancelled reservations",
+        "does not let a manager take the driver's checklist or manufacture a gate event",
+        "keeps the reservation workflow when the unit changes after completion",
+        "does not start a trip after keys were returned without a pickup",
+        "rejects cross-organization designations and limits workspace data to assigned units",
+        "gives a remote manager read access to exceptions without local physical authority",
+        "blocks workflow changes with pending reservations and bookings in disabled units"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/maintenanceApproval.test.ts",
+      "source_sha256": "6a6a3fd3d80729dbce11cf8ae40001e512192338cd96d8ab21a04c1fe2d3d758",
+      "final_passed_test_cases": 7,
+      "case_names": [
+        "allows the fleet manager to approve a budget submitted by maintenance and records the applied policy",
+        "denies self approval for administrators and managers and requires an explicitly designated superior",
+        "preserves the approved limit while a revision awaits independent approval",
+        "applies designated approvers, enforces optimistic versions and preserves author identity after a role change",
+        "tracks planned-line authors and blocks terminal completion with an unapproved revision",
+        "gives a designated superior budget-only authority without granting fleet management",
+        "rejects unauthorized policy configuration and revoked approvers without rewriting historical approvals"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/operations/fleetLifecycle.test.ts",
+      "source_sha256": "37f2ccb2f0771c53e1cb6049a101a039d64639aded5b7deb65ac41acc59587b2",
+      "final_passed_test_cases": 6,
+      "case_names": [
+        "archives with history, keeps the record and denies direct deletion, status bypass and new bookings",
+        "refuses archive during a live reservation and enforces versions",
+        "does not remove an existing damage block when reactivating",
+        "preserves reference catalogs and denies disabling references still used by active vehicles",
+        "limits restoration and archive lists to authorized fleet roles",
+        "cancels a legacy carpool participation without deleting the passenger history"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/documents/documentsSql.test.ts",
+      "source_sha256": "52dd994f05997e479a83ee2b0c67bd16058167e402e9bc57a98a0791f242a4ba",
+      "final_passed_test_cases": 6,
+      "case_names": [
+        "registers intent, enforces actual storage metadata and finalizes idempotently",
+        "enforces scope and blocks arbitrary storage paths and changes to immutable objects",
+        "preserves files and metadata after an audited invalidation",
+        "limits the budget-only superior to quote attachments of pending authorized orders",
+        "exports a complete vehicle history only within operational scope and omits unauthorized energy",
+        "rejects stale invalidation, control characters and a revoked manager with an open upload"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    },
+    {
+      "file": "apps/web/lib/equipment/equipmentSql.test.ts",
+      "source_sha256": "ecfb745b1723de74ec5026f53f02ad8e6411bd8c2941d5cec7e8104170f7bdd9",
+      "final_passed_test_cases": 6,
+      "case_names": [
+        "inherits the configured model and keeps optional equipment out of mandatory missing-item reports",
+        "supports a vehicle-specific kit and freezes the version already prepared for a journey",
+        "requires an explicit configuration for a new pickup and does not let an unrelated user prepare the checklist",
+        "does not silently remove requirements when a catalog entry is deactivated and preserves snapshots",
+        "validates classifications, versions and administrative authority",
+        "preserves a return observation path for a journey recorded before equipment contracts"
+      ],
+      "schema_scope": "see test and logs; full SQL fixtures include active migrations through 0090"
+    }
+  ]
+}

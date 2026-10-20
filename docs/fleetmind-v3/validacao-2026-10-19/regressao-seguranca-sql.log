@@ -1,0 +1,21 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/source/fleet-main/apps/web
+
+ ✓ lib/operations/database.test.ts (16 tests) 3548ms
+ ✓ lib/operations/maintenanceApproval.test.ts (7 tests) 4118ms
+ ✓ lib/documents/documentsSql.test.ts (6 tests) 4231ms
+ ✓ lib/operations/inspectionFlow.test.ts (9 tests) 4498ms
+ ✓ lib/operations/keyCustody.test.ts (14 tests) 4965ms
+ ✓ lib/operations/managerScope.test.ts (12 tests) 5105ms
+ ✓ lib/equipment/equipmentSql.test.ts (6 tests) 6067ms
+   ✓ preserves a return observation path for a journey recorded before equipment contracts 1925ms
+ ✓ lib/operations/incidentCases.test.ts (9 tests) 2766ms
+ ✓ lib/operations/financialAdjustments.test.ts (4 tests) 2486ms
+ ✓ lib/operations/fleetLifecycle.test.ts (6 tests) 2522ms
+
+ Test Files  10 passed (10)
+      Tests  89 passed (89)
+   Start at  09:23:09
+   Duration  7.60s (transform 676ms, setup 0ms, collect 1.30s, tests 40.31s, environment 4ms, prepare 802ms)
+

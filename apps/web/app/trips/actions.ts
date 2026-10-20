@@ -27,15 +27,10 @@ export async function cancelMyReservation(reservationId: string): Promise<void> 
   }
 }
 
-/**
- * Leave a carpool joined via create_carpool_participation (0003_trip_request_flow.sql).
- * A plain RLS-gated delete (0012_leave_carpool.sql "members leave trips they joined")
- * rather than an RPC — deleting your own trip_participants row has no side effects on
- * vehicle status or the driver's reservation, unlike cancelling a reservation.
- */
+/** Leaving a legacy participation changes its state and retains passenger history. */
 export async function leaveCarpool(participantId: string): Promise<void> {
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("trip_participants").delete().eq("id", participantId);
+  const { error } = await supabase.rpc("leave_legacy_participation",{p_id:participantId});
   revalidatePath("/trips");
   if (error) {
     console.error("leaveCarpool failed:", error.message);

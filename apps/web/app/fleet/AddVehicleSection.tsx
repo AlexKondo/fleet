@@ -21,11 +21,13 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 export function AddVehicleSection({
   categories,
   locations,
+  managementScope,
   equipmentItems,
   dict,
 }: {
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
+  managementScope: {mode:"all_units"|"selected_units";units:{id:string;name:string;enabled:boolean}[]}|null;
   equipmentItems: { id: string; name: string }[];
   dict: Dictionary;
 }) {
@@ -60,6 +62,7 @@ export function AddVehicleSection({
       <VehicleForm
         categories={categories}
         locations={locations}
+        managementScope={managementScope}
         dict={dict}
         onSaved={() => setOpen(false)}
       />

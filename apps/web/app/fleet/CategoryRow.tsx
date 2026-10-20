@@ -14,6 +14,7 @@ export function CategoryRow({
 }: {
   dict: Dictionary;
   category: {
+    lifecycle_version?:number;
     id: string;
     name: string;
     passenger_capacity: number;
@@ -128,12 +129,14 @@ export function CategoryRow({
         </button>
         <form action={deleteAction}>
           <input type="hidden" name="id" value={category.id} />
+          <input type="hidden" name="lifecycleVersion" value={category.lifecycle_version??1}/>
+          <input name="archiveReason" aria-label="Motivo da desativação" placeholder="Motivo da desativação" required minLength={3} maxLength={1000}/>
           <ConfirmSubmitButton
-            confirmMessage={dict.fleet.categories.deleteConfirm.replace("{name}", category.name)}
+            confirmMessage={"Arquivar ou desativar este registro preservando seus históricos?"}
             disabled={deletePending}
             className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
           >
-            {deletePending ? dict.common.deleting : dict.common.delete}
+            {deletePending ? "Registrando…" : "Desativar"}
           </ConfirmSubmitButton>
         </form>
       </div>

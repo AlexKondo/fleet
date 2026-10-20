@@ -32,3 +32,15 @@ export async function getOwnLicense(supabase: TypedSupabaseClient): Promise<OwnL
     driverAuthorized: row?.driver_authorized ?? false,
   };
 }
+
+/** Brasília calendar date, exact ISO date and explicit authorization; failed reads fail closed for driving. */
+export function canDrive(license: OwnLicense | null, now = new Date()): boolean {
+ if (!license?.driverAuthorized || !license.number?.trim() || !license.expiration) return false;
+ const expiry = license.expiration;
+ if (!/^\d{4}-\d{2}-\d{2}$/.test(expiry)) return false;
+ const parsed = new Date(`${expiry}T12:00:00Z`);
+ if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0,10) !== expiry) return false;
+ const parts = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+ const part = (name:string) => parts.find(p=>p.type===name)?.value;
+ return expiry >= `${part('year')}-${part('month')}-${part('day')}`;
+}

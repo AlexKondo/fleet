@@ -26,7 +26,7 @@ async function loadAvailableVehicleCandidates(
 ): Promise<CandidateVehicle[]> {
   const { data: vehicleRows } = await supabase
     .from("vehicles")
-    .select(`${VEHICLE_DOMAIN_COLUMNS}, category:vehicle_categories(${VEHICLE_CATEGORY_DOMAIN_COLUMNS})`)
+    .select(`${VEHICLE_DOMAIN_COLUMNS}, category:vehicle_categories(${VEHICLE_CATEGORY_DOMAIN_COLUMNS})`).is("archived_at",null)
     .eq("organization_id", organizationId)
     .eq("status", "available");
 
