@@ -1,0 +1,3 @@
+-- Rollback of 0196 is not possible with CREATE OR REPLACE VIEW (columns cannot be removed from a view). To return to the previous
+-- (frozen) column list: drop view public.fm_managed_vehicles, public.fm_managed_inspections; re-run their definitions from 0180 and
+-- the revoke/grant lines at 0180:204-205. Not recommended: the app needs the new columns.
