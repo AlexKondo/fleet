@@ -76,13 +76,13 @@ export function UserRow({
 
   return (
     <tr className="border-b border-line-800 align-top last:border-0">
-      <td className="min-w-0 px-4 py-3">
+      <td className="min-w-0 px-4 py-3" data-label={dict.team.columns.member}>
         <p className="truncate text-sm text-paper-50">{member.full_name}</p>
         <p className="truncate text-xs text-fog-400">{member.email}</p>
         <p className="text-xs text-fog-400">{member.enabled === true ? t.accountActive : member.enabled === false ? t.accountInactive : t.accessUnavailable}</p>
       </td>
 
-      <td className="px-4 py-3">
+      <td className="px-4 py-3" data-label={dict.team.columns.role}>
         <form ref={roleFormRef} action={roleAction}>
           <input type="hidden" name="userId" value={member.id} />
           <select
@@ -108,7 +108,7 @@ export function UserRow({
         ) : null}
       </td>
 
-      <td className="px-4 py-3">
+      <td className="px-4 py-3" data-label={dict.team.columns.authorized}>
         <form ref={driverFormRef} action={driverAction}>
           <input type="hidden" name="userId" value={member.id} />
           {/* M3: this form carries ONLY the authorization field (never the license columns, which a failed
@@ -136,7 +136,7 @@ export function UserRow({
         ) : null}
       </td>
 
-      <td className="px-4 py-3">
+      <td className="px-4 py-3" data-label={dict.team.columns.license}>
         <form ref={licenseFormRef} action={licenseAction} className="flex flex-wrap items-start gap-x-2 gap-y-1.5">
           <input type="hidden" name="userId" value={member.id} />
           {/* M3: only the three license fields (never driver_authorized); disabled when the data did not load. */}
@@ -258,7 +258,7 @@ export function UserRow({
         ) : null}
       </td>
 
-      <td className="px-4 py-3 text-right">
+      <td className="px-4 py-3 text-right" data-label={dict.team.columns.action}>
         {!isSelf ? (
           <form action={removeAction}>
             <input type="hidden" name="userId" value={member.id} />

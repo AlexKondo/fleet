@@ -180,7 +180,7 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
                 <Metric testId="kpi-avoided-allocations" label={t.avoidedAllocations} value={num(report.shared.avoidedAllocations)} />
                 <Metric testId="kpi-avoided-km" label={t.avoidedKm} value={`≈ ${dec(report.shared.avoidedKmEstimate)} km`} />
               </div>
-              <p className="mt-3 text-xs text-fog-600">{t.avoidedKmNote.replace("{factor}", String(ROAD_DISTANCE_FACTOR))}</p>
+              <p className="mt-5 text-xs text-fog-600">{t.avoidedKmNote.replace("{factor}", String(ROAD_DISTANCE_FACTOR))}</p>
               {report.shared.requestsWithoutCoordinates > 0 ? (
                 <p className="mt-1 text-xs text-fog-600">
                   {t.requestsWithoutCoordinates}: {num(report.shared.requestsWithoutCoordinates)}

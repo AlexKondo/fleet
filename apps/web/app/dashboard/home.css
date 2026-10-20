@@ -371,3 +371,11 @@
     display: none;
   }
 }
+
+/* attention list: inline links inherited a 44 px min-height (global touch rule) and made each row ~52 px tall */
+.fm-theme .hm-attention-list > li > span,
+.fm-theme .hm-attention-list a {
+  display: inline;
+  min-height: 0;
+  min-width: 0;
+}

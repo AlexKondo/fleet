@@ -26,7 +26,7 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
           {/* eslint-disable-next-line @next/next/no-img-element -- small static illustration, next/image is overkill here */}
           <img src="/illustrations/fleet-agent.jpg" alt="" className="animate-chat-agent-float h-14 w-14 rounded-full border-2 border-gwm-accent object-cover" />
         </button>
-        <button type="button" className="fm-assist-caption" onClick={() => open({})} data-testid="fm-assistant-caption">
+        <button type="button" className="fm-assist-caption" title={dict.chat.voiceHint} onClick={() => open({})} data-testid="fm-assistant-caption">
           {dict.chat.voiceHint}
         </button>
       </div>

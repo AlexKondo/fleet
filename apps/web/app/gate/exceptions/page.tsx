@@ -1,3 +1,4 @@
+import "../gate.css";
 import { IncidentsWorkspace } from "@/app/operations/IncidentsWorkspace";
 export default async function Page({
   searchParams,

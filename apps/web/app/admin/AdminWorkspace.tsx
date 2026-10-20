@@ -61,6 +61,12 @@ const auditLabels: Record<string, string> = {
   "ai.policy": "Política do assistente alterada",
   "privacy.submitted": "Solicitação de privacidade",
   "privacy.respond": "Tratamento de solicitação",
+  "gate.departure": "Saída registrada na portaria",
+  "reservation.approve": "Reserva aprovada",
+  "reservation.cancel": "Reserva cancelada",
+  "member.update_role": "Perfil de acesso alterado",
+  "vehicle.block": "Veículo bloqueado",
+  "equipment.checklist_contract": "Contrato de checklist de equipamentos registrado",
 };
 export async function AdminWorkspace({
   view,

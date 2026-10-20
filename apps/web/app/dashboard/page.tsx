@@ -15,7 +15,7 @@ import { BlockVehicleForm } from "../BlockVehicleForm";
 import { StatusBadge } from "../ui/StatusBadge";
 import { RevealAction } from "../ui/RevealAction";
 import { EmployeeHome } from "./EmployeeHome";
-import { ReservationGantt } from "../ReservationGantt";
+import { ClientGantt as ReservationGantt } from "../trips/ClientGantt";
 import type { GanttZoomLevel } from "../ganttZoomActions";
 import {
   approveReservation,

@@ -1218,3 +1218,52 @@
 .fm-theme .us-wrap input[name="licenseExpiration"] {
   width: 160px;
 }
+
+/* ---- B-gestao-manutencao-admin: ajustes de defeitos objetivos (workspaces .ow) ---- */
+/* Resumo de custos: nao estourar a coluna lateral (valor R$ cortado) */
+.fm-theme .ow-costs { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.fm-theme .ow-costs > div { min-width: 0; }
+.fm-theme .ow-costs strong { font-size: 18px; overflow-wrap: anywhere; white-space: normal; }
+/* Cabecalho do prontuario: links colados ("GWM3B52Documentos do veiculo...") */
+.fm-theme .ow-detail-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.fm-theme .ow-detail-head > small,
+.fm-theme .ow-detail-head > h3,
+.fm-theme .ow-detail-head > .ow-vin { flex: 0 0 100%; margin: 0; }
+.fm-theme .ow-detail-head > a { font-size: 12px; font-weight: 600; color: #0868f9; text-decoration: underline; min-height: 24px; }
+/* Cards de governanca de IA: link herdava o estilo de card de .ow-links a e sobrepunha o texto */
+.fm-theme .ow-links .ow-panel a,
+.fm-theme .ow-links .ow-panel a.ow-link { display: inline-block; padding: 0; border: 0; border-radius: 0; background: none; margin-top: 8px; font-weight: 600; text-decoration: underline; }
+/* Paineis empilhados diretamente em .ow (ex.: /admin/units) sem respiro entre si */
+.fm-theme .ow > .ow-panel { margin-bottom: 16px; }
+.fm-theme .ow-heading > a { font-size: 12px; color: #0868f9; text-decoration: underline; white-space: nowrap; }
+/* Formularios .ow-form: paragrafos explicativos e botao em linha propria (campos/justificativa desalinhados) */
+.fm-theme .ow-form > p,
+.fm-theme .ow-form > fieldset { grid-column: 1 / -1; margin: 0; }
+.fm-theme .ow-form > .ow-button { grid-column: 1 / -1; justify-self: start; min-width: 200px; }
+.fm-theme .ow-form > .ow-field:has(input[name="reason"]) { grid-column: 1 / -1; }
+@media (max-width: 699px) {
+  .fm-theme .ow-form { grid-template-columns: 1fr; }
+  .fm-theme .ow-form > .ow-button { justify-self: stretch; min-height: 44px; }
+}
+/* /settings/users em celular: tabela de 860px virava linhas gigantes cortadas; vira cartoes empilhados (rotulos via data-label) */
+@media (max-width: 699px) {
+  .fm-theme .us-wrap table,
+  .fm-theme .us-wrap tbody,
+  .fm-theme .us-wrap tr,
+  .fm-theme .us-wrap td { display: block; min-width: 0; width: 100%; }
+  .fm-theme .us-wrap table { min-width: 0; }
+  .fm-theme .us-wrap thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .fm-theme .us-wrap tbody tr { padding: 8px 0; }
+  .fm-theme .us-wrap tbody td { padding: 8px 14px; text-align: left; }
+  .fm-theme .us-wrap tbody td[data-label]::before {
+    content: attr(data-label); display: block; margin-bottom: 4px;
+    font-size: 11px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: #5b7192;
+  }
+  .fm-theme .us-wrap tbody td:first-child::before { display: none; }
+  .fm-theme .us-wrap tbody td:last-child { text-align: left; }
+  .fm-theme .us-wrap select[name="role"],
+  .fm-theme .us-wrap input[name="licenseNumber"],
+  .fm-theme .us-wrap input[name="licenseCategory"],
+  .fm-theme .us-wrap input[name="licenseExpiration"] { max-width: 100%; min-height: 44px; }
+  .fm-theme .us-wrap input[name="reason"] { width: 100%; }
+}

@@ -78,14 +78,14 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
       route={{ origin: reservation.trip_request?.origin, destination: reservation.trip_request?.destination }}
     >
         {state.inspection_role==="security" ? <GateVisualForm reservationId={id} phase="pickup" dict={dict}/> : (
-        equipmentContract?<><p>Equipamentos: {equipmentContract.source==="legacy_return_observation"?"Observações do processo legado; requisitos específicos ainda não verificados":`Conjunto ${equipmentContract.source==="vehicle"?"do veículo":"do modelo"} · revisão ${equipmentContract.configuration_version}`}</p>{equipmentContract.optional_names.length>0&&<p>Itens disponíveis sem exigência de ausência no checklist: {equipmentContract.optional_names.join(", ")}</p>}
+        equipmentContract?<><p className="ck-note">Equipamentos: {equipmentContract.source==="legacy_return_observation"?"Observações do processo legado; requisitos específicos ainda não verificados":`Conjunto ${equipmentContract.source==="vehicle"?"do veículo":"do modelo"} · revisão ${equipmentContract.configuration_version}`}</p>{equipmentContract.optional_names.length>0&&<p className="ck-note">Itens disponíveis sem exigência de ausência no checklist: {equipmentContract.optional_names.join(", ")}</p>}
         <PickupForm
           reservationId={reservation.id}
           energyType={energyType}
           currentOdometer={vehicle.odometer_km}
           equipmentItems={equipmentItems ?? []}
           dict={dict}
-        /></>:<p role="alert">Não foi possível preparar a configuração de equipamentos. Solicite ao gestor a configuração deste veículo antes de uma nova retirada. O registro físico de chegada continua disponível na unidade.</p>
+        /></>:<p role="alert" className="fm-banner fm-banner-danger ck-blocked">Não foi possível preparar a configuração de equipamentos. Solicite ao gestor a configuração deste veículo antes de uma nova retirada. O registro físico de chegada continua disponível na unidade.</p>
         )}
     </ChecklistFrame>
   );

@@ -131,7 +131,7 @@ export default async function FleetPage() {
       headerActions={<AssistantTrigger voice className="fm-btn fm-btn-primary">Falar com o FleetMind</AssistantTrigger>}
       wide
     >
-      <section className="fm-kpis" aria-label={o.kpisLabel} data-testid="fleet-kpis">
+      <section className="fm-kpis fleet-kpis" aria-label={o.kpisLabel} data-testid="fleet-kpis">
         <div className="fm-kpi fm-kpi-wide" data-testid="fleet-kpi-total">
           <span className="fm-kpi-icon"><FmCarIcon /></span>
           <div className="fm-kpi-body">

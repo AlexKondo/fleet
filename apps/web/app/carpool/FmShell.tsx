@@ -128,20 +128,49 @@ export async function FmShell({
     visible: true,
   });
   // dashboard first, then the two rider destinations, then the shared items
-  const items = [base[0]!, ...extra, ...base.slice(1)].filter((i) => i.visible);
+  const unordered = [base[0]!, ...extra, ...base.slice(1)].filter((i) => i.visible);
+  // Fleet managers: the manager destinations come first (reference order: home, fleet, trips/carpools, maintenance,
+  // energy, drivers, users, reports, settings), the personal "rider" items (book, my carpools, my trips) are
+  // grouped at the end behind a divider. Same keys, same routes, same visibility: nothing is removed.
+  const personalKeys: NavKey[] = ["book", "myCarpools", "trips"];
+  const managerOrder: NavKey[] = [
+    "dashboard", "fleet", "carpool", "gate", "maintenance", "planning", "orders", "vehicleHistory", "energy",
+    "drivers", "team", "incidents", "gateExceptions", "gateHistory", "keyManagement", "budgetApprovals", "keys",
+    "analytics", "admin", "settings",
+  ];
+  const rank = (k: NavKey, list: NavKey[]) => {
+    const i = list.indexOf(k);
+    return i === -1 ? list.length : i;
+  };
+  const items = isFleetManager
+    ? [
+        ...unordered
+          .filter((i) => !personalKeys.includes(i.key))
+          .sort((a, b) => rank(a.key, managerOrder) - rank(b.key, managerOrder)),
+        ...unordered
+          .filter((i) => personalKeys.includes(i.key))
+          .sort((a, b) => rank(a.key, personalKeys) - rank(b.key, personalKeys)),
+      ]
+    : unordered;
+  const firstPersonalKey = isFleetManager
+    ? items.find((i) => personalKeys.includes(i.key))?.key
+    : undefined;
   // the bottom bar only fits the main destinations; the hamburger menu (MobileNav) lists everything
   // (employees: home + rider destinations; operations roles: their own working screens)
   const isOps = role !== "employee";
   const bottomKeys: NavKey[] = isOps
     ? ["dashboard", "gate", "fleet", "trips", "carpool"]
     : ["dashboard", "carpool", "book", "trips"];
-  const bottomItems = items.filter((i) => bottomKeys.includes(i.key));
+  const bottomItems = bottomKeys
+    .map((k) => items.find((i) => i.key === k))
+    .filter((i): i is (typeof items)[number] => Boolean(i));
 
   const link = ({ key, href, label, icon: Icon }: (typeof items)[number]) => (
     <Link
       key={key}
       href={href}
       aria-current={key === active ? "page" : undefined}
+      data-nav-group={key === firstPersonalKey ? "personal-start" : undefined}
     >
       <Icon className="" />
       <span>{label}</span>

@@ -298,3 +298,22 @@
     min-width: 280px;
   }
 }
+
+/* Notes and blocked state rendered by the pickup/return pages (were bare, unstyled paragraphs). */
+.fm-theme .ck-note {
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--fm-text-muted);
+  overflow-wrap: anywhere;
+}
+.fm-theme .ck-note + .ck-note {
+  margin-top: 4px;
+}
+.fm-theme .ck-note + .ck-form {
+  margin-top: 12px;
+}
+.fm-theme .ck-blocked {
+  margin-top: 16px;
+  line-height: 1.5;
+}

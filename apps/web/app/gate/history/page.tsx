@@ -1,3 +1,4 @@
+import "../gate.css";
 import Link from "next/link";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
 import {

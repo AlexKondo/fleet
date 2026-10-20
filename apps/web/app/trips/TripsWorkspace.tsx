@@ -15,7 +15,7 @@ import {
 } from "@/lib/carpool/errorText";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
-import { ReservationGantt } from "../ReservationGantt";
+import { ClientGantt as ReservationGantt } from "./ClientGantt";
 import type { GanttZoomLevel } from "../ganttZoomActions";
 import { getStatusMeta } from "../dashboard/statusMeta";
 import { FmCarIcon, FmChevronIcon, FmPlusIcon, FmUsersIcon } from "../fmIcons";
@@ -332,7 +332,7 @@ export async function TripsWorkspace({
 
   return (
     <FmShell
-      active="trips"
+      active={carpoolOnly ? "myCarpools" : "trips"}
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={profile?.role ?? "employee"}
@@ -342,8 +342,8 @@ export async function TripsWorkspace({
       <div className="tp">
         <div className="tp-head">
           <div>
-            <h1 className="fm-title">{m.title}</h1>
-            <p className="fm-subtitle">{m.subtitle}</p>
+            <h1 className="fm-title">{carpoolOnly ? dict.dashboard.home.carpoolTitle : m.title}</h1>
+            {carpoolOnly ? null : <p className="fm-subtitle">{m.subtitle}</p>}
           </div>
           <Link href="/trips/new" className="fm-btn fm-btn-primary tp-new">
             <FmPlusIcon /> {m.newReservation}

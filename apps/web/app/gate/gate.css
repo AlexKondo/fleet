@@ -1,0 +1,38 @@
+/*
+ * Portaria (SEC-001/002/003) mobile touch targets. Scoped under .fm-theme; additive to fm-theme.css / fm-ops.css.
+ * Flow is mobile-first for the gate guard: every control reachable by thumb must be >= 44 px.
+ */
+@media (max-width: 1047px) {
+  .fm-theme .ow-filters input,
+  .fm-theme .ow-filters select,
+  .fm-theme .ow-filters button,
+  .fm-theme .ow-field input,
+  .fm-theme .ow-field select,
+  .fm-theme .ow-field button,
+  .fm-theme .ow-tabs a,
+  .fm-theme .ow-link,
+  .fm-theme .gt-search input {
+    min-height: 44px;
+  }
+  .fm-theme .ow-tabs a,
+  .fm-theme .ow-link {
+    display: inline-flex;
+    align-items: center;
+  }
+  .fm-theme .ow-link {
+    padding-block: 4px;
+  }
+  .fm-theme .gt-actions .fm-btn,
+  .fm-theme .gt-tab {
+    min-height: 44px;
+  }
+  .fm-theme .gt-actions .fm-btn {
+    white-space: nowrap;
+  }
+  .fm-theme .gt-actions .fm-btn-primary {
+    flex: 1 1 auto;
+  }
+  .fm-theme .ow-table td a {
+    white-space: nowrap;
+  }
+}

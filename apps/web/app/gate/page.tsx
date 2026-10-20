@@ -7,6 +7,7 @@ import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { FmShell } from "../carpool/FmShell";
 import { FmArrowInIcon, FmArrowOutIcon, FmCarIcon } from "../fmIcons";
 import { getStatusMeta } from "../dashboard/statusMeta";
+import "./gate.css";
 import { GateList, type GateRow } from "./GateList";
 
 /**
