@@ -99,7 +99,7 @@ beforeEach(() => {
 describe("dispatchIntent: carpool intents reach the same services as the web UI", () => {
   it("is refused when there is no session", async () => {
     configureDb("");
-    expect(await dispatchIntent("ACCEPT_CARPOOL_REQUEST", { requestId: REQ })).toEqual({ success: false, message: "not_authenticated" });
+    expect(await dispatchIntent("ACCEPT_CARPOOL_REQUEST", { requestId: REQ })).toMatchObject({ success: false, message: "not_authenticated" });
     expect(m.accept).not.toHaveBeenCalled();
   });
 
@@ -197,7 +197,7 @@ describe("dispatchIntent CREATE_RESERVATION: host offer step (answer Yes to 'Des
     expect(db.rpc).toHaveBeenCalledWith("create_vehicle_reservation", expect.objectContaining({ p_vehicle_id: "veh-1", p_allow_carpool: true }));
     expect(m.enable).toHaveBeenCalledWith("trip-new", 4, "res-new");
     expect(r.success).toBe(true);
-    expect(r.message).toContain("Reserva criada");
+    expect(r.message).toContain("Pedi a reserva do veículo ABC1D23");
     expect(r.message).toContain("Vagas de carona publicadas: 4 vagas");
   });
 
@@ -220,7 +220,7 @@ describe("dispatchIntent CREATE_RESERVATION: host offer step (answer Yes to 'Des
     m.enable.mockResolvedValue({ status: "error", error: "CARPOOL_DISABLED_BY_POLICY" });
     const r = await dispatchIntent("CREATE_RESERVATION", slots);
     expect(r.success).toBe(true);
-    expect(r.message).toContain("Reserva criada");
+    expect(r.message).toContain("Pedi a reserva do veículo ABC1D23");
     expect(r.message).toContain("Não consegui publicar as vagas");
   });
 
@@ -228,7 +228,7 @@ describe("dispatchIntent CREATE_RESERVATION: host offer step (answer Yes to 'Des
     dbWithReservation();
     const r = await dispatchIntent("CREATE_RESERVATION", { ...slots, allowCarpool: "false" });
     expect(m.enable).not.toHaveBeenCalled();
-    expect(r.message).toBe("Reserva criada — veículo ABC1D23.");
+    expect(r.message).toBe("Pronto! Pedi a reserva do veículo ABC1D23. Ela fica aguardando a aprovação do gestor da frota, e você acompanha em Minhas Viagens.");
   });
 
   it("org with carpool DISABLED by policy: reservation flow unchanged, no carpool offered or published (L3)", async () => {
@@ -242,6 +242,6 @@ describe("dispatchIntent CREATE_RESERVATION: host offer step (answer Yes to 'Des
     });
     const r = await dispatchIntent("CREATE_RESERVATION", slots);
     expect(m.enable).not.toHaveBeenCalled();
-    expect(r.message).toBe("Reserva criada — veículo ABC1D23.");
+    expect(r.message).toBe("Pronto! Pedi a reserva do veículo ABC1D23. Ela fica aguardando a aprovação do gestor da frota, e você acompanha em Minhas Viagens.");
   });
 });

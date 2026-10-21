@@ -82,7 +82,8 @@ describe("dispatchIntent CREATE_RESERVATION (carpool branch)", () => {
 
     const result = await dispatchIntent("CREATE_RESERVATION", slots);
 
-    expect(result).toEqual({ success: false, message: "carpool_trip_unresolved" });
+    expect(result).toMatchObject({ success: false, message: "carpool_trip_unresolved" });
+    expect(result.reply.content).not.toMatch(/carpool_trip_unresolved/);
     expect(state.rpc).not.toHaveBeenCalled();
   });
 });

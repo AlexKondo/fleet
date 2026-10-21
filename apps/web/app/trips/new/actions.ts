@@ -11,6 +11,7 @@ import {
 } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { summarizeFleet, type FleetSummary, type FleetSummaryRow } from "@/lib/trips/fleetSummary";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
@@ -117,6 +118,10 @@ export interface PlanTripResult {
   /** Phase C5: how the org's carpool policy gates this plan (absent on errors). When
    * `newEngine` is true the old city-string carpool matcher was NOT consulted. */
   carpoolGating?: CarpoolGating;
+  /** FIX-VENCIDAS/Assistente: only on type "none" — counts per blocking reason (reserved, in
+   * maintenance, blocked, in use, busy in the window, not enough seats...), so the assistant can
+   * explain WHY in plain words. Counts only: nothing about other people's trips. */
+  fleet?: FleetSummary;
   /** Phase C5: result of the carpool-first search (only from planTripAction, only when the
    * org policy has carpool + carpool-first enabled). */
   carpoolFirst?: CarpoolFirstState;
@@ -139,6 +144,27 @@ async function releaseExpiredReservations(organizationId: string): Promise<void>
     await createSupabaseAdminClient().rpc("fm_release_expired_reservations", { p_organization_id: organizationId });
   } catch {
     // best-effort: the daily cron (/api/cron/reservation-expiry) is the primary path
+  }
+}
+
+/** Best-effort: a failed read just leaves the explanation generic (never blocks the answer). */
+async function loadFleetSummary(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  busy: ReadonlySet<string>,
+  input: TripFormInput,
+): Promise<FleetSummary | undefined> {
+  try {
+    const { data, error } = await supabase
+      .from("vehicles")
+      .select("id, status, category:vehicle_categories(passenger_capacity, supports_cargo)")
+      .is("archived_at", null);
+    if (error || !data) return undefined;
+    return summarizeFleet(data as unknown as FleetSummaryRow[], busy, {
+      passengerCount: input.passengerCount,
+      requiresCargo: input.requiresCargo,
+    });
+  } catch {
+    return undefined;
   }
 }
 
@@ -220,7 +246,7 @@ async function buildPlanInputs(input: TripFormInput) {
   // (dead code kept on purpose).
   const carpoolCandidates: CarpoolCandidateWithPlate[] = [];
 
-  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, locationNameById, gating };
+  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, locationNameById, gating, supabase, vehicleIdsWithActiveReservation };
 }
 
 /**
@@ -435,6 +461,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
     reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
     bookingMode: config.bookingMode,
     carpoolGating: gating,
+    fleet: await loadFleetSummary(built.supabase, built.vehicleIdsWithActiveReservation, input),
   };
 }
 

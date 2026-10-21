@@ -37,6 +37,11 @@ const KEY_BY_CODE: Record<string, keyof ErrorsDict> = {
   CARPOOL_REQUEST_ALREADY_EXISTS: "alreadyRequested",
 };
 
+/** true when the code has its own translated message (anything else falls back to "generic"). */
+export function isKnownCarpoolError(code: string | null | undefined): boolean {
+  return Boolean(code && KEY_BY_CODE[code]);
+}
+
 export function carpoolErrorText(dict: Dictionary, code: string | null | undefined): string {
   const key = (code && KEY_BY_CODE[code]) || "generic";
   return dict.carpool.errors[key];

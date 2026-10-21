@@ -1203,10 +1203,25 @@ export type Dictionary = {
     errorGeneric: string;
     /** No vehicle available for the requested window (engine reason codes are translated via trips.reasons). */
     noVehicle: {
-      intro: string;
-      alternatives: string;
       carpoolKept: string;
       openForm: string;
+    };
+    /** FIX-VENCIDAS/Assistente: plain-language replies (what happened / why / alternatives / how to continue). */
+    replies: {
+      what: { reservation: string; availability: string; cancel: string; view: string; message: string; extend: string; carpoolOffer: string; carpoolDisable: string; carpoolFind: string; carpoolRequest: string; carpoolRespond: string; carpoolCancel: string; generic: string; };
+      why: { reservationConflict: string; maintenanceConflict: string; vehicleUnavailable: string; unitDisabled: string; license: string; outsideWindow: string; scopeDenied: string; permissionDenied: string; invalidData: string; concurrent: string; tripStarted: string; cancelNotAllowed: string; notFound: string; sessionExpired: string; providerOutage: string; notSupported: string; missingReturnTime: string; missingInfo: string; unexpected: string; rateLimited: string; dailyLimit: string; confirmationExpired: string; };
+      alternatives: { reservation: string; availability: string; cancel: string; view: string; message: string; extend: string; carpoolOffer: string; carpoolDisable: string; carpoolFind: string; carpoolRequest: string; carpoolRespond: string; carpoolCancel: string; generic: string; };
+      keptInForm: string;
+      keptInChat: string;
+      reenter: string;
+      and: string;
+      fleet: { intro: string; summary: string; empty: string; reservedOne: string; reservedOther: string; maintenanceOne: string; maintenanceOther: string; blockedOne: string; blockedOther: string; inUseOne: string; inUseOther: string; busyOne: string; busyOther: string; seatsOne: string; seatsOther: string; cargoOne: string; cargoOther: string; notReadyOne: string; notReadyOther: string; otherOne: string; otherOther: string; };
+      success: { reservationCreated: string; carpoolJoined: string; cancelled: string; noActiveReservation: string; reservationInfo: string; messagePosted: string; returnTimeUpdated: string; vehicleAvailable: string; carpoolAvailable: string; };
+      card: { vehicle: string; chooseOption: string; };
+      notAutomated: { change: string; differentVehicle: string; startTrip: string; endTrip: string; };
+      assistantDisabled: string;
+      policyUnavailable: string;
+      notUnderstood: string;
     };
     thinking: string;
     carpool: {

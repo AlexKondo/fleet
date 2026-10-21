@@ -137,6 +137,14 @@ beforeEach(() => {
   m.requestRide.mockResolvedValue({ status: "success", requestId: "req-new" });
   m.status.mockResolvedValue({ status: "PENDING" });
 });
+
+/** FIX-VENCIDAS/Assistente: refusals are plain replies with why + alternatives + how to continue. */
+function expectFailureReply(r: unknown, why: string) {
+  expect((r as { kind: string }).kind).toBe("reply");
+  const message = (r as { message: string }).message;
+  expect(message).toContain(why);
+  expect(message).toContain(dict.chat.replies.keptInChat);
+}
 
 describe("stripServerResolvedSlots", () => {
   it("drops every identifier the LLM might have invented", () => {
@@ -177,7 +185,7 @@ describe("OFFER_CARPOOL (prepare)", () => {
 
   it("not found: the caller has no upcoming trip (another user's trip is invisible)", async () => {
     const r = await prepareCarpoolIntent(ctxFor("00000000-0000-4000-8000-0000000000ff"), "OFFER_CARPOOL", { seats: "2" });
-    expect(r).toEqual({ kind: "reply", message: dict.chat.carpool.noHostTrip });
+    expectFailureReply(r, dict.chat.carpool.noHostTrip);
   });
 
   it("ambiguous: two trips and no hint -> asks which one; the day hint resolves it", async () => {
@@ -193,7 +201,7 @@ describe("OFFER_CARPOOL (prepare)", () => {
 
   it("refuses when the org policy has carpool disabled", async () => {
     const r = await prepareCarpoolIntent(ctxFor(HOST, rows(), { ...gating, newEngine: false }), "OFFER_CARPOOL", { seats: "2" });
-    expect(r).toEqual({ kind: "reply", message: dict.carpool.errors.disabledByPolicy });
+    expectFailureReply(r, dict.carpool.errors.disabledByPolicy);
   });
 });
 
@@ -205,7 +213,7 @@ describe("DISABLE_CARPOOL (prepare)", () => {
 
   it("not found when the caller hosts no active offer (someone else's offer is invisible)", async () => {
     const r = await prepareCarpoolIntent(ctxFor(RIDER), "DISABLE_CARPOOL", { offerId: OFFER_A });
-    expect(r).toEqual({ kind: "reply", message: dict.chat.carpool.noActiveOffer });
+    expectFailureReply(r, dict.chat.carpool.noActiveOffer);
   });
 });
 
@@ -228,7 +236,7 @@ describe("ACCEPT / REJECT (prepare): a person referenced in speech", () => {
 
   it("zero matches -> says so, reveals nothing about other people's requests", async () => {
     const r = await prepareCarpoolIntent(ctxFor(HOST), "ACCEPT_CARPOOL_REQUEST", { riderName: "Souza" });
-    expect(r).toEqual({ kind: "reply", message: dict.chat.carpool.noPendingForName.replace("{name}", "Souza") });
+    expectFailureReply(r, dict.chat.carpool.noPendingForName.replace("{name}", "Souza"));
   });
 
   it("ambiguous (two Anas) -> asks, lists only the caller's own, never guesses", async () => {
@@ -278,7 +286,7 @@ describe("CANCEL_CARPOOL_REQUEST (prepare)", () => {
 
   it("not found when the caller has no live request", async () => {
     const r = await prepareCarpoolIntent(ctxFor("00000000-0000-4000-8000-0000000000ff"), "CANCEL_CARPOOL_REQUEST", {});
-    expect(r).toEqual({ kind: "reply", message: dict.chat.carpool.noCancellableRequest });
+    expectFailureReply(r, dict.chat.carpool.noCancellableRequest);
   });
 });
 
@@ -302,11 +310,11 @@ describe("FIND_CARPOOL (prepare): read-only, same clarification rule as New Trip
 
   it("provider outage -> clear message, no fake matches", async () => {
     const r = await prepareCarpoolIntent(ctxFor(RIDER), "FIND_CARPOOL", { ...slots, destination: "OUTAGE" });
-    expect(r).toEqual({ kind: "reply", message: dict.carpool.newTrip.unavailableBanner });
+    expectFailureReply(r, dict.chat.replies.why.providerOutage);
     m.resolve.mockImplementation(async (t: string) => resolved(t));
     m.search.mockResolvedValue({ status: "unavailable", reason: "routes_down" });
     const r2 = await prepareCarpoolIntent(ctxFor(RIDER), "FIND_CARPOOL", slots);
-    expect(r2).toEqual({ kind: "reply", message: dict.carpool.newTrip.unavailableBanner });
+    expectFailureReply(r2, dict.chat.replies.why.providerOutage);
   });
 
   it("no compatible offer -> says so (never lists incompatible ones)", async () => {
@@ -337,7 +345,7 @@ describe("FIND_CARPOOL (prepare): read-only, same clarification rule as New Trip
 
   it("carpool disabled by policy -> refusal, no search", async () => {
     const r = await prepareCarpoolIntent(ctxFor(RIDER, rows(), { ...gating, newEngine: false }), "FIND_CARPOOL", slots);
-    expect(r).toEqual({ kind: "reply", message: dict.carpool.errors.disabledByPolicy });
+    expectFailureReply(r, dict.carpool.errors.disabledByPolicy);
     expect(m.search).not.toHaveBeenCalled();
   });
 });
@@ -375,13 +383,13 @@ describe("REQUEST_CARPOOL (prepare / option selection)", () => {
   it("STALE option: the offer is no longer among the compatible results -> refused, no card", async () => {
     m.search.mockResolvedValue({ status: "matches", matches: [] });
     const r = await prepareFromOption(ctxFor(RIDER), prev, OFFER_A);
-    expect(r).toEqual({ kind: "reply", message: dict.carpool.errors.notCompatible });
+    expectFailureReply(r, dict.carpool.errors.notCompatible);
   });
 
   it("an offer id that was never listed/compatible can't be smuggled in (re-validated by a fresh search)", async () => {
     m.search.mockResolvedValue({ status: "matches", matches: [match] });
     const r = await prepareFromOption(ctxFor(RIDER), prev, OFFER_FOREIGN);
-    expect(r).toEqual({ kind: "reply", message: dict.carpool.errors.notCompatible });
+    expectFailureReply(r, dict.carpool.errors.notCompatible);
   });
 
   it("garbage id -> refused without a search", async () => {
@@ -393,7 +401,7 @@ describe("REQUEST_CARPOOL (prepare / option selection)", () => {
   it("provider outage while re-validating -> clear message", async () => {
     m.search.mockResolvedValue({ status: "unavailable", reason: "routes_down" });
     const r = await prepareFromOption(ctxFor(RIDER), prev, OFFER_A);
-    expect(r).toEqual({ kind: "reply", message: dict.carpool.newTrip.unavailableBanner });
+    expectFailureReply(r, dict.chat.replies.why.providerOutage);
   });
 
   it("'use a vehicle' is only meaningful for a chat reservation", async () => {
@@ -454,7 +462,7 @@ describe("executeCarpoolIntent", () => {
     m.update.mockResolvedValue({ status: "error", error: "CARPOOL_SEATS_EXCEED_CAPACITY" });
     const r = await executeCarpoolIntent(ctxFor(HOST), "OFFER_CARPOOL", { seats: "9", tripRequestId: TRIP_A });
     expect(r.success).toBe(false);
-    expect(r.reasons).toEqual([dict.carpool.errors.exceedsCapacity]);
+    expect(r.reply?.content).toContain(dict.carpool.errors.exceedsCapacity);
   });
 
   it("OFFER: invalid seat count never reaches the service", async () => {
@@ -495,7 +503,7 @@ describe("executeCarpoolIntent", () => {
   it("ACCEPT: when the RPC itself refuses (e.g. no seats) the localized reason is surfaced", async () => {
     m.accept.mockResolvedValue({ status: "error", error: "CARPOOL_NO_SEATS_AVAILABLE" });
     const r = await executeCarpoolIntent(ctxFor(HOST), "ACCEPT_CARPOOL_REQUEST", { requestId: REQ_ANA });
-    expect(r.reasons).toEqual([dict.carpool.errors.noSeats]);
+    expect(r.reply?.content).toContain(dict.carpool.errors.noSeats);
   });
 
   it("REJECT: forwards the reason; non-uuid / foreign ids are refused", async () => {
@@ -546,13 +554,14 @@ describe("executeCarpoolIntent", () => {
     it("STALE/invalid offer at confirm time -> refused with the 'not compatible' reason", async () => {
       m.requestRide.mockResolvedValue({ status: "error", error: "offer_not_compatible" });
       const r = await executeCarpoolIntent(ctxFor(RIDER), "REQUEST_CARPOOL", slots);
-      expect(r).toMatchObject({ success: false, message: "offer_not_compatible", reasons: [dict.carpool.errors.notCompatible] });
+      expect(r).toMatchObject({ success: false, message: "offer_not_compatible" });
+      expect(r.reply?.content).toContain(dict.carpool.errors.notCompatible);
     });
 
     it("provider outage at confirm -> clear message, no request", async () => {
       m.requestRide.mockResolvedValue({ status: "error", error: "carpool_unavailable" });
       const out = await executeCarpoolIntent(ctxFor(RIDER), "REQUEST_CARPOOL", slots);
-      expect(out.reasons).toEqual([dict.carpool.errors.unavailable]);
+      expect(out.reply?.content).toContain(dict.carpool.errors.unavailable);
       m.requestRide.mockClear();
       m.resolve.mockResolvedValue({ status: "unavailable", reason: "x" });
       const noCall = await executeCarpoolIntent(ctxFor(RIDER), "REQUEST_CARPOOL", slots);
@@ -571,7 +580,7 @@ describe("executeCarpoolIntent", () => {
       m.requestRide.mockResolvedValue({ status: "error", error: "CARPOOL_CANNOT_REQUEST_OWN_OFFER" });
       const r = await executeCarpoolIntent(ctxFor(HOST), "REQUEST_CARPOOL", slots);
       expect(r.success).toBe(false);
-      expect(r.reasons).toEqual([dict.carpool.errors.notCompatible]);
+      expect(r.reply?.content).toContain(dict.carpool.errors.notCompatible);
     });
 
     it("no explicit clientRequestId -> a fresh uuid is generated, never an empty key", async () => {
@@ -589,6 +598,6 @@ describe("executeCarpoolIntent", () => {
   });
 
   it("a non-carpool intent is not handled here", async () => {
-    expect(await executeCarpoolIntent(ctxFor(HOST), "CREATE_RESERVATION", {})).toEqual({ success: false, message: "not_supported_via_chat" });
+    expect(await executeCarpoolIntent(ctxFor(HOST), "CREATE_RESERVATION", {})).toMatchObject({ success: false, message: "not_supported_via_chat" });
   });
 });

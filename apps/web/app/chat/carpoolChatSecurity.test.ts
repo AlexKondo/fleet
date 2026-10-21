@@ -206,7 +206,7 @@ const mutatingServices = () => [
 beforeEach(() => {
   for (const fn of [m.interpret, m.dispatch, m.search, ...mutatingServices()])
     fn.mockReset();
-  m.dispatch.mockResolvedValue({ success: true, message: "done" });
+  m.dispatch.mockResolvedValue({ success: true, message: "done", reply: { content: "done" } });
   m.search.mockResolvedValue({ status: "matches", matches: [] });
 });
 
@@ -487,6 +487,7 @@ describe("confirm phase only runs the exact card the server persisted", () => {
       "ACCEPT_CARPOOL_REQUEST",
       { requestId: REQ, riderName: "Ana Silva" },
       expect.objectContaining({ chat: expect.anything() }),
+      "pt-BR",
     );
     expect(result.status).toBe("idle");
   });

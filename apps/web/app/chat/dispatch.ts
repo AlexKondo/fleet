@@ -7,31 +7,42 @@ import { postReservationMessage } from "@/app/reservations/[id]/actions";
 import { getFleetManagerEmails } from "@/lib/email/recipients";
 import { renderEmail } from "@/lib/email/renderEmail";
 import { sendEmail } from "@/lib/email/sendEmail";
-import { formatDateTime } from "@/lib/formatDateTime";
-import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
+import { formatDateTime, formatDateTimeShort } from "@/lib/formatDateTime";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
 import { getAppUrl } from "@/lib/getAppUrl";
 import { isCarpoolIntent, type IntentName } from "@fleet/domain";
 import { findActiveReservations, resolveReservationId } from "./queries";
 import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
 import { executeCarpoolIntent, loadChatCarpoolCtx, publishOfferForNewReservation } from "./carpoolChat";
 import { dictionaries, type Dictionary } from "@/lib/i18n/dictionaries";
-import { translateVehicleReasons } from "./noVehicle";
+import { fillTemplate } from "@/lib/carpool/errorText";
+import { noVehicleReply } from "./noVehicle";
+import { classifyError, composeFailure, failureReply, type AssistantReply, type ReplyAction } from "./replies";
 
 export interface DispatchResult {
   success: boolean;
-  // On failure, `message` is a stable internal code (or a raw RPC error) — never shown to
-  // the user directly (apps/web/app/chat/actions.ts maps it to a friendly string).
-  // `reasons`, when present, is already human-readable Portuguese explaining WHY (e.g. the
-  // recommendation engine's own reasons for finding no eligible vehicle) and safe to show
-  // as-is — kept separate from `message` specifically so actions.ts never has to guess
-  // whether a given string is an internal code or genuine explanatory prose.
+  /** A stable internal code (failures) or the success text. Kept for logs/telemetry and tests;
+   * what the USER reads is always `reply` (FIX-VENCIDAS/Assistente: plain-language standard). */
   message: string;
-  reasons?: string[];
-  /** FIX-VENCIDAS/Assistente: the engine found no vehicle (and no carpool) for the window. A
-   * legitimate result, not a failure of the system: `reasons` then holds the engine's raw reason
-   * CODES (e.g. "no_candidates_available"), which actions.ts translates (app/chat/noVehicle.ts)
-   * into the explanation + alternatives + prefilled-form link. Never shown raw. */
+  /** The user-facing answer (dictionary text, never a code), with an optional in-app link. */
+  reply: AssistantReply;
+  /** The engine found no vehicle (and no carpool) for the window: a legitimate business result. */
   noVehicle?: boolean;
+}
+
+const ok = (text: string): DispatchResult => ({ success: true, message: text, reply: { content: text } });
+
+/** Failure with the real cause only in the server log; the user gets the 4-part plain reply. */
+function failed(
+  dict: Dictionary,
+  action: ReplyAction,
+  code: string,
+  cont: Parameters<typeof failureReply>[3],
+  ...signals: (string | null | undefined)[]
+): DispatchResult {
+  const kind = classifyError(code, ...signals);
+  if (kind === "unexpected") console.error(`chat dispatch ${action} failed:`, code, ...signals.filter(Boolean));
+  return { success: false, message: code, reply: failureReply(dict, action, kind, cont) };
 }
 
 /**
@@ -52,10 +63,12 @@ export async function dispatchIntent(
   intent: IntentName,
   slots: Record<string, string>,
   dict: Dictionary = dictionaries[DEFAULT_LOCALE],
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<DispatchResult> {
+  const r = dict.chat.replies;
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser(supabase);
-  if (!user) return { success: false, message: "not_authenticated" };
+  if (!user) return failed(dict, "generic", "not_authenticated", { mode: "reenter" });
 
   switch (intent) {
     case "CREATE_RESERVATION": {
@@ -73,17 +86,17 @@ export async function dispatchIntent(
         // self-service form's checkbox has always had.
         allowCarpool: slots.allowCarpool === "true",
       };
+      // Every failure of a reservation keeps the trip data in the /trips/new link (true in all
+      // branches below: the slots are what the user gave, nothing was created).
+      const form = { mode: "form" as const, slots };
       const plan = await planTrip(input);
-      if (plan.error) {
-        console.error("dispatchIntent CREATE_RESERVATION planTrip failed:", plan.error);
-        return { success: false, message: plan.error };
-      }
+      if (plan.error) return failed(dict, "reservation", plan.error, form);
 
       if (plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0) {
         const target = plan.carpoolOptions[0]!;
         // reservationId is a RESERVATION id; create_carpool_participation needs the host's
         // trip_request id (planTrip resolves it from the same candidate, like confirmTrip does).
-        if (!target.tripRequestId) return { success: false, message: "carpool_trip_unresolved" };
+        if (!target.tripRequestId) return failed(dict, "reservation", "carpool_trip_unresolved", form);
         const { error } = await supabase.rpc("create_carpool_participation", {
           p_departure_at: input.departureAt,
           p_expected_return_at: input.expectedReturnAt,
@@ -95,7 +108,7 @@ export async function dispatchIntent(
           p_justification: input.justification,
           p_existing_trip_request_id: target.tripRequestId,
         });
-        if (error) return { success: false, message: error.message };
+        if (error) return failed(dict, "reservation", "carpool_participation_failed", form, error.code, error.message);
         // The form flow (trips/new/actions.ts's confirmTrip) gets this "for free" — a
         // redirect() to /trips after creating always re-renders with fresh data. Chat
         // never navigates the page, so without an explicit revalidate the reservation was
@@ -103,7 +116,7 @@ export async function dispatchIntent(
         // request) kept showing its stale pre-reservation snapshot until a hard refresh.
         revalidatePath("/trips");
         revalidatePath("/dashboard");
-        return { success: true, message: `Você entrou na carona no veículo ${target.vehiclePlate}.` };
+        return ok(fillTemplate(r.success.carpoolJoined, { plate: target.vehiclePlate }));
       }
 
       if (plan.type === "vehicle" && plan.vehicle) {
@@ -138,17 +151,12 @@ export async function dispatchIntent(
           p_allow_carpool: input.allowCarpool,
         });
         if (error) {
-          // This RPC error was previously invisible end-to-end: never logged here, and the
-          // user only ever saw the generic friendly fallback (apps/web/app/chat/actions.ts).
-          // Root-caused one real failure class this way already (two overloaded
-          // create_vehicle_reservation signatures after 0047 added a parameter via CREATE
-          // OR REPLACE instead of replacing it — see 0049's migration comment) that was
-          // undiagnosable without this.
+          // Logged with the real cause (it was invisible end-to-end once: two overloaded
+          // create_vehicle_reservation signatures after 0047, see 0049); the user reads the
+          // plain-language reason (conflict, maintenance, permission...) or "unexpected".
           console.error("dispatchIntent CREATE_RESERVATION (vehicle) failed:", error.code, error.message);
-          return {
-            success: false,
-            message: error.code === "23P01" ? "RESERVATION_CONFLICT" : error.message,
-          };
+          const code = error.code === "23P01" ? "RESERVATION_CONFLICT" : "create_reservation_failed";
+          return failed(dict, "reservation", code, form, error.code, error.message);
         }
 
         // Same manager notification confirmTrip sends (apps/web/app/trips/new/actions.ts)
@@ -198,40 +206,44 @@ export async function dispatchIntent(
 
         revalidatePath("/trips");
         revalidatePath("/dashboard");
-        return { success: true, message: `Reserva criada — veículo ${chosenPlate}.${carpoolNote}` };
+        return ok(`${fillTemplate(r.success.reservationCreated, { plate: chosenPlate })}${carpoolNote}`);
       }
 
-      return { success: false, message: "no_eligible_vehicle", reasons: plan.reasons, noVehicle: true };
+      const reply = noVehicleReply(dict, slots, plan.reasons, plan.fleet, "reservation");
+      return { success: false, message: "no_eligible_vehicle", reply, noVehicle: true };
     }
 
     case "CANCEL_RESERVATION": {
       const active = await findActiveReservations(supabase, user.id);
       const reservationId = resolveReservationId(slots.reservationId, active);
-      if (!reservationId) return { success: false, message: "reservation_not_found" };
+      if (!reservationId) return failed(dict, "cancel", "reservation_not_found", { mode: "chat" });
       const { error } = await supabase.rpc("cancel_reservation", { p_reservation_id: reservationId });
-      if (error) return { success: false, message: error.message };
+      if (error) return failed(dict, "cancel", "cancel_failed", { mode: "chat" }, error.code, error.message);
       revalidatePath("/trips");
       revalidatePath("/dashboard");
-      return { success: true, message: "Reserva cancelada." };
+      return ok(r.success.cancelled);
     }
 
     case "VIEW_RESERVATION":
     case "FIND_MY_VEHICLE": {
       const active = await findActiveReservations(supabase, user.id);
       const reservationId = resolveReservationId(slots.reservationId, active);
-      const match = active.find((r) => r.reservationId === reservationId) ?? active[0];
-      if (!match) return { success: true, message: "Você não tem nenhuma reserva ativa no momento." };
-      return {
-        success: true,
-        message: `Veículo ${match.vehiclePlate}, destino ${match.destination}, saída em ${match.departureAt}.`,
-      };
+      const match = active.find((x) => x.reservationId === reservationId) ?? active[0];
+      if (!match) return ok(r.success.noActiveReservation);
+      return ok(
+        fillTemplate(r.success.reservationInfo, {
+          plate: match.vehiclePlate,
+          destination: match.destination,
+          departure: formatDateTimeShort(match.departureAt, locale),
+        }),
+      );
     }
 
     case "REPORT_DAMAGE":
     case "REPORT_DELAY": {
       const active = await findActiveReservations(supabase, user.id);
       const reservationId = resolveReservationId(slots.reservationId, active);
-      if (!reservationId) return { success: false, message: "reservation_not_found" };
+      if (!reservationId) return failed(dict, "message", "reservation_not_found", { mode: "chat" });
 
       const formData = new FormData();
       formData.set("reservationId", reservationId);
@@ -239,11 +251,9 @@ export async function dispatchIntent(
       formData.set("body", slots.damageNotes || slots.delayNotes || "Reportado via assistente conversacional.");
       const result = await postReservationMessage({ status: "idle" }, formData);
       // postReservationMessage's `error` already comes from the app's own i18n dictionary
-      // (dict.errors.reservations.*) — genuinely safe human-readable text, not a code.
-      if (result.status === "error") {
-        return { success: false, message: "message_post_failed", reasons: result.error ? [result.error] : undefined };
-      }
-      return { success: true, message: "Registrado na reserva." };
+      // (dict.errors.reservations.*) — genuinely safe human-readable text, used as the "why".
+      if (result.status === "error") return postFailed(dict, "message", result.error);
+      return ok(r.success.messagePosted);
     }
 
     case "EXTEND_RESERVATION": {
@@ -253,8 +263,8 @@ export async function dispatchIntent(
       // automatic-reassignment side effects atomically — nothing new to implement here.
       const active = await findActiveReservations(supabase, user.id);
       const reservationId = resolveReservationId(slots.reservationId, active);
-      if (!reservationId) return { success: false, message: "reservation_not_found" };
-      if (!slots.newExpectedReturnAt) return { success: false, message: "missing_new_return_time" };
+      if (!reservationId) return failed(dict, "extend", "reservation_not_found", { mode: "chat" });
+      if (!slots.newExpectedReturnAt) return failed(dict, "extend", "missing_new_return_time", { mode: "chat" });
 
       const formData = new FormData();
       formData.set("reservationId", reservationId);
@@ -262,10 +272,8 @@ export async function dispatchIntent(
       formData.set("newExpectedReturnAt", slots.newExpectedReturnAt);
       formData.set("body", `Novo horário de retorno solicitado: ${slots.newExpectedReturnAt}.`);
       const result = await postReservationMessage({ status: "idle" }, formData);
-      if (result.status === "error") {
-        return { success: false, message: "message_post_failed", reasons: result.error ? [result.error] : undefined };
-      }
-      return { success: true, message: "Horário de retorno atualizado." };
+      if (result.status === "error") return postFailed(dict, "extend", result.error);
+      return ok(r.success.returnTimeUpdated);
     }
 
     case "CHECK_AVAILABILITY":
@@ -284,20 +292,17 @@ export async function dispatchIntent(
         allowCarpool: true,
       };
       const plan = await planTrip(input);
-      if (plan.error) {
-        console.error("dispatchIntent CHECK_AVAILABILITY planTrip failed:", plan.error);
-        return { success: false, message: plan.error };
-      }
+      if (plan.error) return failed(dict, "availability", plan.error, { mode: "chat" });
       if (plan.type === "none") {
-        return { success: true, message: "no_eligible_vehicle", reasons: plan.reasons, noVehicle: true };
+        // A query, not a failure of the system: answered as a successful reply that explains why.
+        const reply = noVehicleReply(dict, slots, plan.reasons, plan.fleet, "availability");
+        return { success: true, message: "no_eligible_vehicle", reply, noVehicle: true };
       }
-      return {
-        success: true,
-        message:
-          plan.type === "vehicle" && plan.vehicle
-            ? `Sim — veículo ${plan.vehicle.plate} disponível. ${translateVehicleReasons(dict, plan.vehicle.reasons).join(" ")}`.trim()
-            : "Há uma opção de carona disponível para essa janela.",
-      };
+      return ok(
+        plan.type === "vehicle" && plan.vehicle
+          ? fillTemplate(r.success.vehicleAvailable, { plate: plan.vehicle.plate })
+          : r.success.carpoolAvailable,
+      );
     }
 
     // Smart Carpool (Phase C6): every case calls the same server actions/RPCs as the web UI
@@ -311,10 +316,11 @@ export async function dispatchIntent(
     case "ACCEPT_CARPOOL_REQUEST":
     case "REJECT_CARPOOL_REQUEST":
     case "CANCEL_CARPOOL_REQUEST": {
-      if (!isCarpoolIntent(intent)) return { success: false, message: "not_supported_via_chat" };
+      if (!isCarpoolIntent(intent)) return failed(dict, "generic", "not_supported_via_chat", { mode: "chat" });
       const carpoolCtx = await loadChatCarpoolCtx(supabase, user.id);
-      if (!carpoolCtx) return { success: false, message: "not_authenticated" };
-      return executeCarpoolIntent(carpoolCtx, intent, slots);
+      if (!carpoolCtx) return failed(dict, "generic", "not_authenticated", { mode: "reenter" });
+      const result = await executeCarpoolIntent(carpoolCtx, intent, slots);
+      return { success: result.success, message: result.message, reply: result.reply ?? { content: result.message } };
     }
 
     // Not automated (see file-level comment) — answered informationally by
@@ -325,6 +331,20 @@ export async function dispatchIntent(
     case "START_TRIP":
     case "END_TRIP":
     case "ASK_FLEET":
-      return { success: false, message: "not_supported_via_chat" };
+      return failed(dict, "generic", "not_supported_via_chat", { mode: "chat" });
   }
+}
+
+/** Translated validation texts postReservationMessage may return (any locale). */
+const RESERVATION_MESSAGE_TEXTS = new Set(
+  Object.values(dictionaries).flatMap((d) => Object.values(d.errors.reservations as Record<string, string>)),
+);
+
+/** postReservationMessage failures: its own dictionary text is the "why"; a raw code or database
+ * message (it returns error.message as-is) is classified instead and never shown. */
+function postFailed(dict: Dictionary, action: ReplyAction, raw: string | undefined): DispatchResult {
+  if (raw && RESERVATION_MESSAGE_TEXTS.has(raw)) {
+    return { success: false, message: "message_post_failed", reply: composeFailure(dict, action, raw, { mode: "chat" }) };
+  }
+  return failed(dict, action, "message_post_failed", { mode: "chat" }, raw);
 }

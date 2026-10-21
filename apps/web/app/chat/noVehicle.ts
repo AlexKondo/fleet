@@ -1,13 +1,14 @@
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import { buildTripPrefillHref } from "@/lib/trips/tripPrefill";
+import type { FleetSummary } from "@/lib/trips/fleetSummary";
+import { composeFailure, fleetExplanation, type AssistantReply } from "./replies";
 
 /**
  * Assistant answer when the Mobility Decision Engine finds no vehicle for the requested window
  * (e.g. reasons ["no_candidates_available"] from packages/domain recommend.ts). That is a
- * LEGITIMATE business result, not a failure: the user gets the translated reason, the
- * alternatives, an explicit "your carpool offer was not lost" note when they wanted to offer
- * seats, and a link that opens /trips/new with the trip data already filled in. No reservation
- * is created. Engine reason codes are never shown raw.
+ * LEGITIMATE business result, not a failure of the system. The reply says what happened, WHY from
+ * the real fleet situation (counts per reason: reserved / in maintenance / blocked / in use / not
+ * enough seats ...), the alternatives and that the trip data (and the carpool offer intention) go
+ * pre-filled into /trips/new through the link. No reservation is created. Codes are never shown.
  */
 
 /** A reason that looks like an internal code (snake_case) and has no translation is dropped. */
@@ -25,24 +26,18 @@ export function translateVehicleReasons(dict: Dictionary, reasons: readonly stri
   return out;
 }
 
-export interface NoVehicleReply {
-  content: string;
-  link: { href: string; label: string };
-}
+export type NoVehicleReply = Required<AssistantReply>;
 
 export function noVehicleReply(
   dict: Dictionary,
   slots: Record<string, string | undefined>,
   reasons: readonly string[] | undefined,
+  fleet?: FleetSummary,
+  action: "reservation" | "availability" = "reservation",
 ): NoVehicleReply {
-  const t = dict.chat.noVehicle;
-  const explained = translateVehicleReasons(dict, reasons);
-  const lines = [
-    `${explained.length > 0 ? explained.join(" ") : t.intro} ${t.alternatives}`,
-  ];
-  if (slots.allowCarpool === "true") lines.push(t.carpoolKept);
-  return {
-    content: lines.join("\n"),
-    link: { href: buildTripPrefillHref(slots), label: t.openForm },
-  };
+  // Real cause from the fleet counts; without them, the engine's own (translated) reason.
+  const why = fleet
+    ? fleetExplanation(dict, fleet, action === "reservation")
+    : translateVehicleReasons(dict, reasons).join(" ") || dict.chat.replies.fleet.intro;
+  return composeFailure(dict, action, why, { mode: "form", slots }) as NoVehicleReply;
 }

@@ -39,7 +39,8 @@ import {
 } from "@/lib/carpool/carpoolFirst";
 import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
 import { loadOfferCardRows } from "@/lib/carpool/offerCardRows";
-import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
+import { carpoolErrorText, fillTemplate, isKnownCarpoolError } from "@/lib/carpool/errorText";
+import { classifyError, composeFailure, type AssistantReply, type ReplyAction } from "./replies";
 import { isUuid } from "@/lib/carpool/rpcErrors";
 import { VEHICLE_OPTION_ID } from "./persistedPending";
 import type { RiderTripDraft } from "@/lib/carpool/runCarpoolSearch";
@@ -90,8 +91,43 @@ export interface ExecResult {
   success: boolean;
   /** Success: the user-facing text. Failure: a stable code (never shown directly). */
   message: string;
-  /** Already-localized, human-readable reasons (safe to show as-is). */
-  reasons?: string[];
+  /** Failure: the plain-language reply (what / why / alternatives / how to continue). */
+  reply?: AssistantReply;
+}
+
+/** Which "what happened / alternatives" pair a carpool intent uses (chat.replies.*). */
+export function carpoolAction(intent: IntentName): ReplyAction {
+  switch (intent) {
+    case "OFFER_CARPOOL":
+      return "carpoolOffer";
+    case "DISABLE_CARPOOL":
+      return "carpoolDisable";
+    case "FIND_CARPOOL":
+      return "carpoolFind";
+    case "REQUEST_CARPOOL":
+      return "carpoolRequest";
+    case "ACCEPT_CARPOOL_REQUEST":
+    case "REJECT_CARPOOL_REQUEST":
+      return "carpoolRespond";
+    case "CANCEL_CARPOOL_REQUEST":
+      return "carpoolCancel";
+    default:
+      return "generic";
+  }
+}
+
+/** Plain-language WHY for a carpool error code: its translated message when it has one, otherwise
+ * the generic classification (the real code goes to the server log). */
+function carpoolWhy(ctx: ChatCarpoolCtx, code: string): string {
+  if (isKnownCarpoolError(code)) return carpoolErrorText(ctx.dict, code);
+  const kind = classifyError(code);
+  if (kind === "unexpected") console.error("chat carpool failed with an unmapped code:", code);
+  return ctx.dict.chat.replies.why[kind];
+}
+
+/** A carpool refusal/failure reply; the conversation history keeps what the user said. */
+function carpoolFailure(ctx: ChatCarpoolCtx, action: ReplyAction, why: string): { kind: "reply"; message: string } {
+  return { kind: "reply", message: composeFailure(ctx.dict, action, why, { mode: "chat" }).content };
 }
 
 /** Keys that identify rows; the LLM must never supply them (the server resolves them). */
@@ -146,8 +182,8 @@ function seatsPhrase(ctx: ChatCarpoolCtx, n: number): string {
 
 const reply = (message: string): CarpoolPrepared => ({ kind: "reply", message });
 
-function fail(ctx: ChatCarpoolCtx, code: string): ExecResult {
-  return { success: false, message: code, reasons: [carpoolErrorText(ctx.dict, code)] };
+function failWith(ctx: ChatCarpoolCtx, code: string, action: ReplyAction = "generic"): ExecResult {
+  return { success: false, message: code, reply: composeFailure(ctx.dict, action, carpoolWhy(ctx, code), { mode: "chat" }) };
 }
 
 function parseSeats(raw: string | undefined): number | null {
@@ -393,7 +429,7 @@ function searchSlotsToPending(s: SearchSlots): Record<string, string> {
 }
 
 async function prepareFind(ctx: ChatCarpoolCtx, slots: Record<string, string>): Promise<CarpoolPrepared> {
-  if (!ctx.gating.newEngine) return reply(carpoolErrorText(ctx.dict, "CARPOOL_DISABLED_BY_POLICY"));
+  if (!ctx.gating.newEngine) return carpoolFailure(ctx, "carpoolFind", carpoolWhy(ctx, "CARPOOL_DISABLED_BY_POLICY"));
   const s = readSearchSlots(slots);
   if ("missing" in s) {
     // The orchestrator normally asks for destination/time itself; this is the safety net, and
@@ -410,11 +446,13 @@ async function prepareFind(ctx: ChatCarpoolCtx, slots: Record<string, string>): 
   switch (state.status) {
     case "unavailable":
       // Outage: say so, never invent a match.
-      return reply(ctx.dict.carpool.newTrip.unavailableBanner);
+      return carpoolFailure(ctx, "carpoolFind", ctx.dict.chat.replies.why.providerOutage);
     case "needs_precision":
       return reply(precisionMessage(ctx, state));
     case "none":
-      return reply(`${placesLine(ctx, state.origin, state.destination)}\n${ctx.dict.chat.carpool.findNone}`);
+      return reply(
+        `${placesLine(ctx, state.origin, state.destination)}\n${carpoolFailure(ctx, "carpoolFind", ctx.dict.chat.carpool.findNone).message}`,
+      );
     case "offers":
       return {
         kind: "options",
@@ -427,16 +465,16 @@ async function prepareFind(ctx: ChatCarpoolCtx, slots: Record<string, string>): 
 
 /** Builds the REQUEST_CARPOOL confirmation card for one offer of a (re-run) search. */
 async function buildRequestCard(ctx: ChatCarpoolCtx, search: Record<string, string>, offerId: string): Promise<CarpoolPrepared> {
-  if (!ctx.gating.newEngine) return reply(carpoolErrorText(ctx.dict, "CARPOOL_DISABLED_BY_POLICY"));
-  if (!isUuid(offerId)) return reply(carpoolErrorText(ctx.dict, "offer_not_compatible"));
+  if (!ctx.gating.newEngine) return carpoolFailure(ctx, "carpoolRequest", carpoolWhy(ctx, "CARPOOL_DISABLED_BY_POLICY"));
+  if (!isUuid(offerId)) return carpoolFailure(ctx, "carpoolRequest", carpoolWhy(ctx, "offer_not_compatible"));
   const s = readSearchSlots(search);
   if ("missing" in s) return reply(ctx.dict.chat.carpool.noRecentSearch);
   // Re-validated server-side: the offer must still be among the COMPATIBLE results right now.
   const state = await runRiderSearch(ctx, s);
-  if (state.status === "unavailable") return reply(ctx.dict.carpool.newTrip.unavailableBanner);
+  if (state.status === "unavailable") return carpoolFailure(ctx, "carpoolRequest", ctx.dict.chat.replies.why.providerOutage);
   if (state.status === "needs_precision") return reply(precisionMessage(ctx, state));
   const card = state.status === "offers" ? state.offers.find((o) => o.offerId === offerId) : undefined;
-  if (state.status !== "offers" || !card) return reply(carpoolErrorText(ctx.dict, "offer_not_compatible"));
+  if (state.status !== "offers" || !card) return carpoolFailure(ctx, "carpoolRequest", carpoolWhy(ctx, "offer_not_compatible"));
 
   const summary =
     `${placesLine(ctx, state.origin, state.destination)}\n` +
@@ -471,7 +509,7 @@ export async function prepareCarpoolIntent(
 ): Promise<CarpoolPrepared> {
   const slots = stripServerResolvedSlots(rawSlots);
   const t = ctx.dict.chat.carpool;
-  const disabled = () => reply(carpoolErrorText(ctx.dict, "CARPOOL_DISABLED_BY_POLICY"));
+  const disabled = () => carpoolFailure(ctx, carpoolAction(intent), carpoolWhy(ctx, "CARPOOL_DISABLED_BY_POLICY"));
 
   switch (intent) {
     case "FIND_CARPOOL":
@@ -498,7 +536,7 @@ export async function prepareCarpoolIntent(
       const seats = parseSeats(slots.seats);
       if (seats === null) return reply(t.askSeats);
       const trips = await findHostTrips(ctx, hintsFrom(slots));
-      if (trips.length === 0) return reply(t.noHostTrip);
+      if (trips.length === 0) return carpoolFailure(ctx, "carpoolOffer", t.noHostTrip);
       if (trips.length > 1) {
         const list = trips
           .map((x) => fillTemplate(t.tripListItem, { destination: x.destination, departure: formatDateTimeShort(x.departureAt, ctx.locale) }))
@@ -521,7 +559,7 @@ export async function prepareCarpoolIntent(
       const offers = (await findOwnOffers(ctx, true))
         .filter((o) => !hints.tripDate || spDate(o.departureAt) === hints.tripDate)
         .filter((o) => matchesDestination(o.destination, hints.destination));
-      if (offers.length === 0) return reply(t.noActiveOffer);
+      if (offers.length === 0) return carpoolFailure(ctx, "carpoolDisable", t.noActiveOffer);
       if (offers.length > 1) {
         const list = offers
           .map((x) => fillTemplate(t.tripListItem, { destination: x.destination, departure: formatDateTimeShort(x.departureAt, ctx.locale) }))
@@ -554,7 +592,7 @@ export async function prepareCarpoolIntent(
         });
       }
       if (candidates.length === 0) {
-        return reply(name ? fillTemplate(t.noPendingForName, { name }) : t.noPendingRequests);
+        return carpoolFailure(ctx, "carpoolRespond", name ? fillTemplate(t.noPendingForName, { name }) : t.noPendingRequests);
       }
       if (candidates.length > 1) {
         const list = candidates
@@ -585,7 +623,7 @@ export async function prepareCarpoolIntent(
     case "CANCEL_CARPOOL_REQUEST": {
       const hint = /^\d{4}-\d{2}-\d{2}$/.test(slots.tripDate ?? "") ? slots.tripDate : undefined;
       const own = (await findOwnRiderRequests(ctx)).filter((r) => !hint || spDate(r.departureAt) === hint);
-      if (own.length === 0) return reply(t.noCancellableRequest);
+      if (own.length === 0) return carpoolFailure(ctx, "carpoolCancel", t.noCancellableRequest);
       if (own.length > 1) {
         const list = own
           .map((r) => fillTemplate(t.cancelListItem, { when: formatDateTimeShort(r.departureAt, ctx.locale) }))
@@ -603,7 +641,7 @@ export async function prepareCarpoolIntent(
     }
 
     default:
-      return reply(carpoolErrorText(ctx.dict, "generic"));
+      return carpoolFailure(ctx, "generic", ctx.dict.chat.replies.why.notSupported);
   }
 }
 
@@ -658,7 +696,9 @@ export async function executeCarpoolIntent(
   slots: Record<string, string>,
 ): Promise<ExecResult> {
   const t = ctx.dict.chat.carpool;
-  if (!isCarpoolIntent(intent)) return { success: false, message: "not_supported_via_chat" };
+  if (!isCarpoolIntent(intent)) return failWith(ctx, "not_supported_via_chat");
+  const action = carpoolAction(intent);
+  const fail = (c: ChatCarpoolCtx, code: string) => failWith(c, code, action);
 
   switch (intent) {
     case "FIND_CARPOOL": {
@@ -766,7 +806,7 @@ export async function executeCarpoolIntent(
     }
 
     default:
-      return { success: false, message: "not_supported_via_chat" };
+      return fail(ctx, "not_supported_via_chat");
   }
 }
 

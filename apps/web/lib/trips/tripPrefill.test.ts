@@ -62,7 +62,8 @@ describe("no-vehicle reply", () => {
       expect(texts).toContain("Texto já legível.");
       const reply = noVehicleReply(dict, { allowCarpool: "true", origin: "A" }, ["no_candidates_available"]);
       expect(reply.content).not.toMatch(/no_candidates_available/);
-      expect(reply.content).toContain(dict.chat.noVehicle.alternatives);
+      expect(reply.content).toContain(dict.chat.replies.alternatives.reservation);
+      expect(reply.content).toContain(dict.chat.replies.keptInForm);
       expect(reply.content).toContain(dict.chat.noVehicle.carpoolKept);
       expect(reply.link.label).toBe(dict.chat.noVehicle.openForm);
     }
@@ -71,7 +72,7 @@ describe("no-vehicle reply", () => {
   it("falls back to the generic intro when the engine gave no usable reason", () => {
     const dict = dictionaries["pt-BR"];
     const reply = noVehicleReply(dict, { allowCarpool: "false" }, ["unknown_code"]);
-    expect(reply.content.startsWith(dict.chat.noVehicle.intro)).toBe(true);
+    expect(reply.content).toContain(dict.chat.replies.fleet.intro);
     expect(reply.content).not.toContain(dict.chat.noVehicle.carpoolKept);
   });
 });

@@ -16,6 +16,9 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { noVehicleReply } from "./noVehicle";
+import { classifyError, failureReply, type AssistantReply } from "./replies";
+import { fillTemplate } from "@/lib/carpool/errorText";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
   carpoolFirstForReservation,
   loadChatCarpoolCtx,
@@ -59,26 +62,15 @@ export interface ChatState {
     options?: ChatOption[];
   };
   error?: string;
+  /** FIX-VENCIDAS/Assistente: the last assistant message already explains the failure in plain
+   * words (what / why / alternatives / how to continue), so ChatPanel must NOT add the generic
+   * error line under it. Only a failure without any explanation shows chat.errorGeneric. */
+  explained?: boolean;
 }
 
-// dispatch.ts's DispatchResult.message is a stable internal code on failure (or, for an
-// RPC error with no mapped code, a raw Postgres message) — never shown to the user
-// directly (the doc explicitly forbids exposing raw technical errors). Anything not
-// listed here falls back to a generic message instead of leaking internals.
-const FRIENDLY_DISPATCH_ERRORS: Record<string, string> = {
-  reservation_not_found: "Não encontrei essa reserva. Pode informar qual?",
-  RESERVATION_CONFLICT: "Esse veículo acabou de ser reservado por outra pessoa. Tente outro horário.",
-  not_authenticated: "Sua sessão expirou. Faça login novamente.",
-  missing_new_return_time: "Não entendi o novo horário de retorno. Pode informar de novo?",
-  not_supported_via_chat: "Essa ação ainda não é feita por aqui.",
-};
-
-function friendlyDispatchError(code: string): string {
-  const friendly = FRIENDLY_DISPATCH_ERRORS[code];
-  // Unmapped = genuinely unexpected: keep the real cause in the server log (never shown to the user).
-  if (!friendly) console.error("chat dispatch failed with an unmapped code:", code);
-  return friendly ?? "Não consegui concluir essa ação agora. Tente novamente em instantes.";
-}
+// FIX-VENCIDAS/Assistente: every text the assistant writes comes from the dictionaries
+// (chat.replies.*); failures always carry what happened / why / alternatives / how to continue
+// (app/chat/replies.ts). Codes and database messages only ever reach the server log.
 
 type VehicleOption = { vehicleId: string; plate: string; vehicleName: string };
 
@@ -86,6 +78,7 @@ type VehicleOption = { vehicleId: string; plate: string; vehicleName: string };
 // so the driver can also just say/type the number, e.g. "2") — repeating the same list as
 // plain text here duplicated it right above the buttons for no reason.
 function buildVehicleSummary(
+  dict: Dictionary,
   chosen: VehicleOption,
   options: VehicleOption[],
   destination: string,
@@ -93,8 +86,15 @@ function buildVehicleSummary(
   locale: Awaited<ReturnType<typeof getLocale>>,
   tail = "",
 ): string {
-  const optionsLine = options.length > 1 ? " Escolha uma das opções abaixo, ou diga o número dela." : "";
-  return `Vou reservar o veículo ${chosen.vehicleName} (${chosen.plate}) para ${destination}, saída ${formatDateTimeShort(input.departureAt, locale)}, retorno ${formatDateTimeShort(input.expectedReturnAt, locale)}.${optionsLine}${tail}`;
+  const card = dict.chat.replies.card;
+  const optionsLine = options.length > 1 ? card.chooseOption : "";
+  return `${fillTemplate(card.vehicle, {
+    name: chosen.vehicleName,
+    plate: chosen.plate,
+    destination,
+    departure: formatDateTimeShort(input.departureAt, locale),
+    return: formatDateTimeShort(input.expectedReturnAt, locale),
+  })}${optionsLine}${tail}`;
 }
 
 // Matches a bare number ("2") or a short Portuguese phrasing ("opção 2", "opcao 2", "numero 2").
@@ -106,12 +106,27 @@ function parseOptionNumber(message: string): number | null {
 // Intents the doc scopes to "point at the right screen" instead of full chat automation
 // (pickup/return need photo evidence; vehicle-swap is a dashboard/fleet-manager action) —
 // see dispatch.ts's file comment for the reasoning.
-const NOT_AUTOMATED: Partial<Record<IntentName, string>> = {
-  CHANGE_RESERVATION: "Para alterar detalhes de uma reserva, acesse a reserva em Minhas Viagens.",
-  REQUEST_DIFFERENT_VEHICLE: "Para trocar de veículo, use o botão \"Trocar\" no Painel.",
-  START_TRIP: "Para retirar o veículo, abra a reserva e use o checklist de retirada — ele exige fotos do veículo.",
-  END_TRIP: "Para devolver o veículo, abra a reserva e use o checklist de devolução — ele exige fotos do veículo.",
+const NOT_AUTOMATED: Partial<Record<IntentName, keyof Dictionary["chat"]["replies"]["notAutomated"]>> = {
+  CHANGE_RESERVATION: "change",
+  REQUEST_DIFFERENT_VEHICLE: "differentVehicle",
+  START_TRIP: "startTrip",
+  END_TRIP: "endTrip",
 };
+const notAutomatedText = (dict: Dictionary, intent: IntentName): string | undefined => {
+  const key = NOT_AUTOMATED[intent];
+  return key ? dict.chat.replies.notAutomated[key] : undefined;
+};
+
+/** A failure that is already explained in the assistant's own message (no generic line). */
+function explainedError(base: ChatMessage[], reply: AssistantReply, error: string, conversationId?: string): ChatState {
+  return {
+    status: "error",
+    ...(conversationId ? { conversationId } : {}),
+    messages: [...base, { role: "assistant", content: reply.content, ...(reply.link ? { link: reply.link } : {}) }],
+    error,
+    explained: true,
+  };
+}
 
 async function requireUser() {
   const supabase = await createSupabaseServerClient();
@@ -120,18 +135,26 @@ async function requireUser() {
 }
 
 export async function sendChatMessage(prevState: ChatState, formData: FormData): Promise<ChatState> {
+  const locale = await getLocale();
+  const dictNow = dictionaries[locale];
+  const sessionExpired = () =>
+    explainedError(prevState.messages, failureReply(dictNow, "generic", "sessionExpired", { mode: "reenter" }), "not_authenticated");
+
   const { supabase, user } = await requireUser();
-  if (!user) return { status: "error", messages: prevState.messages, error: "not_authenticated" };
+  if (!user) return sessionExpired();
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("organization_id, organization:organizations(name)")
     .eq("id", user.id)
     .single();
-  if (!profile) return { status: "error", messages: prevState.messages, error: "not_authenticated" };
+  if (!profile) return sessionExpired();
 
   const policy = await assistantPolicy(supabase);
-  if (!policy.enabled) return { status: "error", messages: [...prevState.messages, {role:"assistant",content:policy.available?"O assistente FleetMind foi desativado pelo administrador. Os fluxos operacionais permanecem disponíveis no menu.":"Não foi possível confirmar a política do assistente. Tente novamente em instantes."}], error: "assistant_disabled" };
+  if (!policy.enabled) {
+    const text = policy.available ? dictNow.chat.replies.assistantDisabled : dictNow.chat.replies.policyUnavailable;
+    return explainedError(prevState.messages, { content: text }, "assistant_disabled");
+  }
 
   const phase = String(formData.get("phase") ?? "message");
   const admin = createSupabaseAdminClient();
@@ -149,7 +172,8 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     conversationId = created?.id ?? "";
   }
   if (!conversationId) {
-    return { status: "error", messages: prevState.messages, error: "conversation_create_failed" };
+    console.error("chat: conversation row could not be created");
+    return explainedError(prevState.messages, failureReply(dictNow, "generic", "unexpected", { mode: "reenter" }), "conversation_create_failed");
   }
 
   // "edit" and "cancel" (dropping/clearing a pending confirmation) are handled entirely
@@ -160,14 +184,12 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   // "cancel" still persists via a plain Route Handler (app/api/chat/abandon/route.ts),
   // which has no such revalidation side effect.
 
-  const locale = await getLocale();
   // Phase C6: the org's carpool gating (one policy query). Drives the host-question wording in
   // the orchestrator, carpool-first for chat reservations and every carpool intent.
   const carpoolCtx = await loadChatCarpoolCtx(supabase, user.id, {
     organizationId: profile.organization_id,
     gating: deriveCarpoolGating(await loadLatestPolicy(supabase, profile.organization_id)),
   });
-  const dictNow = dictionaries[locale];
 
   // Tail of a vehicle card when the user answered Yes to offering seats under the new engine:
   // states exactly how many seats will be published after the reservation is created.
@@ -183,10 +205,9 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   // an error: the generic error line is reserved for genuinely unexpected failures).
   async function noVehicleState(
     slots: Record<string, string>,
-    reasons: string[] | undefined,
+    reply: AssistantReply,
     base: ChatMessage[],
   ): Promise<ChatState> {
-    const reply = noVehicleReply(dictNow, slots, reasons);
     await admin.from("chat_messages").insert({
       conversation_id: conversationId,
       role: "assistant",
@@ -261,19 +282,18 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     const plan = await planTrip(input);
 
     if (plan.error) {
-      // Genuinely unexpected (session, availability read...): generic error, real cause in the log.
+      // Session / availability read failure: plain reply, trip data kept in the form link, real
+      // cause in the log.
       console.error("chat CREATE_RESERVATION planTrip failed:", plan.error);
-      return {
-        assistantContent: "Não consegui processar sua mensagem agora. Você pode continuar usando os formulários normalmente.",
-        status: "error",
-      };
+      const reply = failureReply(dictNow, "reservation", classifyError(plan.error), { mode: "form", slots });
+      return { assistantContent: reply.content, link: reply.link, status: "error" };
     }
 
     if (plan.type === "none") {
       // FIX-VENCIDAS/Assistente: no vehicle for this window is a legitimate answer (not an error):
-      // translated reason + alternatives + prefilled form link; the trip data and the carpool
-      // intention are preserved in the link and in the persisted chat row. Nothing is created.
-      const reply = noVehicleReply(dictNow, slots, plan.reasons);
+      // the REAL cause (counts per reason) + alternatives + prefilled form link; the trip data and
+      // the carpool intention are preserved in the link and in the persisted chat row.
+      const reply = noVehicleReply(dictNow, slots, plan.reasons, plan.fleet);
       return {
         assistantContent: (note ? `${note}\n` : "") + reply.content,
         status: "idle",
@@ -311,6 +331,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       const summary =
         (note ? `${note}\n` : "") +
         buildVehicleSummary(
+          dictNow,
           { vehicleId: chosenVehicleId, plate: chosenPlate, vehicleName: chosenVehicleName },
           vehicleOptions,
           slots.destination ?? "",
@@ -333,7 +354,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     if (llmSummary === null) {
       // No LLM summary to fall back on (the user picked "use a vehicle" after the carpool
       // options) and no vehicle card can be built: same explanation as "no vehicle".
-      const reply = noVehicleReply(dictNow, slots, plan.reasons);
+      const reply = noVehicleReply(dictNow, slots, plan.reasons, plan.fleet);
       return { assistantContent: reply.content, status: "idle", link: reply.link, noVehicle: true };
     }
     // Carpool (legacy engine), or no eligible vehicle at all — nothing to pick between, so the
@@ -368,16 +389,19 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
 
     if (plan.type === "none" && !plan.error) {
       // Everything got booked up between rounds: explanation + alternatives, data preserved.
-      return noVehicleState(pending.slots, plan.reasons, prevState.messages);
+      return noVehicleState(pending.slots, noVehicleReply(dictNow, pending.slots, plan.reasons, plan.fleet), prevState.messages);
     }
     if (plan.type !== "vehicle" || !plan.vehicle) {
-      // The window's availability genuinely changed between rounds (e.g. everything got
-      // booked up) — surface that instead of silently keeping a stale confirmation card.
+      // Planning failed (or only a legacy carpool is left): plain reply, trip data in the form link.
       if (plan.error) console.error("chat reselectVehicle planTrip failed:", plan.error);
-      const message = "Essa opção não está mais disponível. Pode tentar de novo?";
-      const assistantMessage: ChatMessage = { role: "assistant", content: message };
-      await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "assistant", content: message });
-      return { status: "error", conversationId, messages: [...prevState.messages, assistantMessage], error: "vehicle_no_longer_available" };
+      const reply = failureReply(
+        dictNow,
+        "reservation",
+        plan.error ? classifyError(plan.error) : "vehicleUnavailable",
+        { mode: "form", slots: pending.slots },
+      );
+      await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "assistant", content: reply.content, slots: packSlots(pending.slots) });
+      return explainedError(prevState.messages, reply, "vehicle_no_longer_available", conversationId);
     }
 
     const options = [
@@ -391,6 +415,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         ? plan.vehicle.maxOfferableSeats
         : plan.vehicle.alternatives.find((a) => a.vehicleId === chosen.vehicleId)?.maxOfferableSeats;
     const summary = buildVehicleSummary(
+      dictNow,
       chosen,
       options,
       pending.slots.destination ?? "",
@@ -433,7 +458,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   // Shared by the button click (phase=select_option) and the bare-number reply: one numbered
   // carpool option (or "use a vehicle") was chosen.
   async function selectOption(pending: NonNullable<ChatState["pendingAction"]>, optionId: string): Promise<ChatState> {
-    if (!carpoolCtx) return { status: "error", conversationId, messages: prevState.messages, error: "not_authenticated" };
+    if (!carpoolCtx) return { ...sessionExpired(), conversationId };
     const result = await prepareFromOption(
       carpoolCtx,
       { intent: pending.intent, slots: pending.slots, options: pending.options },
@@ -456,6 +481,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         messages: [...prevState.messages, { role: "assistant", content: built.assistantContent, ...(built.link ? { link: built.link } : {}) }],
         pendingAction: built.pendingAction,
         error: built.status === "error" ? "plan_failed" : undefined,
+        explained: built.status === "error" ? true : undefined,
       };
     }
     return stateFromPrepared(result, "REQUEST_CARPOOL", prevState.messages);
@@ -479,10 +505,10 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
           .gte("created_at", since)
       ).count ?? 0;
     if ((await countAssistant(since30)) >= SELECT_BURST_LIMIT) {
-      return { status: "error", conversationId, messages: prevState.messages, error: "rate_limited" };
+      return explainedError(prevState.messages, failureReply(dictNow, "generic", "rateLimited", { mode: "chat" }), "rate_limited", conversationId);
     }
     if ((await countAssistant(startOfDay)) >= SELECT_DAILY_LIMIT) {
-      return { status: "error", conversationId, messages: prevState.messages, error: "daily_limit_reached" };
+      return explainedError(prevState.messages, failureReply(dictNow, "generic", "dailyLimit", { mode: "chat" }), "daily_limit_reached", conversationId);
     }
     const pending = prevState.pendingAction;
     const optionId = String(formData.get("optionId") ?? "");
@@ -513,13 +539,12 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       const canonical = (v: unknown) =>
         JSON.stringify(Object.entries((v ?? {}) as Record<string, string>).sort(([a], [b]) => (a < b ? -1 : 1)));
       if (!last || last.intent !== pending.intent || canonical(unpackSlots(last.slots).slots) !== canonical(pending.slots)) {
-        const notPending = dictNow.chat.carpool.confirmationNotPending;
-        return {
-          status: "error",
+        return explainedError(
+          prevState.messages,
+          failureReply(dictNow, "generic", "confirmationExpired", { mode: "chat" }),
+          "confirmation_not_pending",
           conversationId,
-          messages: [...prevState.messages, { role: "assistant", content: notPending }],
-          error: "confirmation_not_pending",
-        };
+        );
       }
     }
 
@@ -527,34 +552,32 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     // slots must still all be present (they were set once and only round-tripped as
     // hidden inputs, but nothing stops a tampered request from stripping one).
     if (missingRequiredSlots(pending.intent, pending.slots).length > 0) {
-      return { status: "error", conversationId, messages: prevState.messages, error: "incomplete_slots" };
+      return explainedError(
+        prevState.messages,
+        failureReply(dictNow, "generic", "missingInfo", { mode: "chat" }),
+        "incomplete_slots",
+        conversationId,
+      );
     }
 
-    const notAutomatedMessage = NOT_AUTOMATED[pending.intent];
+    const notAutomatedMessage = notAutomatedText(dictNow, pending.intent);
     const result = notAutomatedMessage
-      ? { success: true, message: notAutomatedMessage }
-      : await dispatchIntent(pending.intent, pending.slots, dictNow);
-    if ("noVehicle" in result && result.noVehicle) {
+      ? { success: true, message: notAutomatedMessage, reply: { content: notAutomatedMessage } as AssistantReply, noVehicle: false }
+      : await dispatchIntent(pending.intent, pending.slots, dictNow, locale);
+    if (result.noVehicle) {
       // Not an error: explanation + alternatives + prefilled form; the conversation stays active
       // so the user can simply ask for another time.
-      return noVehicleState(pending.slots, result.reasons, prevState.messages);
+      return noVehicleState(pending.slots, result.reply, prevState.messages);
     }
-    // `reasons`, when present, is already safe human-readable Portuguese (e.g. the
-    // recommendation engine's own explanation for finding no eligible vehicle) — showing
-    // the generic fallback instead would throw away a genuinely useful, specific answer.
-    const displayMessage = result.success
-      ? result.message
-      : "reasons" in result && result.reasons && result.reasons.length > 0
-        ? result.reasons.join(" ")
-        : friendlyDispatchError(result.message);
-
-    const assistantMessage: ChatMessage = { role: "assistant", content: displayMessage };
+    const reply = result.reply;
+    const assistantMessage: ChatMessage = reply.link
+      ? { role: "assistant", content: reply.content, link: reply.link }
+      : { role: "assistant", content: reply.content };
     await admin.from("chat_messages").insert({
       conversation_id: conversationId,
       role: "assistant",
-      // The raw code is kept in the DB row (not the friendly text shown to the user) —
-      // useful for debugging/telemetry without being what anyone actually reads.
-      content: result.message,
+      // The user-facing text (never a code): codes and causes go to the server log only.
+      content: reply.content,
       intent: pending.intent,
       slots: pending.slots,
     });
@@ -577,6 +600,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       conversationId,
       messages: [...prevState.messages, assistantMessage],
       error: result.message,
+      explained: true,
     };
   }
 
@@ -593,7 +617,8 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     .eq("chat_conversations.user_id", user.id)
     .gte("created_at", new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString());
   if ((dailyCount ?? 0) >= DAILY_MESSAGE_LIMIT) {
-    return { status: "error", conversationId, messages: prevState.messages, error: "daily_limit_reached" };
+    // The message was not processed nor stored: the user has to send it again later.
+    return explainedError(prevState.messages, failureReply(dictNow, "generic", "dailyLimit", { mode: "reenter" }), "daily_limit_reached", conversationId);
   }
 
   // Burst protection: a small, short window cap independent of the daily total — catches
@@ -606,7 +631,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     .eq("chat_conversations.user_id", user.id)
     .gte("created_at", new Date(Date.now() - BURST_WINDOW_MS).toISOString());
   if ((burstCount ?? 0) >= BURST_MESSAGE_LIMIT) {
-    return { status: "error", conversationId, messages: prevState.messages, error: "rate_limited" };
+    return explainedError(prevState.messages, failureReply(dictNow, "generic", "rateLimited", { mode: "reenter" }), "rate_limited", conversationId);
   }
 
   // A plain numeric reply to a pending vehicle-choice confirmation ("2") picks that option
@@ -667,7 +692,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   let noVehicleSlots: Record<string, string> | undefined;
 
   if (interpretation.status === "ok") {
-    const notAutomatedMessage = NOT_AUTOMATED[interpretation.intent];
+    const notAutomatedMessage = notAutomatedText(dictNow, interpretation.intent);
     if (interpretation.intent === "ASK_FLEET") {
       // Purely informational — there's nothing for dispatch.ts to execute, so the
       // interpreter's own answer IS the response. Routing this through dispatchIntent
@@ -682,7 +707,8 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       // options (FIND_CARPOOL, read-only) or builds the confirmation card. dispatch.ts only runs
       // at the confirm phase.
       if (!carpoolCtx) {
-        assistantContent = "Não consegui processar sua mensagem agora. Você pode continuar usando os formulários normalmente.";
+        console.error("chat: carpool context unavailable for a carpool intent");
+        assistantContent = failureReply(dictNow, "generic", "unexpected", { mode: "chat" }).content;
         status = "error";
       } else {
         const prepared = await prepareCarpoolIntent(
@@ -697,19 +723,10 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         return next;
       }
     } else if (requiresConfirmation(interpretation.intent) === "no") {
-      const result = await dispatchIntent(interpretation.intent, interpretation.slots, dictNow);
-      if (result.noVehicle) {
-        const reply = noVehicleReply(dictNow, interpretation.slots, result.reasons);
-        assistantContent = reply.content;
-        assistantLink = reply.link;
-        noVehicleSlots = interpretation.slots;
-      } else {
-        assistantContent = result.success
-          ? result.message
-          : result.reasons && result.reasons.length > 0
-            ? result.reasons.join(" ")
-            : friendlyDispatchError(result.message);
-      }
+      const result = await dispatchIntent(interpretation.intent, interpretation.slots, dictNow, locale);
+      assistantContent = result.reply.content;
+      assistantLink = result.reply.link;
+      if (result.noVehicle) noVehicleSlots = interpretation.slots;
     } else if (interpretation.intent === "CREATE_RESERVATION") {
       // Phase C6 carpool-first (parity with New Trip): when the org runs the Smart Carpool
       // engine with carpool-first, compatible offers are shown BEFORE the vehicle card, next to
@@ -733,7 +750,8 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         pendingAction = built.pendingAction;
         status = built.status;
         assistantLink = built.link;
-        if (built.noVehicle) noVehicleSlots = slots;
+        // Whenever the reply links to the prefilled form, the same trip data is kept on the row.
+        if (built.link) noVehicleSlots = slots;
       }
     } else {
       assistantContent = interpretation.summary;
@@ -743,12 +761,12 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   } else if (interpretation.status === "needs_clarification") {
     assistantContent = interpretation.question;
   } else if (interpretation.status === "low_confidence" || interpretation.status === "unknown_intent") {
-    assistantContent = "Não entendi bem o que você precisa. Pode reformular?";
+    assistantContent = dictNow.chat.replies.notUnderstood;
   } else {
     // Genuinely unexpected (LLM unavailable, missing API key, unparseable answer): generic text,
     // real cause only in the server log.
     console.error("chat interpretMessage failed:", interpretation.message);
-    assistantContent = "Não consegui processar sua mensagem agora. Você pode continuar usando os formulários normalmente.";
+    assistantContent = failureReply(dictNow, "generic", "unexpected", { mode: "chat" }).content;
     status = "error";
   }
 
@@ -771,5 +789,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     messages: [...prevState.messages, userMessage, assistantMessage],
     pendingAction,
     error: status === "error" ? interpretation.status : undefined,
+    // Every error reply above is written in plain words (what / why / alternatives / continue).
+    explained: status === "error" ? true : undefined,
   };
 }

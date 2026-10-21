@@ -454,7 +454,7 @@ export function ChatPanel({
           </div>
         ) : null}
 
-        {state.status === "error" ? (
+        {state.status === "error" && !state.explained ? (
           <p role="alert" className="mt-3 text-xs text-signal-red">
             {t.errorGeneric}
           </p>
