@@ -1596,7 +1596,7 @@ export type Database = {
     }
     Functions: {
       fm_photo_begin: { Args: {p_kind:string;p_target:string;p_angle:Database["public"]["Enums"]["photo_angle"]|null;p_sha256:string;p_size:number;p_mime:string}; Returns: Json };
-      fm_photo_finalize: { Args: {p_id:string}; Returns: undefined };
+      fm_photo_finalize: { Args: {p_id:string; p_sha256?:string}; Returns: undefined };
       fm_photo_pending: { Args: Record<PropertyKey,never>; Returns: Json };
       fm_availability_windows: { Args: {p_from?:string}; Returns: {vehicle_id:string;start_at:string;end_at:string;kind:string}[] };
 

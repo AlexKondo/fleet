@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export interface FleetTab {
   key: string;
@@ -17,10 +17,35 @@ export interface FleetTab {
  */
 export function FleetTabs({ tabs }: { tabs: FleetTab[] }) {
   const [active, setActive] = useState(tabs[0]?.key);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // WAI-ARIA tabs: arrows/Home/End move between tabs (automatic activation).
+  function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const index = tabs.findIndex((tab) => tab.key === active);
+    const next =
+      event.key === "ArrowRight"
+        ? (index + 1) % tabs.length
+        : event.key === "ArrowLeft"
+          ? (index + tabs.length - 1) % tabs.length
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? tabs.length - 1
+              : null;
+    if (next === null || !tabs[next]) return;
+    event.preventDefault();
+    setActive(tabs[next].key);
+    listRef.current?.querySelectorAll<HTMLElement>('[role="tab"]')[next]?.focus();
+  }
 
   return (
     <div>
-      <div role="tablist" className="mb-5 flex gap-1 border-b border-line-800">
+      <div
+        ref={listRef}
+        role="tablist"
+        onKeyDown={onKeyDown}
+        className="mb-5 flex gap-1 border-b border-line-800"
+      >
         {tabs.map((tab) => {
           const isActive = tab.key === active;
           return (
@@ -28,7 +53,10 @@ export function FleetTabs({ tabs }: { tabs: FleetTab[] }) {
               key={tab.key}
               type="button"
               role="tab"
+              id={`fleet-tab-${tab.key}`}
               aria-selected={isActive}
+              aria-controls={`fleet-tabpanel-${tab.key}`}
+              tabIndex={isActive ? 0 : -1}
               onClick={() => setActive(tab.key)}
               className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-3 text-sm uppercase tracking-widest transition-colors ${
                 isActive
@@ -50,7 +78,13 @@ export function FleetTabs({ tabs }: { tabs: FleetTab[] }) {
       </div>
 
       {tabs.map((tab) => (
-        <div key={tab.key} hidden={tab.key !== active}>
+        <div
+          key={tab.key}
+          role="tabpanel"
+          id={`fleet-tabpanel-${tab.key}`}
+          aria-labelledby={`fleet-tab-${tab.key}`}
+          hidden={tab.key !== active}
+        >
           {tab.content}
         </div>
       ))}

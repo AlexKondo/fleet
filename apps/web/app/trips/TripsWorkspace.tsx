@@ -361,7 +361,9 @@ export async function TripsWorkspace({
                 ? dict.reservations.checklistGuard.pickupWrongStatus
                 : tripActionError === "return_wrong_status"
                   ? dict.reservations.checklistGuard.returnWrongStatus
-                  : dict.trips.list.actionError}
+                  : tripActionError === "cancel_blocked_operation_started"
+                    ? dict.rpcErrors.cancelBlockedOperationStarted
+                    : dict.trips.list.actionError}
           </div>
         ) : null}
 

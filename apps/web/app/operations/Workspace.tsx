@@ -5,6 +5,7 @@ import { FmShell } from "../carpool/FmShell";
 import type { NavKey } from "../shellData";
 import type { OperationalData } from "@/lib/operations/load";
 import { executeOperation } from "./actions";
+import { getDictionary } from "@/lib/i18n/getLocale";
 import "./operations.css";
 export const money = (value: number | null) =>
   value === null
@@ -22,37 +23,6 @@ export const date = (value: string | null, time = false) =>
       }).format(
         new Date(value.length === 10 ? value + "T12:00:00-03:00" : value),
       );
-const errors: Record<string, string> = {
- SELF_APPROVAL_DENIED:"Quem criou ou lançou o orçamento não pode aprová-lo. Encaminhe ao superior autorizado.",
- SUPERIOR_APPROVAL_REQUIRED:"Este orçamento exige aprovação de outro gestor superior designado para a unidade.",
- APPROVER_NOT_AUTHORIZED:"O aprovador deve estar ativo, autorizado para a unidade e previsto na política.",
- BUDGET_APPROVAL_PENDING:"A revisão do orçamento aguarda aprovação independente.",
-  NOT_AUTHORIZED: "Seu perfil não pode executar esta ação.",
-  NOT_FOUND: "Registro não encontrado no seu escopo.",
-  INVALID_INPUT: "Confira os campos informados.",
-  INVALID_STATE_TRANSITION: "Esta ação não é válida para o estado atual.",
-  CONCURRENT_UPDATE:
-    "O registro mudou. Recarregue a página e confira os dados antes de tentar novamente.",
-  IDEMPOTENCY_CONFLICT:
-    "O identificador desta solicitação já foi utilizado com outros dados. Recarregue a página.",
-  MAINTENANCE_CONFLICT:
-    "Existe manutenção programada para esse veículo neste intervalo.",
-  RESERVATION_CONFLICT:
-    "O horário conflita com uma reserva ativa. Ajuste o planejamento.",
-  POWERTRAIN_MISMATCH: "O tipo de registro não é compatível com a motorização.",
-  APPROVED_BUDGET_EXCEEDED:
-    "O custo efetivo ultrapassa o orçamento aprovado. Solicite revisão antes de concluir.",
-  DEPARTURE_BLOCKED: "Saída impedida. Confira reserva, veículo e bloqueios.",
-  CHECKLIST_REQUIRED:
-    "Os checklists independentes do colaborador e da portaria precisam estar concluídos.",
-  OUTSIDE_RESERVATION_WINDOW: "A saída está fora da janela da reserva.",
-  OUTSIDE_MAINTENANCE_WINDOW:
-    "A manutenção ainda não está na janela programada.",
-  LEGACY_ARRIVAL_REASON_REQUIRED:
-    "Informe a justificativa para chegada de uma viagem sem saída registrada neste módulo.",
-  VEHICLE_NOT_READY: "O estado atual do veículo impede o início da manutenção.",
-  IMMUTABLE_VIN: "O VIN já registrado é imutável.",
-};
 export async function Workspace({
   data,
   title,
@@ -73,6 +43,7 @@ export async function Workspace({
   managerView?: boolean;
 }) {
   const p = data.profile;
+  const t = (await getDictionary()).opsShell;
   return (
     <FmShell
       orgName={p.organization?.name ?? "—"}
@@ -94,27 +65,23 @@ export async function Workspace({
             href={managerView ? "/dashboard/command-center" : "/maintenance"}
             className="ow-link"
           >
-            Central de Comando →
+            {t.centralLink}
           </Link>
         </header>
         {error && (
           <p className="ow-banner ow-error" role="alert">
-            {errors[error] ??
-              "Não foi possível concluir a operação. Confira o ambiente e tente novamente."}
+            {(t.errors as Record<string, string>)[error] ?? t.genericError}
           </p>
         )}
         {success && (
           <p className="ow-banner" role="status">
-            Operação registrada e auditada.
+            {t.success}
           </p>
         )}
         {data.unavailable && (
           <p className="ow-banner ow-error" role="alert">
-            Algumas fontes estão indisponíveis. Campos sem fonte confirmada
-            aparecem como “—”.{" "}
-            {data.migrationUnavailable
-              ? "Consulte a equipe responsável pelo ambiente."
-              : ""}
+            {t.unavailable}{" "}
+            {data.migrationUnavailable ? t.unavailableEnv : ""}
           </p>
         )}
         {children}
@@ -145,7 +112,9 @@ export function Panel({
 }
 export function Metrics({
   items,
+  ariaLabel = "Indicadores operacionais",
 }: {
+  ariaLabel?: string;
   items: {
     label: string;
     value: string | number | null;
@@ -154,7 +123,7 @@ export function Metrics({
   }[];
 }) {
   return (
-    <section className="ow-metrics" aria-label="Indicadores operacionais">
+    <section className="ow-metrics" aria-label={ariaLabel}>
       {items.map((i) => (
         <div className="ow-panel ow-metric" key={i.label}>
           <span
@@ -251,15 +220,17 @@ export function Field({
 export function VehicleSelect({
   data,
   name = "vehicle_id",
+  labels = { vehicle: "Veículo", select: "Selecione" },
 }: {
   data: OperationalData;
   name?: string;
+  labels?: { vehicle: string; select: string };
 }) {
   return (
     <label className="ow-field">
-      <span>Veículo</span>
+      <span>{labels.vehicle}</span>
       <select name={name} required>
-        <option value="">Selecione</option>
+        <option value="">{labels.select}</option>
         {data.vehicles?.map((v) => (
           <option key={v.id} value={v.id}>
             {v.plate} · {v.name ?? v.category?.name}

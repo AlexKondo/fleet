@@ -46,7 +46,9 @@ describe.sequential("verified inspection flow with actual migrated SQL",()=>{
   let {reservation}=await fixture();await actor(driver);
   await expect(pickup(reservation,"security")).rejects.toThrow(/INSPECTION_NOT_AUTHORIZED/);
   await actor(other);await expect(pickup(reservation)).rejects.toThrow(/INSPECTION_NOT_AUTHORIZED/);
-  await actor(manager);await expect(pickup(reservation)).rejects.toThrow(/INSPECTION_NOT_AUTHORIZED/);
+  // D1-05 (0198): a scoped manager/administrator may record the DRIVER checklist on his behalf (see package01Fixes.test.ts),
+  // but never the gate visual check.
+  await actor(manager);await expect(pickup(reservation,"security")).rejects.toThrow(/INSPECTION_NOT_AUTHORIZED/);
   for(const status of ["cancelled","pending_approval","completed"]){({reservation}=await fixture(status));await actor(driver);await expect(pickup(reservation)).rejects.toThrow(/RESERVATION_NOT_CONFIRMED/);}
   await expect(db.exec("insert into inspections default values")).rejects.toThrow(/permission denied/);
  });

@@ -3,7 +3,19 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 export type CommandSearchItem = { label: string; detail: string; href: string };
-export function CommandSearch({ items }: { items: CommandSearchItem[] }) {
+export type CommandSearchLabels = {
+  aria: string;
+  placeholder: string;
+  heading: string;
+  noResults: string;
+};
+export function CommandSearch({
+  items,
+  labels,
+}: {
+  items: CommandSearchItem[];
+  labels: CommandSearchLabels;
+}) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -46,8 +58,8 @@ export function CommandSearch({ items }: { items: CommandSearchItem[] }) {
       <input
         ref={input}
         type="search"
-        aria-label="Buscar veículo ou viagem do período e local selecionados"
-        placeholder="Buscar veículo, viagem, placa, motorista..."
+        aria-label={labels.aria}
+        placeholder={labels.placeholder}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -58,7 +70,7 @@ export function CommandSearch({ items }: { items: CommandSearchItem[] }) {
       <kbd>Ctrl + K</kbd>
       {open && (
         <div className="fc-search-results">
-          <p>Veículos e viagens do filtro atual</p>
+          <p>{labels.heading}</p>
           <ul>
             {results.map((i, index) => (
               <li key={`${i.href}-${index}`}>
@@ -70,7 +82,7 @@ export function CommandSearch({ items }: { items: CommandSearchItem[] }) {
             ))}
           </ul>
           {!results.length && (
-            <p role="status">Nenhum resultado neste filtro.</p>
+            <p role="status">{labels.noResults}</p>
           )}
         </div>
       )}

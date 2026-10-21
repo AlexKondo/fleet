@@ -23,6 +23,8 @@ export async function cancelMyReservation(reservationId: string): Promise<void> 
   revalidatePath(`/reservations/${reservationId}`);
   if (error) {
     console.error("cancelMyReservation failed:", error.message);
+    if (error.message.includes("CANCEL_BLOCKED_OPERATION_STARTED"))
+      redirect("/trips?tripActionError=cancel_blocked_operation_started");
     redirect("/trips?tripActionError=1");
   }
 }

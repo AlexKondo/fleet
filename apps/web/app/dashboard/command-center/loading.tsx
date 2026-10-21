@@ -1,4 +1,7 @@
-export default function LoadingCommandCenter() {
+import { getDictionary } from "@/lib/i18n/getLocale";
+
+export default async function LoadingCommandCenter() {
+  const dict = await getDictionary();
   return (
     <div
       role="status"
@@ -10,7 +13,7 @@ export default function LoadingCommandCenter() {
         minHeight: "100vh",
       }}
     >
-      Carregando Fleet Command Center 360°…
+      {dict.commandCenter.loading}
     </div>
   );
 }

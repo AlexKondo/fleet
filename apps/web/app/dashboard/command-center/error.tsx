@@ -1,5 +1,18 @@
 "use client";
+import { dictionaries } from "@/lib/i18n/dictionaries";
+import { DEFAULT_LOCALE, isLocale } from "@/lib/i18n/locales";
+
+/** Route-level client boundary: reads the same locale cookie as the server helper. */
+function useCommandCenterDictionary() {
+  const match =
+    typeof document !== "undefined"
+      ? /(?:^|;\s*)fleet-locale=([^;]*)/.exec(document.cookie)?.[1]
+      : undefined;
+  const value = match ? decodeURIComponent(match) : undefined;
+  return dictionaries[isLocale(value) ? value : DEFAULT_LOCALE].commandCenter;
+}
 export default function CommandCenterError({ reset }: { reset: () => void }) {
+  const t = useCommandCenterDictionary();
   return (
     <div
       role="alert"
@@ -10,8 +23,8 @@ export default function CommandCenterError({ reset }: { reset: () => void }) {
         minHeight: "100vh",
       }}
     >
-      <h1>Não foi possível carregar a Central de Comando</h1>
-      <p>Seus registros foram preservados. Tente consultar novamente.</p>
+      <h1>{t.loadError}</h1>
+      <p>{t.loadErrorHint}</p>
       <button
         onClick={reset}
         style={{
@@ -23,7 +36,7 @@ export default function CommandCenterError({ reset }: { reset: () => void }) {
           borderRadius: 6,
         }}
       >
-        Tentar novamente
+        {t.retry}
       </button>
     </div>
   );

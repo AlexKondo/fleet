@@ -15,12 +15,47 @@ import type { Dictionary } from "../../../lib/i18n/dictionaries";
 export function InviteUserModal({ dict }: { dict: Dictionary }) {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
 
+    // Focus management: remember the opener, move focus to the first field, trap Tab
+    // inside the dialog and hand focus back to the opener when it closes.
+    const opener = openerRef.current;
+    const focusable = () =>
+      Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          "button:not([disabled]), a[href], input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+        ) ?? [],
+      ).filter((el) => el.offsetParent !== null);
+    const firstField = dialogRef.current?.querySelector<HTMLElement>(
+      "input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled])",
+    );
+    (firstField ?? focusable()[0] ?? dialogRef.current)?.focus();
+
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (items.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = items[0]!;
+      const last = items[items.length - 1]!;
+      const current = document.activeElement;
+      const inside = dialogRef.current?.contains(current) ?? false;
+      if (event.shiftKey && (current === first || !inside)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (current === last || !inside)) {
+        event.preventDefault();
+        first.focus();
+      }
     }
     function handlePointerDown(event: MouseEvent) {
       if (dialogRef.current && !dialogRef.current.contains(event.target as Node)) {
@@ -32,6 +67,7 @@ export function InviteUserModal({ dict }: { dict: Dictionary }) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("mousedown", handlePointerDown);
+      if (opener && document.contains(opener)) opener.focus();
     };
   }, [open]);
 
@@ -39,7 +75,10 @@ export function InviteUserModal({ dict }: { dict: Dictionary }) {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={(event) => {
+          openerRef.current = event.currentTarget;
+          setOpen(true);
+        }}
         className="rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90"
       >
         {dict.team.invite.trigger}
@@ -54,6 +93,7 @@ export function InviteUserModal({ dict }: { dict: Dictionary }) {
         >
           <div
             ref={dialogRef}
+            tabIndex={-1}
             className="w-full max-w-xl rounded-md border border-line-800 bg-panel-900 p-6 shadow-lg shadow-black/40"
           >
             <div className="mb-4 flex items-center justify-between">

@@ -119,7 +119,16 @@ export function ReturnForm({
   const photoBlocked = !damageEvidenceMissing && failedPhotoAngles;
 
   return (
-    <form action={handleSubmit} className="ck-form" data-testid="checklist-form">
+    // onSubmit (not `action`): React 19 resets uncontrolled fields after a form action, which
+    // wiped the typed checklist whenever submit was blocked (e.g. damage photo missing).
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(new FormData(e.currentTarget));
+      }}
+      className="ck-form"
+      data-testid="checklist-form"
+    >
       <section className="fm-card ck-card" aria-labelledby="ck-trip">
         <h2 id="ck-trip" className="fm-h2">{tc.sectionTrip}</h2>
         <div className="ck-grid">

@@ -108,7 +108,7 @@ export async function FmShell({
     {
       key: "carpool" as NavKey,
       href: isFleetManager ? "/fleet/carpools" : "/carpool",
-      label: isFleetManager ? "Gestão de caronas" : dict.carpool.buscar.navFind,
+      label: isFleetManager ? dict.navExtra.carpoolManagement : dict.carpool.buscar.navFind,
       icon: FindRideIcon,
       visible: true,
     },
@@ -123,7 +123,7 @@ export async function FmShell({
   extra.push({
     key: "myCarpools",
     href: "/carpool/mine",
-    label: "Minhas Caronas",
+    label: dict.navExtra.myCarpools,
     icon: FindRideIcon,
     visible: true,
   });
@@ -192,7 +192,7 @@ export async function FmShell({
         href="#fleetmind-main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-white focus:px-4 focus:py-3 focus:text-black focus:shadow-lg"
       >
-        Ir para o conteúdo principal
+        {dict.navExtra.skipToContent}
       </a>
       <NavFeedback />
       <InactivityLogout />
@@ -315,7 +315,7 @@ export async function FmShell({
             style={{ margin: "16px 16px 0" }}
           >
             {dict.chrome.licenseGateNotice}
-            {canKeyCustody ? <Link href="/account/keys" className="fm-btn fm-btn-ghost">Abrir custódia de chaves (não exige CNH)</Link> : null}{canBudgetApproval ? <Link href="/account/maintenance-approvals" className="fm-btn fm-btn-ghost">Abrir aprovação de orçamentos</Link> : null}
+            {canKeyCustody ? <Link href="/account/keys" className="fm-btn fm-btn-ghost">{dict.navExtra.openKeyCustody}</Link> : null}{canBudgetApproval ? <Link href="/account/maintenance-approvals" className="fm-btn fm-btn-ghost">{dict.navExtra.openBudgetApprovals}</Link> : null}
           </p>
         ) : null}
         <main

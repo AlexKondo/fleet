@@ -1,11 +1,12 @@
 import Link from "next/link";
-import {OrderAdjustments} from "./OrderAdjustments";
+import { OrderAdjustments } from "./OrderAdjustments";
+import { getDictionary } from "@/lib/i18n/getLocale";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
   loadOperationalWorkspace,
   type OperationalData,
 } from "@/lib/operations/load";
 import {
-  ORDER_LABELS,
   ORDER_STATES,
   orderActions,
   orderCosts,
@@ -34,6 +35,8 @@ type Params = {
   error?: string;
   success?: string;
 };
+const fmt = (text: string, values: Record<string, string | number>) =>
+  text.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? ""));
 export async function MaintenanceWorkspace({
   view,
   params,
@@ -43,6 +46,9 @@ export async function MaintenanceWorkspace({
   params: Params;
   managerView?: boolean;
 }) {
+  const dict = await getDictionary();
+  const t = dict.maintenance;
+  const labels = t.orderStates;
   const data = await loadOperationalWorkspace(
     managerView
       ? ["fleet_manager", "administrator"]
@@ -64,12 +70,10 @@ export async function MaintenanceWorkspace({
           ? "/maintenance/work-orders"
           : "/maintenance/vehicles";
   const titles = {
-    overview: managerView
-      ? "Manutenção e Disponibilidade Inteligente"
-      : "Manutenção — Command Center",
-    planning: "Planejamento Inteligente de Manutenção",
-    orders: "Manutenção — Ordens de Serviço",
-    vehicle: "Prontuário Digital do Veículo",
+    overview: managerView ? t.titleOverviewManager : t.titleOverview,
+    planning: t.titlePlanning,
+    orders: t.titleOrders,
+    vehicle: t.titleVehicle,
   };
   const filtered = orders?.filter(
     (o) =>
@@ -96,7 +100,7 @@ export async function MaintenanceWorkspace({
     <Workspace
       data={data}
       title={titles[view]}
-      subtitle="Controle operacional, planejamento de disponibilidade e custos auditáveis da frota."
+      subtitle={t.subtitle}
       active={
         view === "overview"
           ? "maintenance"
@@ -111,9 +115,10 @@ export async function MaintenanceWorkspace({
       managerView={managerView}
     >
       <Metrics
+        ariaLabel={dict.opsShell.metricsAria}
         items={[
           {
-            label: "Veículos operacionais",
+            label: t.mOperational,
             value:
               vehicles?.filter(
                 (v) => !["maintenance", "blocked"].includes(v.status),
@@ -121,52 +126,52 @@ export async function MaintenanceWorkspace({
             tone: "green",
           },
           {
-            label: "Em manutenção",
+            label: t.mInMaintenance,
             value:
               vehicles?.filter((v) => v.status === "maintenance").length ??
               null,
             tone: "red",
           },
           {
-            label: "Ordens programadas",
+            label: t.mScheduled,
             value:
               orders?.filter((o) => o.status === "scheduled").length ?? null,
             tone: "amber",
           },
           {
-            label: "Ordens em execução",
+            label: t.mInProgress,
             value:
               orders?.filter((o) =>
                 ["in_progress", "partial"].includes(o.status),
               ).length ?? null,
           },
           {
-            label: "Custo efetivo registrado",
+            label: t.mEffectiveCost,
             value: money(effective),
-            detail: "Acumulado · linhas não anuladas",
+            detail: t.mEffectiveCostDetail,
           },
         ]}
       />
-      <nav className="ow-tabs" aria-label="Manutenção">
+      <nav className="ow-tabs" aria-label={t.tabsAria}>
         {[
           {
             href: managerView ? "/fleet/maintenance" : "/maintenance",
-            label: "Visão geral",
+            label: t.tabOverview,
             key: "overview",
           },
           {
             href: "/maintenance/planning",
-            label: "Planejamento",
+            label: t.tabPlanning,
             key: "planning",
           },
           {
             href: "/maintenance/work-orders",
-            label: "Ordens de serviço",
+            label: t.tabOrders,
             key: "orders",
           },
           {
             href: "/maintenance/vehicles",
-            label: "Prontuário",
+            label: t.tabRecord,
             key: "vehicle",
           },
         ].map((t) => (
@@ -182,10 +187,10 @@ export async function MaintenanceWorkspace({
       {view === "vehicle" ? (
         <div className="ow-grid">
           <div className="ow-stack">
-            <Panel title="Identidade e histórico do veículo">
+            <Panel title={t.identityPanel}>
               <form className="ow-filters" method="get">
                 <label className="ow-field">
-                  <span>Veículo</span>
+                  <span>{t.vehicleLabel}</span>
                   <select name="vehicle" defaultValue={selectedVehicle?.id}>
                     {vehicles?.map((v) => (
                       <option key={v.id} value={v.id}>
@@ -194,13 +199,11 @@ export async function MaintenanceWorkspace({
                     ))}
                   </select>
                 </label>
-                <Submit>Consultar</Submit>
+                <Submit>{t.consult}</Submit>
               </form>
               {!selectedVehicle ? (
                 <Empty>
-                  {vehicles === null
-                    ? "Frota indisponível."
-                    : "Nenhum veículo cadastrado."}
+                  {vehicles === null ? t.fleetUnavailable : t.noVehicles}
                 </Empty>
               ) : (
                 <>
@@ -209,20 +212,22 @@ export async function MaintenanceWorkspace({
                     <h3>
                       {selectedVehicle.name ?? selectedVehicle.category?.name}
                     </h3>
-                    <strong>{selectedVehicle.plate}</strong><Link href={`/documents?target=vehicle&id=${selectedVehicle.id}`}>Documentos do veículo</Link><Link href={`/fleet/equipment?vehicle=${selectedVehicle.id}`}>Equipamentos e requisitos</Link><Link href={`/api/exports/vehicle/${selectedVehicle.id}`}>Exportar prontuário CSV</Link>
+                    <strong>{selectedVehicle.plate}</strong><Link href={`/documents?target=vehicle&id=${selectedVehicle.id}`}>{t.vehicleDocs}</Link><Link href={`/fleet/equipment?vehicle=${selectedVehicle.id}`}>{t.equipmentLink}</Link><Link href={`/api/exports/vehicle/${selectedVehicle.id}`}>{t.exportCsv}</Link>
                     <p className="ow-vin">
-                      VIN: {selectedVehicle.vin ?? "Não informado"}
+                      {fmt(t.vinLine, {
+                        vin: selectedVehicle.vin ?? t.notInformed,
+                      })}
                     </p>
                   </div>
                   <div className="ow-costs">
                     <div>
-                      <small>Odômetro atual</small>
+                      <small>{t.odometer}</small>
                       <strong>
                         {selectedVehicle.odometer_km.toLocaleString("pt-BR")} km
                       </strong>
                     </div>
                     <div>
-                      <small>Próxima revisão por km</small>
+                      <small>{t.nextServiceKm}</small>
                       <strong>
                         {selectedVehicle.next_service_odometer_km?.toLocaleString(
                           "pt-BR",
@@ -230,7 +235,7 @@ export async function MaintenanceWorkspace({
                       </strong>
                     </div>
                     <div>
-                      <small>Próxima revisão por data</small>
+                      <small>{t.nextServiceDate}</small>
                       <strong>{date(selectedVehicle.next_service_date)}</strong>
                     </div>
                   </div>
@@ -241,16 +246,18 @@ export async function MaintenanceWorkspace({
                       ) ?? null
                     }
                     data={data}
+                    dict={dict}
                   />
                 </>
               )}
             </Panel>
-            <Panel title="Custos e histórico de manutenção">
+            <Panel title={t.costsPanel}>
               {!selectedVehicle || !orders || !lines ? (
-                <Empty>Histórico indisponível.</Empty>
+                <Empty>{t.historyUnavailable}</Empty>
               ) : (
                 <>
                   <CostSummary
+                    dict={dict}
                     lines={lines.filter((l) =>
                       orders.some(
                         (o) =>
@@ -260,37 +267,35 @@ export async function MaintenanceWorkspace({
                     )}
                   />
                   <p className="ow-muted">
-                    Correções financeiras são registradas por anulação com
-                    justificativa; o lançamento original é preservado.
+                    {t.voidNote}
                   </p>
                 </>
               )}
             </Panel>
           </div>
           <div className="ow-stack">
-            <Panel title="Condição operacional">
+            <Panel title={t.conditionPanel}>
               {selectedVehicle ? (
                 <dl className="ow-data-grid">
                   <div>
-                    <dt>Estado</dt>
-                    <dd>{selectedVehicle.status}</dd>
+                    <dt>{t.state}</dt>
+                    <dd>{dict.status.vehicle[selectedVehicle.status]}</dd>
                   </div>
                   <div>
-                    <dt>Local atual</dt>
+                    <dt>{t.currentLocation}</dt>
                     <dd>
-                      {selectedVehicle.current_location?.name ??
-                        "Não informado"}
+                      {selectedVehicle.current_location?.name ?? t.notInformed}
                     </dd>
                   </div>
                   <div>
-                    <dt>Revisão por tempo</dt>
+                    <dt>{t.serviceByTime}</dt>
                     <dd>{date(selectedVehicle.next_service_date)}</dd>
                   </div>
                   <div>
-                    <dt>Revisão por km</dt>
+                    <dt>{t.serviceByKm}</dt>
                     <dd>
                       {selectedVehicle.next_service_odometer_km ??
-                        "Não informado"}
+                        t.notInformed}
                     </dd>
                   </div>
                 </dl>
@@ -298,80 +303,86 @@ export async function MaintenanceWorkspace({
                 <Empty />
               )}
               <p className="ow-note">
-                A revisão vence por tempo ou quilometragem, o que ocorrer
-                primeiro.
+                {t.serviceNote}
               </p>
             </Panel>
             {manager && selectedVehicle && (
-              <Panel title="Identidade técnica e revisão">
+              <Panel title={t.techPanel}>
                 <OperationForm
                   command="vehicle.identity"
                   returnTo={`${base}?vehicle=${selectedVehicle.id}`}
                   values={{ vehicle_id: selectedVehicle.id }}
                 >
                   <Field
-                    label="VIN (imutável após registro)"
+                    label={t.vinField}
                     name="vin"
                     value={selectedVehicle.vin ?? ""}
                     maxLength={17}
                   />
                   <Field
-                    label="Próxima revisão por data"
+                    label={t.nextServiceDate}
                     name="next_service_date"
                     type="date"
                     value={selectedVehicle.next_service_date ?? ""}
                   />
-                  <Submit disabled={data.migrationUnavailable}>Salvar</Submit>
+                  <Submit disabled={data.migrationUnavailable}>{t.save}</Submit>
                 </OperationForm>
               </Panel>
             )}
-            <MaintenanceDue data={data} />
+            <MaintenanceDue data={data} dict={dict} />
           </div>
         </div>
       ) : view === "orders" ? (
         <div className="ow-grid">
           <div className="ow-stack">
             <Panel
-              title="Ordens de serviço"
+              title={t.ordersPanel}
               action={
                 <Link className="ow-link" href="#new-order">
-                  + Nova ordem
+                  {t.newOrderLink}
                 </Link>
               }
             >
-              <Filters params={params} />
+              <Filters params={params} dict={dict} />
               <OrderTable
                 orders={filtered ?? null}
                 data={data}
+                dict={dict}
                 selected={selected?.id}
               />
             </Panel>
             {selected && (
               <Panel
-                title={`OS ${String(selected.number).padStart(6, "0")} · serviços e custos`}
+                title={fmt(t.orderServicesCosts, {
+                  n: String(selected.number).padStart(6, "0"),
+                })}
               >
                 <OrderDetail
                   order={selected}
                   lines={selectedLines}
                   data={data}
+                  dict={dict}
                   base={base}
                 />
               </Panel>
             )}
-            <Panel title="Nova ordem de serviço">
+            <Panel title={t.newOrderPanel}>
               <div id="new-order" />
               <OperationForm command="work_order.create" returnTo={base}>
-                <VehicleSelect data={data} />
+                <VehicleSelect
+                  data={data}
+                  labels={{ vehicle: t.vehicleLabel, select: dict.opsShell.select }}
+                />
                 <label className="ow-field">
-                  <span>Tipo de manutenção</span>
+                  <span>{t.maintKind}</span>
                   <select name="kind" required>
-                    <option value="preventive">Preventiva</option>
-                    <option value="corrective">Corretiva</option>
-                    <option value="inspection">Inspeção</option>
+                    <option value="preventive">{t.kindPreventive}</option>
+                    <option value="corrective">{t.kindCorrective}</option>
+                    <option value="inspection">{t.kindInspection}</option>
                   </select>
                 </label>
                 <label className="ow-field">
-                  <span>Descrição / diagnóstico</span>
+                  <span>{t.descDiagnosis}</span>
                   <textarea
                     name="description"
                     minLength={3}
@@ -380,12 +391,12 @@ export async function MaintenanceWorkspace({
                   />
                 </label>
                 <Field
-                  label="Fornecedor / oficina"
+                  label={t.supplierShop}
                   name="supplier"
                   maxLength={200}
                 />
                 <Field
-                  label="Orçamento inicial (R$)"
+                  label={t.initialQuote}
                   name="quote_total"
                   type="number"
                   min={0}
@@ -396,7 +407,7 @@ export async function MaintenanceWorkspace({
                 <Submit
                   disabled={data.migrationUnavailable || vehicles === null}
                 >
-                  Criar ordem
+                  {t.createOrder}
                 </Submit>
               </OperationForm>
             </Panel>
@@ -404,35 +415,35 @@ export async function MaintenanceWorkspace({
           <aside className="ow-stack">
             {selected ? (
               <>
-                <Panel title="Resumo da ordem">
+                <Panel title={t.summaryPanel}>
                   <div className="ow-detail-head">
-                    <small>OS {selected.number}</small>
+                    <small>{fmt(t.osShort, { n: selected.number })}</small>
                     <h3>
                       {vehicles?.find((v) => v.id === selected.vehicle_id)
-                        ?.plate ?? "Veículo"}
+                        ?.plate ?? t.vehicleLabel}
                     </h3>
                     <Tag
                       tone={selected.status === "completed" ? "green" : "blue"}
                     >
-                      {ORDER_LABELS[selected.status]}
+                      {labels[selected.status]}
                     </Tag>
                     <p>{selected.description}</p>
                   </div>
                   <dl className="ow-data-grid">
                     <div>
-                      <dt>Fornecedor</dt>
-                      <dd>{selected.supplier || "Não informado"}</dd>
+                      <dt>{t.supplier}</dt>
+                      <dd>{selected.supplier || t.notInformed}</dd>
                     </div>
                     <div>
-                      <dt>Criada em</dt>
+                      <dt>{t.createdAt}</dt>
                       <dd>{date(selected.created_at)}</dd>
                     </div>
                     <div>
-                      <dt>Início programado</dt>
+                      <dt>{t.scheduledStart}</dt>
                       <dd>{date(selected.scheduled_start, true)}</dd>
                     </div>
                     <div>
-                      <dt>Fim programado</dt>
+                      <dt>{t.scheduledEnd}</dt>
                       <dd>{date(selected.scheduled_end, true)}</dd>
                     </div>
                   </dl>
@@ -440,23 +451,24 @@ export async function MaintenanceWorkspace({
                     className="ow-link"
                     href={`/maintenance/vehicles?vehicle=${selected.vehicle_id}`}
                   >
-                    Abrir prontuário →
+                    {t.openRecord}
                   </Link>
                 </Panel>
-                <Panel title="Histórico e rastreabilidade">
+                <Panel title={t.historyPanel}>
                   <p className="ow-muted">
-                    Versão atual: {selected.version}. Todas as transições e
-                    alterações são auditadas na mesma transação.
+                    {fmt(t.versionNote, { v: selected.version })}
                   </p>
                   {selected.completed_at && (
                     <p className="ow-note">
-                      Concluída em {date(selected.completed_at, true)}
+                      {fmt(t.completedOn, {
+                        date: date(selected.completed_at, true),
+                      })}
                     </p>
                   )}
                 </Panel>
               </>
             ) : (
-              <MaintenanceDue data={data} />
+              <MaintenanceDue data={data} dict={dict} />
             )}
           </aside>
         </div>
@@ -465,43 +477,40 @@ export async function MaintenanceWorkspace({
           <div className="ow-grid">
             <div className="ow-stack">
               {view === "planning" && (
-                <Panel title="Calendário de manutenção">
-                  <Planning data={data} />
+                <Panel title={t.calendarPanel}>
+                  <Planning data={data} dict={dict} />
                 </Panel>
               )}
               <Panel
                 title={
-                  view === "planning"
-                    ? "Próximas manutenções e conflitos"
-                    : "Visão da frota e ordens de serviço"
+                  view === "planning" ? t.upcomingConflicts : t.fleetAndOrders
                 }
                 action={
                   <Link
                     className="ow-link"
                     href="/maintenance/work-orders#new-order"
                   >
-                    + Nova ordem
+                    {t.newOrderLink}
                   </Link>
                 }
               >
-                <Filters params={params} />
-                <OrderTable orders={filtered ?? null} data={data} />
+                <Filters params={params} dict={dict} />
+                <OrderTable orders={filtered ?? null} data={data} dict={dict} />
                 {orders?.length === 0 && (
                   <p className="ow-note">
-                    Cadastre a primeira ordem para planejar uma janela de
-                    serviço e os custos correspondentes.
+                    {t.firstOrderNote}
                   </p>
                 )}
               </Panel>
-              <Panel title="Veículos da operação">
-                <VehicleTable data={data} />
+              <Panel title={t.operationVehicles}>
+                <VehicleTable data={data} dict={dict} />
               </Panel>
             </div>
             <aside className="ow-stack">
-              <MaintenanceDue data={data} />
-              <Panel title="Alertas e prioridades">
+              <MaintenanceDue data={data} dict={dict} />
+              <Panel title={t.alertsPanel}>
                 {vehicles === null ? (
-                  <Empty>Frota indisponível.</Empty>
+                  <Empty>{t.fleetUnavailable}</Empty>
                 ) : (
                   <ul className="ow-list">
                     {vehicles
@@ -516,8 +525,8 @@ export async function MaintenanceWorkspace({
                             <strong>{v.plate}</strong>
                             <p>
                               {v.status === "blocked"
-                                ? "Bloqueio ativo. A resolução deve seguir o fluxo operacional."
-                                : "Manutenção em andamento."}
+                                ? t.activeBlock
+                                : t.inProgressNote}
                             </p>
                           </Link>
                         </li>
@@ -525,31 +534,29 @@ export async function MaintenanceWorkspace({
                     {!vehicles.some((v) =>
                       ["blocked", "maintenance"].includes(v.status),
                     ) && (
-                      <Empty>
-                        Sem bloqueios ou manutenções no estado atual.
-                      </Empty>
+                      <Empty>{t.noBlocks}</Empty>
                     )}
                   </ul>
                 )}
               </Panel>
-              <Panel title="Custos de manutenção">
+              <Panel title={t.costsSidePanel}>
                 {lines ? (
-                  <CostSummary lines={lines} />
+                  <CostSummary lines={lines} dict={dict} />
                 ) : (
-                  <Empty>Custos indisponíveis.</Empty>
+                  <Empty>{t.costsUnavailable}</Empty>
                 )}
               </Panel>
             </aside>
           </div>
           <div className="ow-grid-equal">
-            <Panel title="Ordens por situação">
+            <Panel title={t.ordersByStatus}>
               {orders ? (
                 <div
                   className="ow-bars"
                   role="img"
                   aria-label={ORDER_STATES.map(
                     (s) =>
-                      `${ORDER_LABELS[s]}: ${orders.filter((o) => o.status === s).length}`,
+                      `${labels[s]}: ${orders.filter((o) => o.status === s).length}`,
                   ).join("; ")}
                 >
                   {ORDER_STATES.filter((s) =>
@@ -564,19 +571,19 @@ export async function MaintenanceWorkspace({
                             height: `${(n / Math.max(orders.length, 1)) * 110}px`,
                           }}
                         />
-                        <small>{ORDER_LABELS[s]}</small>
+                        <small>{labels[s]}</small>
                       </div>
                     );
                   })}
                   {orders.length === 0 && <Empty />}
                 </div>
               ) : (
-                <Empty>Dados indisponíveis.</Empty>
+                <Empty>{t.dataUnavailable}</Empty>
               )}
             </Panel>
-            <Panel title="Revisões previstas">
+            <Panel title={t.plannedReviews}>
               {!dueVehicles ? (
-                <Empty>Dados indisponíveis.</Empty>
+                <Empty>{t.dataUnavailable}</Empty>
               ) : (
                 <ul className="ow-list">
                   {dueVehicles.slice(0, 6).map((v) => (
@@ -584,16 +591,19 @@ export async function MaintenanceWorkspace({
                       <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
                         <strong>{v.plate}</strong>
                         <small>
-                          Data: {date(v.next_service_date)} · Km:{" "}
-                          {v.next_service_odometer_km?.toLocaleString(
-                            "pt-BR",
-                          ) ?? "—"}
+                          {fmt(t.dateKm, {
+                            date: date(v.next_service_date),
+                            km:
+                              v.next_service_odometer_km?.toLocaleString(
+                                "pt-BR",
+                              ) ?? "—",
+                          })}
                         </small>
                       </Link>
                     </li>
                   ))}
                   {!dueVehicles.length && (
-                    <Empty>Nenhuma revisão cadastrada por data ou km.</Empty>
+                    <Empty>{t.noReviews}</Empty>
                   )}
                 </ul>
               )}
@@ -604,57 +614,61 @@ export async function MaintenanceWorkspace({
     </Workspace>
   );
 }
-function Filters({ params }: { params: Params }) {
+function Filters({ params, dict }: { params: Params; dict: Dictionary }) {
+  const t = dict.maintenance;
   return (
     <form className="ow-filters" method="get">
       <label className="ow-field">
-        <span>Buscar OS ou placa</span>
+        <span>{t.searchOrder}</span>
         <input name="q" type="search" defaultValue={params.q} maxLength={100} />
       </label>
       <label className="ow-field">
-        <span>Situação</span>
+        <span>{t.status}</span>
         <select name="status" defaultValue={params.status ?? ""}>
-          <option value="">Todas</option>
+          <option value="">{t.all}</option>
           {ORDER_STATES.map((s) => (
             <option key={s} value={s}>
-              {ORDER_LABELS[s]}
+              {t.orderStates[s]}
             </option>
           ))}
         </select>
       </label>
-      <Submit>Filtrar</Submit>
+      <Submit>{t.filter}</Submit>
     </form>
   );
 }
 function OrderTable({
   orders,
   data,
+  dict,
   selected,
 }: {
   orders: WorkOrder[] | null;
   data: OperationalData;
+  dict: Dictionary;
   selected?: string;
 }) {
-  if (!orders) return <Empty>Ordens indisponíveis.</Empty>;
-  if (!orders.length) return <Empty />;
+  const t = dict.maintenance;
+  if (!orders) return <Empty>{t.ordersUnavailable}</Empty>;
+  if (!orders.length) return <Empty>{dict.opsShell.noRecords}</Empty>;
   return (
     <div className="ow-table-scroll">
       <table className="ow-table">
         <thead>
           <tr>
-            <th>OS</th>
-            <th>Veículo</th>
-            <th>Tipo / descrição</th>
-            <th>Programação</th>
-            <th>Situação</th>
-            <th>Custo GWM</th>
-            <th>Detalhes</th>
+            <th>{t.colOrder}</th>
+            <th>{t.colVehicle}</th>
+            <th>{t.colKindDesc}</th>
+            <th>{t.colSchedule}</th>
+            <th>{t.colStatus}</th>
+            <th>{t.colGwmCost}</th>
+            <th>{t.colDetails}</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((o) => (
             <tr key={o.id} data-selected={selected === o.id}>
-              <td>OS {o.number}</td>
+              <td>{fmt(t.osShort, { n: o.number })}</td>
               <td>
                 <strong>
                   {data.vehicles?.find((v) => v.id === o.vehicle_id)?.plate ??
@@ -663,10 +677,10 @@ function OrderTable({
               </td>
               <td>
                 {o.kind === "preventive"
-                  ? "Preventiva"
+                  ? t.kindPreventive
                   : o.kind === "corrective"
-                    ? "Corretiva"
-                    : "Inspeção"}
+                    ? t.kindCorrective
+                    : t.kindInspection}
                 <small>{o.description}</small>
               </td>
               <td>
@@ -685,7 +699,7 @@ function OrderTable({
                           : "blue"
                   }
                 >
-                  {ORDER_LABELS[o.status]}
+                  {t.orderStates[o.status]}
                 </Tag>
               </td>
               <td className="ow-amount">
@@ -701,7 +715,7 @@ function OrderTable({
               </td>
               <td>
                 <Link href={`/maintenance/work-orders?order=${o.id}`}>
-                  Abrir →
+                  {t.open}
                 </Link>
               </td>
             </tr>
@@ -711,20 +725,27 @@ function OrderTable({
     </div>
   );
 }
-function CostSummary({ lines }: { lines: Parameters<typeof orderCosts>[0] }) {
+function CostSummary({
+  lines,
+  dict,
+}: {
+  lines: Parameters<typeof orderCosts>[0];
+  dict: Dictionary;
+}) {
+  const t = dict.maintenance;
   const c = orderCosts(lines);
   return (
     <div className="ow-costs">
       <div>
-        <small>Valor executado</small>
+        <small>{t.costExecuted}</small>
         <strong>{money(c.gross)}</strong>
       </div>
       <div>
-        <small>Coberto por garantia</small>
+        <small>{t.costWarranty}</small>
         <strong>{money(c.warranty)}</strong>
       </div>
       <div>
-        <small>Custo efetivo GWM</small>
+        <small>{t.costEffective}</small>
         <strong>{money(c.effective)}</strong>
       </div>
     </div>
@@ -734,59 +755,87 @@ function OrderDetail({
   order,
   lines,
   data,
+  dict,
   base,
 }: {
   order: WorkOrder;
   lines: OperationalData["records"]["lines"];
   data: OperationalData;
+  dict: Dictionary;
   base: string;
 }) {
+  const t = dict.maintenance;
   const returnTo = `${base}?order=${order.id}`;
   const mutable = !["completed", "cancelled"].includes(order.status);
   return (
     <>
-      <OrderAdjustments adjustments={data.records.adjustments} order={order}/>
-      <Link href={`/documents?target=work_order&id=${order.id}`}>Orçamentos, notas e documentos da OS</Link>
-      <details><summary>Histórico de aprovações do orçamento</summary>{data.records.approvals==null?<p>Histórico de aprovações indisponível nesta consulta.</p>:data.records.approvals.filter(a=>a.work_order_id===order.id).length===0?<p>Nenhuma aprovação registrada na nova política. Aprovações legadas permanecem no histórico de auditoria.</p>:data.records.approvals.filter(a=>a.work_order_id===order.id).map(a=><p key={a.id}>{a.actor_name} · {money(a.amount)} · {date(a.created_at)} · Política revisão {a.policy_snapshot.policy_version}{a.policy_snapshot.superior_required?" · Superior autorizado":" · Gestor aprovador"}</p>)}</details>
-      <div className="ow-timeline" aria-label="Etapas da ordem">
+      <OrderAdjustments
+        adjustments={data.records.adjustments}
+        order={order}
+        dict={dict}
+      />
+      <Link href={`/documents?target=work_order&id=${order.id}`}>{t.orderDocs}</Link>
+      <details>
+        <summary>{t.approvalHistory}</summary>
+        {data.records.approvals == null ? (
+          <p>{t.approvalsUnavailable}</p>
+        ) : data.records.approvals.filter((a) => a.work_order_id === order.id)
+            .length === 0 ? (
+          <p>{t.noApprovals}</p>
+        ) : (
+          data.records.approvals
+            .filter((a) => a.work_order_id === order.id)
+            .map((a) => (
+              <p key={a.id}>
+                {a.actor_name} · {money(a.amount)} · {date(a.created_at)} ·{" "}
+                {fmt(t.policyRevision, { v: a.policy_snapshot.policy_version })}
+                {" · "}
+                {a.policy_snapshot.superior_required
+                  ? t.superiorAuthorized
+                  : t.managerApprover}
+              </p>
+            ))
+        )}
+      </details>
+      <div className="ow-timeline" aria-label={t.stagesAria}>
         {ORDER_STATES.filter(
           (s) => s !== "cancelled" || order.status === s,
         ).map((s) => (
           <span key={s} data-active={order.status === s}>
-            {ORDER_LABELS[s]}
+            {t.orderStates[s]}
           </span>
         ))}
       </div>
       <div className="ow-costs">
         <div>
-          <small>Orçamento</small>
+          <small>{t.quote}</small>
           <strong>{money(order.quote_total)}</strong>
         </div>
         <div>
-          <small>Aprovado</small>
+          <small>{t.approved}</small>
           <strong>{money(order.approved_total)}</strong>
         </div>
         <div>
-          <small>Efetivo GWM</small>
+          <small>{t.effectiveGwm}</small>
           <strong>{lines ? money(orderCosts(lines).effective) : "—"}</strong>
         </div>
       </div>
       {!lines ? (
-        <Empty>Linhas indisponíveis.</Empty>
+        <Empty>{t.linesUnavailable}</Empty>
       ) : !lines.length ? (
-        <Empty>Ainda não há serviços ou peças lançados.</Empty>
+        <Empty>{t.noLines}</Empty>
       ) : (
         <div className="ow-table-scroll">
           <table className="ow-table">
             <thead>
               <tr>
-                <th>Item</th>
-                <th>Tipo</th>
-                <th>Qtd.</th>
-                <th>Unitário</th>
-                <th>Total</th>
-                <th>Cobertura</th>
-                <th>Correção</th>
+                <th>{t.colItem}</th>
+                <th>{t.colType}</th>
+                <th>{t.colQty}</th>
+                <th>{t.colUnit}</th>
+                <th>{t.colTotal}</th>
+                <th>{t.colCoverage}</th>
+                <th>{t.colCorrection}</th>
               </tr>
             </thead>
             <tbody>
@@ -795,18 +844,22 @@ function OrderDetail({
                   <td>
                     {l.description}
                     <small>
-                      {l.stage === "actual" ? "Executado" : "Orçado / previsto"}
+                      {l.stage === "actual" ? t.stageActual : t.stagePlanned}
                     </small>
-                    {l.voided_at && <small>Anulado: {l.void_reason}</small>}
+                    {l.voided_at && (
+                      <small>
+                        {fmt(t.voidedReason, { reason: l.void_reason ?? "" })}
+                      </small>
+                    )}
                   </td>
                   <td>
                     {
                       (
                         {
-                          parts: "Peças",
-                          labor: "Mão de obra",
-                          service: "Serviço",
-                          other: "Outros",
+                          parts: t.catParts,
+                          labor: t.catLabor,
+                          service: t.catService,
+                          other: t.catOther,
                         } as Record<string, string>
                       )[l.category]
                     }
@@ -819,16 +872,16 @@ function OrderDetail({
                       tone={l.voided_at ? "red" : l.warranty ? "green" : "blue"}
                     >
                       {l.voided_at
-                        ? "Anulado"
+                        ? t.covVoided
                         : l.warranty
-                          ? "Garantia"
-                          : "Custo GWM"}
+                          ? t.covWarranty
+                          : t.covGwm}
                     </Tag>
                   </td>
                   <td>
                     {mutable && !l.voided_at && (
                       <details>
-                        <summary>Anular lançamento</summary>
+                        <summary>{t.voidEntry}</summary>
                         <OperationForm
                           command="work_order.void_line"
                           returnTo={returnTo}
@@ -839,12 +892,12 @@ function OrderDetail({
                           }}
                         >
                           <Field
-                            label="Justificativa"
+                            label={t.justification}
                             name="reason"
                             required
                             maxLength={500}
                           />
-                          <Submit>Anular com registro</Submit>
+                          <Submit>{t.voidWithRecord}</Submit>
                         </OperationForm>
                       </details>
                     )}
@@ -857,38 +910,38 @@ function OrderDetail({
       )}
       {mutable && (
         <details>
-          <summary>+ Adicionar item / serviço</summary>
+          <summary>{t.addItem}</summary>
           <OperationForm
             command="work_order.line"
             returnTo={returnTo}
             values={{ id: order.id, version: order.version }}
           >
             <Field
-              label="Descrição"
+              label={t.description}
               name="description"
               required
               maxLength={500}
             />
             <label className="ow-field">
-              <span>Natureza do lançamento</span>
+              <span>{t.nature}</span>
               <select name="stage">
-                <option value="planned">Orçado / previsto</option>
+                <option value="planned">{t.stagePlanned}</option>
                 {["in_progress", "partial"].includes(order.status) && (
-                  <option value="actual">Executado</option>
+                  <option value="actual">{t.stageActual}</option>
                 )}
               </select>
             </label>
             <label className="ow-field">
-              <span>Categoria</span>
+              <span>{t.category}</span>
               <select name="category">
-                <option value="parts">Peças</option>
-                <option value="labor">Mão de obra</option>
-                <option value="service">Serviço</option>
-                <option value="other">Outros</option>
+                <option value="parts">{t.catParts}</option>
+                <option value="labor">{t.catLabor}</option>
+                <option value="service">{t.catService}</option>
+                <option value="other">{t.catOther}</option>
               </select>
             </label>
             <Field
-              label="Quantidade"
+              label={t.quantity}
               name="quantity"
               type="number"
               min={0.001}
@@ -897,7 +950,7 @@ function OrderDetail({
               required
             />
             <Field
-              label="Preço unitário (R$)"
+              label={t.unitPrice}
               name="unit_price"
               type="number"
               min={0}
@@ -906,25 +959,23 @@ function OrderDetail({
             />
             <label className="ow-checkbox">
               <input type="checkbox" name="warranty" />
-              Coberto por garantia (sem custo GWM)
+              {t.warrantyCheck}
             </label>
-            <Submit>Registrar item</Submit>
+            <Submit>{t.registerItem}</Submit>
           </OperationForm>
         </details>
       )}
       {mutable &&
         (data.manager || ["draft", "budgeted"].includes(order.status)) && (
           <details>
-            <summary>
-              Revisar orçamento
-            </summary>
+            <summary>{t.reviewBudget}</summary>
             <OperationForm
               command="work_order.budget"
               returnTo={returnTo}
               values={{ id: order.id, version: order.version }}
             >
               <Field
-                label="Novo valor (R$)"
+                label={t.newValue}
                 name="quote_total"
                 type="number"
                 min={0}
@@ -933,28 +984,26 @@ function OrderDetail({
                 required
               />
               <Field
-                label="Justificativa da revisão"
+                label={t.revisionReason}
                 name="reason"
                 required
                 maxLength={500}
               />
               <p className="ow-wide">
-                Revisar o orçamento não altera o limite aprovado. A revisão aguarda aprovação independente conforme a política da unidade.
+                {t.revisionNote}
               </p>
-              <Submit>Registrar revisão</Submit>
+              <Submit>{t.registerRevision}</Submit>
             </OperationForm>
           </details>
         )}
-      {order.budget_pending&&!["draft","budgeted","completed","cancelled"].includes(order.status)&&<p role="status">Revisão de orçamento pendente. Limite aprovado preservado até nova aprovação.</p>}
-      {data.manager&&order.budget_pending&&!["draft","budgeted","completed","cancelled"].includes(order.status)&&<OperationForm command="work_order.approve_budget" returnTo={returnTo} values={{id:order.id,version:order.version}}><p>A aprovação exige pessoa independente e autorização vigente na unidade.</p><Submit>Aprovar orçamento revisado</Submit></OperationForm>}
+      {order.budget_pending&&!["draft","budgeted","completed","cancelled"].includes(order.status)&&<p role="status">{t.budgetPending}</p>}
+      {data.manager&&order.budget_pending&&!["draft","budgeted","completed","cancelled"].includes(order.status)&&<OperationForm command="work_order.approve_budget" returnTo={returnTo} values={{id:order.id,version:order.version}}><p>{t.approveRevisedNote}</p><Submit>{t.approveRevised}</Submit></OperationForm>}
       <div className="ow-actions">
         {orderActions(order.status, data.manager).map((status) =>
           status === "scheduled" ? (
             <details key={status}>
               <summary>
-                {order.status === "scheduled"
-                  ? "Reprogramar janela"
-                  : "Programar manutenção"}
+                {order.status === "scheduled" ? t.reschedule : t.scheduleMaint}
               </summary>
               <OperationForm
                 command="work_order.transition"
@@ -962,18 +1011,18 @@ function OrderDetail({
                 values={{ id: order.id, version: order.version, status }}
               >
                 <Field
-                  label="Início · horário de Brasília"
+                  label={t.startBrasilia}
                   name="scheduled_start"
                   type="datetime-local"
                   required
                 />
                 <Field
-                  label="Fim · horário de Brasília"
+                  label={t.endBrasilia}
                   name="scheduled_end"
                   type="datetime-local"
                   required
                 />
-                <Submit>Validar conflitos e programar</Submit>
+                <Submit>{t.validateSchedule}</Submit>
               </OperationForm>
             </details>
           ) : (
@@ -986,42 +1035,47 @@ function OrderDetail({
             >
               <Submit>
                 {status === "cancelled"
-                  ? "Cancelar ordem"
+                  ? t.actCancel
                   : status === "in_progress"
-                    ? "Iniciar / retomar execução"
+                    ? t.actStart
                     : status === "completed"
-                      ? "Concluir serviço"
+                      ? t.actComplete
                       : status === "approved"
-                        ? "Aprovar orçamento"
+                        ? t.actApprove
                         : status === "budgeted"
-                          ? "Enviar orçamento"
-                          : "Registrar execução parcial"}
+                          ? t.actSend
+                          : t.actPartial}
               </Submit>
             </OperationForm>
           ),
         )}
       </div>
       <p className="ow-note">
-        Uma janela programada bloqueia novas reservas nesse intervalo. O início
-        do serviço usa o fluxo de tarefas existente; a conclusão reconcilia a
-        disponibilidade. Ações concorrentes exigem recarregar a versão atual.
+        {t.windowNote}
       </p>
     </>
   );
 }
-function VehicleTable({ data }: { data: OperationalData }) {
-  if (!data.vehicles) return <Empty>Frota indisponível.</Empty>;
+function VehicleTable({
+  data,
+  dict,
+}: {
+  data: OperationalData;
+  dict: Dictionary;
+}) {
+  const t = dict.maintenance;
+  if (!data.vehicles) return <Empty>{t.fleetUnavailable}</Empty>;
   return (
     <div className="ow-table-scroll">
       <table className="ow-table">
         <thead>
           <tr>
-            <th>Veículo</th>
-            <th>Estado</th>
-            <th>Local</th>
-            <th>Odômetro</th>
-            <th>Próxima revisão</th>
-            <th>Prontuário</th>
+            <th>{t.colVehicle}</th>
+            <th>{t.colState}</th>
+            <th>{t.colLocation}</th>
+            <th>{t.colOdometer}</th>
+            <th>{t.colNextReview}</th>
+            <th>{t.colRecord}</th>
           </tr>
         </thead>
         <tbody>
@@ -1039,7 +1093,7 @@ function VehicleTable({ data }: { data: OperationalData }) {
                       : "green"
                   }
                 >
-                  {v.status}
+                  {dict.status.vehicle[v.status]}
                 </Tag>
               </td>
               <td>{v.current_location?.name ?? "—"}</td>
@@ -1053,7 +1107,7 @@ function VehicleTable({ data }: { data: OperationalData }) {
               </td>
               <td>
                 <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
-                  Consultar →
+                  {t.consultArrow}
                 </Link>
               </td>
             </tr>
@@ -1063,7 +1117,14 @@ function VehicleTable({ data }: { data: OperationalData }) {
     </div>
   );
 }
-function MaintenanceDue({ data }: { data: OperationalData }) {
+function MaintenanceDue({
+  data,
+  dict,
+}: {
+  data: OperationalData;
+  dict: Dictionary;
+}) {
+  const t = dict.maintenance;
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
   }).format(new Date());
@@ -1074,21 +1135,23 @@ function MaintenanceDue({ data }: { data: OperationalData }) {
         v.odometer_km >= v.next_service_odometer_km),
   );
   return (
-    <Panel title="Revisões atingidas">
+    <Panel title={t.reviewsReached}>
       {!due ? (
-        <Empty>Dados indisponíveis.</Empty>
+        <Empty>{t.dataUnavailable}</Empty>
       ) : !due.length ? (
-        <Empty>Nenhuma revisão vencida nos limites cadastrados.</Empty>
+        <Empty>{t.noneDue}</Empty>
       ) : (
         <ul className="ow-list">
           {due.map((v) => (
             <li key={v.id}>
-              <Tag tone="red">Revisão</Tag>
+              <Tag tone="red">{t.reviewTag}</Tag>
               <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
                 <strong>{v.plate}</strong>
                 <small>
-                  Data: {date(v.next_service_date)} · Km limite:{" "}
-                  {v.next_service_odometer_km?.toLocaleString("pt-BR") ?? "—"}
+                  {fmt(t.dueLine, {
+                    date: date(v.next_service_date),
+                    km: v.next_service_odometer_km?.toLocaleString("pt-BR") ?? "—",
+                  })}
                 </small>
               </Link>
             </li>
@@ -1098,19 +1161,24 @@ function MaintenanceDue({ data }: { data: OperationalData }) {
     </Panel>
   );
 }
-function Planning({ data }: { data: OperationalData }) {
+function Planning({
+  data,
+  dict,
+}: {
+  data: OperationalData;
+  dict: Dictionary;
+}) {
+  const t = dict.maintenance;
   const scheduled = data.records.orders?.filter(
     (o) =>
       o.scheduled_start &&
       o.scheduled_end &&
       !["cancelled", "completed"].includes(o.status),
   );
-  if (!scheduled) return <Empty>Planejamento indisponível.</Empty>;
+  if (!scheduled) return <Empty>{t.planningUnavailable}</Empty>;
   if (!scheduled.length)
     return (
-      <Empty>
-        Nenhuma janela programada. Abra uma ordem aprovada para programar.
-      </Empty>
+      <Empty>{t.noWindows}</Empty>
     );
   const from = Math.min(
       ...scheduled.map((o) => Date.parse(o.scheduled_start!)),
@@ -1122,13 +1190,15 @@ function Planning({ data }: { data: OperationalData }) {
       <div className="ow-inline ow-muted">
         <span>{date(new Date(from).toISOString(), true)}</span>
         <span>→</span>
-        <span>{date(new Date(to).toISOString(), true)} · Brasília</span>
+        <span>
+          {date(new Date(to).toISOString(), true)} · {t.brasiliaSuffix}
+        </span>
       </div>
       <div className="ow-calendar">
         {scheduled.map((o) => (
           <div className="ow-calendar-row" key={o.id}>
             <Link href={`/maintenance/work-orders?order=${o.id}`}>
-              OS {o.number}
+              {fmt(t.osShort, { n: o.number })}
               <small>
                 {data.vehicles?.find((v) => v.id === o.vehicle_id)?.plate}
               </small>
@@ -1140,17 +1210,19 @@ function Planning({ data }: { data: OperationalData }) {
                   left: `${((Date.parse(o.scheduled_start!) - from) / span) * 100}%`,
                   width: `${Math.max(((Date.parse(o.scheduled_end!) - Date.parse(o.scheduled_start!)) / span) * 100, 1)}%`,
                 }}
-                title={`${date(o.scheduled_start, true)} a ${date(o.scheduled_end, true)}`}
+                title={fmt(t.toRange, {
+                  from: date(o.scheduled_start, true),
+                  to: date(o.scheduled_end, true),
+                })}
               >
-                {ORDER_LABELS[o.status]}
+                {t.orderStates[o.status]}
               </Link>
             </div>
           </div>
         ))}
       </div>
       <p className="ow-note">
-        Janelas reais cadastradas. Conflitos são verificados novamente no banco
-        ao programar e ao reservar.
+        {t.planningNote}
       </p>
     </>
   );

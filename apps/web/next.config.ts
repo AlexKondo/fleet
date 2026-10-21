@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+// The configured Supabase origin (local stack in dev/homolog, *.supabase.co in prod). Vehicle
+// photos are in the PRIVATE `vehicle-photos` bucket and are rendered from short-lived signed
+// URLs (/storage/v1/object/sign/...), so the allow-list must cover that path on this host too.
+const supabaseOrigin = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL) : null;
+  } catch {
+    return null;
+  }
+})();
+
 const nextConfig: NextConfig = {
   transpilePackages: ["@fleet/domain", "@fleet/supabase-client"],
   experimental: {
@@ -42,6 +53,24 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      // Signed URLs of the private bucket (createSignedUrls in app/fleet/page.tsx). Without
+      // this, any vehicle with a photo made next/image throw and /fleet fell into the error
+      // boundary for every user.
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/sign/**",
+      },
+      ...(supabaseOrigin
+        ? [
+            {
+              protocol: supabaseOrigin.protocol.replace(":", "") as "http" | "https",
+              hostname: supabaseOrigin.hostname,
+              port: supabaseOrigin.port,
+              pathname: "/storage/v1/object/**",
+            },
+          ]
+        : []),
     ],
   },
 };

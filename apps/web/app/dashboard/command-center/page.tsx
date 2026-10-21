@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { getDictionary } from "@/lib/i18n/getLocale";
+import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
+import type { Locale } from "@/lib/i18n/locales";
 import { loadCommandCenter } from "@/lib/dashboard/loadCommandCenter";
 import { FmShell } from "../../carpool/FmShell";
 import {
@@ -17,30 +18,26 @@ import { getStatusMeta, VEHICLE_STATUSES } from "../statusMeta";
 import "./command-center.css";
 import { CommandSearch } from "./CommandSearch";
 
-const labels = {
-  today: "Hoje",
-  "7d": "7 dias",
-  "30d": "30 dias",
-  month: "Mês",
-} as const;
-const number = (n: number | null) =>
-  n === null ? "—" : n.toLocaleString("pt-BR");
+const fmt = (text: string, values: Record<string, string | number>) =>
+  text.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? ""));
 function Card({
   title,
   children,
   className = "",
   href,
+  viewDetails,
 }: {
   title: string;
   children: ReactNode;
   className?: string;
   href?: string;
+  viewDetails: string;
 }) {
   return (
     <section className={`fc-card ${className}`}>
       <header>
         <h2>{title}</h2>
-        {href && <Link href={href}>Ver detalhes →</Link>}
+        {href && <Link href={href}>{viewDetails}</Link>}
       </header>
       {children}
     </section>
@@ -72,7 +69,7 @@ export default async function FleetCommandCenterPage({
     !["fleet_manager", "administrator"].includes(profile.role)
   )
     redirect("/dashboard");
-  const [data, dict] = await Promise.all([
+  const [data, dict, locale] = await Promise.all([
     loadCommandCenter(
       db,
       profile.organization_id,
@@ -80,7 +77,18 @@ export default async function FleetCommandCenterPage({
       params.location,
     ),
     getDictionary(),
+    getLocale(),
   ]);
+  const t = dict.commandCenter;
+  const labels = {
+    today: t.periodToday,
+    "7d": t.period7d,
+    "30d": t.period30d,
+    month: t.periodMonth,
+  } as const;
+  const number = (n: number | null) =>
+    n === null ? "—" : n.toLocaleString(locale as Locale);
+  const dateLocale = locale as Locale;
   const { vehicles, reservations, rides, tasks, range } = data;
   const statuses = getStatusMeta(dict);
   const counts = VEHICLE_STATUSES.map((status) => ({
@@ -100,11 +108,11 @@ export default async function FleetCommandCenterPage({
   const noLocation =
     vehicles?.filter((v) => !v.current_location_id).length ?? null;
   const categories = [
-    ...new Set(vehicles?.map((v) => v.category?.name ?? "Sem categoria")),
+    ...new Set(vehicles?.map((v) => v.category?.name ?? t.noCategory)),
   ].map((name) => ({
     name,
     count:
-      vehicles?.filter((v) => (v.category?.name ?? "Sem categoria") === name)
+      vehicles?.filter((v) => (v.category?.name ?? t.noCategory) === name)
         .length ?? 0,
   }));
   const services = vehicles
@@ -124,8 +132,8 @@ export default async function FleetCommandCenterPage({
     ...(blocked
       ? [
           {
-            title: "Veículos bloqueados",
-            text: `${number(blocked)} veículo(s) precisam de resolução antes da próxima utilização.`,
+            title: t.insightBlockedTitle,
+            text: fmt(t.insightBlockedText, { n: number(blocked) }),
             href: "/dashboard#attention",
             tone: "red",
           },
@@ -134,8 +142,8 @@ export default async function FleetCommandCenterPage({
     ...(tasks?.length
       ? [
           {
-            title: "Ações operacionais pendentes",
-            text: `${number(tasks.length)} tarefa(s) abertas aguardam tratamento.`,
+            title: t.insightTasksTitle,
+            text: fmt(t.insightTasksText, { n: number(tasks.length) }),
             href: "/dashboard#open-tasks",
             tone: "orange",
           },
@@ -144,8 +152,8 @@ export default async function FleetCommandCenterPage({
     ...(noLocation
       ? [
           {
-            title: "Complete a localização da frota",
-            text: `${number(noLocation)} veículo(s) sem local atual registrado.`,
+            title: t.insightLocationTitle,
+            text: fmt(t.insightLocationText, { n: number(noLocation) }),
             href: "/fleet",
             tone: "blue",
           },
@@ -154,8 +162,8 @@ export default async function FleetCommandCenterPage({
     ...(maintenance
       ? [
           {
-            title: "Disponibilidade para manutenção",
-            text: `${number(maintenance)} veículo(s) estão em manutenção. Consulte os bloqueios antes de reservar.`,
+            title: t.insightMaintenanceTitle,
+            text: fmt(t.insightMaintenanceText, { n: number(maintenance) }),
             href: "/dashboard#open-tasks",
             tone: "green",
           },
@@ -178,30 +186,33 @@ export default async function FleetCommandCenterPage({
         <CommandSearch
           items={[
             ...(vehicles ?? []).map((v) => ({
-              label: `${v.plate} · ${v.category?.name ?? "Veículo"}`,
+              label: `${v.plate} · ${v.category?.name ?? t.vehicleFallback}`,
               detail: statuses[v.status].label,
               href: `/fleet/vehicles/${v.id}`,
             })),
             ...(reservations ?? []).map((r) => ({
-              label: r.trip_request?.requester?.full_name ?? "Viagem",
+              label: r.trip_request?.requester?.full_name ?? t.tripFallback,
               detail: `${r.trip_request?.origin ?? ""} → ${r.trip_request?.destination ?? ""}`,
               href: `/reservations/${r.id}`,
             })),
           ]}
+          labels={{
+            aria: t.searchAria,
+            placeholder: t.searchPlaceholder,
+            heading: t.searchHeading,
+            noResults: t.searchNoResults,
+          }}
         />
       }
     >
       <div className="fc" data-testid="fleet-command-center">
         <div className="fc-heading">
           <div>
-            <h1>Fleet Command Center 360°</h1>
-            <p>
-              Visão completa da operação, utilização, viagens, caronas, economia
-              e sustentabilidade da frota.
-            </p>
+            <h1>{t.title}</h1>
+            <p>{t.subtitle}</p>
           </div>
           <div className="fc-filters">
-            <nav aria-label="Período dos indicadores">
+            <nav aria-label={t.periodAria}>
               {Object.entries(labels).map(([key, label]) => (
                 <Link
                   key={key}
@@ -215,7 +226,7 @@ export default async function FleetCommandCenterPage({
             <form method="get">
               <input type="hidden" name="period" value={range.period} />
               <label className="sr-only" htmlFor="fc-location">
-                Local operacional atual
+                {t.locationAria}
               </label>
               <select
                 id="fc-location"
@@ -223,32 +234,32 @@ export default async function FleetCommandCenterPage({
                 defaultValue={data.selectedLocation}
                 disabled={data.locations === null}
               >
-                <option value="all">Todos os locais</option>
+                <option value="all">{t.allLocations}</option>
                 {data.locations?.map((l) => (
                   <option value={l.id} key={l.id}>
                     {l.name}
                   </option>
                 ))}
               </select>
-              <button type="submit">Aplicar</button>
+              <button type="submit">{t.apply}</button>
             </form>
           </div>
         </div>
         {data.degraded && (
           <p role="alert" className="fc-error">
-            Algumas fontes não responderam. “—” indica dados indisponíveis.{" "}
-            <Link href={href(range.period)}>Tentar novamente</Link>
+            {t.degraded}{" "}
+            <Link href={href(range.period)}>{t.retry}</Link>
           </p>
         )}
         <div className="fc-layout">
           <div className="fc-main">
-            <section className="fc-kpis" aria-label="Indicadores operacionais">
+            <section className="fc-kpis" aria-label={t.kpisAria}>
               <div className="fc-card fc-kpi">
                 <div className="fc-kpi-top">
                   <FmCarIcon />
                   <div>
                     <strong>{number(total)}</strong>
-                    <span>Veículos total</span>
+                    <span>{t.vehiclesTotal}</span>
                   </div>
                 </div>
                 <div className="fc-segments" aria-hidden="true">
@@ -264,10 +275,10 @@ export default async function FleetCommandCenterPage({
                 </div>
                 <dl>
                   {[
-                    ["Em operação", active],
-                    ["Disponíveis", available],
-                    ["Em manutenção", maintenance],
-                    ["Bloqueados", blocked],
+                    [t.inOperation, active],
+                    [t.available, available],
+                    [t.inMaintenance, maintenance],
+                    [t.blocked, blocked],
                   ].map(([label, n]) => (
                     <div key={String(label)}>
                       <dt>{label}</dt>
@@ -289,7 +300,7 @@ export default async function FleetCommandCenterPage({
                         ).length ?? null,
                       )}
                     </strong>
-                    <span>Viagens · {labels[range.period]}</span>
+                    <span>{fmt(t.tripsPeriod, { period: labels[range.period] })}</span>
                   </div>
                 </div>
                 <dl>
@@ -297,10 +308,10 @@ export default async function FleetCommandCenterPage({
                     <div key={s}>
                       <dt>
                         {s === "confirmed"
-                          ? "Confirmadas"
+                          ? t.confirmed
                           : s === "completed"
-                            ? "Concluídas"
-                            : "Canceladas"}
+                            ? t.completed
+                            : t.cancelled}
                       </dt>
                       <dd>
                         {number(
@@ -311,19 +322,19 @@ export default async function FleetCommandCenterPage({
                     </div>
                   ))}
                 </dl>
-                <small>Por data de partida programada</small>
+                <small>{t.byDeparture}</small>
               </Link>
               <Link className="fc-card fc-kpi" href="/analytics/carpool">
                 <div className="fc-kpi-top">
                   <FmUsersIcon />
                   <div>
                     <strong>{number(rides?.length ?? null)}</strong>
-                    <span>Caronas aceitas</span>
+                    <span>{t.ridesAccepted}</span>
                   </div>
                 </div>
                 <dl>
                   <div>
-                    <dt>Assentos compartilhados</dt>
+                    <dt>{t.sharedSeats}</dt>
                     <dd>
                       {number(
                         rides?.reduce((sum, r) => sum + r.requested_seats, 0) ??
@@ -332,7 +343,7 @@ export default async function FleetCommandCenterPage({
                     </dd>
                   </div>
                 </dl>
-                <small>Nas viagens do período selecionado</small>
+                <small>{t.ridesNote}</small>
               </Link>
               <div className="fc-card fc-kpi">
                 <div className="fc-kpi-top">
@@ -341,27 +352,28 @@ export default async function FleetCommandCenterPage({
                   </span>
                   <div>
                     <strong>—</strong>
-                    <span>Taxa de utilização</span>
+                    <span>{t.utilizationRate}</span>
                   </div>
                 </div>
-                <small>Veículo-horas em uso / disponíveis</small>
-                <p>Histórico de disponibilidade ainda não integrado.</p>
+                <small>{t.utilizationHint}</small>
+                <p>{t.utilizationPending}</p>
               </div>
               <div className="fc-card fc-kpi">
                 <div className="fc-kpi-top">
                   <FmUsersIcon />
                   <div>
                     <strong>—</strong>
-                    <span>Taxa de ocupação</span>
+                    <span>{t.occupancyRate}</span>
                   </div>
                 </div>
-                <small>Passageiro-km / assento-km disponíveis</small>
-                <p>Distâncias e ocupação efetivas ainda não consolidadas.</p>
+                <small>{t.occupancyHint}</small>
+                <p>{t.occupancyPending}</p>
               </div>
             </section>
             <div className="fc-middle">
               <Card
-                title="Localização da Frota"
+                title={t.fleetLocation}
+                viewDetails={t.viewDetails}
                 className="fc-location"
                 href="/fleet"
               >
@@ -377,17 +389,13 @@ export default async function FleetCommandCenterPage({
                     <path d="M12 21s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12Z" />
                     <circle cx="12" cy="9" r="2.5" />
                   </svg>
-                  <strong>Mapa indisponível</strong>
-                  <p>
-                    Sem fonte geográfica validada para posicionar os veículos.
-                  </p>
-                  <span className="fc-pill">
-                    Localização operacional cadastrada
-                  </span>
+                  <strong>{t.mapUnavailable}</strong>
+                  <p>{t.mapNoSource}</p>
+                  <span className="fc-pill">{t.locationRegistered}</span>
                 </div>
                 <div className="fc-location-list">
                   {vehicles === null || data.locations === null ? (
-                    <Empty>Não foi possível consultar as localizações.</Empty>
+                    <Empty>{t.locationsError}</Empty>
                   ) : (
                     <>
                       {data.locations
@@ -411,30 +419,31 @@ export default async function FleetCommandCenterPage({
                           </Link>
                         ))}
                       <p>
-                        Sem local: <strong>{number(noLocation)}</strong>
+                        {t.noLocationLabel} <strong>{number(noLocation)}</strong>
                       </p>
                     </>
                   )}
                 </div>
               </Card>
               <Card
-                title="Economia e Sustentabilidade"
+                title={t.economyTitle}
+                viewDetails={t.viewDetails}
                 className="fc-sustain"
                 href="/analytics"
               >
                 <div className="fc-sustain-grid">
                   {[
-                    ["♧", "Economia com caronas"],
-                    ["◉", "Economia BEV (vs. gasolina)"],
-                    ["ϟ", "Percorridos em modo elétrico (BEV)"],
-                    ["❧", "CO₂ evitado (BEV)"],
+                    ["♧", t.ecoCarpool],
+                    ["◉", t.ecoBev],
+                    ["ϟ", t.ecoElectric],
+                    ["❧", t.ecoCo2],
                   ].map(([icon, label]) => (
                     <div key={label}>
                       <span aria-hidden="true">{icon}</span>
                       <div>
                         <strong>—</strong>
                         <p>{label}</p>
-                        <small>Fonte de cálculo pendente</small>
+                        <small>{t.calcPending}</small>
                       </div>
                     </div>
                   ))}
@@ -442,25 +451,24 @@ export default async function FleetCommandCenterPage({
               </Card>
             </div>
             <div className="fc-charts">
-              <Card title="Utilização da frota">
+              <Card title={t.fleetUtilization} viewDetails={t.viewDetails}>
                 <p className="fc-caption">
-                  Partidas programadas no período · não representa taxa de
-                  utilização
+                  {t.utilizationCaption}
                 </p>
                 {reservations === null ? (
-                  <Empty>Série indisponível.</Empty>
+                  <Empty>{t.seriesUnavailable}</Empty>
                 ) : !data.daily.some((d) => d.count) ? (
-                  <Empty>Sem partidas programadas neste período.</Empty>
+                  <Empty>{t.noDepartures}</Empty>
                 ) : (
                   <div
                     className="fc-bars"
                     role="img"
                     aria-label={data.daily
-                      .map((d) => `${d.day}: ${d.count} partidas`)
+                      .map((d) => fmt(t.departuresCount, { day: d.day, n: d.count }))
                       .join("; ")}
                   >
                     {data.daily.map((d) => (
-                      <div key={d.day} title={`${d.day}: ${d.count} partidas`}>
+                      <div key={d.day} title={fmt(t.departuresCount, { day: d.day, n: d.count })}>
                         <span
                           style={{
                             height: `${(d.count / Math.max(...data.daily.map((x) => x.count), 1)) * 100}%`,
@@ -472,28 +480,24 @@ export default async function FleetCommandCenterPage({
                   </div>
                 )}
               </Card>
-              <Card title="Ocupação dos assentos">
-                <Empty>
-                  O gráfico será exibido quando passageiro-km e assento-km
-                  efetivos estiverem disponíveis.
-                </Empty>
-                <p className="fc-caption">
-                  Sem estimativas a partir de reservas confirmadas.
-                </p>
+              <Card title={t.seatOccupancy} viewDetails={t.viewDetails}>
+                <Empty>{t.seatOccupancyEmpty}</Empty>
+                <p className="fc-caption">{t.seatOccupancyCaption}</p>
               </Card>
-              <Card title="Viagens por tipo de uso">
-                <Empty>
-                  Classificação por finalidade ainda não disponível nos
-                  registros.
-                </Empty>
+              <Card title={t.tripsByUse} viewDetails={t.viewDetails}>
+                <Empty>{t.tripsByUseEmpty}</Empty>
               </Card>
             </div>
             <div className="fc-bottom">
-              <Card title="Veículos por categoria" href="/fleet">
+              <Card
+                title={t.vehiclesByCategory}
+                href="/fleet"
+                viewDetails={t.viewDetails}
+              >
                 {vehicles === null ? (
-                  <Empty>Dados indisponíveis.</Empty>
+                  <Empty>{t.dataUnavailable}</Empty>
                 ) : !total ? (
-                  <Empty>Nenhum veículo cadastrado.</Empty>
+                  <Empty>{t.noVehicles}</Empty>
                 ) : (
                   <div className="fc-category-bars">
                     {categories.map((c) => (
@@ -510,9 +514,9 @@ export default async function FleetCommandCenterPage({
                   </div>
                 )}
               </Card>
-              <Card title="Status da frota">
+              <Card title={t.fleetStatus} viewDetails={t.viewDetails}>
                 {vehicles === null ? (
-                  <Empty>Dados indisponíveis.</Empty>
+                  <Empty>{t.dataUnavailable}</Empty>
                 ) : (
                   <dl className="fc-status-list">
                     {counts
@@ -531,15 +535,19 @@ export default async function FleetCommandCenterPage({
                           </dd>
                         </div>
                       ))}
-                    {!total && <Empty>Nenhum veículo neste filtro.</Empty>}
+                    {!total && <Empty>{t.noVehiclesFilter}</Empty>}
                   </dl>
                 )}
               </Card>
-              <Card title="Próximas manutenções" href="/dashboard#open-tasks">
+              <Card
+                title={t.upcomingMaintenance}
+                href="/dashboard#open-tasks"
+                viewDetails={t.viewDetails}
+              >
                 {vehicles === null ? (
-                  <Empty>Dados indisponíveis.</Empty>
+                  <Empty>{t.dataUnavailable}</Empty>
                 ) : !services?.length ? (
-                  <Empty>Sem revisão por quilometragem cadastrada.</Empty>
+                  <Empty>{t.noServiceByKm}</Empty>
                 ) : (
                   <ul className="fc-records">
                     {services.map((v) => (
@@ -565,8 +573,8 @@ export default async function FleetCommandCenterPage({
                           km
                           <small>
                             {v.next_service_odometer_km! <= v.odometer_km
-                              ? "Revisão atingida"
-                              : "Até a revisão"}
+                              ? t.reviewReached
+                              : t.untilReview}
                           </small>
                         </span>
                       </li>
@@ -574,26 +582,30 @@ export default async function FleetCommandCenterPage({
                   </ul>
                 )}
               </Card>
-              <Card title="Viagens recentes" href="/trips">
+              <Card
+                title={t.recentTrips}
+                href="/trips"
+                viewDetails={t.viewDetails}
+              >
                 {reservations === null ? (
-                  <Empty>Dados indisponíveis.</Empty>
+                  <Empty>{t.dataUnavailable}</Empty>
                 ) : !recent?.length ? (
-                  <Empty>Sem viagens neste período.</Empty>
+                  <Empty>{t.noTrips}</Empty>
                 ) : (
                   <ul className="fc-records">
                     {recent.map((r) => (
                       <li key={r.id}>
                         <Link href={`/reservations/${r.id}`}>
                           <strong>
-                            {r.trip_request?.requester?.full_name ?? "Condutor"}
+                            {r.trip_request?.requester?.full_name ?? t.driverFallback}
                           </strong>
                           <small>
                             {r.trip_request?.destination ??
-                              "Destino não informado"}
+                              t.destinationMissing}
                           </small>
                         </Link>
                         <span>
-                          {new Date(r.start_at).toLocaleDateString("pt-BR", {
+                          {new Date(r.start_at).toLocaleDateString(dateLocale, {
                             timeZone: "America/Sao_Paulo",
                             day: "2-digit",
                             month: "2-digit",
@@ -610,12 +622,16 @@ export default async function FleetCommandCenterPage({
             </div>
           </div>
           <aside className="fc-side">
-            <Card title="✦ FleetMind Intelligence" className="fc-intelligence">
-              <span className="fc-count">{insights.length} insights</span>
+            <Card
+              title="✦ FleetMind Intelligence"
+              className="fc-intelligence"
+              viewDetails={t.viewDetails}
+            >
+              <span className="fc-count">
+                {fmt(t.insightsCount, { n: insights.length })}
+              </span>
               {vehicles === null || tasks === null ? (
-                <Empty>
-                  Não foi possível confirmar todas as recomendações.
-                </Empty>
+                <Empty>{t.insightsUnconfirmed}</Empty>
               ) : null}
               {insights.length
                 ? insights.map((i) => (
@@ -629,19 +645,19 @@ export default async function FleetCommandCenterPage({
                     </Link>
                   ))
                 : !data.degraded && (
-                    <Empty>
-                      Nenhuma ação proativa identificada nos registros atuais.
-                    </Empty>
+                    <Empty>{t.noInsights}</Empty>
                   )}
-              <p className="fc-caption">
-                Regras explicáveis baseadas no estado atual da operação.
-              </p>
+              <p className="fc-caption">{t.insightsCaption}</p>
             </Card>
-            <Card title="Alertas e Notificações" href="/dashboard#open-tasks">
+            <Card
+              title={t.alertsTitle}
+              href="/dashboard#open-tasks"
+              viewDetails={t.viewDetails}
+            >
               {tasks === null ? (
-                <Empty>Alertas indisponíveis.</Empty>
+                <Empty>{t.alertsUnavailable}</Empty>
               ) : !tasks.length ? (
-                <Empty>Não há tarefas operacionais abertas neste filtro.</Empty>
+                <Empty>{t.noOpenTasks}</Empty>
               ) : (
                 <ul className="fc-alerts">
                   {tasks
@@ -655,13 +671,16 @@ export default async function FleetCommandCenterPage({
                           <strong>
                             {dict.dashboard.tasks.types[task.type] ?? task.type}
                           </strong>
-                          <p>{task.vehicle?.plate ?? "Veículo"}</p>
+                          <p>{task.vehicle?.plate ?? t.vehicleFallback}</p>
                           <small>
                             {new Date(task.created_at).toLocaleDateString(
-                              "pt-BR",
+                              dateLocale,
                               { timeZone: "America/Sao_Paulo" },
                             )}{" "}
-                            · {task.priority}
+                            ·{" "}
+                            {(dict.dashboard.tasks.priorities as Record<string, string>)[
+                              task.priority
+                            ] ?? task.priority}
                           </small>
                         </Link>
                       </li>
@@ -669,36 +688,36 @@ export default async function FleetCommandCenterPage({
                 </ul>
               )}
             </Card>
-            <Card title="Ações rápidas">
-              <nav className="fc-actions" aria-label="Ações rápidas">
+            <Card title={t.quickActions} viewDetails={t.viewDetails}>
+              <nav className="fc-actions" aria-label={t.quickActions}>
                 {[
                   {
-                    label: "Nova reserva",
+                    label: t.newReservation,
                     href: "/trips/new",
                     icon: <FmCalendarIcon />,
                   },
                   {
-                    label: "Procurar carona",
+                    label: t.findCarpool,
                     href: "/carpool",
                     icon: <FmUsersIcon />,
                   },
                   {
-                    label: "Gerenciar veículos",
+                    label: t.manageVehicles,
                     href: "/fleet",
                     icon: <FmCarIcon />,
                   },
                   {
-                    label: "Ocorrências e tarefas",
+                    label: t.incidentsTasks,
                     href: "/dashboard#attention",
                     icon: <FmAlertIcon />,
                   },
                   {
-                    label: "Manutenção",
+                    label: t.maintenance,
                     href: "/dashboard#open-tasks",
                     icon: <FmWrenchIcon />,
                   },
                   {
-                    label: "Relatórios",
+                    label: t.reports,
                     href: "/analytics",
                     icon: <FmCalendarIcon />,
                   },
@@ -713,12 +732,8 @@ export default async function FleetCommandCenterPage({
           </aside>
         </div>
         <p className="fc-footnote">
-          Frota, alertas e insights refletem o estado atual. O período filtra
-          partidas programadas e caronas vinculadas. O local filtra a posição
-          operacional atual, sem representar uma unidade histórica.{" "}
-          <Link href="/dashboard">
-            Abrir controles operacionais e aprovações →
-          </Link>
+          {t.footnote}{" "}
+          <Link href="/dashboard">{t.openControls}</Link>
         </p>
       </div>
     </FmShell>

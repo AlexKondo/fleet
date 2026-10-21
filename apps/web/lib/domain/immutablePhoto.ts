@@ -27,7 +27,7 @@ export async function uploadImmutablePhoto(client:TypedSupabaseClient,kind:'vehi
   const existing=await bucket.download(row.path);
   if(existing.error||!existing.data||existing.data.size!==file.size||await digest(await existing.data.arrayBuffer())!==sha)throw new Error('PHOTO_UPLOAD_FAILED');
  }
- const finalized=await client.rpc('fm_photo_finalize',{p_id:row.id});
+ const finalized=await client.rpc('fm_photo_finalize',{p_id:row.id,p_sha256:sha});
  if(finalized.error)throw new Error('PHOTO_LINK_PENDING');
  return{path:row.path};
 }
