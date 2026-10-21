@@ -20,8 +20,9 @@ import { GET as carpool } from "./carpool-expiry/route";
 import { GET as retention } from "./carpool-retention/route";
 import { GET as chat } from "./chat-cleanup/route";
 import { GET as license } from "./license-reminders/route";
+import { GET as reservationExpiry } from "./reservation-expiry/route";
 
-const routes = { "carpool-expiry": carpool, "carpool-retention": retention, "chat-cleanup": chat, "license-reminders": license };
+const routes = { "carpool-expiry": carpool, "carpool-retention": retention, "chat-cleanup": chat, "license-reminders": license, "reservation-expiry": reservationExpiry };
 const req = (auth?: string) =>
   new NextRequest("http://localhost/api/cron/x", { headers: auth ? { authorization: auth } : {} });
 const saved = process.env.CRON_SECRET;

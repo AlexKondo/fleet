@@ -10,6 +10,7 @@ import {
   type TrafficRestrictionResult,
 } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
@@ -125,6 +126,22 @@ interface CarpoolCandidateWithPlate extends CarpoolCandidate {
   vehiclePlate: string;
 }
 
+/**
+ * FIX-VENCIDAS R5 — chosen over a read-side rule ("treat status='reserved' with no live window as
+ * available") because that would need the domain engine (OPERATIONALLY_CANDIDATE_STATUSES) and
+ * create_vehicle_reservation to agree on a second notion of availability, while the release
+ * function (0209, service_role only) already applies the exact no-show rule, restores the vehicle
+ * like cancel_reservation and is idempotent. Scoped to the caller's own organization, which was
+ * resolved through the RLS client above; errors are ignored on purpose.
+ */
+async function releaseExpiredReservations(organizationId: string): Promise<void> {
+  try {
+    await createSupabaseAdminClient().rpc("fm_release_expired_reservations", { p_organization_id: organizationId });
+  } catch {
+    // best-effort: the daily cron (/api/cron/reservation-expiry) is the primary path
+  }
+}
+
 async function buildPlanInputs(input: TripFormInput) {
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser(supabase);
@@ -140,6 +157,12 @@ async function buildPlanInputs(input: TripFormInput) {
   if (!profile) {
     return { error: "no_profile" as const };
   }
+
+  // FIX-VENCIDAS R5: release this organization's no-show reservations (end_at + grace passed, no
+  // pickup/gate/key activity) BEFORE reading candidates, so a vehicle stuck in 'reserved' by a
+  // reservation that was never picked up is offered again without waiting for the daily cron.
+  // Best-effort: any failure (missing service-role env, RPC error) leaves the previous behaviour.
+  await releaseExpiredReservations(profile.organization_id);
 
   const now = new Date().toISOString();
   const config = await loadOrgConfig(supabase, profile.organization_id);

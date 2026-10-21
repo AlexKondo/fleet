@@ -14,6 +14,8 @@ import { isCarpoolIntent, type IntentName } from "@fleet/domain";
 import { findActiveReservations, resolveReservationId } from "./queries";
 import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
 import { executeCarpoolIntent, loadChatCarpoolCtx, publishOfferForNewReservation } from "./carpoolChat";
+import { dictionaries, type Dictionary } from "@/lib/i18n/dictionaries";
+import { translateVehicleReasons } from "./noVehicle";
 
 export interface DispatchResult {
   success: boolean;
@@ -25,6 +27,11 @@ export interface DispatchResult {
   // whether a given string is an internal code or genuine explanatory prose.
   message: string;
   reasons?: string[];
+  /** FIX-VENCIDAS/Assistente: the engine found no vehicle (and no carpool) for the window. A
+   * legitimate result, not a failure of the system: `reasons` then holds the engine's raw reason
+   * CODES (e.g. "no_candidates_available"), which actions.ts translates (app/chat/noVehicle.ts)
+   * into the explanation + alternatives + prefilled-form link. Never shown raw. */
+  noVehicle?: boolean;
 }
 
 /**
@@ -44,6 +51,7 @@ export interface DispatchResult {
 export async function dispatchIntent(
   intent: IntentName,
   slots: Record<string, string>,
+  dict: Dictionary = dictionaries[DEFAULT_LOCALE],
 ): Promise<DispatchResult> {
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser(supabase);
@@ -66,7 +74,10 @@ export async function dispatchIntent(
         allowCarpool: slots.allowCarpool === "true",
       };
       const plan = await planTrip(input);
-      if (plan.error) return { success: false, message: plan.error };
+      if (plan.error) {
+        console.error("dispatchIntent CREATE_RESERVATION planTrip failed:", plan.error);
+        return { success: false, message: plan.error };
+      }
 
       if (plan.type === "carpool" && plan.carpoolOptions && plan.carpoolOptions.length > 0) {
         const target = plan.carpoolOptions[0]!;
@@ -190,11 +201,7 @@ export async function dispatchIntent(
         return { success: true, message: `Reserva criada — veículo ${chosenPlate}.${carpoolNote}` };
       }
 
-      return {
-        success: false,
-        message: "no_eligible_vehicle",
-        reasons: plan.reasons.length > 0 ? plan.reasons : ["Nenhum veículo elegível encontrado para esse período."],
-      };
+      return { success: false, message: "no_eligible_vehicle", reasons: plan.reasons, noVehicle: true };
     }
 
     case "CANCEL_RESERVATION": {
@@ -277,14 +284,18 @@ export async function dispatchIntent(
         allowCarpool: true,
       };
       const plan = await planTrip(input);
+      if (plan.error) {
+        console.error("dispatchIntent CHECK_AVAILABILITY planTrip failed:", plan.error);
+        return { success: false, message: plan.error };
+      }
       if (plan.type === "none") {
-        return { success: true, message: plan.reasons.join(" ") || "Nenhum veículo disponível para essa janela." };
+        return { success: true, message: "no_eligible_vehicle", reasons: plan.reasons, noVehicle: true };
       }
       return {
         success: true,
         message:
           plan.type === "vehicle" && plan.vehicle
-            ? `Sim — veículo ${plan.vehicle.plate} disponível. ${plan.vehicle.reasons.join(" ")}`
+            ? `Sim — veículo ${plan.vehicle.plate} disponível. ${translateVehicleReasons(dict, plan.vehicle.reasons).join(" ")}`.trim()
             : "Há uma opção de carona disponível para essa janela.",
       };
     }

@@ -618,6 +618,8 @@ const dict: Dictionary = {
       upcomingTitle: "Próximas reservas",
       activeTitle: "En curso",
       historyTitle: "Historial de viajes",
+      notPickedUp: "No retirada",
+      expiredUnapproved: "Vencida sin aprobación",
       scheduleTitle: "Agenda de los vehículos",
       kindVehicle: "Vehículo",
       viewDetails: "Ver detalles",
@@ -1176,6 +1178,12 @@ const dict: Dictionary = {
     editPrompt: "Claro, ¿qué te gustaría cambiar? Puedes decirme un nuevo destino, hora de salida, hora de retorno, u otro vehículo.",
     confirmCancel: "Cancelar",
     errorGeneric: "No pude procesar esto ahora. Puedes usar los formularios normalmente.",
+    noVehicle: {
+      intro: "No hay ningún vehículo disponible para ese período.",
+      alternatives: "No se creó ninguna reserva. Puedes probar otro horario, revisar tus reservas en Mis viajes, hablar con el gestor de la flota o continuar con el formulario de reserva, que se abre con los datos de este viaje.",
+      carpoolKept: "Tu intención de ofrecer plazas de viaje compartido no se perdió: sigue marcada en el formulario.",
+      openForm: "Abrir el formulario con los datos completados",
+    },
     thinking: "Pensando...",
     carpool: {
       askSeats: "¿Cuántas plazas quieres ofrecer?",

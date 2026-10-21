@@ -124,7 +124,11 @@ export async function EmployeeHome({
 
   // Same conditions as the reservation detail page (the checklist pages re-check them server-side).
   const vStatus = next?.vehicle?.status;
-  const canPickup = next?.status === "confirmed" && (vStatus === "reserved" || vStatus === "awaiting_pickup");
+  // FIX-VENCIDAS R2: no pickup once the reservation window has ended (same rule as fm_checklist_state, 0208).
+  const canPickup =
+    next?.status === "confirmed" &&
+    (vStatus === "reserved" || vStatus === "awaiting_pickup") &&
+    new Date(next.end_at).getTime() > Date.now();
   const canReturn = next?.status === "confirmed" && vStatus === "in_use";
 
   // "Veículos mais reservados por você": reservations per vehicle (what is counted is reservations, not trips taken).

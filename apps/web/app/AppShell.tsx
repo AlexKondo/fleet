@@ -19,6 +19,10 @@ export type { NavKey };
  * which also meant the role label was never translated (raw "administrator" instead of
  * ROLE_LABELS' "Administrador", visible uppercased in the old header). One shell, one
  * source of truth for navigation, org identity, and sign-out.
+ *
+ * @deprecated FIX-VISUAL: no route renders this legacy shell anymore — every authenticated page uses
+ * `app/carpool/FmShell.tsx` (the FleetMind look). Kept only for the `NavKey` type re-export used by MobileNav;
+ * `app/shellGuard.test.ts` fails if a page starts rendering `<AppShell` again.
  */
 export async function AppShell({
   active,

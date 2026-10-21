@@ -19,6 +19,7 @@ import { ClientGantt as ReservationGantt } from "./ClientGantt";
 import type { GanttZoomLevel } from "../ganttZoomActions";
 import { getStatusMeta } from "../dashboard/statusMeta";
 import { FmCarIcon, FmChevronIcon, FmPlusIcon, FmUsersIcon } from "../fmIcons";
+import { expiredBadge, groupTrips, hasOperationalActivity, isActiveTrip } from "@/lib/trips/tripGroups";
 import "./trips.css";
 
 const TABS = [
@@ -105,7 +106,7 @@ export async function TripsWorkspace({
     supabase
       .from("reservations")
       .select(
-        `id, status, start_at, end_at, impacted_at,
+        `id, status, start_at, end_at, impacted_at, cancellation_reason,
        trip_request:trip_requests!inner(origin, destination, requester_id, justification),
        vehicle:vehicles(plate, name, status)`,
       )
@@ -181,28 +182,18 @@ export async function TripsWorkspace({
   const isAdministrator = profile?.role === "administrator";
 
   // ---- grouping for the tabs (all derived from the rows above) ----
+  // R1 (FIX-VENCIDAS): an open reservation whose window ended without any pickup/gate/key
+  // activity is not "upcoming" — it is listed in History (cancelled tab) with a badge.
   const all = reservations ?? [];
-  const isActive = (r: (typeof all)[number]) =>
-    r.status === "confirmed" &&
-    (r.vehicle?.status === "in_use" || r.vehicle?.status === "returning");
-  const activeList = all
-    .filter(isActive)
-    .sort((a, b) => a.start_at.localeCompare(b.start_at));
-  const upcomingList = all
-    .filter(
-      (r) =>
-        (r.status === "pending_approval" || r.status === "confirmed") &&
-        !isActive(r),
-    )
-    .sort((a, b) => a.start_at.localeCompare(b.start_at));
-  const doneList = all.filter((r) => r.status === "completed");
-  const cancelledList = all.filter((r) => r.status === "cancelled");
+  const isActive = isActiveTrip;
+  const nowMs = Date.now();
+  const activityOf = (r: (typeof all)[number]) =>
+    r.status === "confirmed" ? hasOperationalActivity(checklistStates?.get(r.id)) : false;
+  const { activeList, upcomingList, doneList, cancelledList, historyList } =
+    groupTrips(all, nowMs, activityOf);
   const requests = carpoolRequests ?? [];
   const carpoolCount = requests.length + listedCarpools.length;
   const total = all.length + carpoolCount;
-  const historyList = [...doneList, ...cancelledList].sort((a, b) =>
-    b.start_at.localeCompare(a.start_at),
-  );
 
   const counts: Record<Tab, number> = {
     all: total,
@@ -246,7 +237,10 @@ export async function TripsWorkspace({
   const card = (r: Row) => {
     const d = dateBlock(r.start_at, locale);
     const vs = r.vehicle?.status;
-    const canPickup=checklistStates?.get(r.id)?.can_pickup ?? false;
+    const expired = expiredBadge(r, nowMs, activityOf(r));
+    // The SQL flag already turns false once end_at has passed (0208); the window check here keeps
+    // the button hidden even against a database where 0208 is not applied yet.
+    const canPickup=(checklistStates?.get(r.id)?.can_pickup ?? false) && new Date(r.end_at).getTime() > nowMs;
     const canReturn=checklistStates?.get(r.id)?.can_return ?? false;
     return (
       <li
@@ -278,9 +272,20 @@ export async function TripsWorkspace({
           </p>
         </div>
         <div className="tp-side">
-          <span className="fm-pill" data-tone={tone(r.status)}>
-            {reservationStatusLabel(r.status)}
-          </span>
+          {expired && r.status !== "cancelled" ? (
+            <span className="fm-pill" data-tone="bad" data-testid="trip-expired-badge">
+              {m[expired]}
+            </span>
+          ) : (
+            <span className="fm-pill" data-tone={tone(r.status)}>
+              {reservationStatusLabel(r.status)}
+            </span>
+          )}
+          {expired && r.status === "cancelled" ? (
+            <span className="fm-pill" data-tone="neutral" data-testid="trip-expired-badge">
+              {m[expired]}
+            </span>
+          ) : null}
           {isActive(r) && vs ? (
             <span className="fm-pill" data-tone="info">
               {vehicleStatusMeta[vs]?.label ?? vs}

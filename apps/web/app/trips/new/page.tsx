@@ -6,8 +6,15 @@ import { TripRequestForm } from "./TripRequestForm";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
+import { parseTripPrefill } from "@/lib/trips/tripPrefill";
 
-export default async function NewTripPage() {
+export default async function NewTripPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  // Assistant hand-off (no vehicle found in chat): validated trip data only; nothing is created here.
+  const prefill = parseTripPrefill((await searchParams) ?? {});
   const dict = await getDictionary();
   const locale = await getLocale();
   // Every other protected page checks auth itself rather than relying solely on
@@ -43,7 +50,7 @@ export default async function NewTripPage() {
     >
       <h1 className="fm-title">{dict.trips.reservar.title}</h1>
       <p className="fm-subtitle">{dict.trips.reservar.subtitle}</p>
-      <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} />
+      <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} prefill={prefill} />
     </FmShell>
   );
 }

@@ -647,6 +647,10 @@ export type Dictionary = {
       upcomingTitle: string;
       activeTitle: string;
       historyTitle: string;
+      /** Badge: confirmed reservation whose window ended without any pickup (no-show). */
+      notPickedUp: string;
+      /** Badge: request whose window ended while still awaiting approval. */
+      expiredUnapproved: string;
       scheduleTitle: string;
       kindVehicle: string;
       viewDetails: string;
@@ -1197,6 +1201,13 @@ export type Dictionary = {
     editPrompt: string;
     confirmCancel: string;
     errorGeneric: string;
+    /** No vehicle available for the requested window (engine reason codes are translated via trips.reasons). */
+    noVehicle: {
+      intro: string;
+      alternatives: string;
+      carpoolKept: string;
+      openForm: string;
+    };
     thinking: string;
     carpool: {
       askSeats: string;

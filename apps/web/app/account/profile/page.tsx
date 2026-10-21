@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getDictionary } from "../../../lib/i18n/getLocale";
-import { AppShell } from "../../AppShell";
+import { FmShell } from "../../carpool/FmShell";
 import { BackButton } from "../../BackButton";
 import { getOwnLicense } from "../../../lib/auth/ownLicense";
 import { Card } from "../../ui/Card";
@@ -28,8 +28,10 @@ export default async function ProfilePage() {
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
 
+  // FIX-VISUAL: FleetMind shell (was the legacy AppShell). The content keeps its markup, restyled by `.fm-legacy`.
+  // No nonDrivingWorkspace here, so the CNH gate is exactly the AppShell one (loadShellContext's licenseGateActive).
   return (
-    <AppShell
+    <FmShell
       active="dashboard"
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
@@ -37,6 +39,7 @@ export default async function ProfilePage() {
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
       title={dict.account.profile.title}
+      legacy
     >
       <section className="mx-auto max-w-md px-6 py-8">
         <BackButton dict={dict} />
@@ -58,6 +61,6 @@ export default async function ProfilePage() {
           />
         </Card>
       </section>
-    </AppShell>
+    </FmShell>
   );
 }

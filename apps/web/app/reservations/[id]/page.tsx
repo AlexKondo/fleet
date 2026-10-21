@@ -4,8 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { formatDateTime, formatDateTimeShort } from "@/lib/formatDateTime";
-import { AppShell } from "../../AppShell";
+import { formatDateTimeShort } from "@/lib/formatDateTime";
 import { FmShell } from "../../carpool/FmShell";
 import { getStatusMeta } from "../../dashboard/statusMeta";
 import { getDictionary, getLocale } from "../../../lib/i18n/getLocale";
@@ -261,198 +260,95 @@ export default async function ReservationDetailPage({
     </>
   );
 
-  // SCR-USR-004/005: an employee gets the FleetMind v2.0 detail (scoped theme). Every other role keeps the
-  // original AppShell page below, unchanged.
-  if (profile?.role === "employee") {
-    return (
-      <FmShell
-        active="trips"
-        orgName={profile?.organization?.name ?? "—"}
-        userName={profile?.full_name ?? user.email ?? "—"}
-        role="employee"
-        isFleetManager={false}
-        isAdministrator={false}
-      >
-        <div className="rd" data-testid="reservation-detail-fm">
-          {banners}
-          <Link href="/trips" className="fm-link">
-            {dict.reservations.detail.backToTrips}
-          </Link>
-
-          <header className="fm-card rd-head">
-            <div className="rd-head-top">
-              <div className="min-w-0">
-                <h1 className="rd-name">{reservation.vehicle?.name ?? reservation.vehicle?.plate ?? "—"}</h1>
-                <p className="ck-plate">{reservation.vehicle?.plate}</p>
-                <p className="rd-route break-user-text">
-                  {reservation.trip_request.origin} → {reservation.trip_request.destination}
-                </p>
-                <p className="rd-meta">
-                  {reservation.trip_request.requester?.full_name} · {formatDateTimeShort(reservation.start_at, locale)} →{" "}
-                  {formatDateTimeShort(reservation.end_at, locale)}
-                </p>
-              </div>
-              <div className="rd-pills">
-                {/* the reservation status is the answer to "did this get cancelled?"; the vehicle status is the second badge */}
-                <span className="fm-pill" data-tone={statusTone}>{statusText}</span>
-                {statusMeta ? <span className="fm-pill" data-tone="info">{statusMeta.label}</span> : null}
-              </div>
-            </div>
-
-            {checklistState?.own_pickup_id || checklistState?.own_return_id ? <nav aria-label="Evidências registradas" className="fm-actions">
-          {checklistState.own_pickup_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_pickup_id}`}>Fotos da retirada</Link> : null}
-          {checklistState.own_return_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_return_id}`}>Fotos da devolução</Link> : null}
-        </nav> : null}
-        <OfficeCustodyNotice state={checklistState}/>
-        {canPickup || canReturn || canCancel ? (
-              <div className="rd-actions">
-                {canPickup ? (
-                  <Link href={`/reservations/${id}/pickup`} className="fm-btn fm-btn-primary">
-                    {dict.trips.list.startPickup}
-                  </Link>
-                ) : null}
-                {canReturn ? (
-                  <Link href={`/reservations/${id}/return`} className="fm-btn fm-btn-primary">
-                    {dict.trips.list.registerReturn}
-                  </Link>
-                ) : null}
-                {canCancel ? (
-                  <form action={cancelMyReservation.bind(null, id)}>
-                    <ConfirmSubmitButton confirmMessage={dict.trips.list.confirmCancel} className="fm-btn fm-btn-danger">
-                      {dict.common.cancel}
-                    </ConfirmSubmitButton>
-                  </form>
-                ) : null}
-              </div>
-            ) : null}
-
-            {reservation.impacted_at ? (
-              <div className="rd-impacted" role="status">
-                <strong>{dict.reservations.detail.impactedTitle}</strong>
-                {reservation.impacted_reason ?? dict.reservations.detail.impactedDefaultReason}
-              </div>
-            ) : null}
-          </header>
-
-          {routeMap}
-
-          {tail}
-        </div>
-      </FmShell>
-    );
-  }
-
+  // SCR-USR-004/005 (+ FIX-VISUAL): EVERY role gets the FleetMind v2.0 detail inside FmShell. Before, only an employee
+  // did and every other role (fleet_manager, administrator, security, maintenance_operator) fell through to the legacy
+  // AppShell page (black sidebar, "VIAGEM" header). Same queries, same permission checks, same actions: only the
+  // wrapper/markup changed. The two blocks the legacy branch rendered differently keep their original conditions:
+  // the evidence links stay employee-only, the "reassign on the dashboard" hint stays privileged-only.
+  const isEmployee = profile?.role === "employee";
   return (
-    <AppShell
+    <FmShell
       active="trips"
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={profile?.role ?? "employee"}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title={dict.reservations.detail.title}
     >
-      <div className="mx-auto max-w-3xl px-4 py-6">
-      {banners}
-      <Link href="/trips" className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent">
-        {dict.reservations.detail.backToTrips}
-      </Link>
+      <div className="rd" data-testid="reservation-detail-fm">
+        {banners}
+        <Link href="/trips" className="fm-link">
+          {dict.reservations.detail.backToTrips}
+        </Link>
 
-      <header className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-2xl text-paper-50">{reservation.vehicle?.name ?? reservation.vehicle?.plate ?? "—"}</p>
-            <p className="font-mono text-xs text-fog-600">{reservation.vehicle?.plate}</p>
-            <p className="mt-1 text-sm text-fog-400 break-user-text">
-              {reservation.trip_request.origin} → {reservation.trip_request.destination}
-            </p>
-            <p className="mt-1 text-xs text-fog-600">
-              {reservation.trip_request.requester?.full_name} ·{" "}
-              {formatDateTime(reservation.start_at, locale)} →{" "}
-              {formatDateTime(reservation.end_at, locale)}
-            </p>
+        <header className="fm-card rd-head">
+          <div className="rd-head-top">
+            <div className="min-w-0">
+              <h1 className="rd-name">{reservation.vehicle?.name ?? reservation.vehicle?.plate ?? "—"}</h1>
+              <p className="ck-plate">{reservation.vehicle?.plate}</p>
+              <p className="rd-route break-user-text">
+                {reservation.trip_request.origin} → {reservation.trip_request.destination}
+              </p>
+              <p className="rd-meta">
+                {reservation.trip_request.requester?.full_name} · {formatDateTimeShort(reservation.start_at, locale)} →{" "}
+                {formatDateTimeShort(reservation.end_at, locale)}
+              </p>
+            </div>
+            <div className="rd-pills">
+              {/* the reservation status is the answer to "did this get cancelled?"; the vehicle status is the second badge */}
+              <span className="fm-pill" data-tone={statusTone}>{statusText}</span>
+              {statusMeta ? <span className="fm-pill" data-tone="info">{statusMeta.label}</span> : null}
+            </div>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1.5">
-            {/* Vehicle status ("Disponível", "Em uso"...) alone left no way to tell a
-                cancelled reservation apart from an active one whose vehicle happened to be
-                free again — this reservation-status badge is the actual answer to "did this
-                get cancelled?". */}
-            <span
-              className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-widest ${
-                reservation.status === "cancelled"
-                  ? "border-signal-red/40 text-signal-red"
-                  : reservation.status === "completed"
-                    ? "border-line-700 text-fog-400"
-                    : "border-gwm-accent/40 text-gwm-accent"
-              }`}
-            >
-              {(dict.trips.statuses as Record<string, string>)[reservation.status] ?? reservation.status}
-            </span>
-            {statusMeta ? (
-              <span className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-widest ${statusMeta.text} border-current/40`}>
-                {statusMeta.label}
-              </span>
-            ) : null}
-          </div>
-        </div>
 
+          {isEmployee && (checklistState?.own_pickup_id || checklistState?.own_return_id) ? <nav aria-label="Evidências registradas" className="fm-actions">
+          {checklistState.own_pickup_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_pickup_id}`}>Fotos da retirada</Link> : null}
+          {checklistState.own_return_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_return_id}`}>Fotos da devolução</Link> : null}
+        </nav> : null}
         <OfficeCustodyNotice state={checklistState}/>
         {canPickup || canReturn || canCancel ? (
-          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line-800 pt-4">
-            {canPickup ? (
-              <Link
-                href={`/reservations/${id}/pickup`}
-                className="rounded-sm border border-signal-blue px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-blue hover:bg-signal-blue/10"
-              >
-                {dict.trips.list.startPickup}
-              </Link>
-            ) : null}
-            {canReturn ? (
-              <Link
-                href={`/reservations/${id}/return`}
-                className="rounded-sm border border-gwm-accent px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10"
-              >
-                {dict.trips.list.registerReturn}
-              </Link>
-            ) : null}
-            {canCancel ? (
-              <form action={cancelMyReservation.bind(null, id)}>
-                <ConfirmSubmitButton
-                  confirmMessage={dict.trips.list.confirmCancel}
-                  className="rounded-sm border border-line-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red"
-                >
-                  {dict.common.cancel}
-                </ConfirmSubmitButton>
-              </form>
-            ) : null}
-          </div>
-        ) : null}
-
-        {reservation.impacted_at ? (
-          <div className="mt-4 rounded-sm border border-signal-yellow/40 bg-signal-yellow/10 p-3">
-            <p className="text-xs uppercase tracking-widest text-signal-yellow">
-              {dict.reservations.detail.impactedTitle}
-            </p>
-            <p className="mt-1 text-sm text-fog-400">
-              {reservation.impacted_reason ?? dict.reservations.detail.impactedDefaultReason}
-            </p>
-            {isPrivileged ? (
-              <p className="mt-1 text-xs text-fog-600">
-                {dict.reservations.detail.impactedReassignPrefix}{" "}
-                <Link href="/dashboard" className="text-signal-yellow hover:underline">
-                  {dict.reservations.detail.impactedReassignLink}
+            <div className="rd-actions">
+              {canPickup ? (
+                <Link href={`/reservations/${id}/pickup`} className="fm-btn fm-btn-primary">
+                  {dict.trips.list.startPickup}
                 </Link>
-                .
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-      </header>
+              ) : null}
+              {canReturn ? (
+                <Link href={`/reservations/${id}/return`} className="fm-btn fm-btn-primary">
+                  {dict.trips.list.registerReturn}
+                </Link>
+              ) : null}
+              {canCancel ? (
+                <form action={cancelMyReservation.bind(null, id)}>
+                  <ConfirmSubmitButton confirmMessage={dict.trips.list.confirmCancel} className="fm-btn fm-btn-danger">
+                    {dict.common.cancel}
+                  </ConfirmSubmitButton>
+                </form>
+              ) : null}
+            </div>
+          ) : null}
 
-      <div className="mt-4">{routeMap}</div>
+          {reservation.impacted_at ? (
+            <div className="rd-impacted" role="status">
+              <strong>{dict.reservations.detail.impactedTitle}</strong>
+              {reservation.impacted_reason ?? dict.reservations.detail.impactedDefaultReason}
+              {isPrivileged ? (
+                <p className="rd-impacted-hint">
+                  {dict.reservations.detail.impactedReassignPrefix}{" "}
+                  <Link href="/dashboard" className="fm-link">
+                    {dict.reservations.detail.impactedReassignLink}
+                  </Link>
+                  .
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </header>
 
-      {tail}
+        {routeMap}
+
+        {tail}
       </div>
-    </AppShell>
+    </FmShell>
   );
 }

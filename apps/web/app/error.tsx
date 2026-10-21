@@ -2,6 +2,7 @@
 
 import { dictionaries } from "../lib/i18n/dictionaries";
 import { DEFAULT_LOCALE, isLocale } from "../lib/i18n/locales";
+import "./carpool/fm-theme.css";
 
 /** This boundary is a route-level client component: Next.js only ever passes it
  * `error`/`reset`, so there's no Server Component parent to receive `dict` from. The
@@ -35,27 +36,25 @@ export default function GlobalError({
 }) {
   const dict = useErrorDictionary();
 
+  // FIX-VISUAL: FleetMind look (scoped .fm-theme tokens + fm-card/fm-btn) instead of the legacy dark panel. No shell:
+  // this boundary has no server data (role/nav) to render one with. Same texts, same digest, same retry.
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-ink-950 px-6">
-      <div className="w-full max-w-md rounded-md border border-line-800 bg-panel-900/60 p-8 text-center">
-        <p className="font-display text-2xl font-extrabold uppercase tracking-tight text-paper-50">
-          Fleet<span className="text-gwm-accent">.</span>
-        </p>
-        <p className="mt-4 text-sm text-paper-50">{dict.appError.title}</p>
-        <p className="mt-2 text-sm text-fog-400">{dict.appError.description}</p>
-        {error.digest ? (
-          <p className="mt-4 font-mono text-xs text-fog-600">
-            {dict.appError.code} {error.digest}
-          </p>
-        ) : null}
-        <button
-          type="button"
-          onClick={reset}
-          className="mt-6 rounded-sm bg-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-ink-950 transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent"
-        >
-          {dict.appError.retry}
-        </button>
-      </div>
-    </main>
+    <div className="fm-theme">
+      <main className="flex min-h-dvh w-full items-center justify-center px-6">
+        <div className="fm-card w-full max-w-md p-8 text-center">
+          <p className="fm-title">FleetMind</p>
+          <p className="mt-4 text-sm">{dict.appError.title}</p>
+          <p className="fm-subtitle text-sm">{dict.appError.description}</p>
+          {error.digest ? (
+            <p className="fm-subtitle font-mono text-xs">
+              {dict.appError.code} {error.digest}
+            </p>
+          ) : null}
+          <button type="button" onClick={reset} className="fm-btn fm-btn-primary mt-6">
+            {dict.appError.retry}
+          </button>
+        </div>
+      </main>
+    </div>
   );
 }

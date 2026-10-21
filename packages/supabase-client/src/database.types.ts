@@ -1771,6 +1771,10 @@ export type Database = {
         Args: never
         Returns: number
       }
+      fm_release_expired_reservations: {
+        Args: { p_organization_id?: string; p_limit?: number }
+        Returns: Json
+      }
       purge_old_carpool_locations: {
         Args: { p_days?: number }
         Returns: number

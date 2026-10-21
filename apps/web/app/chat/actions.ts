@@ -15,6 +15,7 @@ import { packSlots, stripReservedSlots, unpackSlots } from "./persistedPending";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
+import { noVehicleReply } from "./noVehicle";
 import {
   carpoolFirstForReservation,
   loadChatCarpoolCtx,
@@ -34,6 +35,8 @@ const SELECT_DAILY_LIMIT = 150;
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  /** Optional in-app link rendered under the message (e.g. /trips/new prefilled after "no vehicle"). */
+  link?: { href: string; label: string };
 }
 
 export interface ChatState {
@@ -71,7 +74,10 @@ const FRIENDLY_DISPATCH_ERRORS: Record<string, string> = {
 };
 
 function friendlyDispatchError(code: string): string {
-  return FRIENDLY_DISPATCH_ERRORS[code] ?? "Não consegui concluir essa ação agora. Tente novamente em instantes.";
+  const friendly = FRIENDLY_DISPATCH_ERRORS[code];
+  // Unmapped = genuinely unexpected: keep the real cause in the server log (never shown to the user).
+  if (!friendly) console.error("chat dispatch failed with an unmapped code:", code);
+  return friendly ?? "Não consegui concluir essa ação agora. Tente novamente em instantes.";
 }
 
 type VehicleOption = { vehicleId: string; plate: string; vehicleName: string };
@@ -172,6 +178,28 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     return offerNoteForReservation(carpoolCtx, seats);
   }
 
+  // FIX-VENCIDAS/Assistente: "no vehicle for this window" answer. Persisted with the trip slots but
+  // WITHOUT an intent, so a reload never turns it back into a confirmation card; status idle (not
+  // an error: the generic error line is reserved for genuinely unexpected failures).
+  async function noVehicleState(
+    slots: Record<string, string>,
+    reasons: string[] | undefined,
+    base: ChatMessage[],
+  ): Promise<ChatState> {
+    const reply = noVehicleReply(dictNow, slots, reasons);
+    await admin.from("chat_messages").insert({
+      conversation_id: conversationId,
+      role: "assistant",
+      content: reply.content,
+      slots: packSlots(slots),
+    });
+    return {
+      status: "idle",
+      conversationId,
+      messages: [...base, { role: "assistant", content: reply.content, link: reply.link }],
+    };
+  }
+
   // Turns a prepared carpool step into the chat state (reply / confirmation card / options).
   async function stateFromPrepared(
     prepared: CarpoolPrepared,
@@ -215,6 +243,9 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     assistantContent: string;
     pendingAction?: ChatState["pendingAction"];
     status: ChatState["status"];
+    link?: ChatMessage["link"];
+    /** true when the engine found no vehicle: the reply is an explanation, not a confirmation card. */
+    noVehicle?: boolean;
   }> {
     const input: TripFormInput = {
       departureAt: new Date(slots.departureAt ?? "").toISOString(),
@@ -228,6 +259,28 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       allowCarpool: slots.allowCarpool === "true",
     };
     const plan = await planTrip(input);
+
+    if (plan.error) {
+      // Genuinely unexpected (session, availability read...): generic error, real cause in the log.
+      console.error("chat CREATE_RESERVATION planTrip failed:", plan.error);
+      return {
+        assistantContent: "Não consegui processar sua mensagem agora. Você pode continuar usando os formulários normalmente.",
+        status: "error",
+      };
+    }
+
+    if (plan.type === "none") {
+      // FIX-VENCIDAS/Assistente: no vehicle for this window is a legitimate answer (not an error):
+      // translated reason + alternatives + prefilled form link; the trip data and the carpool
+      // intention are preserved in the link and in the persisted chat row. Nothing is created.
+      const reply = noVehicleReply(dictNow, slots, plan.reasons);
+      return {
+        assistantContent: (note ? `${note}\n` : "") + reply.content,
+        status: "idle",
+        link: reply.link,
+        noVehicle: true,
+      };
+    }
 
     if (plan.type === "vehicle" && plan.vehicle) {
       // A plate the user already named (answering a previous round of alternatives)
@@ -279,12 +332,9 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
 
     if (llmSummary === null) {
       // No LLM summary to fall back on (the user picked "use a vehicle" after the carpool
-      // options) and no vehicle is eligible: say why instead of showing a card that can't work.
-      return {
-        assistantContent:
-          plan.reasons.length > 0 ? plan.reasons.join(" ") : "Nenhum veículo elegível encontrado para esse período.",
-        status: "error",
-      };
+      // options) and no vehicle card can be built: same explanation as "no vehicle".
+      const reply = noVehicleReply(dictNow, slots, plan.reasons);
+      return { assistantContent: reply.content, status: "idle", link: reply.link, noVehicle: true };
     }
     // Carpool (legacy engine), or no eligible vehicle at all — nothing to pick between, so the
     // original (vehicle-blind) confirmation summary is the right one; dispatch.ts re-runs
@@ -316,9 +366,14 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     };
     const plan = await planTrip(input);
 
+    if (plan.type === "none" && !plan.error) {
+      // Everything got booked up between rounds: explanation + alternatives, data preserved.
+      return noVehicleState(pending.slots, plan.reasons, prevState.messages);
+    }
     if (plan.type !== "vehicle" || !plan.vehicle) {
       // The window's availability genuinely changed between rounds (e.g. everything got
       // booked up) — surface that instead of silently keeping a stale confirmation card.
+      if (plan.error) console.error("chat reselectVehicle planTrip failed:", plan.error);
       const message = "Essa opção não está mais disponível. Pode tentar de novo?";
       const assistantMessage: ChatMessage = { role: "assistant", content: message };
       await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "assistant", content: message });
@@ -386,20 +441,21 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     );
     if (result.kind === "vehicle") {
       // "Use a vehicle": the normal vehicle card, carpool-first not repeated.
-      const built = await buildReservationCard({ ...pending.slots, carpoolDeclined: "true" }, null, "");
+      const declinedSlots = { ...pending.slots, carpoolDeclined: "true" };
+      const built = await buildReservationCard(declinedSlots, null, "");
       await admin.from("chat_messages").insert({
         conversation_id: conversationId,
         role: "assistant",
         content: built.assistantContent,
         intent: built.pendingAction?.intent,
-        slots: built.pendingAction?.slots,
+        slots: built.pendingAction?.slots ?? (built.noVehicle ? packSlots(declinedSlots) : undefined),
       });
       return {
         status: built.status,
         conversationId,
-        messages: [...prevState.messages, { role: "assistant", content: built.assistantContent }],
+        messages: [...prevState.messages, { role: "assistant", content: built.assistantContent, ...(built.link ? { link: built.link } : {}) }],
         pendingAction: built.pendingAction,
-        error: built.status === "error" ? "no_eligible_vehicle" : undefined,
+        error: built.status === "error" ? "plan_failed" : undefined,
       };
     }
     return stateFromPrepared(result, "REQUEST_CARPOOL", prevState.messages);
@@ -477,7 +533,12 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     const notAutomatedMessage = NOT_AUTOMATED[pending.intent];
     const result = notAutomatedMessage
       ? { success: true, message: notAutomatedMessage }
-      : await dispatchIntent(pending.intent, pending.slots);
+      : await dispatchIntent(pending.intent, pending.slots, dictNow);
+    if ("noVehicle" in result && result.noVehicle) {
+      // Not an error: explanation + alternatives + prefilled form; the conversation stays active
+      // so the user can simply ask for another time.
+      return noVehicleState(pending.slots, result.reasons, prevState.messages);
+    }
     // `reasons`, when present, is already safe human-readable Portuguese (e.g. the
     // recommendation engine's own explanation for finding no eligible vehicle) — showing
     // the generic fallback instead would throw away a genuinely useful, specific answer.
@@ -601,6 +662,9 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   let assistantContent: string;
   let pendingAction: ChatState["pendingAction"];
   let status: ChatState["status"] = "idle";
+  let assistantLink: ChatMessage["link"];
+  // Trip data kept on the persisted assistant row (no intent => never restored as a pending card).
+  let noVehicleSlots: Record<string, string> | undefined;
 
   if (interpretation.status === "ok") {
     const notAutomatedMessage = NOT_AUTOMATED[interpretation.intent];
@@ -633,12 +697,19 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         return next;
       }
     } else if (requiresConfirmation(interpretation.intent) === "no") {
-      const result = await dispatchIntent(interpretation.intent, interpretation.slots);
-      assistantContent = result.success
-        ? result.message
-        : result.reasons && result.reasons.length > 0
-          ? result.reasons.join(" ")
-          : friendlyDispatchError(result.message);
+      const result = await dispatchIntent(interpretation.intent, interpretation.slots, dictNow);
+      if (result.noVehicle) {
+        const reply = noVehicleReply(dictNow, interpretation.slots, result.reasons);
+        assistantContent = reply.content;
+        assistantLink = reply.link;
+        noVehicleSlots = interpretation.slots;
+      } else {
+        assistantContent = result.success
+          ? result.message
+          : result.reasons && result.reasons.length > 0
+            ? result.reasons.join(" ")
+            : friendlyDispatchError(result.message);
+      }
     } else if (interpretation.intent === "CREATE_RESERVATION") {
       // Phase C6 carpool-first (parity with New Trip): when the org runs the Smart Carpool
       // engine with carpool-first, compatible offers are shown BEFORE the vehicle card, next to
@@ -661,6 +732,8 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         assistantContent = built.assistantContent;
         pendingAction = built.pendingAction;
         status = built.status;
+        assistantLink = built.link;
+        if (built.noVehicle) noVehicleSlots = slots;
       }
     } else {
       assistantContent = interpretation.summary;
@@ -672,17 +745,24 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   } else if (interpretation.status === "low_confidence" || interpretation.status === "unknown_intent") {
     assistantContent = "Não entendi bem o que você precisa. Pode reformular?";
   } else {
+    // Genuinely unexpected (LLM unavailable, missing API key, unparseable answer): generic text,
+    // real cause only in the server log.
+    console.error("chat interpretMessage failed:", interpretation.message);
     assistantContent = "Não consegui processar sua mensagem agora. Você pode continuar usando os formulários normalmente.";
     status = "error";
   }
 
-  const assistantMessage: ChatMessage = { role: "assistant", content: assistantContent };
+  const assistantMessage: ChatMessage = assistantLink
+    ? { role: "assistant", content: assistantContent, link: assistantLink }
+    : { role: "assistant", content: assistantContent };
   await admin.from("chat_messages").insert({
     conversation_id: conversationId,
     role: "assistant",
     content: assistantContent,
     intent: pendingAction?.intent,
-    slots: packSlots(pendingAction?.slots, pendingAction?.options, pendingAction?.vehicleOptions),
+    slots: pendingAction
+      ? packSlots(pendingAction.slots, pendingAction.options, pendingAction.vehicleOptions)
+      : packSlots(noVehicleSlots),
   });
 
   return {

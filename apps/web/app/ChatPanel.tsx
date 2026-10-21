@@ -363,6 +363,15 @@ export function ChatPanel({
               }`}
             >
               {message.content}
+              {message.link ? (
+                <a
+                  href={message.link.href}
+                  data-testid="chat-message-link"
+                  className="mt-1.5 block font-semibold text-gwm-accent underline underline-offset-2"
+                >
+                  {message.link.label}
+                </a>
+              ) : null}
             </div>
           ))}
         </div>

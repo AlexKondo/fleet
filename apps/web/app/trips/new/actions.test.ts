@@ -14,6 +14,7 @@ const h = vi.hoisted(() => ({
   policyError: false,
   planMobility: vi.fn(),
   rpc: vi.fn(),
+  adminRpc: vi.fn(),
   enable: vi.fn(),
   search: vi.fn(),
   geocode: vi.fn(),
@@ -95,6 +96,8 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 vi.mock("@/lib/carpool/offerCardRows", () => ({ loadOfferCardRows: async () => [] }));
+// FIX-VENCIDAS R5: best-effort no-show release through the service-role client before the candidate read.
+vi.mock("@/lib/supabase/admin", () => ({ createSupabaseAdminClient: () => ({ rpc: (...a: unknown[]) => h.adminRpc(...a) }) }));
 
 import { confirmTrip, planTrip, planTripAction } from "./actions";
 
@@ -140,6 +143,7 @@ beforeEach(() => {
   h.redirects.length = 0;
   h.planMobility.mockReset().mockReturnValue(vehiclePlan);
   h.rpc.mockReset().mockResolvedValue({ data: "res-1", error: null });
+  h.adminRpc.mockReset().mockResolvedValue({ data: { released: 0 }, error: null });
   h.enable.mockReset().mockResolvedValue({ status: "success", offerId: "o1" });
   h.search.mockReset().mockResolvedValue({ status: "matches", matches: [] });
   h.geocode.mockReset();
@@ -362,5 +366,22 @@ describe("confirmTrip: host offer step", () => {
       await confirm({ offerSeats });
     }
     expect(h.enable).not.toHaveBeenCalled();
+  });
+});
+
+describe("FIX-VENCIDAS R5: no-show release before the allocation search", () => {
+  it("calls fm_release_expired_reservations scoped to the caller's organization, before planning", async () => {
+    await planTrip(input);
+    expect(h.adminRpc).toHaveBeenCalledWith("fm_release_expired_reservations", { p_organization_id: "org-1" });
+    expect(h.planMobility).toHaveBeenCalled();
+    expect(h.adminRpc.mock.invocationCallOrder[0]!).toBeLessThan(h.planMobility.mock.invocationCallOrder[0]!);
+  });
+  it("a failing release (RPC error or thrown) never blocks planning", async () => {
+    h.adminRpc.mockRejectedValueOnce(new Error("missing service role"));
+    await planTrip(input);
+    expect(h.planMobility).toHaveBeenCalledTimes(1);
+    h.adminRpc.mockResolvedValueOnce({ data: null, error: { message: "boom" } });
+    await planTrip(input);
+    expect(h.planMobility).toHaveBeenCalledTimes(2);
   });
 });

@@ -602,6 +602,8 @@ const dict: Dictionary = {
       upcomingTitle: "即将开始的预订",
       activeTitle: "进行中",
       historyTitle: "行程历史",
+      notPickedUp: "未取车",
+      expiredUnapproved: "未经审批已过期",
       scheduleTitle: "车辆日程",
       kindVehicle: "车辆",
       viewDetails: "查看详情",
@@ -1140,6 +1142,12 @@ const dict: Dictionary = {
     editPrompt: "好的，您想修改什么？可以告诉我新的目的地、出发时间、返回时间，或者换一辆车。",
     confirmCancel: "取消",
     errorGeneric: "暂时无法处理，您可以照常使用表单。",
+    noVehicle: {
+      intro: "该时段没有可用车辆。",
+      alternatives: "未创建任何预订。您可以尝试其他时间、在“我的行程”中查看预订、联系车队管理员，或继续使用已预填本次行程信息的预订表单。",
+      carpoolKept: "您提供拼车座位的意向不会丢失：表单中仍保持勾选。",
+      openForm: "打开已预填信息的表单",
+    },
     thinking: "正在处理...",
     carpool: {
       askSeats: "您想提供几个座位？",

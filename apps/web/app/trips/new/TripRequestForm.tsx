@@ -98,9 +98,13 @@ export function TripRequestForm({
   dict,
   locale,
   carpoolMode,
+  prefill,
 }: {
   dict: Dictionary;
   locale: Locale;
+  /** Trip data handed over by the FleetMind Assistant (/trips/new?origin=…, lib/trips/tripPrefill.ts),
+   * same field format as the sessionStorage draft. Takes precedence over the draft; creates nothing. */
+  prefill?: Record<string, string>;
   /** Phase C5: org carpool policy as seen by the server (page.tsx). `newEngine` hides the old
    * allow_carpool checkbox (the Yes/No host step is then the only carpool question). */
   carpoolMode: CarpoolGating;
@@ -150,7 +154,7 @@ export function TripRequestForm({
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const draft = readDraft();
+    const draft = prefill && Object.keys(prefill).length > 0 ? prefill : readDraft();
     const now = Date.now();
     const dep = splitLocalDateTime(draft.departureAt ?? toLocalInputValue(new Date(now + 60 * 60 * 1000).toISOString()));
     const ret = splitLocalDateTime(draft.expectedReturnAt ?? toLocalInputValue(new Date(now + 9 * 60 * 60 * 1000).toISOString()));
@@ -203,11 +207,14 @@ export function TripRequestForm({
   // UI state that belongs to ONE plan result. React's "adjust state when a prop/value changes" pattern: whenever a NEW plan
   // arrives the host's seat choice and the energy filter reset (no effect, no stale flash).
   const [trackedPlan, setTrackedPlan] = useState(plan);
-  const [offer, setOffer] = useState<{ choice: "yes" | "no"; seats: string }>({ choice: "no", seats: "" });
+  // Assistant hand-off: the "offer carpool seats" intention survives (pre-selects Yes + the seats).
+  const prefillOffer: { choice: "yes" | "no"; seats: string } =
+    prefill?.allowCarpool === "on" ? { choice: "yes", seats: prefill.offerSeats ?? "" } : { choice: "no", seats: "" };
+  const [offer, setOffer] = useState<{ choice: "yes" | "no"; seats: string }>(prefillOffer);
   const [energyFilter, setEnergyFilter] = useState("all");
   if (plan !== trackedPlan) {
     setTrackedPlan(plan);
-    setOffer({ choice: "no", seats: "" });
+    setOffer(prefillOffer);
     setEnergyFilter("all");
   }
   const carpoolFirst = plan && !plan.error ? plan.carpoolFirst : undefined;

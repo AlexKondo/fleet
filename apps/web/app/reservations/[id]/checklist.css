@@ -239,6 +239,15 @@
 .fm-theme .rd-impacted strong {
   display: block;
 }
+/* privileged roles only: where to reassign the vehicle (was the legacy AppShell branch's hint) */
+.fm-theme .rd-impacted-hint {
+  margin-top: 6px;
+  font-size: 13px;
+}
+.fm-theme .rd-impacted-hint .fm-link {
+  color: inherit;
+  text-decoration: underline;
+}
 .fm-theme .rd-pending {
   display: flex;
   flex-direction: column;

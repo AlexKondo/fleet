@@ -482,10 +482,12 @@ describe("confirm phase only runs the exact card the server persisted", () => {
     setup(HOST, card(HOST));
     const result = await confirm(pending());
     expect(m.dispatch).toHaveBeenCalledTimes(1);
-    expect(m.dispatch).toHaveBeenCalledWith("ACCEPT_CARPOOL_REQUEST", {
-      requestId: REQ,
-      riderName: "Ana Silva",
-    });
+    // third argument: the user's dictionary (FIX-VENCIDAS/Assistente: reason codes are translated)
+    expect(m.dispatch).toHaveBeenCalledWith(
+      "ACCEPT_CARPOOL_REQUEST",
+      { requestId: REQ, riderName: "Ana Silva" },
+      expect.objectContaining({ chat: expect.anything() }),
+    );
     expect(result.status).toBe("idle");
   });
 

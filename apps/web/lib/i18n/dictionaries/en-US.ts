@@ -618,6 +618,8 @@ const dict: Dictionary = {
       upcomingTitle: "Upcoming reservations",
       activeTitle: "In progress",
       historyTitle: "Trip history",
+      notPickedUp: "Not picked up",
+      expiredUnapproved: "Expired without approval",
       scheduleTitle: "Vehicle schedule",
       kindVehicle: "Vehicle",
       viewDetails: "View details",
@@ -1176,6 +1178,12 @@ const dict: Dictionary = {
     editPrompt: "Sure, what would you like to change? You can tell me a new destination, departure time, return time, or a different vehicle.",
     confirmCancel: "Cancel",
     errorGeneric: "Couldn't process that right now. Feel free to use the regular forms.",
+    noVehicle: {
+      intro: "No vehicle is available for that period.",
+      alternatives: "No reservation was created. You can try another time, check your reservations in My Trips, contact the fleet manager or continue with the booking form, which opens with this trip's details already filled in.",
+      carpoolKept: "Your intention to offer carpool seats was not lost: it stays selected in the form.",
+      openForm: "Open the form with the details filled in",
+    },
     thinking: "Thinking...",
     carpool: {
       askSeats: "How many seats do you want to offer?",
