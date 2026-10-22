@@ -1,0 +1,14 @@
+=== 0210_vehicle_operational_permissions.sql 2026-10-22T19:05:42.877Z -> HTTP 201 OK
+=== 0211_exception_availability_guards.sql 2026-10-22T19:05:43.831Z -> HTTP 201 OK
+=== 0212_photo_server_verification.sql 2026-10-22T19:05:44.721Z -> HTTP 201 OK
+=== 0213_expired_release_policy_and_safety.sql 2026-10-22T19:05:45.436Z -> HTTP 201 OK
+=== 0215_vehicle_safe_return_check.sql 2026-10-22T19:05:46.220Z -> HTTP 201 OK
+=== 0217_restore_approved_automatic_release.sql 2026-10-22T19:05:47.135Z -> HTTP 201 OK
+=== 0218_task_privacy_and_expired_approval.sql 2026-10-22T19:05:47.902Z -> HTTP 201 OK
+=== 0219_photo_relink_and_attestation_metadata.sql 2026-10-22T19:05:48.974Z -> HTTP 201 OK
+=== 0220_audited_vehicle_measurements.sql 2026-10-22T19:05:49.839Z -> HTTP 201 OK
+=== 0221_photo_pending_recovery.sql 2026-10-22T19:05:50.678Z -> HTTP 201 OK
+=== 0222_reservation_exception_summary.sql 2026-10-22T19:05:51.467Z -> HTTP 201 OK
+=== 0225_audited_task_claim.sql 2026-10-22T19:05:52.238Z -> HTTP 201 OK
+=== 0228_operation_exception_no_internal_reason_leak.sql 2026-10-22T19:05:53.024Z -> HTTP 201 OK
+FIM 2026-10-22_expand 2026-10-22T19:05:53.694Z

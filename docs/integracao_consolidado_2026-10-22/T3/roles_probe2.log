@@ -1,0 +1,18 @@
+﻿== t3cust /account/keys -> /account/keys
+Entrega e recebimento de chaves Confirmação presencial no escritório pelas pessoas designadas para cada unidade. Unidades autorizadas: Campinas - Centro Técnico. Esta atribuição não inclui inspeção do veículo, aprovação de reservas ou liberação de bloqueios. GWM7T37 · Campinas - Centro Técnico Mariana Teixeira · 22/10/2026, 06:00 até 22/10/2026, 20:00 Chaves entregues; recebimento pendente Confirm
+   (shots/role_t3cust_-account-keys.png)
+== t3admin /dashboard -> /dashboard
+Fleet Command Center 360° Aprovações, reservas, tarefas operacionais e prontidão dos veículos em uma só tela. Fleet Command Center 360° Indicadores por unidade, distribuição operacional e veículos que exigem atenção. Abrir Central de Comando → 33 Veículos Disponível 17 Manutenção 2 Bloqueado 3 Em Uso 2 Carregando 1 Aguardando Retirada 8 4 Aprovações pendentes 25 Reservas ativas 10 com sobreposição
+   (shots/role_t3admin_-dashboard.png)
+== t3pwd /account/keys -> /account/keys
+Entrega e recebimento de chaves Confirmação presencial no escritório pelas pessoas designadas para cada unidade. Você não possui designação ativa para custódia de chaves. Um administrador pode configurar essa atribuição por unidade.
+   (shots/role_t3pwd_-account-keys.png)
+== t3up /trips/new -> /trips/new
+Reservar Veículo Encontre o veículo ideal para a sua viagem. O FleetMind também verifica caronas compatíveis. 1 Viagem (etapa atual) Informe os detalhes 2 Veículo Escolha o veículo 3 Carona Veja as opções 4 Confirmação Revise e finalize Detalhes da viagem Origem Destino Data de ida Hora de ida Data de volta Hora de volta Motivo da viagem Reunião Visita a cliente Treinamento Entrega Manutenção/ofic
+   (shots/role_t3up_-trips-new.png)
+== t3ai /trips/new -> /account/license
+CNH (Carteira de Habilitação) Tire uma foto da sua CNH (ou envie um arquivo) — nosso sistema lê os dados automaticamente e, se a validade estiver em dia, já libera você para retirar veículos. 🪪 Toque para fotografar sua CNH Capturar Enviar arquivo Ler
+   (shots/role_t3ai_-trips-new.png)
+== t3ai /dashboard -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 11 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA1C01, TDA1C02, TDA1C03, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa:
+   (shots/role_t3ai_-dashboard.png)

@@ -1,0 +1,14 @@
+﻿BUSCA normal: unavailableBanner=1 :: Buscar caronas O serviço de mapas do Google está indisponível no momento, então não é possível buscar caronas agora. Você pode continuar com a reserva de veículo normalmente.
+BUSCA pontos_revogados: unavailableBanner=0 :: …
+GRANT restaurado: INSERT,SELECT,UPDATE,DELETE
+BUSCA restaurado: unavailableBanner=1 :: Buscar caronas O serviço de mapas do Google está indisponível no momento, então não é possível buscar caronas agora. Você pode continuar com a reserva de veículo normalmente.
+pageerrors []
+ANFITRIAO reserva: mariana visivel= true :: trecho carona: do Veículo Cancelar Mapa indisponível no momento. Carona nesta viagem Carona ativa Vagas oferecidas: 3 · Vagas disponíveis: 2 Vagas Atualizar vagas Desativar carona Passageiros confirmados Mariana Teixeira1 vaga(s) Embarque: Matriz Faria Lima → Desembarque: Centro Técnico Campinas Pedidos de carona pendentes Thiago Ribeiro1 vaga(s) · 24/10/2026, 08:00 Região de embarque: Matriz Faria Lima → Região de desembarque: Centro Técnico Campinas Apenas a região aproximada. O endereço exato aparece depois que você aceitar. Aceitar Recusar Histórico de pe
+ANFITRIAO /carpool/mine :: Minhas caronas Nova reserva Como motoristaComo passageiro Como motorista Matriz Faria Lima → Centro Técnico Campinas · 24/10/2026, 08:00 Matriz Faria Lima → Centro Técnico Campinas · 31/10/2026, 08:00 Como passageiro Caronas (0) Nenhum item nesta aba.
+ANFITRIAO /trips?tab=carpools :: Minhas Reservas e Viagens Gerencie suas reservas de veículos, caronas e acompanhe todo o histórico. Nova reserva Todas (7) Próximas (3) Em andamento (1) Caronas (0) Concluídas (2) Canceladas (1) Nenhum item nesta aba.
+PASSAGEIRA /carpool/mine :: Minhas caronas Nova reserva Como motoristaComo passageiro Como motorista Matriz Faria Lima → Centro Técnico Campinas · 19/10/2026, 09:00 Matriz Faria Lima → Centro Técnico Campinas · 26/10/2026, 08:00 Matriz Faria Lima → Aeroporto de Guarulhos (GRU) · 23/10/2026, 09:00 Como passageiro Caronas (1) Minhas solicitações de carona Aceita Saída solicitada: 24/10/2026, 08:00 Cancelar solicitação
+PASSAGEIRA /trips?tab=carpools :: Minhas Reservas e Viagens Gerencie suas reservas de veículos, caronas e acompanhe todo o histórico. Nova reserva Todas (6) Próximas (2) Em andamento (1) Caronas (1) Concluídas (2) Canceladas (0) Minhas solicitações de carona Aceita Saída solicitada: 24/10/2026, 08:00 Cancelar solicitação
+EXCECAO pt-BR: lista rotulo=true detalhe rotulo=true motivoInternoVisivel=false :: veículo não saiu
+EXCECAO en-US: lista rotulo=true detalhe rotulo=true motivoInternoVisivel=false :: vehicle did not leave
+EXCECAO es: lista rotulo=true detalhe rotulo=true motivoInternoVisivel=false :: vehículo no salió
+EXCECAO zh-CN: lista rotulo=true detalhe rotulo=true motivoInternoVisivel=false :: 车辆未出发

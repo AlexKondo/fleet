@@ -1,0 +1,72 @@
+﻿login fmall -> /
+SCR-FM-001 /dashboard/command-center fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-001 /dashboard/command-center fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-002 /fleet fmall 1440 200  err 1 fail 1 keys 0
+SCR-FM-002 /fleet fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-002 /fleet/vehicles/9b712003-3f5c-4caa-b8c2- fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-002 /fleet/vehicles/9b712003-3f5c-4caa-b8c2- fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-003 /dashboard fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-003 /dashboard fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-003 /trips fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-003 /trips fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-003 /reservations/b1a3324f-7159-4fc1-a0dc-88 fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-003 /reservations/b1a3324f-7159-4fc1-a0dc-88 fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-004 /fleet/carpools fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-004 /fleet/carpools fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-004 /analytics/carpool fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-004 /analytics/carpool fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-004 /carpool fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-004 /carpool fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-005 /fleet/maintenance fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-005 /fleet/maintenance fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-005 /maintenance/planning fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-005 /maintenance/planning fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-006 /fleet/energy fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-006 /fleet/energy fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-007 /fleet/drivers fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-007 /fleet/drivers fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-007 /settings/users fmall 1440 200 /settings err 0 fail 0 keys 0
+SCR-FM-007 /settings/users fmall 390 200 /settings err 0 fail 0 keys 0
+SCR-FM-008 /fleet/incidents fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-008 /fleet/incidents fmall 390 200  err 0 fail 0 keys 0
+SCR-FM-009 /analytics fmall 1440 200  err 0 fail 0 keys 0
+SCR-FM-009 /analytics fmall 390 200  err 0 fail 0 keys 0
+EXTRA /fleet/keys fmall 1440 200  err 0 fail 0 keys 0
+EXTRA /fleet/keys fmall 390 200  err 0 fail 0 keys 0
+login lucas -> /dashboard
+SCR-USR-001 /dashboard lucas 1440 200  err 0 fail 0 keys 0
+SCR-USR-001 /dashboard lucas 390 200  err 0 fail 0 keys 0
+SCR-USR-002 /trips/new lucas 1440 200  err 0 fail 0 keys 0
+SCR-USR-002 /trips/new lucas 390 200  err 0 fail 0 keys 0
+SCR-USR-003 /carpool lucas 1440 200  err 0 fail 0 keys 0
+SCR-USR-003 /carpool lucas 390 200  err 0 fail 0 keys 0
+SCR-USR-004 /trips lucas 1440 200  err 0 fail 0 keys 0
+SCR-USR-004 /trips lucas 390 200  err 0 fail 0 keys 0
+SCR-USR-004 /reservations/b1a3324f-7159-4fc1-a0dc-88 lucas 1440 200  err 0 fail 0 keys 0
+SCR-USR-004 /reservations/b1a3324f-7159-4fc1-a0dc-88 lucas 390 200  err 0 fail 0 keys 0
+SCR-USR-006 /carpool/mine lucas 1440 200  err 0 fail 0 keys 0
+SCR-USR-006 /carpool/mine lucas 390 200  err 0 fail 0 keys 0
+login thiago -> /dashboard
+SCR-USR-005 /reservations/d7fa0318-83a0-416e-bf69-69 thiago 1440 200  err 0 fail 0 keys 0
+SCR-USR-005 /reservations/d7fa0318-83a0-416e-bf69-69 thiago 390 200  err 0 fail 0 keys 0
+login mariana -> /dashboard
+SCR-USR-005 /reservations/15d4bfed-1a25-4d2b-be30-c1 mariana 1440 200  err 0 fail 0 keys 0
+SCR-USR-005 /reservations/15d4bfed-1a25-4d2b-be30-c1 mariana 390 200  err 0 fail 0 keys 0
+login security -> /
+SCR-SEC-001 /gate security 1440 200  err 0 fail 0 keys 0
+SCR-SEC-001 /gate security 390 200  err 0 fail 0 keys 0
+SCR-SEC-002 /gate/exceptions security 1440 200  err 0 fail 0 keys 0
+SCR-SEC-002 /gate/exceptions security 390 200  err 0 fail 0 keys 0
+SCR-SEC-003 /gate/history security 1440 200  err 0 fail 0 keys 0
+SCR-SEC-003 /gate/history security 390 200  err 0 fail 0 keys 0
+login maint -> /trips
+SCR-MNT-001 /maintenance maint 1440 200  err 0 fail 0 keys 0
+SCR-MNT-001 /maintenance maint 390 200  err 0 fail 0 keys 0
+SCR-MNT-002 /maintenance/planning maint 1440 200  err 0 fail 0 keys 0
+SCR-MNT-002 /maintenance/planning maint 390 200  err 0 fail 0 keys 0
+SCR-MNT-003 /maintenance/work-orders maint 1440 200  err 0 fail 0 keys 0
+SCR-MNT-003 /maintenance/work-orders maint 390 200  err 0 fail 0 keys 0
+SCR-MNT-004 /maintenance/vehicles maint 1440 200  err 0 fail 0 keys 0
+SCR-MNT-004 /maintenance/vehicles maint 390 200  err 0 fail 0 keys 0
+login admin -> /
+SCR-ADM-001 /admin admin 1440 200  err 0 fail 0 keys 0

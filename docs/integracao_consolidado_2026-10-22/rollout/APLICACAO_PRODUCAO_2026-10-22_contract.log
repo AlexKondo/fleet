@@ -1,0 +1,7 @@
+=== 0214_require_verified_photo_links.sql 2026-10-22T19:09:59.533Z -> HTTP 201 OK
+=== 0216_inspection_photos_no_direct_insert.sql 2026-10-22T19:10:00.778Z -> HTTP 201 OK
+=== 0223_vehicle_measurements_no_direct_update.sql 2026-10-22T19:10:01.710Z -> HTTP 201 OK
+=== 0224_photo_attestation_path_contract.sql 2026-10-22T19:10:03.561Z -> HTTP 201 OK
+=== 0226_no_direct_task_update.sql 2026-10-22T19:10:04.399Z -> HTTP 201 OK
+=== 0227_photo_reference_relink_contract.sql 2026-10-22T19:10:05.882Z -> HTTP 201 OK
+FIM 2026-10-22_contract 2026-10-22T19:10:06.781Z

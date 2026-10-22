@@ -1,0 +1,32 @@
+{
+ "plate": "HML6A06",
+ "site": "https://fleet-web-three.vercel.app",
+ "sha": "3e818489a98b4d50df510cd4751ac004ea3697978a94296b2dcbc06838bbde8e",
+ "bytes": 665,
+ "antes": "(null)",
+ "resultado": "form fechado (sucesso)",
+ "alerta": [],
+ "posts": [
+  "303 /login",
+  "200 /fleet",
+  "200 /api/photos",
+  "200 https://rhbiwkxilelitugbwind.supabase.co/storage/v1/object/vehicle-pho",
+  "200 /api/photos"
+ ],
+ "depois": "e2e0f1c7-0000-4000-8000-000000000001/vehicles/a7ade12e-210b-4890-85bd-077c6e878764_3e818489a98b4d50df510cd4751ac004ea3697978a94296b2dcbc06838bbde8e.png",
+ "jornal": [
+  {
+   "state": "linked",
+   "atestada": true,
+   "caminho": "e2e0f1c7-0000-4000-8000-000000000001/vehicles/a7ade12e-210b-",
+   "size_bytes": 665
+  },
+  {
+   "state": "linked",
+   "atestada": true,
+   "caminho": "e2e0f1c7-0000-4000-8000-000000000001/vehicles/ee750301-1d8b-",
+   "size_bytes": 665
+  }
+ ],
+ "auditoria": 1
+}

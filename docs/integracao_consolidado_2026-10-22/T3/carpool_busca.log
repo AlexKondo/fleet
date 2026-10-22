@@ -1,0 +1,8 @@
+﻿  tempo ms 1487
+BUSCA normal: unavailableBanner=1 :: Buscar caronas O serviço de mapas do Google está indisponível no momento, então não é possível buscar caronas agora. Você pode continuar com a reserva de veículo normalmente.
+  tempo ms 1264
+BUSCA pontos_revogados: unavailableBanner=1 :: Buscar caronas Não conseguimos consultar os locais da empresa agora, então a busca de carona foi interrompida por segurança. Tente de novo em alguns minutos ou continue com a reserva de veículo.
+GRANT restaurado: INSERT,SELECT,UPDATE,DELETE
+  tempo ms 1500
+BUSCA restaurado: unavailableBanner=1 :: Buscar caronas O serviço de mapas do Google está indisponível no momento, então não é possível buscar caronas agora. Você pode continuar com a reserva de veículo normalmente.
+pageerrors []

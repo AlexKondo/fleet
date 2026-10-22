@@ -1,0 +1,366 @@
+[
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/dashboard",
+  "status": 200,
+  "final": "/dashboard",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/dashboard/command-center",
+  "status": 200,
+  "final": "/dashboard/command-center",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/fleet",
+  "status": 200,
+  "final": "/fleet",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/fleet/carpools",
+  "status": 200,
+  "final": "/fleet/carpools",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/analytics",
+  "status": 200,
+  "final": "/analytics",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/admin",
+  "status": 200,
+  "final": "/admin",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/admin/audit",
+  "status": 200,
+  "final": "/admin/audit",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/gate",
+  "status": 200,
+  "final": "/gate",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/settings",
+  "status": 200,
+  "final": "/settings",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/settings/users",
+  "status": 200,
+  "final": "/settings/users",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/maintenance",
+  "status": 200,
+  "final": "/maintenance",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/trips",
+  "status": 200,
+  "final": "/trips",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/carpool",
+  "status": 200,
+  "final": "/carpool",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "role": "administrator",
+  "rota": "/account",
+  "status": 200,
+  "final": "/account",
+  "redirecionou": false
+ },
+ {
+  "papel": "admin",
+  "erros5xx_ou_pageerror": []
+ },
+ {
+  "papel": "gestor",
+  "role": "fleet_manager",
+  "rota": "/dashboard",
+  "status": 200,
+  "final": "/dashboard",
+  "redirecionou": false
+ },
+ {
+  "papel": "gestor",
+  "role": "fleet_manager",
+  "rota": "/fleet",
+  "status": 200,
+  "final": "/fleet",
+  "redirecionou": false
+ },
+ {
+  "papel": "gestor",
+  "role": "fleet_manager",
+  "rota": "/analytics",
+  "status": 200,
+  "final": "/analytics",
+  "redirecionou": false
+ },
+ {
+  "papel": "gestor",
+  "role": "fleet_manager",
+  "rota": "/gate",
+  "status": 200,
+  "final": "/gate",
+  "redirecionou": false
+ },
+ {
+  "papel": "gestor",
+  "role": "fleet_manager",
+  "rota": "/maintenance/work-orders",
+  "status": 200,
+  "final": "/maintenance/work-orders",
+  "redirecionou": false
+ },
+ {
+  "papel": "gestor",
+  "role": "fleet_manager",
+  "rota": "/trips",
+  "status": 200,
+  "final": "/trips",
+  "redirecionou": false
+ },
+ {
+  "papel": "gestor",
+  "erros5xx_ou_pageerror": []
+ },
+ {
+  "papel": "seguranca",
+  "role": "security",
+  "rota": "/gate",
+  "status": 200,
+  "final": "/gate",
+  "redirecionou": false
+ },
+ {
+  "papel": "seguranca",
+  "role": "security",
+  "rota": "/gate/history",
+  "status": 200,
+  "final": "/gate/history",
+  "redirecionou": false
+ },
+ {
+  "papel": "seguranca",
+  "role": "security",
+  "rota": "/dashboard",
+  "status": 200,
+  "final": "/dashboard",
+  "redirecionou": false
+ },
+ {
+  "papel": "seguranca",
+  "erros5xx_ou_pageerror": []
+ },
+ {
+  "papel": "manutencao",
+  "role": "maintenance_operator",
+  "rota": "/maintenance",
+  "status": 200,
+  "final": "/maintenance",
+  "redirecionou": false
+ },
+ {
+  "papel": "manutencao",
+  "role": "maintenance_operator",
+  "rota": "/maintenance/work-orders",
+  "status": 200,
+  "final": "/maintenance/work-orders",
+  "redirecionou": false
+ },
+ {
+  "papel": "manutencao",
+  "role": "maintenance_operator",
+  "rota": "/dashboard",
+  "status": 200,
+  "final": "/dashboard",
+  "redirecionou": false
+ },
+ {
+  "papel": "manutencao",
+  "erros5xx_ou_pageerror": []
+ },
+ {
+  "papel": "motorista1",
+  "role": "employee",
+  "rota": "/dashboard",
+  "status": 200,
+  "final": "/dashboard",
+  "redirecionou": false
+ },
+ {
+  "papel": "motorista1",
+  "role": "employee",
+  "rota": "/trips",
+  "status": 200,
+  "final": "/trips",
+  "redirecionou": false
+ },
+ {
+  "papel": "motorista1",
+  "role": "employee",
+  "rota": "/trips/new",
+  "status": 200,
+  "final": "/trips/new",
+  "redirecionou": false
+ },
+ {
+  "papel": "motorista1",
+  "role": "employee",
+  "rota": "/carpool",
+  "status": 200,
+  "final": "/carpool",
+  "redirecionou": false
+ },
+ {
+  "papel": "motorista1",
+  "role": "employee",
+  "rota": "/carpool/mine",
+  "status": 200,
+  "final": "/carpool/mine",
+  "redirecionou": false
+ },
+ {
+  "papel": "motorista1",
+  "role": "employee",
+  "rota": "/account",
+  "status": 200,
+  "final": "/account",
+  "redirecionou": false
+ },
+ {
+  "papel": "motorista1",
+  "erros5xx_ou_pageerror": []
+ },
+ {
+  "papel": "vencida",
+  "role": "employee",
+  "rota": "/dashboard",
+  "status": 200,
+  "final": "/dashboard",
+  "redirecionou": false
+ },
+ {
+  "papel": "vencida",
+  "role": "employee",
+  "rota": "/trips",
+  "status": 200,
+  "final": "/trips",
+  "redirecionou": false
+ },
+ {
+  "papel": "vencida",
+  "role": "employee",
+  "rota": "/carpool",
+  "status": 200,
+  "final": "/carpool",
+  "redirecionou": false
+ },
+ {
+  "papel": "vencida",
+  "role": "employee",
+  "rota": "/carpool/mine",
+  "status": 200,
+  "final": "/carpool/mine",
+  "redirecionou": false
+ },
+ {
+  "papel": "vencida",
+  "role": "employee",
+  "rota": "/trips/new",
+  "status": 200,
+  "final": "/account/license",
+  "redirecionou": true
+ },
+ {
+  "papel": "vencida",
+  "role": "employee",
+  "rota": "/account/license",
+  "status": 200,
+  "final": "/account/license",
+  "redirecionou": false
+ },
+ {
+  "papel": "vencida",
+  "erros5xx_ou_pageerror": []
+ },
+ {
+  "papel": "semvalidade",
+  "role": "employee",
+  "rota": "/dashboard",
+  "status": 200,
+  "final": "/dashboard",
+  "redirecionou": false
+ },
+ {
+  "papel": "semvalidade",
+  "role": "employee",
+  "rota": "/trips",
+  "status": 200,
+  "final": "/trips",
+  "redirecionou": false
+ },
+ {
+  "papel": "semvalidade",
+  "role": "employee",
+  "rota": "/carpool",
+  "status": 200,
+  "final": "/carpool",
+  "redirecionou": false
+ },
+ {
+  "papel": "semvalidade",
+  "role": "employee",
+  "rota": "/account/license",
+  "status": 200,
+  "final": "/account/license",
+  "redirecionou": false
+ },
+ {
+  "papel": "semvalidade",
+  "erros5xx_ou_pageerror": []
+ }
+]
