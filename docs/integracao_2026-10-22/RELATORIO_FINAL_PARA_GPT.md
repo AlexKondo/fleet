@@ -4,7 +4,7 @@ Data: 2026-10-22 · Autor: Claude (executor/integrador) para o Kondo · **Veredi
 Nada desta entrega foi publicado: a `main` do GitHub e a produção estão em **`0aa2403`**; nenhuma migration nova foi aplicada em produção; nenhum deploy foi feito.
 
 ## 1. Onde está o código
-- Branch: `integracao-conclusao-2026-10-22` · commit atual **`0f1dc12`** (worktree: `C:\projects\fleet\_local\fleet-integ`).
+- Branch: `integracao-conclusao-2026-10-22` · último commit de CÓDIGO **`0f1dc12`**; os commits seguintes (inclusive o que traz este relatório) alteram só documentação — o commit exato do ZIP está no `README_ENTREGA_FINAL_GPT.md` (worktree: `C:\projects\fleet\_local\fleet-integ`).
 - Linha de commits desta entrega: `0aa2403` (publicado) → `5b5a9d0` (delta do Pacote Único integrado) → `fcc598d` (relatórios S1/S2/S3) → `0f1dc12` (correções pós-teste + relatórios F1/F2) → commit só de documentação com este relatório.
 - O ZIP que acompanha este relatório contém o código-fonte completo desse commit, `supabase/migrations` (0001–0216 + rollbacks), testes, configurações e `.env.example` (sem segredos). **Não** contém `.env`, credenciais, backups, dados pessoais, `node_modules`, builds, capturas de tela de testes nem .zip.
 
