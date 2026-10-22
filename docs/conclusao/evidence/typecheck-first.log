@@ -1,0 +1,1 @@
+app/reservations/[id]/exceptionAction.ts(13,33): error TS2345: Argument of type '"fm_operation_exception"' is not assignable to parameter of type '"fm_photo_attest" | "fm_photo_begin" | "fm_photo_finalize" | "fm_photo_pending" | "fm_availability_windows" | "fm_equipment_profile_save" | "fm_equipment_vehicle_snapshot" | ... 86 more ... | "update_member_role"'.

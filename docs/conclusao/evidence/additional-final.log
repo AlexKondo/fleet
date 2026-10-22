@@ -1,0 +1,15 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/final22/work/apps/web
+
+ ✓ app/operations/workspaces.test.ts (9 tests) 110ms
+ ✓ app/dashboard/command-center/render.test.ts (6 tests) 61ms
+ ✓ app/api/geo/geoRoutes.test.ts (32 tests) 22ms
+ ✓ lib/carpool/managementRender.test.ts (4 tests) 41ms
+
+ Test Files  4 passed (4)
+      Tests  51 passed (51)
+   Start at  07:04:53
+   Duration  1.80s (transform 498ms, setup 0ms, collect 937ms, tests 234ms, environment 1ms, prepare 188ms)
+
+JSON report written to /workspace/scratch/7e2402800f4f/final22/work/docs/conclusao/evidence/additional-final.json

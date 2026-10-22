@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { OperationExceptionForm } from "./OperationExceptionForm";
 import { loadChecklistState } from "@/lib/operations/checklistState";
 import { OfficeCustodyNotice } from "./OfficeCustodyNotice";
 import Link from "next/link";
@@ -306,6 +308,7 @@ export default async function ReservationDetailPage({
           {checklistState.own_return_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_return_id}`}>Fotos da devolução</Link> : null}
         </nav> : null}
         <OfficeCustodyNotice state={checklistState}/>
+        {isPrivileged && !isOwnReservation && reservation.status==='confirmed' && checklistState && !checklistState.departed && (checklistState.pickup_traveler || checklistState.pickup_security) ? <OperationExceptionForm reservationId={id} requestId={randomUUID()} locale={locale}/> : null}
         {canPickup || canReturn || canCancel ? (
             <div className="rd-actions">
               {canPickup ? (

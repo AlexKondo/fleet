@@ -13,12 +13,14 @@ const saved = process.env.CRON_SECRET;
 
 beforeEach(() => {
   process.env.CRON_SECRET = "s3cret";
+  vi.stubEnv("FM_ENABLE_AUTO_RESERVATION_RELEASE","true");
   admin.rpc.mockReset().mockResolvedValue({
     data: { released: 2, vehicles_released: 1, skipped_with_activity: 1, skipped_locked: 0 },
     error: null,
   });
 });
 afterEach(() => {
+  vi.unstubAllEnvs();
   if (saved === undefined) delete process.env.CRON_SECRET;
   else process.env.CRON_SECRET = saved;
 });
@@ -44,6 +46,8 @@ describe("cron reservation-expiry", () => {
     admin.rpc.mockResolvedValue({ data: null, error: { message: "permission denied" } });
     const response = await GET(req("Bearer s3cret"));
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: "permission denied" });
+    expect(await response.json()).toEqual({ error: "reservation_expiry_unavailable" });
   });
 });
+
+it('disabled policy skips RPC even with a valid cron secret',async()=>{vi.stubEnv('FM_ENABLE_AUTO_RESERVATION_RELEASE','false');expect(await (await GET(req('Bearer s3cret'))).json()).toEqual({released:0,skipped:'disabled_by_policy'});expect(admin.rpc).not.toHaveBeenCalled();});

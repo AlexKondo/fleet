@@ -73,7 +73,7 @@ export function ChatWidget({
     if (embedded) return;
     const showTimer = setTimeout(() => setShowHint(true), HINT_SHOW_DELAY_MS);
     return () => clearTimeout(showTimer);
-  }, []);
+  }, [embedded]);
 
   // No auto-hide timer, per explicit request — it stays up until dismissed (its own X,
   // or opening the chat) rather than disappearing on its own after a few seconds.

@@ -1,3 +1,6 @@
+import "server-only";
+import {createSupabaseAdminClient} from "@/lib/supabase/admin";
+import {getCurrentUser} from "@/lib/auth/currentUser";
 import type { TypedSupabaseClient } from '@fleet/supabase-client';
 import type { PhotoAngle } from './checklist';
 
@@ -21,12 +24,14 @@ export async function uploadImmutablePhoto(client:TypedSupabaseClient,kind:'vehi
  if(!row?.id || !row.path) throw new Error('PHOTO_BEGIN_FAILED');
  if(row.state==='linked')return{path:row.path};
  const bucket=client.storage.from('vehicle-photos');
- const upload=await bucket.upload(row.path,file,{upsert:false,contentType:file.type});
- if(upload.error){
-  // Handles conflict and ambiguous transport failure identically: verify exact stored bytes.
-  const existing=await bucket.download(row.path);
-  if(existing.error||!existing.data||existing.data.size!==file.size||await digest(await existing.data.arrayBuffer())!==sha)throw new Error('PHOTO_UPLOAD_FAILED');
- }
+ await bucket.upload(row.path,file,{upsert:false,contentType:file.type});
+ // Verify actual stored bytes even after an apparently successful upload (not just a 409).
+ const existing=await bucket.download(row.path);
+ if(existing.error||!existing.data||existing.data.size!==file.size||await digest(await existing.data.arrayBuffer())!==sha)throw new Error('PHOTO_UPLOAD_FAILED');
+ const actor=await getCurrentUser(client);
+ if(!actor)throw new Error('PHOTO_LINK_PENDING');
+ const attested=await createSupabaseAdminClient().rpc('fm_photo_attest',{p_id:row.id,p_actor:actor.id,p_sha256:sha,p_size:file.size,p_mime:file.type});
+ if(attested.error)throw new Error('PHOTO_LINK_PENDING');
  const finalized=await client.rpc('fm_photo_finalize',{p_id:row.id,p_sha256:sha});
  if(finalized.error)throw new Error('PHOTO_LINK_PENDING');
  return{path:row.path};

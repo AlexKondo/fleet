@@ -1,0 +1,10 @@
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/final22/work
+
+ ✓ packages/domain/src/carpool/locationResolution.test.ts (14 tests) 11ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  07:03:48
+   Duration  372ms (transform 86ms, setup 0ms, collect 87ms, tests 11ms, environment 0ms, prepare 70ms)
+

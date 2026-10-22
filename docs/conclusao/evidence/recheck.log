@@ -1,0 +1,32 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/final22/work/apps/web
+
+ ✓ app/chat/noVehicleFlow.test.ts (104 tests) 149ms
+ ✓ lib/operations/noShowRelease.test.ts (11 tests) 1951ms
+ ✓ lib/operations/fixSql2.test.ts (6 tests) 1970ms
+ ❯ lib/operations/fleetLifecycle.test.ts (6 tests | 1 failed) 1584ms
+   × data-preserving fleet lifecycle > archives with history, keeps the record and denies direct deletion, status bypass and new bookings 50ms
+     → expected [Function] to throw error matching /permission denied/ but got 'VEHICLE_ARCHIVED'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/operations/fleetLifecycle.test.ts > data-preserving fleet lifecycle > archives with history, keeps the record and denies direct deletion, status bypass and new bookings
+AssertionError: expected [Function] to throw error matching /permission denied/ but got 'VEHICLE_ARCHIVED'
+
+- Expected: 
+/permission denied/
+
++ Received: 
+"VEHICLE_ARCHIVED"
+
+ ❯ lib/operations/fleetLifecycle.test.ts:25:3
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 126 passed (127)
+   Start at  06:52:02
+   Duration  6.99s (transform 460ms, setup 0ms, collect 663ms, tests 5.65s, environment 1ms, prepare 205ms)
+

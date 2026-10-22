@@ -361,6 +361,7 @@ export type Database = {
       }
       organization_settings: {
         Row: {
+          auto_release_enabled: boolean
           booking_mode: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes: number
           carpool_return_tolerance_minutes: number
@@ -374,6 +375,7 @@ export type Database = {
           traffic_restriction_enabled: boolean
         }
         Insert: {
+          auto_release_enabled?: boolean
           booking_mode?: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
@@ -387,6 +389,7 @@ export type Database = {
           traffic_restriction_enabled?: boolean
         }
         Update: {
+          auto_release_enabled?: boolean
           booking_mode?: Database["public"]["Enums"]["booking_mode"]
           carpool_departure_tolerance_minutes?: number
           carpool_return_tolerance_minutes?: number
@@ -1595,6 +1598,10 @@ export type Database = {
       fm_managed_ride_requests: {Row:Pick<Database["public"]["Tables"]["carpool_ride_requests"]["Row"],"id"|"organization_id"|"carpool_offer_id"|"rider_id"|"status"|"requested_seats"|"created_at">;Relationships:Database["public"]["Tables"]["carpool_ride_requests"]["Relationships"]};
     }
     Functions: {
+      fm_operation_exception: {Args:{p_reservation_id:string;p_outcome:string;p_reason:string;p_request_id:string};Returns:Json};
+
+      fm_photo_attest: { Args:{p_id:string;p_actor:string;p_sha256:string;p_size:number;p_mime:string}; Returns:undefined };
+
       fm_photo_begin: { Args: {p_kind:string;p_target:string;p_angle:Database["public"]["Enums"]["photo_angle"]|null;p_sha256:string;p_size:number;p_mime:string}; Returns: Json };
       fm_photo_finalize: { Args: {p_id:string; p_sha256?:string}; Returns: undefined };
       fm_photo_pending: { Args: Record<PropertyKey,never>; Returns: Json };

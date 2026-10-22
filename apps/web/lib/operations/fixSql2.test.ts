@@ -71,7 +71,7 @@ describe.sequential("FIX-SQL-2 corrections with the actual migrated SQL",()=>{
   await actor(manager);await unblock(v);expect(await vstate(v)).toBe("available/false");
   expect(await auditCount(v,"vehicle_unblocked")).toBe(1);
   const clean=await vehicle(gateUnit);await actor(admin);await block(clean);
-  await actor(employee);await expect(unblock(clean)).rejects.toThrow(/not blocked/);
+  await actor(employee);await expect(unblock(clean)).rejects.toThrow(/MANAGEMENT_SCOPE_DENIED/);
   await actor(admin);await unblock(clean);expect(await vstate(clean)).toBe("available/false");
  });
  it("SQL-3: damage reported at the gate pickup is released by an independent actor once repair task and incident are closed",async()=>{
@@ -132,4 +132,17 @@ describe.sequential("FIX-SQL-2 corrections with the actual migrated SQL",()=>{
   await actor(employee);await expect(db.query("select transfer_reservation($1,$2)",[r.id,employee])).rejects.toThrow();
   expect(await auditCount(r.id,"reservation_transferred")).toBe(1);
  });
+ it('direct writes cannot clear damage, alter state or forge evidence for any interactive role',async()=>{
+  const v=await vehicle(gateUnit,{damage:true});
+  for(const who of [admin,manager,limited,security,maintenance,employee]){
+   await actor(who);
+   for(const column of ['has_blocking_damage=false',"status='available'","missing_safety_equipment='{}'", 'documentation_valid=true',"photo_storage_path='forged'"]){
+    await expect(db.query(`update vehicles set ${column} where id=$1`,[v])).rejects.toThrow(/permission denied/);
+   }
+  }
+  await actor(manager);expect((await db.query("update vehicles set name='Authorized identity edit' where id=$1 returning id",[v])).rows).toHaveLength(1);
+  await actor(security);expect((await db.query("update vehicles set name='Forbidden identity edit' where id=$1 returning id",[v])).rows).toHaveLength(0);
+  await asPostgres();expect((await db.query<{damage:boolean}>('select has_blocking_damage damage from vehicles where id=$1',[v])).rows[0]!.damage).toBe(true);
+ });
+
 });

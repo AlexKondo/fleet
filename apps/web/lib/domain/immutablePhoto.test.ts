@@ -1,5 +1,7 @@
 import {it,expect,vi} from 'vitest';
 import type {TypedSupabaseClient} from '@fleet/supabase-client';
+vi.mock('@/lib/auth/currentUser',()=>({getCurrentUser:async()=>({id:'owner'})}));
+vi.mock('@/lib/supabase/admin',()=>({createSupabaseAdminClient:()=>({rpc:async()=>({error:null})})}));
 import {uploadImmutablePhoto} from './immutablePhoto';
 const file=new File([new Uint8Array([137,80,78,71,13,10,26,10,1])],'proof.png',{type:'image/png'});
 function fixture(options:{linked?:boolean;uploadError?:boolean;wrongBytes?:boolean;finalizeError?:boolean}={}){
@@ -16,3 +18,5 @@ it('a finalized retry does not re-upload or relink',async()=>{const f=fixture({l
 it('rejects unapproved MIME and oversized files before journal creation',async()=>{const f=fixture();await expect(uploadImmutablePhoto(f.client,'vehicle','target',null,new File(['x'],'x.svg',{type:'image/svg+xml'}))).rejects.toThrow('INVALID_PHOTO');expect(f.rpc).not.toHaveBeenCalled();});
 
 it('rejects claimed image MIME with mismatched bytes',async()=>{const f=fixture();await expect(uploadImmutablePhoto(f.client,'vehicle','target',null,new File(['<script>'],'x.png',{type:'image/png'}))).rejects.toThrow('INVALID_PHOTO');expect(f.rpc).not.toHaveBeenCalled();});
+
+it('does not finalize corrupted stored bytes even when upload reports success',async()=>{const f=fixture({wrongBytes:true});await expect(uploadImmutablePhoto(f.client,'inspection','target','damage',file)).rejects.toThrow('PHOTO_UPLOAD_FAILED');expect(f.rpc).toHaveBeenCalledOnce();});

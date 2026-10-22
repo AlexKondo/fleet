@@ -1,0 +1,17 @@
+import type { Locale } from '../i18n/locales';
+const texts = {
+ 'pt-BR': {title:'Regularizar saída impedida',help:'Use somente quando o veículo não saiu. Os registros anteriores serão preservados e a situação do veículo será conferida novamente.',reason:'Justificativa',confirm:'Confirmo que o veículo não saiu e permanece na unidade.',submit:'Encerrar por exceção',done:'Exceção registrada. A reserva foi encerrada; os registros foram preservados.',unavailable:'Não foi possível registrar. Recarregue e confira a situação da viagem.',denied:'Seu acesso não permite regularizar esta operação.',onTrip:'Há registro de saída ou viagem em andamento. Registre a chegada e siga o fluxo de devolução.',keys:'As chaves ainda não foram recebidas. O responsável precisa registrar o recebimento primeiro.',independent:'Outra pessoa autorizada deve registrar esta exceção.',invalid:'Informe uma justificativa de 3 a 1000 caracteres e confirme que o veículo não saiu.'},
+ 'en-US': {title:'Resolve denied departure',help:'Use only if the vehicle did not leave. Previous evidence is preserved and vehicle conditions are checked again.',reason:'Reason',confirm:'I confirm the vehicle did not leave and remains at the unit.',submit:'Close by exception',done:'Exception recorded. Reservation closed; previous records preserved.',unavailable:'Could not record the exception. Reload and check the journey.',denied:'Your access does not allow this operation.',onTrip:'A departure or ongoing journey is recorded. Record arrival and follow the return flow.',keys:'Keys have not been received. The custodian must record receipt first.',independent:'Another authorized person must record this exception.',invalid:'Enter a reason of 3 to 1000 characters and confirm the vehicle did not leave.'},
+ es: {title:'Regularizar salida impedida',help:'Use solo si el vehículo no salió. Se conservan los registros y se revisa la situación del vehículo.',reason:'Justificación',confirm:'Confirmo que el vehículo no salió y permanece en la unidad.',submit:'Cerrar por excepción',done:'Excepción registrada. Reserva cerrada y registros conservados.',unavailable:'No se pudo registrar. Recargue y revise el viaje.',denied:'Su acceso no permite esta operación.',onTrip:'Hay una salida o viaje en curso. Registre la llegada y siga la devolución.',keys:'Las llaves aún no se han recibido. El responsable debe registrar su recepción.',independent:'Otra persona autorizada debe registrar la excepción.',invalid:'Indique una justificación de 3 a 1000 caracteres y confirme que el vehículo no salió.'},
+ 'zh-CN': {title:'处理被阻止的出车',help:'仅在车辆未离开时使用。保留原有记录，并重新检查车辆状态。',reason:'原因',confirm:'我确认车辆未离开，仍在本单位。',submit:'按例外关闭',done:'例外已记录，预订已关闭，原记录已保留。',unavailable:'无法记录。请刷新并检查行程状态。',denied:'您无权执行此操作。',onTrip:'已有出车或行驶记录。请登记到达并完成还车流程。',keys:'钥匙尚未收回，请保管人先登记收回。',independent:'须由另一位授权人员登记此例外。',invalid:'请填写3至1000个字符的原因，并确认车辆未离开。'},
+} satisfies Record<Locale,Record<string,string>>;
+export function exceptionText(locale:Locale){return texts[locale];}
+export function exceptionError(code:string,locale:Locale):string {
+ const t=texts[locale];
+ if(['NOT_AUTHORIZED','MANAGEMENT_SCOPE_DENIED'].includes(code))return t.denied;
+ if(['PHYSICAL_DEPARTURE_ALREADY_RECORDED','VEHICLE_ON_TRIP'].includes(code))return t.onTrip;
+ if(code==='KEYS_OUTSTANDING')return t.keys;
+ if(code==='INDEPENDENT_ACTOR_REQUIRED')return t.independent;
+ if(code==='INVALID_INPUT')return t.invalid;
+ return t.unavailable;
+}

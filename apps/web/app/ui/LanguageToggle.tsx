@@ -64,6 +64,7 @@ export function LanguageToggle({
     setIsOpen(false);
     startTransition(async () => {
       await setLocale(next);
+      document.documentElement.lang = next;
       router.refresh();
     });
   }

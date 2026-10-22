@@ -30,6 +30,7 @@ it('persists the journal before upload, rejects missing object and deduplicates 
  await expect(db.query('select fm_photo_finalize($1)',[one.id])).rejects.toThrow(/PHOTO_UPLOAD_REQUIRED/);
  expect(JSON.stringify((await db.query('select fm_photo_pending() p')).rows)).toContain(one.id);
  await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('vehicle-photos',$1,$2,'{\"size\":3,\"mimetype\":\"image/png\"}')",[one.path,driver]);
+ await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,3,'image/png')",[one.id,driver,'a'.repeat(64)]);await actor(driver);
  await db.query('select fm_photo_finalize($1)',[one.id]);await db.query('select fm_photo_finalize($1)',[one.id]);
  expect((await db.query('select id from inspection_photos where storage_path=$1',[one.path])).rows).toHaveLength(1);
  await expect(db.query('delete from storage.objects where name=$1',[one.path])).resolves.toMatchObject({affectedRows:0});
@@ -40,7 +41,7 @@ it('prevents another actor, unscoped manager and anonymous access',async()=>{
  await db.exec('reset role;set role anon');await expect(begin()).rejects.toThrow(/permission denied/);
 });
 it('links a reference photo atomically and retains the prior journal',async()=>{
- await actor(admin);const one=await begin('vehicle',vehicle,null);await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('vehicle-photos',$1,$2,'{\"size\":3,\"mimetype\":\"image/png\"}')",[one.path,admin]);await db.query('select fm_photo_finalize($1)',[one.id]);
+ await actor(admin);const one=await begin('vehicle',vehicle,null);await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('vehicle-photos',$1,$2,'{\"size\":3,\"mimetype\":\"image/png\"}')",[one.path,admin]);await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,3,'image/png')",[one.id,admin,'a'.repeat(64)]);await actor(admin);await db.query('select fm_photo_finalize($1)',[one.id]);
  expect((await db.query<{photo_storage_path:string}>('select photo_storage_path from vehicles where id=$1',[vehicle])).rows[0]!.photo_storage_path).toBe(one.path);
  await expect(db.exec('delete from fm_photo_uploads')).rejects.toThrow(/permission denied/);
 });

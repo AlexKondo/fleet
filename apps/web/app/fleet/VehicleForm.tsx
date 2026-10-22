@@ -69,9 +69,18 @@ export function VehicleForm({
   const [state, formAction, pending] = useActionState(createVehicle, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   // Read once, on mount — restores whatever survived a remount after a failed submit.
-  const [draft] = useState(readDraft);
+  const [draft, setDraft] = useState<Record<string,string>>({});
   const [categoryId, setCategoryId] = useState(draft.categoryId ?? "");
 
+  useEffect(() => {const saved=readDraft();setDraft(saved);setCategoryId(saved.categoryId??"");},[]);
+  useEffect(() => {
+    // Restore after hydration and category-dependent fields mount; never replace fresh typing or a File.
+    for(const [name,value] of Object.entries(draft)){
+      const field=formRef.current?.elements.namedItem(name);
+      if(field instanceof HTMLInputElement && field.type!=="file" && field.value===field.defaultValue)field.value=value;
+      else if(field instanceof HTMLSelectElement && name!=="categoryId" && Array.from(field.options).some(o=>o.value===value))field.value=value;
+    }
+  },[draft,categoryId]);
   useEffect(() => {
     if (state.status === "success") {
       formRef.current?.reset();

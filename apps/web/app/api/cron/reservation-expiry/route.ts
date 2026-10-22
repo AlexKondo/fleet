@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { automaticReleaseEnabled } from "@/lib/operations/autoReleasePolicy";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -22,10 +23,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  if (!automaticReleaseEnabled()) return NextResponse.json({released:0, skipped:"disabled_by_policy"});
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin.rpc("fm_release_expired_reservations", {});
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("reservation-expiry RPC failed", {code:error.code});
+    return NextResponse.json({ error: "reservation_expiry_unavailable" }, { status: 500 });
   }
   return NextResponse.json(data ?? { released: 0 });
 }

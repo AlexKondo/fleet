@@ -106,7 +106,7 @@ export function matchMobilityPoint<T extends MobilityPointLike>(
   if (!key) return undefined;
   return points.find((point) => {
     if (point.isActive === false) return false;
-    return [point.name, point.addressLabel, ...point.aliases].some(
+    return [point.name, point.addressLabel, `${point.name} - ${point.addressLabel}`, ...point.aliases].some(
       (candidate) => normalizeLocationText(candidate) === key,
     );
   });

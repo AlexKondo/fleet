@@ -181,6 +181,7 @@ function expectFailure(
 
 let errorSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
+  vi.stubEnv("FM_ENABLE_AUTO_RESERVATION_RELEASE","false");
   m.interpret.mockReset();
   interpretAs("CREATE_RESERVATION");
   m.release.mockReset().mockResolvedValue({ data: null, error: { message: "function fm_release_expired_reservations does not exist" } });
@@ -192,6 +193,7 @@ beforeEach(() => {
   errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 afterEach(() => {
+  vi.unstubAllEnvs();
   errorSpy.mockRestore();
   m.locale = "pt-BR";
 });
@@ -225,7 +227,7 @@ describe.each(LOCALES)("Assistente — linguagem simples [%s]", (locale) => {
     expect(state.status).toBe("idle");
     expectFailure(state, dict, "reservation", { text: r.fleet.reservedOther.replace("{count}", "3") }, "form");
     expect(created()).toHaveLength(0); // nothing is created by the explanation
-    expect(m.release).toHaveBeenCalledWith("fm_release_expired_reservations", { p_organization_id: ORG });
+    expect(m.release).not.toHaveBeenCalled();
   });
 
   it("only maintenance", async () => {
@@ -391,6 +393,7 @@ describe.each(LOCALES)("Assistente — linguagem simples [%s]", (locale) => {
 
 describe("Assistente — after the R3 release the same request finds vehicles", () => {
   it("vehicles freed by fm_release_expired_reservations give a card instead of the explanation", async () => {
+    vi.stubEnv("FM_ENABLE_AUTO_RESERVATION_RELEASE","true");
     const rows = setup(fleet(["reserved", "reserved"]));
     m.release.mockImplementation(async () => {
       for (const v of rows.vehicles!) if (v.status === "reserved") v.status = "available"; // what 0209 does for expired no-shows

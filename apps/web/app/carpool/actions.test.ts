@@ -97,6 +97,7 @@ beforeEach(() => {
   state.inserts = [];
   state.insertThrows = false;
   state.tables = {
+    corporate_mobility_points: {data:[],error:null},
     profiles: { data: { organization_id: "org-1" }, error: null },
     carpool_policy_settings: { data: policyRow, error: null },
     carpool_offers: { data: [offerRow], error: null },
@@ -176,7 +177,7 @@ describe("searchCompatibleCarpool (wrapper)", () => {
     state.tables.carpool_policy_settings = { data: null, error: null };
     state.geocode.mockResolvedValue({
       status: "ok",
-      location: { coordinates: SP, source: "geocoding_provider" },
+      location: { coordinates: SP, placeTypes:["street_address"], source: "geocoding_provider" },
     });
     state.evaluateInsertion.mockResolvedValue({
       status: "ok",
@@ -210,7 +211,7 @@ describe("searchCompatibleCarpool (wrapper)", () => {
   });
 
   it("0063: coworkers' offers, host trips and reservations are read with the SERVICE-ROLE client only, never the caller's RLS client", async () => {
-    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP } });
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP, placeTypes:["street_address"] } });
     state.evaluateInsertion.mockResolvedValue({ status: "unavailable", reason: "provider_down" });
     await searchCompatibleCarpool(draft);
     expect(state.adminTables).toEqual(expect.arrayContaining(["carpool_offers", "reservations"]));
@@ -237,7 +238,7 @@ describe("regression: host answered No at reservation, later enabled an offer (a
       data: [{ ...offerRow, trip_request: { ...offerRow.trip_request, allow_carpool: false } }],
       error: null,
     };
-    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP, source: "geocoding_provider" } });
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP, placeTypes:["street_address"], source: "geocoding_provider" } });
     state.evaluateInsertion.mockResolvedValue({
       status: "ok",
       result: {
@@ -261,7 +262,7 @@ describe("C7b telemetry: carpool_search_log", () => {
   };
 
   it("logs counts + outcome + latency for a successful search (web source), with NO route/personal data", async () => {
-    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP, source: "geocoding_provider" } });
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP, placeTypes:["street_address"], source: "geocoding_provider" } });
     state.evaluateInsertion.mockResolvedValue(okRoute);
     const result = await searchCompatibleCarpool(draft);
     expect(result.status).toBe("matches");
@@ -280,7 +281,7 @@ describe("C7b telemetry: carpool_search_log", () => {
   });
 
   it("chat path logs source=chat; none / unavailable outcomes are distinguished", async () => {
-    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP } });
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP, placeTypes:["street_address"] } });
     state.evaluateInsertion.mockResolvedValue({ status: "unavailable", reason: "x" });
     await searchCompatibleCarpoolForChat(draft);
     state.tables.carpool_offers = { data: [{ ...offerRow, seats_available: 0 }], error: null };
@@ -290,7 +291,7 @@ describe("C7b telemetry: carpool_search_log", () => {
   });
 
   it("a failing telemetry insert never changes or fails the search result", async () => {
-    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP } });
+    state.geocode.mockResolvedValue({ status: "ok", location: { coordinates: SP, placeTypes:["street_address"] } });
     state.evaluateInsertion.mockResolvedValue(okRoute);
     state.insertThrows = true;
     const result = await searchCompatibleCarpool(draft);
@@ -301,4 +302,15 @@ describe("C7b telemetry: carpool_search_log", () => {
     await searchCompatibleCarpool({ ...draft, requestedSeats: 0 });
     expect(state.inserts).toHaveLength(0);
   });
+});
+
+describe('corporate mobility point parity for the host',()=>{
+ function points(active=true){
+  state.tables.corporate_mobility_points={data:[{id:'point-a',organization_id:'org-1',name:'GWM Factory',aliases:['Factory'],address_label:'Factory road 100',latitude:SP.lat,longitude:SP.lng,is_active:active,category:null,provider_place_ref:null},{id:'point-b',organization_id:'org-1',name:'EZ Tower',aliases:[],address_label:'Tower road 200',latitude:SP.lat,longitude:SP.lng,is_active:active,category:null,provider_place_ref:null}],error:null};
+  state.tables.carpool_offers={data:[{...offerRow,trip_request:{...offerRow.trip_request,origin:'GWM Factory',destination:'EZ Tower'}}],error:null};
+  state.evaluateInsertion.mockResolvedValue({status:'ok',result:{baselineDistanceKm:10,baselineDurationMin:10,candidateRouteDistanceKm:11,candidateRouteDurationMin:11,additionalDistanceKm:1,additionalTimeMin:1}});
+ }
+ it('matches corporate host points without a Google geocode call and returns no host coordinates',async()=>{points();const result=await searchCompatibleCarpool(draft);expect(result.status).toBe('matches');if(result.status==='matches')expect(result.matches).toHaveLength(1);expect(state.geocode).not.toHaveBeenCalled();expect(state.userTables).toContain('corporate_mobility_points');expect(state.adminTables).not.toContain('corporate_mobility_points');expect(JSON.stringify(result)).not.toContain('Factory road');});
+ it('recognizes the canonical point label stored by the trip resolver',async()=>{points();state.tables.carpool_offers={data:[{...offerRow,trip_request:{...offerRow.trip_request,origin:'GWM Factory - Factory road 100',destination:'EZ Tower - Tower road 200'}}],error:null};const result=await searchCompatibleCarpool(draft);expect(result.status).toBe('matches');if(result.status==='matches')expect(result.matches).toHaveLength(1);expect(state.geocode).not.toHaveBeenCalled();});
+ it('fails closed when the tenant-scoped location read fails',async()=>{points();state.tables.corporate_mobility_points={data:null,error:{message:'read denied'}};expect(await searchCompatibleCarpool(draft)).toEqual({status:'unavailable',reason:'geocoding_unavailable'});expect(state.evaluateInsertion).not.toHaveBeenCalled();});
 });

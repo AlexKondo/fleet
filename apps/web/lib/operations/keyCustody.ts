@@ -43,6 +43,7 @@ const errors:Record<string,string>={
  CONCURRENT_UPDATE:"A configuração mudou. Recarregue a página antes de tentar novamente.",
  IDEMPOTENCY_CONFLICT:"Esta solicitação já foi usada com outros dados. Recarregue a página.",
  PICKUP_WINDOW_INVALID:"A entrega está fora da janela permitida para retirada.",
+ LICENSE_EXPIRED:"A CNH do condutor está vencida ou sem validade registrada. Regularize-a antes de entregar as chaves.",
  DRIVER_NOT_AUTHORIZED:"O condutor precisa estar ativo e com autorização e CNH válidas.",
  VEHICLE_NOT_READY:"O veículo não está disponível para entrega das chaves. Consulte o gestor.",
  RESERVATION_NOT_CONFIRMED:"A reserva não está confirmada para retirada.",

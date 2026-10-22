@@ -15,10 +15,10 @@ const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const CONFETTI_COLORS = ["#0BC5A8", "#3B82F6", "#F59E0B", "#EC4899", "#84CC16"];
 const CONFETTI_PIECES = Array.from({ length: 28 }, (_, i) => ({
   id: i,
-  left: Math.round((i / 28) * 100 + (Math.random() * 6 - 3)),
-  delay: Math.random() * 0.35,
-  duration: 1.1 + Math.random() * 0.7,
-  rotate: Math.round(Math.random() * 360),
+  left: Math.round((i / 28) * 100 + ((i * 17) % 7 - 3)),
+  delay: ((i * 13) % 35) / 100,
+  duration: 1.1 + ((i * 19) % 70) / 100,
+  rotate: (i * 137) % 360,
   color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
 }));
 
@@ -53,7 +53,7 @@ function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestar
   // the same field the confirm step will check, so the driver isn't only told the CNH is
   // expired after they've already ticked the checkbox and clicked Enviar a second time.
   const isReadExpired =
-    isAnalyzed && !!state.read && new Date(`${state.read.expirationDate}T00:00:00`).getTime() < Date.now();
+    isAnalyzed && !!state.read && state.read.expirationDate < new Intl.DateTimeFormat("en-CA", {timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

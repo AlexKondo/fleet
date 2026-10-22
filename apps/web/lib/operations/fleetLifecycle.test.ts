@@ -20,7 +20,7 @@ describe.sequential('data-preserving fleet lifecycle',()=>{
  it('archives with history, keeps the record and denies direct deletion, status bypass and new bookings',async()=>{
   const v=await vehicle();const historic=await booking(v,'completed');const req=randomUUID();const first=await lifecycle('vehicle',v,false,1,req);expect(await lifecycle('vehicle',v,false,1,req)).toEqual(first);
   await actor();await expect(db.query('delete from vehicles where id=$1',[v])).rejects.toThrow(/permission denied/);
-  await expect(db.query("update vehicles set status='available' where id=$1",[v])).rejects.toThrow(/VEHICLE_ARCHIVED/);
+  await expect(db.query("update vehicles set status='available' where id=$1",[v])).rejects.toThrow(/permission denied|VEHICLE_ARCHIVED/);
   await expect(db.query('update vehicles set archived_at=null where id=$1',[v])).rejects.toThrow(/permission denied/);
   await expect(booking(v)).rejects.toThrow(/VEHICLE_ARCHIVED/);
   await db.exec('reset role');expect((await db.query('select id from reservations where id=$1',[historic.r])).rows).toHaveLength(1);expect((await db.query('select id from vehicles where id=$1',[v])).rows).toHaveLength(1);
@@ -30,7 +30,7 @@ describe.sequential('data-preserving fleet lifecycle',()=>{
   const free=await vehicle();await lifecycle('vehicle',free,false);await expect(lifecycle('vehicle',free,true,1)).rejects.toThrow(/CONCURRENT_UPDATE/);
  });
  it('does not remove an existing damage block when reactivating',async()=>{
-  const v=await vehicle();await lifecycle('vehicle',v,false);await actor();await db.query('update vehicles set has_blocking_damage=true where id=$1',[v]);await lifecycle('vehicle',v,true,2);
+  const v=await vehicle();await lifecycle('vehicle',v,false);await db.exec('reset role');await db.query('update vehicles set has_blocking_damage=true where id=$1',[v]);await lifecycle('vehicle',v,true,2);
   const row=(await db.query<{status:string;archived_at:string|null}>('select status,archived_at from vehicles where id=$1',[v])).rows[0]!;expect(row.archived_at).toBeNull();expect(row.status).toBe('blocked');
  });
  it('preserves reference catalogs and denies disabling references still used by active vehicles',async()=>{

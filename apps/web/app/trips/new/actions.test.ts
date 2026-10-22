@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * Phase C5: planTrip / planTripAction / confirmTrip gating around the new carpool engine.
@@ -370,6 +370,7 @@ describe("confirmTrip: host offer step", () => {
 });
 
 describe("FIX-VENCIDAS R5: no-show release before the allocation search", () => {
+  beforeEach(()=>{vi.stubEnv("FM_ENABLE_AUTO_RESERVATION_RELEASE","true");});
   it("calls fm_release_expired_reservations scoped to the caller's organization, before planning", async () => {
     await planTrip(input);
     expect(h.adminRpc).toHaveBeenCalledWith("fm_release_expired_reservations", { p_organization_id: "org-1" });
@@ -385,3 +386,6 @@ describe("FIX-VENCIDAS R5: no-show release before the allocation search", () => 
     expect(h.planMobility).toHaveBeenCalledTimes(2);
   });
 });
+
+afterEach(()=>vi.unstubAllEnvs());
+it('planning with release policy absent or disabled never invokes the release RPC',async()=>{vi.stubEnv('FM_ENABLE_AUTO_RESERVATION_RELEASE',undefined);await planTrip(input);expect(h.adminRpc).not.toHaveBeenCalled();vi.stubEnv('FM_ENABLE_AUTO_RESERVATION_RELEASE','false');await planTrip(input);expect(h.adminRpc).not.toHaveBeenCalled();});

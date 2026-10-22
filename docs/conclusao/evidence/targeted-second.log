@@ -1,0 +1,37 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/final22/work/apps/web
+
+ ✓ app/chat/noVehicleFlow.test.ts (104 tests) 217ms
+ ✓ lib/operations/database.test.ts (16 tests) 1434ms
+ ✓ app/trips/new/actions.test.ts (24 tests) 21ms
+ ✓ lib/operations/package01Fixes.test.ts (8 tests) 2423ms
+ ✓ lib/operations/keyCustody.test.ts (14 tests) 2536ms
+ ✓ app/carpool/actions.test.ts (28 tests) 19ms
+ ❯ lib/operations/noShowRelease.test.ts (11 tests | 1 failed) 2364ms
+   × FIX-VENCIDAS SQL (0207-0209) > requires per-organization activation even when the service RPC is called directly 15ms
+     → null value in column "departure_at" of relation "trip_requests" violates not-null constraint
+ ❯ lib/operations/fixSql2.test.ts (0 test)
+ ✓ lib/operations/managerScope.test.ts (12 tests) 2372ms
+ ✓ app/reservations/[id]/detailShell.test.ts (35 tests) 340ms
+ ✓ lib/operations/inspectionFlow.test.ts (9 tests) 2168ms
+ ✓ lib/operations/keyCustodyRender.test.ts (14 tests) 210ms
+ ✓ lib/operations/maintenanceApproval.test.ts (7 tests) 2543ms
+ ✓ lib/operations/package01.test.ts (8 tests) 2271ms
+ ✓ lib/operations/incidentCases.test.ts (9 tests) 2189ms
+ ✓ lib/operations/financialAdjustments.test.ts (4 tests) 2218ms
+ ✓ app/api/cron/daily-dispatcher.test.ts (3 tests) 17ms
+ ✓ lib/domain/immutablePhoto.test.ts (8 tests) 16ms
+ ✓ lib/operations/forms.test.ts (6 tests) 9ms
+ ✓ lib/operations/newPanelsValidation.test.ts (2 tests) 39ms
+ ✓ lib/operations/keyCustodyModels.test.ts (4 tests) 11ms
+stderr | app/api/cron/reservation-expiry.test.ts > cron reservation-expiry > an RPC error is reported as 500 (visible in the cron log)
+reservation-expiry RPC failed { code: undefined }
+
+ ✓ app/api/cron/reservation-expiry.test.ts (4 tests) 13ms
+ ❯ lib/operations/fleetLifecycle.test.ts (6 tests | 1 failed) 2265ms
+   × data-preserving fleet lifecycle > archives with history, keeps the record and denies direct deletion, status bypass and new bookings 64ms
+     → expected [Function] to throw error matching /permission denied/ but got 'VEHICLE_ARCHIVED'
+ ✓ app/api/cron/cron-auth.test.ts (15 tests) 18ms
+ ✓ lib/operations/vehicleWorkspaceRender.test.ts (1 test) 30ms
+ ✓ lib/operations/checklistState.test.ts (3 tests) 5ms

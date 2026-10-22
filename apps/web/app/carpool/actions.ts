@@ -23,6 +23,8 @@
  */
 
 import type { GeocodingProvider, LatLng } from "@fleet/domain";
+import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
+import { resolveLocationText, type MobilityPointForResolution } from "@/lib/carpool/resolveLocationText";
 import { isValidLatLng, isValidReturnAfterDeparture, isValidSeatCount } from "@fleet/domain";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -40,10 +42,9 @@ import {
   type SearchCarpoolResult,
 } from "@/lib/carpool/runCarpoolSearch";
 
-async function resolveAddress(geocoder: GeocodingProvider, address: string): Promise<LatLng | undefined> {
-  const outcome = await geocoder.geocode(address);
-  if (outcome.status !== "ok") return undefined;
-  return outcome.location.coordinates;
+async function resolveAddress(geocoder: GeocodingProvider, address: string, points: readonly MobilityPointForResolution[]): Promise<LatLng | undefined> {
+ const outcome = await resolveLocationText(address,{points,geocoder});
+ return outcome.status === "resolved" ? outcome.place.coordinates : undefined;
 }
 
 /** C7b telemetry counters filled while a search runs (counts only, never route data). */
@@ -180,11 +181,15 @@ async function searchInner(
     return { status: "matches", matches: [] };
   }
 
+  // Same tenant-scoped corporate locations as the passenger side, before provider work.
+  const pointResult = await listCorporateMobilityPoints(supabase,organizationId);
+  if (pointResult.status !== "ok") return {status:"unavailable",reason:"geocoding_unavailable"};
+  const points = pointResult.data;
   const geocoder = createGooglePlacesProvider(organizationId);
   const resolved: CarpoolOfferCandidateRow[] = [];
   for (const row of shortlistRows) {
-    const origin = await resolveAddress(geocoder, row.trip_request!.origin);
-    const destination = await resolveAddress(geocoder, row.trip_request!.destination);
+    const origin = await resolveAddress(geocoder, row.trip_request!.origin, points);
+    const destination = await resolveAddress(geocoder, row.trip_request!.destination, points);
     // Unresolvable address: never guessed, simply excluded.
     if (origin && destination) {
       resolved.push({

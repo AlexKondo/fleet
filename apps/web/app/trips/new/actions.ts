@@ -10,6 +10,7 @@ import {
   type TrafficRestrictionResult,
 } from "@fleet/domain";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { automaticReleaseEnabled } from "@/lib/operations/autoReleasePolicy";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { summarizeFleet, type FleetSummary, type FleetSummaryRow } from "@/lib/trips/fleetSummary";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -140,6 +141,7 @@ interface CarpoolCandidateWithPlate extends CarpoolCandidate {
  * resolved through the RLS client above; errors are ignored on purpose.
  */
 async function releaseExpiredReservations(organizationId: string): Promise<void> {
+  if (!automaticReleaseEnabled()) return;
   try {
     await createSupabaseAdminClient().rpc("fm_release_expired_reservations", { p_organization_id: organizationId });
   } catch {

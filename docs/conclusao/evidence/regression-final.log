@@ -1,0 +1,46 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/final22/work/apps/web
+
+ ✓ app/chat/noVehicleFlow.test.ts (104 tests) 180ms
+ ✓ lib/operations/database.test.ts (16 tests) 1359ms
+ ✓ lib/operations/package01Fixes.test.ts (8 tests) 2704ms
+ ✓ app/trips/new/actions.test.ts (24 tests) 33ms
+ ✓ lib/operations/keyCustody.test.ts (14 tests) 2669ms
+ ✓ lib/operations/noShowRelease.test.ts (11 tests) 2385ms
+ ✓ app/carpool/actions.test.ts (28 tests) 28ms
+ ✓ lib/operations/managerScope.test.ts (12 tests) 2373ms
+ ✓ lib/operations/fixSql2.test.ts (6 tests) 2366ms
+ ✓ lib/operations/inspectionFlow.test.ts (9 tests) 2276ms
+ ✓ lib/operations/keyCustodyRender.test.ts (14 tests) 198ms
+ ✓ lib/operations/maintenanceApproval.test.ts (7 tests) 2365ms
+ ✓ lib/operations/package01.test.ts (8 tests) 1841ms
+ ✓ lib/operations/incidentCases.test.ts (9 tests) 1849ms
+ ✓ lib/operations/financialAdjustments.test.ts (4 tests) 1825ms
+ ✓ lib/operations/fleetLifecycle.test.ts (6 tests) 2003ms
+ ✓ app/api/cron/daily-dispatcher.test.ts (3 tests) 16ms
+ ✓ lib/domain/immutablePhoto.test.ts (8 tests) 12ms
+ ✓ lib/operations/forms.test.ts (6 tests) 7ms
+ ✓ lib/operations/newPanelsValidation.test.ts (2 tests) 33ms
+ ✓ lib/operations/keyCustodyModels.test.ts (4 tests) 8ms
+stderr | app/api/cron/reservation-expiry.test.ts > cron reservation-expiry > an RPC error is reported as 500 (visible in the cron log)
+reservation-expiry RPC failed { code: undefined }
+
+ ✓ app/api/cron/reservation-expiry.test.ts (4 tests) 11ms
+ ✓ app/api/cron/cron-auth.test.ts (15 tests) 15ms
+ ✓ lib/operations/vehicleWorkspaceRender.test.ts (1 test) 27ms
+ ✓ app/reservations/[id]/exceptionAction.test.ts (4 tests) 7ms
+ ✓ lib/operations/checklistState.test.ts (3 tests) 3ms
+ ✓ app/api/cron/preservation.test.ts (2 tests) 11ms
+ ✓ lib/operations/vehicleSelection.test.ts (3 tests) 4ms
+ ✓ lib/operations/aiPolicy.test.ts (2 tests) 2ms
+ ✓ lib/operations/organizationMetrics.test.ts (1 test) 5ms
+ ✓ lib/operations/migrationChain.test.ts (1 test) 1807ms
+   ✓ applies the actual migration chain to a disposable platform scaffold 1806ms
+
+ Test Files  31 passed (31)
+      Tests  339 passed (339)
+   Start at  07:03:30
+   Duration  37.51s (transform 1.51s, setup 0ms, collect 3.11s, tests 28.42s, environment 5ms, prepare 1.74s)
+
+JSON report written to /workspace/scratch/7e2402800f4f/final22/work/docs/conclusao/evidence/regression-final.json

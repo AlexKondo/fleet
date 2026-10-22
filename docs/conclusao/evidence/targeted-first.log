@@ -1,0 +1,177 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/final22/work/apps/web
+
+ ❯ app/chat/noVehicleFlow.test.ts (104 tests | 5 failed) 198ms
+   × Assistente — linguagem simples [pt-BR] > all vehicles 'reserved' by expired reservations: real cause (counts), alternatives, data in the form 13ms
+     → expected "spy" to be called with arguments: [ …(2) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+   × Assistente — linguagem simples [en-US] > all vehicles 'reserved' by expired reservations: real cause (counts), alternatives, data in the form 2ms
+     → expected "spy" to be called with arguments: [ …(2) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+   × Assistente — linguagem simples [es] > all vehicles 'reserved' by expired reservations: real cause (counts), alternatives, data in the form 2ms
+     → expected "spy" to be called with arguments: [ …(2) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+   × Assistente — linguagem simples [zh-CN] > all vehicles 'reserved' by expired reservations: real cause (counts), alternatives, data in the form 2ms
+     → expected "spy" to be called with arguments: [ …(2) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+   × Assistente — after the R3 release the same request finds vehicles > vehicles freed by fm_release_expired_reservations give a card instead of the explanation 4ms
+     → expected 'idle' to be 'needs_confirmation' // Object.is equality
+ ✓ lib/operations/database.test.ts (16 tests) 1293ms
+ ✓ app/trips/new/actions.test.ts (24 tests) 20ms
+ ✓ lib/operations/package01Fixes.test.ts (8 tests) 2355ms
+ ✓ lib/operations/keyCustody.test.ts (14 tests) 2337ms
+ ✓ lib/operations/noShowRelease.test.ts (10 tests) 2259ms
+ ✓ app/carpool/actions.test.ts (25 tests) 17ms
+ ✓ lib/operations/managerScope.test.ts (12 tests) 2412ms
+ ✓ lib/operations/inspectionFlow.test.ts (9 tests) 2124ms
+ ❯ lib/operations/fixSql2.test.ts (5 tests | 1 failed) 2144ms
+   × FIX-SQL-2 corrections with the actual migrated SQL > SQL-1: unblock is refused while blocking damage, invalid documentation or missing safety equipment persists 107ms
+     → expected [Function] to throw error matching /not blocked/ but got 'MANAGEMENT_SCOPE_DENIED'
+ ✓ lib/operations/keyCustodyRender.test.ts (14 tests) 203ms
+ ✓ lib/operations/maintenanceApproval.test.ts (7 tests) 2234ms
+ ✓ lib/operations/package01.test.ts (8 tests) 1986ms
+ ✓ lib/operations/incidentCases.test.ts (9 tests) 1955ms
+ ✓ lib/operations/financialAdjustments.test.ts (4 tests) 1915ms
+ ✓ app/api/cron/daily-dispatcher.test.ts (3 tests) 21ms
+ ✓ lib/domain/immutablePhoto.test.ts (8 tests) 23ms
+ ✓ lib/operations/forms.test.ts (6 tests) 9ms
+ ✓ lib/operations/newPanelsValidation.test.ts (2 tests) 45ms
+ ✓ lib/operations/keyCustodyModels.test.ts (4 tests) 10ms
+stderr | app/api/cron/reservation-expiry.test.ts > cron reservation-expiry > an RPC error is reported as 500 (visible in the cron log)
+reservation-expiry RPC failed { code: undefined }
+
+ ✓ app/api/cron/reservation-expiry.test.ts (4 tests) 22ms
+ ❯ lib/operations/fleetLifecycle.test.ts (6 tests | 2 failed) 2292ms
+   × data-preserving fleet lifecycle > archives with history, keeps the record and denies direct deletion, status bypass and new bookings 55ms
+     → expected [Function] to throw error matching /VEHICLE_ARCHIVED/ but got 'permission denied for table vehicles'
+   × data-preserving fleet lifecycle > does not remove an existing damage block when reactivating 30ms
+     → permission denied for table vehicles
+ ✓ app/api/cron/cron-auth.test.ts (15 tests) 30ms
+ ✓ lib/operations/vehicleWorkspaceRender.test.ts (1 test) 37ms
+ ✓ lib/operations/checklistState.test.ts (3 tests) 4ms
+ ✓ lib/operations/vehicleSelection.test.ts (3 tests) 5ms
+ ✓ app/api/cron/preservation.test.ts (2 tests) 11ms
+ ✓ lib/operations/aiPolicy.test.ts (2 tests) 3ms
+ ✓ lib/operations/organizationMetrics.test.ts (1 test) 3ms
+ ✓ lib/operations/migrationChain.test.ts (1 test) 1885ms
+   ✓ applies the actual migration chain to a disposable platform scaffold 1885ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/chat/noVehicleFlow.test.ts > Assistente — linguagem simples [pt-BR] > all vehicles 'reserved' by expired reservations: real cause (counts), alternatives, data in the form
+ FAIL  app/chat/noVehicleFlow.test.ts > Assistente — linguagem simples [en-US] > all vehicles 'reserved' by expired reservations: real cause (counts), alternatives, data in the form
+ FAIL  app/chat/noVehicleFlow.test.ts > Assistente — linguagem simples [es] > all vehicles 'reserved' by expired reservations: real cause (counts), alternatives, data in the form
+ FAIL  app/chat/noVehicleFlow.test.ts > Assistente — linguagem simples [zh-CN] > all vehicles 'reserved' by expired reservations: real cause (counts), alternatives, data in the form
+AssertionError: expected "spy" to be called with arguments: [ …(2) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+ ❯ app/chat/noVehicleFlow.test.ts:228:23
+    226|     expectFailure(state, dict, "reservation", { text: r.fleet.reserved…
+    227|     expect(created()).toHaveLength(0); // nothing is created by the ex…
+    228|     expect(m.release).toHaveBeenCalledWith("fm_release_expired_reserva…
+       |                       ^
+    229|   });
+    230| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  app/chat/noVehicleFlow.test.ts > Assistente — after the R3 release the same request finds vehicles > vehicles freed by fm_release_expired_reservations give a card instead of the explanation
+AssertionError: expected 'idle' to be 'needs_confirmation' // Object.is equality
+
+Expected: "needs_confirmation"
+Received: "idle"
+
+ ❯ app/chat/noVehicleFlow.test.ts:400:26
+    398|     });
+    399|     const state = await say();
+    400|     expect(state.status).toBe("needs_confirmation");
+       |                          ^
+    401|     expect(state.pendingAction?.slots.preferredVehicleId).toMatch(/^v[…
+    402|     expect(created()).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  lib/operations/fixSql2.test.ts > FIX-SQL-2 corrections with the actual migrated SQL > SQL-1: unblock is refused while blocking damage, invalid documentation or missing safety equipment persists
+AssertionError: expected [Function] to throw error matching /not blocked/ but got 'MANAGEMENT_SCOPE_DENIED'
+
+- Expected: 
+/not blocked/
+
++ Received: 
+"MANAGEMENT_SCOPE_DENIED"
+
+ ❯ lib/operations/fixSql2.test.ts:74:25
+     72|   expect(await auditCount(v,"vehicle_unblocked")).toBe(1);
+     73|   const clean=await vehicle(gateUnit);await actor(admin);await block(c…
+     74|   await actor(employee);await expect(unblock(clean)).rejects.toThrow(/…
+       |                         ^
+     75|   await actor(admin);await unblock(clean);expect(await vstate(clean)).…
+     76|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  lib/operations/fleetLifecycle.test.ts > data-preserving fleet lifecycle > archives with history, keeps the record and denies direct deletion, status bypass and new bookings
+AssertionError: expected [Function] to throw error matching /VEHICLE_ARCHIVED/ but got 'permission denied for table vehicles'
+
+- Expected: 
+/VEHICLE_ARCHIVED/
+
++ Received: 
+"permission denied for table vehicles"
+
+ ❯ lib/operations/fleetLifecycle.test.ts:23:3
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  lib/operations/fleetLifecycle.test.ts > data-preserving fleet lifecycle > does not remove an existing damage block when reactivating
+error: permission denied for table vehicles
+ ❯ ye.Ve ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:11
+ ❯ ye.nt ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:16
+ ❯ ye.parse ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:25
+ ❯ ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/src/pglite.ts:398:28
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:2608882
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:2609769
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:5283187
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:366756
+ ❯ invoke_v ../../node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/release/pglite.js:9:389208
+ ❯ null.<anonymous> wasm:/wasm/021cbcb2:1:368873
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ Test Files  3 failed | 27 passed (30)
+      Tests  8 failed | 322 passed (330)
+   Start at  06:47:04
+   Duration  19.79s (transform 1.53s, setup 0ms, collect 3.26s, tests 27.85s, environment 6ms, prepare 1.89s)
+
+JSON report written to /workspace/scratch/7e2402800f4f/final22/work/docs/conclusao/evidence/targeted-first.json
