@@ -1,3 +1,5 @@
+> **Nota (22/10):** esta etapa foi commitada em `0f1dc12` na branch `integracao-conclusao-2026-10-22`; os caminhos citados foram atualizados para `C:/projects/fleet/_local/...` depois da reorganização das pastas.
+
 # F1: correções SQL dos defeitos P2 (S1-02, S1-04, S1-05, S1-06, S2-D01)
 
 Agente F1 · 22/10/2026 · worktree `C:\projects\fleet-integ` (branch `integracao-conclusao-2026-10-22`, HEAD `fcc598d`) · banco LOCAL descartável `supabase_db_fleet-homolog`.

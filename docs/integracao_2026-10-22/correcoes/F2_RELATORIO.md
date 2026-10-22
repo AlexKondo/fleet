@@ -1,3 +1,5 @@
+> **Nota (22/10):** esta etapa foi commitada em `0f1dc12` na branch `integracao-conclusao-2026-10-22`; os caminhos citados foram atualizados para `C:/projects/fleet/_local/...` depois da reorganização das pastas.
+
 # F2: correções de aplicação (S3-03, S3-01, S3-02, S2-D02 e P3 mecânicos)
 
 - **Data:** 22/10/2026, worktree `C:\projects\fleet-integ`, branch `integracao-conclusao-2026-10-22` (HEAD fcc598d, sem commit).
