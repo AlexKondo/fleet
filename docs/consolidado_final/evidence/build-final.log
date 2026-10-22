@@ -1,0 +1,20 @@
+   ▲ Next.js 15.5.9
+   - Experiments (use with caution):
+     · serverActions
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 7.5s
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/fleet/VehicleForm.tsx:71:56
+Type error: Parameter 'prev' implicitly has an 'any' type.
+
+[0m [90m 69 |[39m   onSaved[33m?[39m[33m:[39m () [33m=>[39m [36mvoid[39m[33m;[39m
+ [90m 70 |[39m }) {
+[31m[1m>[22m[39m[90m 71 |[39m   [36mconst[39m [state[33m,[39m formAction[33m,[39m pending] [33m=[39m useActionState((prev[33m,[39mdata)[33m=>[39mcreateVehicleWithPhoto(prev[33m,[39mdata[33m,[39mcreateVehicle[33m,[39mdict[33m.[39merrors[33m.[39mfleet[33m.[39mphotoPendingAfterCreate)[33m,[39m initialState)[33m;[39m
+ [90m    |[39m                                                        [31m[1m^[22m[39m
+ [90m 72 |[39m   [36mconst[39m formRef [33m=[39m useRef[33m<[39m[33mHTMLFormElement[39m[33m>[39m([36mnull[39m)[33m;[39m
+ [90m 73 |[39m   [90m// Read once, on mount — restores whatever survived a remount after a failed submit.[39m
+ [90m 74 |[39m   [36mconst[39m [draft[33m,[39m setDraft] [33m=[39m useState[33m<[39m[33mRecord[39m[33m<[39m[33mstring[39m[33m,[39mstring[33m>>[39m({})[33m;[39m[0m
+Next.js build worker exited with code: 1 and signal: null

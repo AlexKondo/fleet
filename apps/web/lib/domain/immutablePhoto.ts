@@ -22,15 +22,17 @@ export async function uploadImmutablePhoto(client:TypedSupabaseClient,kind:'vehi
  if(begun.error) throw new Error('PHOTO_BEGIN_FAILED');
  const row=begun.data as {id?:string;path?:string;state?:string}|null;
  if(!row?.id || !row.path) throw new Error('PHOTO_BEGIN_FAILED');
- if(row.state==='linked')return{path:row.path};
+ if(row.state==='linked'&&kind==='inspection')return{path:row.path};
  const bucket=client.storage.from('vehicle-photos');
- await bucket.upload(row.path,file,{upsert:false,contentType:file.type});
+ if(row.state!=='linked')await bucket.upload(row.path,file,{upsert:false,contentType:file.type});
  // Verify actual stored bytes even after an apparently successful upload (not just a 409).
- const existing=await bucket.download(row.path);
+ let existing=await bucket.download(row.path);
+ for(const wait of [80,200,500]){if(!existing.error&&existing.data)break;await new Promise(resolve=>setTimeout(resolve,wait));existing=await bucket.download(row.path);}
+ if(existing.error||!existing.data)throw new Error('PHOTO_LINK_PENDING');
  if(existing.error||!existing.data||existing.data.size!==file.size||await digest(await existing.data.arrayBuffer())!==sha)throw new Error('PHOTO_UPLOAD_FAILED');
  const actor=await getCurrentUser(client);
  if(!actor)throw new Error('PHOTO_LINK_PENDING');
- const attested=await createSupabaseAdminClient().rpc('fm_photo_attest',{p_id:row.id,p_actor:actor.id,p_sha256:sha,p_size:file.size,p_mime:file.type});
+ const attested=await createSupabaseAdminClient().rpc('fm_photo_attest',{p_id:row.id,p_actor:actor.id,p_sha256:sha,p_size:file.size,p_mime:file.type,p_path:row.path});
  if(attested.error)throw new Error('PHOTO_LINK_PENDING');
  const finalized=await client.rpc('fm_photo_finalize',{p_id:row.id,p_sha256:sha});
  if(finalized.error)throw new Error('PHOTO_LINK_PENDING');

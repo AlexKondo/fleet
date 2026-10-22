@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "pdfInput": 3147592,
+  "pdfOutput": 91499,
+  "width": 1697,
+  "height": 4800,
+  "imageInput": 3251348,
+  "imageOutput": 44177,
+  "errors": []
+}

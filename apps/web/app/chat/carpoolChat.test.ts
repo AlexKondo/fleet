@@ -137,7 +137,8 @@ beforeEach(() => {
   m.requestRide.mockResolvedValue({ status: "success", requestId: "req-new" });
   m.status.mockResolvedValue({ status: "PENDING" });
 });
-
+
+
 /** FIX-VENCIDAS/Assistente: refusals are plain replies with why + alternatives + how to continue. */
 function expectFailureReply(r: unknown, why: string) {
   expect((r as { kind: string }).kind).toBe("reply");

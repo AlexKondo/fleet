@@ -1600,7 +1600,12 @@ export type Database = {
     Functions: {
       fm_operation_exception: {Args:{p_reservation_id:string;p_outcome:string;p_reason:string;p_request_id:string};Returns:Json};
 
-      fm_photo_attest: { Args:{p_id:string;p_actor:string;p_sha256:string;p_size:number;p_mime:string}; Returns:undefined };
+      fm_update_vehicle: {Args:{p_id:string;p_payload:Json;p_correction_reason?:string};Returns:undefined};
+      fm_photo_info: {Args:{p_id:string};Returns:Json};
+      fm_photo_restart: {Args:{p_id:string};Returns:undefined};
+      fm_not_departed_reservations: {Args:{p_ids:string[]};Returns:string[]};
+      fm_claim_workflow_task: {Args:{p_task_id:string};Returns:string};
+      fm_photo_attest: { Args:{p_id:string;p_actor:string;p_sha256:string;p_size:number;p_mime:string;p_path:string}; Returns:undefined };
 
       fm_photo_begin: { Args: {p_kind:string;p_target:string;p_angle:Database["public"]["Enums"]["photo_angle"]|null;p_sha256:string;p_size:number;p_mime:string}; Returns: Json };
       fm_photo_finalize: { Args: {p_id:string; p_sha256?:string}; Returns: undefined };

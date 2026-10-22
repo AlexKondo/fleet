@@ -1,5 +1,6 @@
 "use server";
 
+import { knownFleetActionError } from "@/lib/dashboard/fleetActionError";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
@@ -36,7 +37,7 @@ async function runFleetAction(
   revalidatePath("/dashboard");
   if (error) {
     console.error("Fleet action failed:", error.message);
-    redirect("/dashboard?fleetActionError=1");
+    redirect(`/dashboard?fleetActionError=${knownFleetActionError(error.message) ?? "1"}`);
   }
 }
 
@@ -156,16 +157,10 @@ export async function claimWorkflowTask(taskId: string, formData?: FormData): Pr
     redirect("/dashboard?fleetActionError=1");
   }
 
-  const { data, error } = await supabase
-    .from("workflow_tasks")
-    .update({ assigned_to: user.id })
-    .eq("id", taskId)
-    .eq("status", "open")
-    .is("assigned_to", null)
-    .select("id");
+  const {data,error}=await supabase.rpc("fm_claim_workflow_task",{p_task_id:taskId});
 
   revalidatePath("/dashboard");
-  if (error || !data || data.length === 0) {
+  if (error || !data) {
     console.error("Fleet action failed:", error?.message ?? "task already claimed");
     redirect("/dashboard?fleetActionError=1");
   }

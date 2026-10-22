@@ -1,3 +1,4 @@
+import { knownFleetActionError } from "@/lib/dashboard/fleetActionError";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assessVehicleReadiness } from "@fleet/domain";
@@ -40,6 +41,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ fleetActionError?: string; actionSuccess?: string; myTasks?: string }>;
 }) {
   const { fleetActionError, actionSuccess, myTasks } = await searchParams;
+  const actionErrorCode = knownFleetActionError(fleetActionError);
   const onlyMyTasks = myTasks === "1";
   const locale = await getLocale();
   const dict = await getDictionary();
@@ -243,7 +245,7 @@ export default async function DashboardPage({
           role="alert"
           className="fm-banner fm-banner-danger cc-banner"
         >
-          <span>{t.actionError}</span>
+          <span>{actionErrorCode ? dict.opsShell.errors[actionErrorCode] : t.actionError}</span>
           <Link href="/dashboard" className="fm-link">
             {t.dismissBanner}
           </Link>

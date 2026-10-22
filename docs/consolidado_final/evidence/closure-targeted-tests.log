@@ -1,0 +1,17 @@
+$ vitest run lib/domain/prepareLicenseDocument.test.ts lib/domain/analyzeDriversLicense.test.ts app/account/license/actions.test.ts app/api/photos/route.test.ts lib/domain/storedPhoto.test.ts lib/dashboard/fleetActionError.test.ts
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/current_kondo/apps/web
+
+ ✓ lib/dashboard/fleetActionError.test.ts (4 tests) 2ms
+ ✓ lib/domain/prepareLicenseDocument.test.ts (6 tests) 32ms
+ ✓ lib/domain/analyzeDriversLicense.test.ts (9 tests) 6ms
+ ✓ app/account/license/actions.test.ts (14 tests) 42ms
+ ✓ app/api/photos/route.test.ts (7 tests) 29ms
+ ✓ lib/domain/storedPhoto.test.ts (6 tests) 105ms
+
+ Test Files  6 passed (6)
+      Tests  46 passed (46)
+   Start at  13:35:43
+   Duration  643ms (transform 710ms, setup 0ms, collect 973ms, tests 217ms, environment 1ms, prepare 545ms)
+

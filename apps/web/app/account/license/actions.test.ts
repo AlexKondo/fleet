@@ -52,6 +52,21 @@ describe("CNH confirm phase (signed AI result)", () => {
     });
     expect(st.update).not.toHaveBeenCalled();
   });
+  it.each([
+    ["2031-05-21T02:59:59Z", true],
+    ["2031-05-21T03:00:00Z", false],
+  ])("respects the Brasília expiration day at %s", async (instant, authorized) => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(instant));
+      const token = signLicenseToken({ uid: "u1", ...read })!;
+      const res = await submitLicensePhoto({ status: "idle" }, form({ phase: "confirm", token }));
+      expect(res.status).toBe(authorized ? "success" : "success_expired");
+      expect(st.rpc.mock.calls[0]![1]).toMatchObject({ p_authorized: authorized });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
   it("an expired CNH is saved but not authorized (existing isStillValid logic)", async () => {
     const token = signLicenseToken({ uid: "u1", ...read, expirationDate: "2020-01-01" })!;
     const res = await submitLicensePhoto({ status: "idle" }, form({ phase: "confirm", token }));

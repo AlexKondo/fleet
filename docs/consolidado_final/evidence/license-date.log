@@ -1,0 +1,12 @@
+$ vitest run app/account/license/actions.test.ts
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/current_kondo/apps/web
+
+ ✓ app/account/license/actions.test.ts (14 tests) 32ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  13:02:52
+   Duration  379ms (transform 67ms, setup 0ms, collect 78ms, tests 32ms, environment 0ms, prepare 57ms)
+

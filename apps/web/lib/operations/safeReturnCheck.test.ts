@@ -155,3 +155,46 @@ describe.sequential("0215 single safety check / 0216 photo links",()=>{
   expect((await db.query<{n:number}>("select count(*)::int n from pg_proc where prosrc ilike '%insert into inspection_photos%' and proname='fm_photo_link' and prosecdef")).rows[0]!.n).toBe(1);
  });
 });
+
+it('S1-07/08: internal tasks cannot be read or injected by the driver',async()=>{
+ const v=await vehicle('available');const t=await task(v,'cleaning');await actor(driver);
+ expect((await db.query('select notes from workflow_tasks where id=$1',[t])).rows).toHaveLength(0);
+ await expect(db.query("insert into workflow_tasks(organization_id,vehicle_id,type,notes) values($1,$2,'repair','Injected')",[org,v])).rejects.toThrow(/permission denied/);
+ await actor(admin);expect((await db.query('select notes from workflow_tasks where id=$1',[t])).rows).toHaveLength(1);
+});
+it('S1-03: approval rejects an elapsed window without effects',async()=>{
+ const v=await vehicle('available');const id=await reservation(v,-180,-120,'pending_approval');await actor(admin);
+ await expect(db.query('select approve_reservation($1)',[id])).rejects.toThrow('RESERVATION_EXPIRED');
+ await asPostgres();expect((await db.query<{s:string}>('select status s from reservations where id=$1',[id])).rows[0]!.s).toBe('pending_approval');
+});
+it('S1-01: measurements require the audited RPC and decreases require a reason',async()=>{
+ const v=await vehicle('available');await actor(admin);
+ await expect(db.query('update vehicles set odometer_km=90 where id=$1',[v])).rejects.toThrow(/permission denied/);
+ await expect(db.query('select fm_update_vehicle($1,$2::jsonb,null)',[v,JSON.stringify({odometer_km:90})])).rejects.toThrow('ODOMETER_CORRECTION_REASON_REQUIRED');
+ await db.query('select fm_update_vehicle($1,$2::jsonb,$3)',[v,JSON.stringify({odometer_km:90,fuel_level_percent:70}),'Correção conferida']);
+ await asPostgres();expect((await db.query<{n:number}>('select odometer_km n from vehicles where id=$1',[v])).rows[0]!.n).toBe(90);
+ expect((await db.query("select id from audit_log where entity_id=$1 and action='vehicle.measurements_updated'",[v])).rows).toHaveLength(1);
+ await actor(driver);await expect(db.query('select fm_update_vehicle($1,$2::jsonb,null)',[v,JSON.stringify({odometer_km:200})])).rejects.toThrow('MANAGEMENT_SCOPE_DENIED');
+ await actor(admin);await expect(db.query('select fm_update_vehicle($1,$2::jsonb,null)',[v,JSON.stringify({status:'available'})])).rejects.toThrow('INVALID_INPUT');
+});
+it('approved automatic release is active by default for new organizations',async()=>{
+ await asPostgres();const n=randomUUID();await db.query("insert into organizations(id,name) values($1,'Default policy')",[n]);await db.query('insert into organization_settings(organization_id) values($1)',[n]);
+ expect((await db.query<{enabled:boolean}>('select auto_release_enabled enabled from organization_settings where organization_id=$1',[n])).rows[0]!.enabled).toBe(true);
+});
+it('requester gets only the exception outcome; unrelated driver gets no summary',async()=>{
+ const v=await vehicle('available');const id=await reservation(v,-180,-120);await asPostgres();
+ await db.query("insert into fm_operation_exceptions(organization_id,reservation_id,vehicle_id,workflow,outcome,reason,actor_id,actor_role,reservation_status_before,vehicle_status_before,vehicle_status_after) values($1,$2,$3,'gate_visual','not_departed','Internal reason',$4,'administrator','confirmed','reserved','available')",[org,id,v,admin]);
+ await actor(driver);expect((await db.query<{r:string[]}>('select fm_not_departed_reservations($1::uuid[]) r',[[id]])).rows[0]!.r).toEqual([id]);
+ await actor(custodian);expect((await db.query<{r:string[]}>('select fm_not_departed_reservations($1::uuid[]) r',[[id]])).rows[0]!.r).toEqual([]);
+});
+it('audited task claim stays functional while direct assignment is denied',async()=>{
+ const v=await vehicle('maintenance');const id=await task(v,'cleaning');await actor(admin);
+ await expect(db.query('update workflow_tasks set assigned_to=$2 where id=$1',[id,admin])).rejects.toThrow(/permission denied/);
+ expect((await db.query<{id:string}>('select fm_claim_workflow_task($1) id',[id])).rows[0]!.id).toBe(id);
+ await expect(db.query('select fm_claim_workflow_task($1)',[id])).rejects.toThrow('CONCURRENT_UPDATE');
+});
+it('automatic release remains active when the organization has no settings row',async()=>{
+ const v=await vehicle('reserved');const id=await reservation(v,-180,-120);await asPostgres();await db.query('delete from organization_settings where organization_id=$1',[org]);
+ await release();await asPostgres();expect((await db.query<{s:string}>('select status s from reservations where id=$1',[id])).rows[0]!.s).toBe('cancelled');
+ await db.query('insert into organization_settings(organization_id) values($1)',[org]);
+});

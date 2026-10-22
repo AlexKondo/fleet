@@ -1,4 +1,5 @@
 "use client";
+import {fieldsWithoutPhotos,directInspectionPhotos} from "@/lib/domain/directPhotoUpload";
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -84,9 +85,10 @@ export function PickupForm({
           isDirtyExterior: formData.get("isDirtyExterior") === "on",
           isDirtyInterior: formData.get("isDirtyInterior") === "on",
         },
-        formData,
+        fieldsWithoutPhotos(formData),
       );
 
+      if(result.success&&result.inspectionId){const failed=await directInspectionPhotos(result.inspectionId,formData);result.failedPhotoAngles=failed;result.damageEvidenceMissing=hasDamage&&failed.includes('damage');}
       if (!result.success) {
         setError(result.error ?? "unknown_error");
         return;

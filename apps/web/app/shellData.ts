@@ -254,7 +254,7 @@ export async function loadShellContext(role: string) {
 
   // The actual navigation block lives in middleware.ts (redirects any other route to /account/license before it
   // ever renders) — this only decides what the one page that survives that redirect looks like.
-  const licenseGateActive = licenseMissing && !isSecurity && !["fleet_manager", "administrator", "maintenance_operator"].includes(role ?? "");
+  const licenseGateActive = false; // Driving routes and RPCs enforce CNH; passenger/admin navigation remains accessible.
 
   const chatInitialState: ChatState = currentUser
     ? await loadLatestChatState(supabase, currentUser.id)

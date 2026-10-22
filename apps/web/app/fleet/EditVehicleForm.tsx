@@ -1,4 +1,5 @@
 "use client";
+import {directPhotoUpload,fieldsWithoutPhotos} from "@/lib/domain/directPhotoUpload";
 
 import Image from "next/image";
 import { useActionState, useEffect, useState } from "react";
@@ -41,7 +42,13 @@ export function EditVehicleForm({
   onSaved: () => void;
   onCancel: () => void;
 }) {
-  const [state, formAction, pending] = useActionState(updateVehicle, initialState);
+  const [correctingOdometer,setCorrectingOdometer]=useState(false);
+  const [state, formAction, pending] = useActionState(async (prev:FleetActionState,data:FormData):Promise<FleetActionState>=>{
+    const photo=data.get('photo');
+    const result:FleetActionState=await updateVehicle(prev,fieldsWithoutPhotos(data));
+    if(result.status==='success'&&photo instanceof File&&photo.size){try{await directPhotoUpload('vehicle',vehicle.id,null,photo)}catch{return {status:'error',error:dict.errors.fleet.photoLinkPending,vehicleId:result.vehicleId};}}
+    return result;
+  }, initialState);
   const [categoryId, setCategoryId] = useState(vehicle.category_id);
 
   useEffect(() => {
@@ -155,10 +162,12 @@ export function EditVehicleForm({
             required
             min={0}
             defaultValue={vehicle.odometer_km}
+            onChange={e=>setCorrectingOdometer(Number(e.target.value)<vehicle.odometer_km)}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 font-mono text-sm text-paper-50 outline-none focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
           />
         </label>
 
+        {correctingOdometer?<label className="flex flex-col gap-1.5"><span>{dict.fleet.vehicleForm.odometerCorrectionReason}</span><textarea name="odometerCorrectionReason" required minLength={3} maxLength={1000}/></label>:null}
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">
             {dict.fleet.vehicleForm.nextServiceLabel}

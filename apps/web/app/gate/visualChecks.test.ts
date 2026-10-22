@@ -17,7 +17,7 @@ describe("approved gate visual-only process",()=>{
  it("does not ask for driver gauges or standard photos, or invent their readings",async()=>{
   const html=renderToStaticMarkup(createElement(GateVisualForm,{reservationId:"reservation",phase:"pickup",dict}));
   expect(html).not.toContain('name="odometerKm"');expect(html).not.toContain('name="photo_front"');expect(html).not.toContain('type="file"');
-  expect(await submitVisualCheck(form())).toEqual({success:true});
+  expect(await submitVisualCheck(form())).toMatchObject({success:true});
   expect(mock.rpc).toHaveBeenCalledWith("record_pickup",expect.objectContaining({p_role:"security",p_odometer_km:null,p_fuel_level_percent:null,p_battery_level_percent:null,p_missing_safety_equipment:null}));
   expect(mock.photos).not.toHaveBeenCalled();
  });

@@ -9,10 +9,10 @@ describe("who sees the denied-departure form (S3-04, mirrors fm_operation_except
     expect(canShowOperationExceptionForm({ role: "security", workflow: "key_custody", inScope: true })).toBe(false);
     expect(canShowOperationExceptionForm({ role: "security", workflow: undefined, inScope: true })).toBe(false);
   });
-  it("managers and administrators only within scope, in both workflows", () => {
+  it("managers and administrators only within scope and gate workflow", () => {
     for (const role of ["fleet_manager", "administrator"]) {
       for (const workflow of ["gate_visual", "key_custody"] as const) {
-        expect(canShowOperationExceptionForm({ role, workflow, inScope: true })).toBe(true);
+        expect(canShowOperationExceptionForm({ role, workflow, inScope: true })).toBe(workflow==="gate_visual");
         expect(canShowOperationExceptionForm({ role, workflow, inScope: false })).toBe(false);
       }
     }

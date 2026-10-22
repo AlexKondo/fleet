@@ -1,4 +1,5 @@
 "use client";
+import {createVehicleWithPhoto} from "./photoSubmission";
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createVehicle, type FleetActionState } from "./actions";
@@ -67,7 +68,7 @@ export function VehicleForm({
   dict: Dictionary;
   onSaved?: () => void;
 }) {
-  const [state, formAction, pending] = useActionState(createVehicle, initialState);
+  const [state, formAction, pending] = useActionState((prev:FleetActionState,data:FormData)=>createVehicleWithPhoto(prev,data,createVehicle,dict.errors.fleet.photoPendingAfterCreate), initialState);
   const formRef = useRef<HTMLFormElement>(null);
   // Read once, on mount — restores whatever survived a remount after a failed submit.
   const [draft, setDraft] = useState<Record<string,string>>({});

@@ -1,3 +1,5 @@
+import {photoRecoveryText} from "@/lib/domain/photoRecoveryText";
+import {getLocale} from "@/lib/i18n/getLocale";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -19,6 +21,7 @@ export default async function AccountPage({
 }) {
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
+  const photoText=photoRecoveryText(await getLocale());
   const { forcePasswordChange } = await searchParams;
 
   const user = await getCurrentUser(supabase);
@@ -60,7 +63,8 @@ export default async function AccountPage({
         ) : null}
         <p className="mb-6 text-sm text-fog-400">{dict.account.description}</p>
         <Card>
-          <ChangePasswordForm
+          <Link href="/account/photos" className="fm-btn fm-btn-ghost">{photoText.title}</Link>
+        <ChangePasswordForm
             dict={dict}
             forced={forcePasswordChange === "1"}
           />

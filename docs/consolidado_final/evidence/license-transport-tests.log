@@ -1,0 +1,14 @@
+$ vitest run lib/domain/prepareLicenseDocument.test.ts lib/domain/analyzeDriversLicense.test.ts app/account/license/actions.test.ts
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/current_kondo/apps/web
+
+ ✓ lib/domain/analyzeDriversLicense.test.ts (9 tests) 5ms
+ ✓ lib/domain/prepareLicenseDocument.test.ts (6 tests) 47ms
+ ✓ app/account/license/actions.test.ts (14 tests) 33ms
+
+ Test Files  3 passed (3)
+      Tests  29 passed (29)
+   Start at  13:22:47
+   Duration  450ms (transform 289ms, setup 0ms, collect 349ms, tests 84ms, environment 1ms, prepare 208ms)
+

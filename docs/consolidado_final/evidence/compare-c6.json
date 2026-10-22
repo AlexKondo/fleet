@@ -1,0 +1,296 @@
+{
+  "mode": "read_only",
+  "baseline": "c6b26da ZIP",
+  "normalizes": "CRLF/LF for UTF-8 text only",
+  "counts": {
+    "candidate_change": 71,
+    "keep_kondo": 0,
+    "needs_merge": 0
+  },
+  "files": [
+    {
+      "path": ".env.example",
+      "result": "candidate_change"
+    },
+    {
+      "path": "00_LEIA_PRIMEIRO_CONCLUSAO_2026-10-22.md",
+      "result": "candidate_change"
+    },
+    {
+      "path": "README_ENTREGA_FINAL_GPT.md",
+      "result": "candidate_change"
+    },
+    {
+      "path": "V3_MIGRATION_MAP.json",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/account/page.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/account/photos/PendingPhoto.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/account/photos/actions.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/account/photos/page.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/api/photos/route.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/api/photos/route.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/chat/carpoolChat.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/dashboard/actions.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/dashboard/page.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/fleet/EditVehicleForm.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/fleet/VehicleForm.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/fleet/actions.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/fleet/photoSubmission.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/fleet/photoSubmission.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/gate/GateVisualForm.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/gate/visualActions.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/gate/visualChecks.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/reservations/[id]/evidence/[inspectionId]/EvidenceForm.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/reservations/[id]/page.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/reservations/[id]/pickup/PickupForm.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/reservations/[id]/pickup/actions.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/reservations/[id]/return/ReturnForm.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/reservations/[id]/return/actions.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/shellData.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/trips/TripsWorkspace.tsx",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/app/trips/new/actions.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/domain/directPhotoUpload.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/domain/directPhotoUpload.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/domain/immutablePhoto.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/domain/photoRecoveryText.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/domain/storedPhoto.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/domain/storedPhoto.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/domain/vehiclePhotoLimit.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/domain/vehiclePhotoLimit.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/i18n/dictionaries/en-US.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/i18n/dictionaries/es.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/i18n/dictionaries/pt-BR.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/i18n/dictionaries/types.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/i18n/dictionaries/zh-CN.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/operations/autoReleasePolicy.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/operations/autoReleasePolicy.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/operations/noShowRelease.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/operations/operationExceptionUi.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/operations/operationExceptionUi.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/operations/package01.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/operations/package01Fixes.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/operations/safeReturnCheck.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/supabase/managementLicenseBoundary.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/supabase/middleware.test.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/lib/supabase/middleware.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "apps/web/vitest.config.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "packages/supabase-client/src/database.types.ts",
+      "result": "candidate_change"
+    },
+    {
+      "path": "scripts/check-auto-release-policy.mjs",
+      "result": "candidate_change"
+    },
+    {
+      "path": "scripts/check-auto-release-policy.test.mjs",
+      "result": "candidate_change"
+    },
+    {
+      "path": "scripts/compare_consolidado_final.py",
+      "result": "candidate_change"
+    },
+    {
+      "path": "scripts/print-consolidated-migration-plan.mjs",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0217_restore_approved_automatic_release.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0218_task_privacy_and_expired_approval.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0219_photo_relink_and_attestation_metadata.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0220_audited_vehicle_measurements.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0221_photo_pending_recovery.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0222_reservation_exception_summary.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0223_vehicle_measurements_no_direct_update.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0224_photo_attestation_path_contract.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0225_audited_task_claim.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0226_no_direct_task_update.sql",
+      "result": "candidate_change"
+    },
+    {
+      "path": "supabase/migrations/0227_photo_reference_relink_contract.sql",
+      "result": "candidate_change"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+✔ deployment guard undefined (70.254801ms)
+✔ deployment guard true (74.15316ms)
+✔ deployment guard false (66.446146ms)
+✔ deployment guard tru (60.917625ms)
+✔ missing, numeric and duplicate history fail closed (1.043601ms)
+✔ actual historical wipe is blocked when pending (0.98341ms)
+✔ function bodies/comments/literals are not top-level deletes (0.281454ms)
+✔ procedural blocks, destructive DDL and history gaps need review (9.979032ms)
+✔ renumbered package keeps legacy history and plans only 0174/0175 (7.196395ms)
+✔ account access migration requires review of its procedural RLS block (0.749408ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 355.391339

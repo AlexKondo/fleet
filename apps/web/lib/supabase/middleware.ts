@@ -152,8 +152,9 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     // (/trips*, /carpool*, /reservations/[id]/pickup) and every other role keep the CNH gate; the
     // driving ACTIONS stay blocked server-side (RPCs) regardless of this routing decision, and the
     // CNH notice keeps showing (LICENSE_MISSING_HEADER below).
+    const drivingPath=pathname === "/trips/new" || pathname.startsWith("/trips/new/") || /^\/reservations\/[^/]+\/pickup\/?$/.test(pathname);
     const explicitManagerWorkspace = isManagementRole(ownProfile?.role) && isAdministrativePath(pathname);
-    if (ownProfile?.role !== "security" && !explicitManagerWorkspace && !canDrive(ownLicense)) {
+    if (ownProfile?.role !== "security" && !explicitManagerWorkspace && drivingPath && !canDrive(ownLicense)) {
       return NextResponse.redirect(new URL("/account/license", request.url));
     }
     // L6: hand the result to the render so AppShell does not repeat the same RPC for this request.

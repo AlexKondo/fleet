@@ -1,5 +1,6 @@
 "use client";
 
+import { prepareLicenseDocument } from "@/lib/domain/prepareLicenseDocument";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { submitLicensePhoto, type LicenseUploadState } from "./actions";
@@ -41,7 +42,19 @@ export function LicenseCaptureForm({ dict }: { dict: Dictionary }) {
 function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestart: () => void }) {
   const t = dict.account.license;
   const router = useRouter();
-  const [state, formAction, pending] = useActionState(submitLicensePhoto, initialState);
+  const [state, formAction, pending] = useActionState(async (previous: LicenseUploadState, data: FormData): Promise<LicenseUploadState> => {
+    if (data.get("phase") !== "confirm") {
+      const original = data.get("photo");
+      if (original instanceof File) {
+        try {
+          data.set("photo", await prepareLicenseDocument(original));
+        } catch {
+          return { status: "error", error: t.documentPreparationFailed };
+        }
+      }
+    }
+    return submitLicensePhoto(previous, data);
+  }, initialState);
   const isDone = DONE_STATUSES.includes(state.status);
   // "analyzed" = the model has read the photo and handed back fields, but nothing is
   // saved yet — driver_authorized/drivers_license_number (what the middleware CNH gate

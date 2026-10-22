@@ -1,3 +1,5 @@
+> HISTÓRICO DA PRIMEIRA ENTREGA — não executar como orientação vigente. Consulte docs/consolidado_final e o LEIA PRIMEIRO do topo. A regra automática agora é ativa.
+
 # Testes executados nesta entrega
 
 22/10/2026. Ambiente local Node 24.19, pnpm 11.25, dependências congeladas; PGlite 0.3.14. Nenhum teste usou produção.

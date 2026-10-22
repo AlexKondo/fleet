@@ -25,6 +25,7 @@ export interface ReturnFormInput {
 
 export interface SubmitReturnResult {
   success: boolean;
+  inspectionId?:string;
   error?: string;
   /** Angles whose photo the user provided but which failed to upload/save. */
   failedPhotoAngles?: PhotoAngle[];
@@ -115,6 +116,7 @@ export async function submitReturn(
 
   return {
     success: true,
+    inspectionId,
     failedPhotoAngles: failedPhotoAngles.length > 0 ? failedPhotoAngles : undefined,
     damageEvidenceMissing: damageEvidenceMissing || undefined,
   };

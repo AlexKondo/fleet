@@ -193,6 +193,7 @@ export type Dictionary = {
       analyzing: string;
       noPhoto: string;
       notAnImage: string;
+      documentPreparationFailed: string;
       photoTooLarge: string;
       analysisFailed: string;
       saveFailed: string;
@@ -516,6 +517,7 @@ export type Dictionary = {
       photoAlt: string;
       categoryLabel: string;
       selectPlaceholder: string;
+      odometerCorrectionReason: string;
       odometerLabel: string;
       nextServiceLabel: string;
       estimatedRangeLabel: string;
@@ -1121,6 +1123,8 @@ export type Dictionary = {
     };
     fleet: {
       photoMustBeImage: string;
+      photoPendingAfterCreate: string;
+      photoLinkPending: string;
       photoTooLarge: string;
       photoUploadFailed: string;
       locationNameRequired: string;
@@ -1713,6 +1717,8 @@ export type Dictionary = {
       RESERVATION_CONFLICT: string;
       POWERTRAIN_MISMATCH: string;
       APPROVED_BUDGET_EXCEEDED: string;
+      RESERVATION_EXPIRED: string;
+      DAMAGE_RELEASE_INDEPENDENT_ACTOR_REQUIRED: string;
       DEPARTURE_BLOCKED: string;
       CHECKLIST_REQUIRED: string;
       OUTSIDE_RESERVATION_WINDOW: string;

@@ -22,6 +22,7 @@ export default defineConfig({
     include: [
       "lib/geospatial/**/*.test.ts",
       "app/carpool/**/*.test.ts",
+      "app/fleet/**/*.test.ts",
       "lib/carpool/**/*.test.ts",
       "app/chat/**/*.test.ts",
       "app/trips/**/*.test.ts",

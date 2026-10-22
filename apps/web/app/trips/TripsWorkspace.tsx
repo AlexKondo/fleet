@@ -106,7 +106,7 @@ export async function TripsWorkspace({
     supabase
       .from("reservations")
       .select(
-        `id, status, start_at, end_at, impacted_at, cancellation_reason,
+        `id, trip_request_id, status, start_at, end_at, impacted_at, cancellation_reason,
        trip_request:trip_requests!inner(origin, destination, requester_id, justification),
        vehicle:vehicles(plate, name, status)`,
       )
@@ -128,6 +128,11 @@ export async function TripsWorkspace({
       .limit(20),
   ]);
 
+  const {data:notDeparted}=await supabase.rpc('fm_not_departed_reservations',{p_ids:(reservations??[]).filter(r=>r.status==='cancelled').map(r=>r.id)});
+  const notDepartedIds=new Set(notDeparted??[]);
+  const closedLabel=locale==='en-US'?'Closed: vehicle did not leave':locale==='es'?'Cerrada: el vehículo no salió':locale==='zh-CN'?'已结束：车辆未出发':'Encerrada: veículo não saiu';
+  const ownOffers=carpoolOnly?await supabase.from('carpool_offers').select('id,trip_request_id').eq('host_id',user.id).order('created_at',{ascending:false}):{data:[],error:null};
+  const roleView=locale==='en-US'?{driver:'As driver',passenger:'As passenger',unavailable:'Could not load your offers.'}:locale==='es'?{driver:'Como conductor',passenger:'Como pasajero',unavailable:'No se pudieron consultar sus ofertas.'}:locale==='zh-CN'?{driver:'作为司机',passenger:'作为乘客',unavailable:'无法加载您的拼车。'}:{driver:'Como motorista',passenger:'Como passageiro',unavailable:'Não foi possível consultar suas ofertas.'};
   const checklistStates=await loadMyChecklistStates(supabase,(reservations??[]).filter(r=>r.status==="confirmed").map(r=>r.id));
   const carpoolTripRequestIds = (participations ?? []).map(
     (p) => p.trip_request_id,
@@ -278,7 +283,7 @@ export async function TripsWorkspace({
             </span>
           ) : (
             <span className="fm-pill" data-tone={tone(r.status)}>
-              {reservationStatusLabel(r.status)}
+              {notDepartedIds.has(r.id)?closedLabel:reservationStatusLabel(r.status)}
             </span>
           )}
           {expired && r.status === "cancelled" ? (
@@ -355,6 +360,11 @@ export async function TripsWorkspace({
           </Link>
         </div>
 
+        {carpoolOnly?<>
+          <nav className="fm-tabs" aria-label={dict.dashboard.home.carpoolTitle}><a className="fm-btn fm-btn-ghost" href="#as-driver">{roleView.driver}</a><a className="fm-btn fm-btn-ghost" href="#as-passenger">{roleView.passenger}</a></nav>
+          <section id="as-driver"><h2 className="fm-h2">{roleView.driver}</h2>{ownOffers.error?<p role="alert">{roleView.unavailable}</p>:<ul>{(ownOffers.data??[]).map(offer=>{const reservation=(reservations??[]).find(r=>r.trip_request_id===offer.trip_request_id);return <li key={offer.id}>{reservation?<Link href={`/reservations/${reservation.id}`}>{reservation.trip_request?.origin} → {reservation.trip_request?.destination} · {formatDateTimeShort(reservation.start_at,locale)}</Link>:<span>{dict.errors.common.generic}</span>}</li>})}</ul>}</section>
+          <h2 id="as-passenger" className="fm-h2">{roleView.passenger}</h2>
+        </>:null}
         {checklistStates===null ? <p role="alert" className="fm-banner fm-banner-danger">{dict.ops.gate.checklistUnavailable}</p> : null}
         {tripActionError ? (
           <div role="alert" className="fm-banner fm-banner-danger tp-banner">

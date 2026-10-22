@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { canDrive } from "@/lib/auth/ownLicense";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { analyzeDriversLicense } from "@/lib/domain/analyzeDriversLicense";
 import { getDictionary } from "@/lib/i18n/getLocale";
@@ -79,7 +80,7 @@ export async function submitLicensePhoto(
       return { status: "error", error: dict.account.license.saveFailed };
     }
 
-    const isStillValid = new Date(`${expirationDate}T00:00:00Z`).getTime() > Date.now();
+    const isStillValid = canDrive({ number, category, expiration: expirationDate, driverAuthorized: true });
 
     // profiles has no client-side UPDATE RLS policy (see updateDriverAuthorization's
     // comment in settings/users/actions.ts) — admin client, scoped to the caller's own id.

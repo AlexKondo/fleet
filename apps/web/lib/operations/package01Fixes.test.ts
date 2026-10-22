@@ -104,8 +104,8 @@ describe.sequential("Pacote 01 corrections with the actual migrated SQL",()=>{
   const good=await begin("wheels","9".repeat(64));await object(good.path,{size:10,mimetype:"image/png",eTag:"\"x\""});
   await expect(db.query("select fm_photo_finalize($1,$2)",[good.id,"8".repeat(64)])).rejects.toThrow(/PHOTO_HASH_MISMATCH/);
   await expect(db.query("select fm_photo_finalize($1,$2)",[good.id,"9".repeat(64)])).rejects.toThrow(/PHOTO_SERVER_VERIFICATION_REQUIRED/);
-  await expect(db.query("select fm_photo_attest($1,$2,$3,10,'image/png')",[good.id,driver,"9".repeat(64)])).rejects.toThrow(/permission denied/);
-  await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,10,'image/png')",[good.id,driver,"9".repeat(64)]);await actor(driver);
+  await expect(db.query("select fm_photo_attest($1,$2,$3,10,'image/png',(select storage_path from fm_photo_uploads where id=$1))",[good.id,driver,"9".repeat(64)])).rejects.toThrow(/permission denied/);
+  await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,10,'image/png',(select storage_path from fm_photo_uploads where id=$1))",[good.id,driver,"9".repeat(64)]);await actor(driver);
   await db.query("select fm_photo_finalize($1,$2)",[good.id,"9".repeat(64)]);
   await expect(db.query("select fm_photo_finalize($1,$2)",[good.id,"8".repeat(64)])).rejects.toThrow(/PHOTO_HASH_MISMATCH/);
   await db.query("select fm_photo_finalize($1)",[good.id]);

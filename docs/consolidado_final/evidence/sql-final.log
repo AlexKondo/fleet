@@ -1,0 +1,14 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/current_kondo/apps/web
+
+ ✓ lib/operations/safeReturnCheck.test.ts (15 tests) 2283ms
+ ✓ lib/operations/noShowRelease.test.ts (11 tests) 2214ms
+ ✓ lib/operations/package01.test.ts (11 tests) 1810ms
+
+ Test Files  3 passed (3)
+      Tests  37 passed (37)
+   Start at  12:26:45
+   Duration  7.03s (transform 78ms, setup 0ms, collect 147ms, tests 6.31s, environment 1ms, prepare 156ms)
+
+JSON report written to /workspace/scratch/7e2402800f4f/current_kondo/docs/consolidado_final/evidence/sql-final.json

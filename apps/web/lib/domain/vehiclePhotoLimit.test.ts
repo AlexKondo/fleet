@@ -8,26 +8,19 @@ import es from "../i18n/dictionaries/es";
 import zhCN from "../i18n/dictionaries/zh-CN";
 
 const MB = 1024 * 1024;
-const VERCEL_FUNCTION_BODY_LIMIT = 4.5 * MB; // documented platform limit (not testable locally)
 
 describe("vehicle photo size limit (S2-D02)", () => {
-  it("rejects the 8.6 MB photo that broke the page and accepts a 3 MB one", () => {
-    expect(vehiclePhotoTooLarge({ size: Math.round(8.6 * MB) })).toBe(true);
+  it("accepts 8.6 MB via direct Storage and enforces the 10 MB ceiling", () => {
+    expect(vehiclePhotoTooLarge({ size: Math.round(8.6 * MB) })).toBe(false);
     expect(vehiclePhotoTooLarge({ size: 3 * MB })).toBe(false);
     expect(vehiclePhotoTooLarge({ size: VEHICLE_PHOTO_MAX_BYTES })).toBe(false);
     expect(vehiclePhotoTooLarge({ size: VEHICLE_PHOTO_MAX_BYTES + 1 })).toBe(true);
     expect(vehiclePhotoTooLarge(null)).toBe(false);
   });
 
-  it("fits below the Server Action body limit and the hosting platform limit, with room for the other fields", () => {
-    const config = fs.readFileSync(path.resolve(__dirname, "../../next.config.ts"), "utf8");
-    const match = /bodySizeLimit:\s*"(\d+)mb"/.exec(config);
-    expect(match).not.toBeNull();
-    const serverActionLimit = Number(match![1]) * MB;
-    expect(VEHICLE_PHOTO_MAX_BYTES).toBeLessThan(serverActionLimit - 256 * 1024);
-    expect(VEHICLE_PHOTO_MAX_BYTES).toBeLessThan(VERCEL_FUNCTION_BODY_LIMIT - 256 * 1024);
-    // and never above the bucket / uploadImmutablePhoto ceiling (10 MB)
-    expect(VEHICLE_PHOTO_MAX_BYTES).toBeLessThanOrEqual(10 * MB);
+  it("uses direct Storage instead of sending files in server actions",()=>{
+    const source=fs.readFileSync(path.resolve(__dirname,"../../app/fleet/VehicleForm.tsx"),"utf8");
+    const submission=fs.readFileSync(path.resolve(__dirname,"../../app/fleet/photoSubmission.ts"),"utf8");expect(source).toContain("createVehicleWithPhoto");expect(submission).toContain("fieldsWithoutPhotos(data)");expect(submission).toContain("directPhotoUpload(");expect(VEHICLE_PHOTO_MAX_BYTES).toBe(10*MB);
   });
 
   it.each([["pt-BR", ptBR], ["en-US", enUS], ["es", es], ["zh-CN", zhCN]])("%s message states the real limit", (_l, dict) => {

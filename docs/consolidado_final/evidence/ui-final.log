@@ -1,0 +1,16 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/7e2402800f4f/current_kondo/apps/web
+
+ ✓ app/reservations/[id]/detailShell.test.ts (35 tests) 330ms
+ ✓ lib/supabase/middleware.test.ts (10 tests) 81ms
+ ✓ app/account/accountShell.test.ts (9 tests) 130ms
+ ✓ lib/domain/directPhotoUpload.test.ts (5 tests) 32ms
+ ✓ lib/operations/auditActionLabel.test.ts (6 tests) 9ms
+ ✓ lib/domain/vehiclePhotoLimit.test.ts (6 tests) 4ms
+
+ Test Files  6 passed (6)
+      Tests  71 passed (71)
+   Start at  12:29:42
+   Duration  2.66s (transform 602ms, setup 0ms, collect 1.09s, tests 585ms, environment 1ms, prepare 294ms)
+

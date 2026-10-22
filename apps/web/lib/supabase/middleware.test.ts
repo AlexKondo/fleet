@@ -59,7 +59,7 @@ describe("CNH gate versus administrative access (S3-03)", () => {
   const NO_CNH: License = { drivers_license_number: null, drivers_license_expiration: null, driver_authorized: false };
   const EXPIRED: License = { drivers_license_number: "12345678900", drivers_license_expiration: "2026-01-10", driver_authorized: true };
   const ADMIN_PATHS = ["/", "/admin", "/admin/units", "/admin/integrations", "/admin/audit", "/admin/ai", "/analytics", "/analytics/carpool", "/dashboard", "/dashboard/command-center", "/gate", "/gate/exceptions", "/gate/history", "/fleet", "/fleet/carpools", "/settings/users", "/maintenance/planning", "/reservations/abc"];
-  const DRIVING_PATHS = ["/trips/new", "/reservations/abc/pickup", "/trips", "/carpool", "/carpool/mine"];
+  const DRIVING_PATHS = ["/trips/new", "/reservations/abc/pickup"];
 
   async function load(opts: { role: string; license: License; enabled?: boolean; mustChange?: boolean }) {
     vi.resetModules();
@@ -102,10 +102,11 @@ describe("CNH gate versus administrative access (S3-03)", () => {
     vi.doUnmock("@supabase/ssr");
   });
 
-  it("employee with expired or missing CNH keeps the current behavior (S3-09 pending): every non-account route is gated", async () => {
+  it("employee with expired or missing CNH can read and ride while driving remains gated", async () => {
     for (const license of [EXPIRED, NO_CNH]) {
       const go = await load({ role: "employee", license });
-      for (const path of ["/dashboard", "/admin", "/analytics", "/gate", "/fleet", "/reservations/abc", "/trips", "/carpool", "/"]) expect(toLicense(await go(path)), path).toBe(true);
+      for (const path of ["/dashboard", "/admin", "/analytics", "/gate", "/fleet", "/reservations/abc", "/trips", "/carpool", "/carpool/mine", "/"]) expect((await go(path)).status, path).toBe(200);
+      for (const path of ["/trips/new", "/reservations/abc/pickup"]) expect(toLicense(await go(path)), path).toBe(true);
       for (const path of ["/account", "/account/license", "/reservations/abc/return"]) expect((await go(path)).status, path).toBe(200);
     }
     vi.doUnmock("@supabase/ssr");

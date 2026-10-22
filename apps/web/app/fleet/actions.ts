@@ -12,6 +12,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 export interface FleetActionState {
   status: "idle" | "success" | "error";
   error?: string;
+  vehicleId?:string;
 }
 
 // S2-D02: same limit the browser enforces before sending (see lib/domain/vehiclePhotoLimit.ts for the why).
@@ -271,7 +272,7 @@ export async function createVehicle(
 
   revalidatePath("/fleet");
   revalidatePath("/dashboard");
-  return { status: "success" };
+  return { status: "success",vehicleId:inserted.id };
 }
 
 /**
@@ -350,9 +351,7 @@ export async function updateVehicle(
 
   }
 
-  const { error } = await supabase
-    .from("vehicles")
-    .update({
+  const { error } = await supabase.rpc("fm_update_vehicle",{p_id:id,p_correction_reason:String(formData.get("odometerCorrectionReason")??"").trim(),p_payload:{
       plate,
       category_id: categoryId,
       odometer_km: odometerKm,
@@ -364,13 +363,11 @@ export async function updateVehicle(
       name,
       color,
 
-    })
-    .eq("id", id)
-    .eq("organization_id", organizationId);
+    }});
   if (error) {
     const friendlyError = error.message.includes("duplicate") || error.message.includes("unique")
       ? dict.errors.fleet.duplicatePlate
-      : error.message;
+      : error.message.includes("ODOMETER_CORRECTION_REASON_REQUIRED")?dict.fleet.vehicleForm.odometerCorrectionReason:dict.errors.common.generic;
     return { status: "error", error: friendlyError };
   }
 

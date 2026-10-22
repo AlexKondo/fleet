@@ -122,7 +122,7 @@ export default async function ReservationDetailPage({
   const vehicleStatus = reservation.vehicle?.status;
   const checklistState=await loadChecklistState(supabase,id);
   // S3-05: only the operation roles see the exception confirmation; the requester's label is decision S3-08.
-  const exceptionRecorded = isPrivileged && !isOwnReservation && reservation.status === "cancelled" && (await loadNotDepartedException(supabase, id));
+  const exceptionRecorded = reservation.status === "cancelled" && (await loadNotDepartedException(supabase, id));
   const canPickup=checklistState?.can_pickup ?? false;
   const canReturn=checklistState?.can_return ?? false;
   // Mirrors cancel_reservation's own guard (0010_cancel_reservation.sql): once the vehicle
@@ -146,7 +146,8 @@ export default async function ReservationDetailPage({
     new Date(reservation.trip_request.departure_at).getTime() > Date.now();
 
   const statusTone = reservation.status === "confirmed" ? "ok" : reservation.status === "pending_approval" ? "warn" : reservation.status === "cancelled" ? "bad" : "neutral";
-  const statusText = (dict.trips.statuses as Record<string, string>)[reservation.status] ?? reservation.status;
+  const closedLabel=locale==='en-US'?'Closed: vehicle did not leave':locale==='es'?'Cerrada: el vehículo no salió':locale==='zh-CN'?'已结束：车辆未出发':'Encerrada: veículo não saiu';
+  const statusText = exceptionRecorded ? closedLabel : (dict.trips.statuses as Record<string, string>)[reservation.status] ?? reservation.status;
 
   const banners = (
     <>

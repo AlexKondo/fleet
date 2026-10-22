@@ -1,0 +1,28 @@
+{
+  "mode": "read_only_not_authorization",
+  "prerequisite": "Reconcile the actual schema and ledger through 0209; do not reapply old migrations.",
+  "expand": [
+    "0210_vehicle_operational_permissions.sql",
+    "0211_exception_availability_guards.sql",
+    "0212_photo_server_verification.sql",
+    "0213_expired_release_policy_and_safety.sql",
+    "0215_vehicle_safe_return_check.sql",
+    "0217_restore_approved_automatic_release.sql",
+    "0218_task_privacy_and_expired_approval.sql",
+    "0219_photo_relink_and_attestation_metadata.sql",
+    "0220_audited_vehicle_measurements.sql",
+    "0221_photo_pending_recovery.sql",
+    "0222_reservation_exception_summary.sql",
+    "0225_audited_task_claim.sql"
+  ],
+  "app": "Deploy verified, path-bound writers and audited edit/assignment commands only after authorization; prove one real upload.",
+  "contract": [
+    "0214_require_verified_photo_links.sql",
+    "0216_inspection_photos_no_direct_insert.sql",
+    "0223_vehicle_measurements_no_direct_update.sql",
+    "0224_photo_attestation_path_contract.sql",
+    "0226_no_direct_task_update.sql",
+    "0227_photo_reference_relink_contract.sql"
+  ],
+  "warning": "Do not end the database window after 0213 without 0217. This plan executes nothing."
+}

@@ -73,5 +73,227 @@
     "source": "0088_scoped_dimensions_and_personal_export.sql",
     "integrated": "0188_scoped_dimensions_and_personal_export.sql",
     "original_sha256": "be80efdcf98a214426b8da6331f6e85f58445af0e8810a00fbdbb82094d92adb"
+  },
+  {
+    "source": "0191_package01_evidence_and_availability.sql",
+    "integrated": "0191_package01_evidence_and_availability.sql",
+    "original_sha256": "1a46924f9004823b84991ee398ed254577264d0634dae5f5484307dded21df1d",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0192_explicit_legacy_function_hardening.sql",
+    "integrated": "0192_explicit_legacy_function_hardening.sql",
+    "original_sha256": "6b6ebb49dd6cb0797b73eca2273cc1f1a87925e540dd964c5e03ec410e252cb7",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0193_scoped_staff_notifications.sql",
+    "integrated": "0193_scoped_staff_notifications.sql",
+    "original_sha256": "3c90b1f66fffa37249998501734227a6e658f371964441e68ad44faddc27a8bd",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0194_consistent_operational_lock_order.sql",
+    "integrated": "0194_consistent_operational_lock_order.sql",
+    "original_sha256": "5e28d8236ffe96d102db09422bf79626a70dd2ab81868429bcc679651b3f91f1",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0195_harden_list_member_license_sources.sql",
+    "integrated": "0195_harden_list_member_license_sources.sql",
+    "original_sha256": "e8b2b3178d5bc157c1dbd36c16e13de9c68c7bfdada6704b9adac2bd5acc1575",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0196_refresh_scoped_views_after_new_columns.sql",
+    "integrated": "0196_refresh_scoped_views_after_new_columns.sql",
+    "original_sha256": "e40552dc516cdc4205980aa0c8f539456b658362d21cb5480556b43b731afd9e",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0197_gate_physical_actor_independence.sql",
+    "integrated": "0197_gate_physical_actor_independence.sql",
+    "original_sha256": "529c646218b73614cb81c522b63a36e208e1978bcc755e2ae5f21f94f0a23a62",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0198_manager_checklist_on_behalf.sql",
+    "integrated": "0198_manager_checklist_on_behalf.sql",
+    "original_sha256": "c7a6e16886692e84d31bbb43359fbc2edd7a748d5208a55d031035fda2a86404",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0199_photo_finalize_integrity.sql",
+    "integrated": "0199_photo_finalize_integrity.sql",
+    "original_sha256": "127e982fd59fe51cc1474d79e7b6826404a568cd9fdc6cfc2bc7be1458b891d5",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0200_operation_exception_and_cancel_guard.sql",
+    "integrated": "0200_operation_exception_and_cancel_guard.sql",
+    "original_sha256": "a9ac7bec10e98cf274e213333c98b4a53d275f1d8c9b1e639f8e3037b6ba5462",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0201_overdue_maintenance_availability.sql",
+    "integrated": "0201_overdue_maintenance_availability.sql",
+    "original_sha256": "6a244d49ce332281c6f5ee5bac5dc252ec61f5606827a8aaff643f2bc143d056",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0202_scoped_audit_log_read.sql",
+    "integrated": "0202_scoped_audit_log_read.sql",
+    "original_sha256": "a5b30bad78718b258b5a42e7ff12ac7c818bbd5f948a567de7521b19cc59994b",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0203_vehicle_photos_bucket_limits.sql",
+    "integrated": "0203_vehicle_photos_bucket_limits.sql",
+    "original_sha256": "c22dff420242fee243241dfb5f2b4eb1db1b94b32fd6e1cda3aedd3bac78e7f7",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0204_unblock_requires_clear_conditions.sql",
+    "integrated": "0204_unblock_requires_clear_conditions.sql",
+    "original_sha256": "30770096dfc1f2ae2df885459f84d5b9c2289d09d86fb03de55670cbad45e410",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0205_damage_hold_release_path.sql",
+    "integrated": "0205_damage_hold_release_path.sql",
+    "original_sha256": "d30f76db072e51aee8fc330a1115bf0cc2bb19f1c56de28fc8ab9c28fae05745",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0206_transfer_reservation_audit.sql",
+    "integrated": "0206_transfer_reservation_audit.sql",
+    "original_sha256": "949aaf4bc6164c56a1f7c0d126fc0b90976b1a18e928b5e0639f2a485366a999",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0207_no_show_release_grace_setting.sql",
+    "integrated": "0207_no_show_release_grace_setting.sql",
+    "original_sha256": "63cc17859160232d56f1a03f96e77dcf1acde8cc4cf29c7c82c7e6265dc4326c",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0208_checklist_state_pickup_window.sql",
+    "integrated": "0208_checklist_state_pickup_window.sql",
+    "original_sha256": "56ee83173a74210e25753b9fedf1946a2d11ccffede780be5ed0fef1a0c4aa2d",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0209_release_expired_reservations.sql",
+    "integrated": "0209_release_expired_reservations.sql",
+    "original_sha256": "3da5bc767d08465af9066b3137e4652d0a04e0d0c49441c99de237ac8a33233f",
+    "stage": "prior_baseline"
+  },
+  {
+    "source": "0210_vehicle_operational_permissions.sql",
+    "integrated": "0210_vehicle_operational_permissions.sql",
+    "original_sha256": "d6cb5a72a9724d8901a004e29c5fd9c337e4eb8a8bf00745c0c4e3d73e8ebcb2",
+    "stage": "expand"
+  },
+  {
+    "source": "0211_exception_availability_guards.sql",
+    "integrated": "0211_exception_availability_guards.sql",
+    "original_sha256": "c38ea1898aa13aaf1766758745e3bca22eb2ea3c40ebdeb43b965eeece512d18",
+    "stage": "expand"
+  },
+  {
+    "source": "0212_photo_server_verification.sql",
+    "integrated": "0212_photo_server_verification.sql",
+    "original_sha256": "47d3d52de7abdd452cb9170704d1f08f1b298f103e5c27ae958ea39e934b6c3a",
+    "stage": "expand"
+  },
+  {
+    "source": "0213_expired_release_policy_and_safety.sql",
+    "integrated": "0213_expired_release_policy_and_safety.sql",
+    "original_sha256": "825faf1754106f0c9e7511a78e33581e34bc06a3fe8ad4a892811798feaabf51",
+    "stage": "expand"
+  },
+  {
+    "source": "0214_require_verified_photo_links.sql",
+    "integrated": "0214_require_verified_photo_links.sql",
+    "original_sha256": "f3bcee6b1e8f8dca00e351d042a6d979b6ec4f164236d416e199f2cfce0f98c2",
+    "stage": "contract"
+  },
+  {
+    "source": "0215_vehicle_safe_return_check.sql",
+    "integrated": "0215_vehicle_safe_return_check.sql",
+    "original_sha256": "90ed3d5e9f1434fc37a043b1e8a7547e769d9ed5fa4b5a2ae79a995a2fb61756",
+    "stage": "expand"
+  },
+  {
+    "source": "0216_inspection_photos_no_direct_insert.sql",
+    "integrated": "0216_inspection_photos_no_direct_insert.sql",
+    "original_sha256": "a7a57c08756ab619cdd20f0b031e3f9ba1af63d3808a3a8b4b045f327975e2cb",
+    "stage": "contract"
+  },
+  {
+    "source": "0217_restore_approved_automatic_release.sql",
+    "integrated": "0217_restore_approved_automatic_release.sql",
+    "original_sha256": "c40cff8c3ae3c6822ce8c9ff996613e8f6d366d26f7685788110045a8823ac54",
+    "stage": "expand"
+  },
+  {
+    "source": "0218_task_privacy_and_expired_approval.sql",
+    "integrated": "0218_task_privacy_and_expired_approval.sql",
+    "original_sha256": "701fb8ec87c7184776326d7d354935f8f28d7a176db851e674c0d73f5f29dfec",
+    "stage": "expand"
+  },
+  {
+    "source": "0219_photo_relink_and_attestation_metadata.sql",
+    "integrated": "0219_photo_relink_and_attestation_metadata.sql",
+    "original_sha256": "6e59403acbd905012122f799202bdb1e47beef68bb67766d0879a036e56d7184",
+    "stage": "expand"
+  },
+  {
+    "source": "0220_audited_vehicle_measurements.sql",
+    "integrated": "0220_audited_vehicle_measurements.sql",
+    "original_sha256": "7517c887ddb5f8fe0471b3ef5e41a43d9149fbe8068952f2c519f60f236fec1e",
+    "stage": "expand"
+  },
+  {
+    "source": "0221_photo_pending_recovery.sql",
+    "integrated": "0221_photo_pending_recovery.sql",
+    "original_sha256": "b480d05b5ee5fd20c5f5259194ceae327bac73fdca7fc737ca2aa75cfbd7ff22",
+    "stage": "expand"
+  },
+  {
+    "source": "0222_reservation_exception_summary.sql",
+    "integrated": "0222_reservation_exception_summary.sql",
+    "original_sha256": "6bc3288ba96ad1ef7d99a0264b562058144d603ea54f06573a01e9260b4ca514",
+    "stage": "expand"
+  },
+  {
+    "source": "0223_vehicle_measurements_no_direct_update.sql",
+    "integrated": "0223_vehicle_measurements_no_direct_update.sql",
+    "original_sha256": "f5a386fdebbfdc603e96fa2d65fb8b99d4cd5a884d6ce9e753ccc265fd622548",
+    "stage": "contract"
+  },
+  {
+    "source": "0224_photo_attestation_path_contract.sql",
+    "integrated": "0224_photo_attestation_path_contract.sql",
+    "original_sha256": "d00812669cdf90ed3afd6d7370222c0f590a90ec73d47c28dc8ef4d04b19409e",
+    "stage": "contract"
+  },
+  {
+    "source": "0225_audited_task_claim.sql",
+    "integrated": "0225_audited_task_claim.sql",
+    "original_sha256": "47f8cc7b03b52b5d502ccbffb5b5d18cdee55bb6428d7bcf01e753672a65c5ea",
+    "stage": "expand"
+  },
+  {
+    "source": "0226_no_direct_task_update.sql",
+    "integrated": "0226_no_direct_task_update.sql",
+    "original_sha256": "643e9a412420fe6f19f2320ebc1af16955579f6b67c1c32e3e13ac108e7d8f18",
+    "stage": "contract"
+  },
+  {
+    "source": "0227_photo_reference_relink_contract.sql",
+    "integrated": "0227_photo_reference_relink_contract.sql",
+    "original_sha256": "5f22613c474e04bc163e98da695759039c02d357d8deb36bac1968775d683720",
+    "stage": "contract"
   }
 ]

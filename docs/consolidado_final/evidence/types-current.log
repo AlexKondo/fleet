@@ -1,0 +1,8 @@
+app/dashboard/actions.ts(156,14): error TS2448: Block-scoped variable 'error' used before its declaration.
+app/dashboard/actions.ts(156,14): error TS2454: Variable 'error' is used before being assigned.
+app/dashboard/actions.ts(156,14): error TS18047: 'error' is possibly 'null'.
+app/dashboard/actions.ts(170,14): error TS18047: 'error' is possibly 'null'.
+app/dashboard/actions.ts(232,14): error TS2552: Cannot find name 'error'. Did you mean 'Error'?
+app/dashboard/actions.ts(251,14): error TS2552: Cannot find name 'error'. Did you mean 'Error'?
+app/dashboard/page.tsx(246,90): error TS2339: Property 'errors' does not exist on type '{ cc: { title: string; subtitle: string; kpisLabel: string; kpiVehicles: string; kpiVehiclesBar: string; kpiPending: string; kpiActive: string; kpiConflicts: string; kpiTasks: string; kpiTasksMine: string; kpiCapped: string; kpiAttention: string; }; ... 5 more ...; settings: { ...; }; }'.
+app/reservations/[id]/pickup/actions.ts(86,66): error TS2339: Property 'errors' does not exist on type '{ cc: { title: string; subtitle: string; kpisLabel: string; kpiVehicles: string; kpiVehiclesBar: string; kpiPending: string; kpiActive: string; kpiConflicts: string; kpiTasks: string; kpiTasksMine: string; kpiCapped: string; kpiAttention: string; }; ... 5 more ...; settings: { ...; }; }'.

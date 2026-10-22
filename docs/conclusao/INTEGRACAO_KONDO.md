@@ -1,3 +1,5 @@
+> HISTÓRICO DA PRIMEIRA ENTREGA — não executar como orientação vigente. Consulte docs/consolidado_final e o LEIA PRIMEIRO do topo. A regra automática agora é ativa.
+
 # Integração executável e homologação
 
 1. Criar branch a partir do checkout atualizado do Kondo e guardar commit/backup verificável. Não apontar testes para produção. Extrair este pacote em diretório separado.

@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 
 /**
@@ -18,6 +17,7 @@ export function canShowOperationExceptionForm(input: {
   inScope: boolean;
 }): boolean {
   if (input.role === "security") return input.workflow === "gate_visual";
+  if(input.workflow==="key_custody")return false;
   if (input.role === "fleet_manager" || input.role === "administrator") return input.inScope;
   return false;
 }
@@ -27,16 +27,4 @@ export function canShowOperationExceptionForm(input: {
  * viewer's RLS (fm_operation_exceptions_read: managers in scope, security and the actor). The table is not in the
  * generated types yet, hence the narrow untyped read. A failed read answers false (no notice), never an error.
  */
-export async function loadNotDepartedException(db: TypedSupabaseClient, reservationId: string): Promise<boolean> {
-  try {
-    const { data, error } = await (db as unknown as SupabaseClient)
-      .from("fm_operation_exceptions")
-      .select("id")
-      .eq("reservation_id", reservationId)
-      .eq("outcome", "not_departed")
-      .limit(1);
-    return !error && Array.isArray(data) && data.length > 0;
-  } catch {
-    return false;
-  }
-}
+export async function loadNotDepartedException(db:TypedSupabaseClient,id:string):Promise<boolean>{try{const {data,error}=await db.rpc('fm_not_departed_reservations',{p_ids:[id]});return !error&&Array.isArray(data)&&data.includes(id);}catch{return false;}}

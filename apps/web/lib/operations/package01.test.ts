@@ -30,7 +30,7 @@ it('persists the journal before upload, rejects missing object and deduplicates 
  await expect(db.query('select fm_photo_finalize($1)',[one.id])).rejects.toThrow(/PHOTO_UPLOAD_REQUIRED/);
  expect(JSON.stringify((await db.query('select fm_photo_pending() p')).rows)).toContain(one.id);
  await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('vehicle-photos',$1,$2,'{\"size\":3,\"mimetype\":\"image/png\"}')",[one.path,driver]);
- await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,3,'image/png')",[one.id,driver,'a'.repeat(64)]);await actor(driver);
+ await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,3,'image/png',(select storage_path from fm_photo_uploads where id=$1))",[one.id,driver,'a'.repeat(64)]);await actor(driver);
  await db.query('select fm_photo_finalize($1)',[one.id]);await db.query('select fm_photo_finalize($1)',[one.id]);
  expect((await db.query('select id from inspection_photos where storage_path=$1',[one.path])).rows).toHaveLength(1);
  await expect(db.query('delete from storage.objects where name=$1',[one.path])).resolves.toMatchObject({affectedRows:0});
@@ -41,7 +41,7 @@ it('prevents another actor, unscoped manager and anonymous access',async()=>{
  await db.exec('reset role;set role anon');await expect(begin()).rejects.toThrow(/permission denied/);
 });
 it('links a reference photo atomically and retains the prior journal',async()=>{
- await actor(admin);const one=await begin('vehicle',vehicle,null);await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('vehicle-photos',$1,$2,'{\"size\":3,\"mimetype\":\"image/png\"}')",[one.path,admin]);await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,3,'image/png')",[one.id,admin,'a'.repeat(64)]);await actor(admin);await db.query('select fm_photo_finalize($1)',[one.id]);
+ await actor(admin);const one=await begin('vehicle',vehicle,null);await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('vehicle-photos',$1,$2,'{\"size\":3,\"mimetype\":\"image/png\"}')",[one.path,admin]);await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,3,'image/png',(select storage_path from fm_photo_uploads where id=$1))",[one.id,admin,'a'.repeat(64)]);await actor(admin);await db.query('select fm_photo_finalize($1)',[one.id]);
  expect((await db.query<{photo_storage_path:string}>('select photo_storage_path from vehicles where id=$1',[vehicle])).rows[0]!.photo_storage_path).toBe(one.path);
  await expect(db.exec('delete from fm_photo_uploads')).rejects.toThrow(/permission denied/);
 });
@@ -68,4 +68,29 @@ it('filters unitless staff fan-out for an unscoped manager',async()=>{
 it('rejects a disabled requester even when a security actor submits the pickup',async()=>{
  await db.exec('reset role');await db.query('insert into fm_member_access(user_id,organization_id,enabled,version,updated_by,reason) values($1,$2,false,1,$3,\'Test deactivation\')',[driver,org,admin]);await actor(security);
  await expect(db.query("select record_pickup($1,100,80,null,false,null,'{}',false,false,'security')",[reservation])).rejects.toThrow(/DRIVER_NOT_AUTHORIZED/);
+});
+
+it('S2-D04: selecting an earlier verified reference A after B restores A',async()=>{
+ await actor(admin);const a=await begin('vehicle',vehicle,null,'b'.repeat(64));const b=await begin('vehicle',vehicle,null,'c'.repeat(64));
+ for(const j of [a,b]){
+  await actor(admin);await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('vehicle-photos',$1,$2,'{\"size\":3,\"mimetype\":\"image/png\"}')",[j.path,admin]);
+  await db.exec('reset role;set role service_role');await db.query("select fm_photo_attest($1,$2,$3,3,'image/png',$4)",[j.id,admin,j===a?'b'.repeat(64):'c'.repeat(64),j.path]);
+  await actor(admin);await db.query('select fm_photo_finalize($1)',[j.id]);
+ }
+ await db.query('select fm_photo_finalize($1)',[a.id]);
+ expect((await db.query<{p:string}>('select photo_storage_path p from vehicles where id=$1',[vehicle])).rows[0]!.p).toBe(a.path);
+});
+it('S2-D06: metadata and exact downloaded path are required before attestation',async()=>{
+ await actor(admin);const j=await begin('vehicle',vehicle,null,'d'.repeat(64));
+ await db.query("insert into storage.objects(bucket_id,name,owner,metadata) values('vehicle-photos',$1,$2,'{\"size\":3,\"mimetype\":\"image/jpeg\"}')",[j.path,admin]);
+ await db.exec('reset role;set role service_role');await expect(db.query("select fm_photo_attest($1,$2,$3,3,'image/png',$4)",[j.id,admin,'d'.repeat(64),j.path])).rejects.toThrow('PHOTO_INTEGRITY_MISMATCH');
+ await expect(db.query("select fm_photo_attest($1,$2,$3,3,'image/png',$4)",[j.id,admin,'d'.repeat(64),j.path+'_wrong'])).rejects.toThrow('PHOTO_ATTEMPT_CHANGED');
+ await expect(db.query("select fm_photo_attest($1,$2,$3,3,'image/png')",[j.id,admin,'d'.repeat(64)])).rejects.toThrow(/permission denied/);
+});
+it('S2-D05: a corrupt pending attempt gets a new immutable path and retains history',async()=>{
+ await actor(admin);const j=await begin('vehicle',vehicle,null,'e'.repeat(64));await db.query('select fm_photo_restart($1)',[j.id]);const retried=await begin('vehicle',vehicle,null,'e'.repeat(64));
+ expect(retried.id).toBe(j.id);expect(retried.path).not.toBe(j.path);expect(retried.path).toContain('e'.repeat(64));
+ await db.exec('reset role');expect((await db.query<{p:string}>('select storage_path p from fm_photo_attempt_history where upload_id=$1',[j.id])).rows[0]!.p).toBe(j.path);
+ await expect(db.query('delete from fm_photo_attempt_history where upload_id=$1',[j.id])).rejects.toThrow();
+ await actor(driver);await expect(db.query('select fm_photo_info($1)',[j.id])).rejects.toThrow('NOT_AUTHORIZED');
 });

@@ -34,7 +34,7 @@ Never guess a value you can't actually read — return readable:false instead.`;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-function parseModelJson(content: string):
+export function parseModelJson(content: string):
   | { status: "ok"; data: DriversLicenseData }
   | { status: "unreadable" } {
   let parsed: {
@@ -55,14 +55,20 @@ function parseModelJson(content: string):
   }
 
   if (
-    !parsed.readable ||
+    !parsed || typeof parsed !== "object" ||
+    parsed.readable !== true ||
+    typeof parsed.number !== "string" ||
+    typeof parsed.fullName !== "string" ||
+    typeof parsed.category !== "string" ||
+    typeof parsed.expirationDate !== "string" ||
+    typeof parsed.issueDate !== "string" ||
     !parsed.number ||
     !parsed.fullName ||
     !parsed.category ||
     !parsed.expirationDate ||
     !ISO_DATE.test(parsed.expirationDate) ||
     // issueDate is REQUIRED, not just requested — a response missing it skips the
-    // swap-correction below entirely, which is exactly how an earlier version of this
+    // consistency check below entirely, which is exactly how an earlier version of this
     // check silently let a mixed-up date through (the model ignored the prompt's request
     // for issueDate, so `parsed.issueDate` was undefined and the check below never ran).
     !parsed.issueDate ||
@@ -71,16 +77,16 @@ function parseModelJson(content: string):
     return { status: "unreadable" };
   }
 
-  let expirationDate = parsed.expirationDate;
-
-  // Ground-truth check independent of the prompt actually being followed: Validade is
-  // structurally always after Emissão on a real CNH. If the model swapped the two
-  // adjacent fields, issueDate ends up later than expirationDate, which is physically
-  // impossible — swap them back rather than reject a document that was, in substance,
-  // fully read correctly.
-  if (parsed.issueDate >= expirationDate) {
-    expirationDate = parsed.issueDate;
+  const exactDate = (value: string): boolean => {
+    const date = new Date(`${value}T12:00:00Z`);
+    return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  };
+  // A contradictory read cannot safely be repaired by guessing which date is correct.
+  if (!exactDate(parsed.issueDate) || !exactDate(parsed.expirationDate) ||
+      parsed.issueDate >= parsed.expirationDate || !parsed.number.trim() || !parsed.fullName.trim() || !parsed.category.trim()) {
+    return { status: "unreadable" };
   }
+  const expirationDate = parsed.expirationDate;
 
   return {
     status: "ok",

@@ -1,3 +1,5 @@
+> HISTÓRICO DA PRIMEIRA ENTREGA — não executar como orientação vigente. Consulte docs/consolidado_final e o LEIA PRIMEIRO do topo. A regra automática agora é ativa.
+
 # FleetMind v3.0 — implementação corretiva, 22/10/2026
 
 Base: ZIP 0aa2403 fornecido. Esta entrega contém código corrigido e cinco migrations novas. NÃO representa homologação do produto nem autorização para produção. Nenhuma chamada ao banco de produção, migration remota, limpeza, deploy ou envio de mensagens foi realizada.

@@ -42,7 +42,7 @@ const withoutPickup=(s:State)=>{const {can_pickup:_c,...rest}=s;void _c;return r
 
 beforeAll(async()=>{
  ({db}=await migratedDatabase());
- for(const [id,name] of [[org,"Vencidas"],[otherOrg,"Outra"]]){await db.query("insert into organizations(id,name) values($1,$2)",[id,name]);await db.query("insert into organization_settings(organization_id,auto_release_enabled) values($1,true)",[id]);}
+ for(const [id,name] of [[org,"Vencidas"],[otherOrg,"Outra"]]){await db.query("insert into organizations(id,name) values($1,$2)",[id,name]);await db.query("insert into organization_settings(organization_id) values($1)",[id]);}
  for(const [id,role] of [[admin,"administrator"],[security,"security"],[custodian,"employee"],[driver,"employee"]]){
   await db.query("insert into auth.users(id) values($1)",[id]);
   await db.query("insert into profiles(id,organization_id,full_name,role,drivers_license_number,driver_authorized,drivers_license_expiration) values($1,$2,'Pessoa de teste',$3,'TEST-CNH',true,current_date+30)",[id,org,role]);

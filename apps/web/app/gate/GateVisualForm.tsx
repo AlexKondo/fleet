@@ -1,11 +1,12 @@
 "use client";
+import {fieldsWithoutPhotos,directInspectionPhotos} from "@/lib/domain/directPhotoUpload";
 import {useState,useTransition} from "react";
 import {useRouter} from "next/navigation";
 import {submitVisualCheck} from "./visualActions";
 import type {Dictionary} from "@/lib/i18n/dictionaries";
 export function GateVisualForm({reservationId,phase,dict}:{reservationId:string;phase:"pickup"|"return";dict:Dictionary}){
  const [damage,setDamage]=useState(false);const [error,setError]=useState<string|null>(null);const [pending,start]=useTransition();const router=useRouter();const t=dict.ops.gate;
- return <form className="fm-card ck-card" action={form=>start(async()=>{setError(null);const result=await submitVisualCheck(form);if(result.success){router.push("/gate");router.refresh();}else setError(result.error??dict.errors.common.generic);})}>
+ return <form className="fm-card ck-card" onSubmit={event=>{event.preventDefault();const form=new FormData(event.currentTarget);start(async()=>{setError(null);const fields=fieldsWithoutPhotos(form);fields.set("photo_upload_pending","true");const result=await submitVisualCheck(fields);if(result.success&&result.inspectionId&&damage){if((await directInspectionPhotos(result.inspectionId,form)).length){setError(dict.errors.common.generic);return;}}if(result.success){router.push("/gate");router.refresh();}else setError(result.error??dict.errors.common.generic);});}}>
   <h2 className="fm-h2">{t.visualTitle}</h2><p className="fm-muted">{t.visualDescription}</p>
   <input type="hidden" name="reservationId" value={reservationId}/><input type="hidden" name="phase" value={phase}/>
   <label className="fm-field"><span><input type="checkbox" name="hasDamage" checked={damage} onChange={e=>setDamage(e.target.checked)}/> {t.observedDamage}</span></label>

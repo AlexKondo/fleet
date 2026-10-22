@@ -22,6 +22,7 @@ export interface PickupFormInput {
 
 export interface SubmitPickupResult {
   success: boolean;
+  inspectionId?:string;
   error?: string;
   /** Angles whose photo the user provided but which failed to upload/save. */
   failedPhotoAngles?: PhotoAngle[];
@@ -82,7 +83,7 @@ export async function submitPickup(
         ? dict.errors.reservations.licenseExpired
         : error.message.includes("EARLY_PICKUP_NOT_ALLOWED")
           ? dict.errors.reservations.earlyPickupNotAllowed
-          : error.message;
+          : error.message.includes("DEPARTURE_BLOCKED")?dict.opsShell.errors.DEPARTURE_BLOCKED:dict.errors.common.generic;
     return { success: false, error: message };
   }
   if (!inspectionId) return { success: false, error: "inspection_not_created" };
@@ -109,6 +110,7 @@ export async function submitPickup(
 
   return {
     success: true,
+    inspectionId,
     failedPhotoAngles: failedPhotoAngles.length > 0 ? failedPhotoAngles : undefined,
     damageEvidenceMissing: damageEvidenceMissing || undefined,
   };

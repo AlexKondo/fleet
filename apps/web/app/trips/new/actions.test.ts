@@ -388,4 +388,4 @@ describe("FIX-VENCIDAS R5: no-show release before the allocation search", () => 
 });
 
 afterEach(()=>vi.unstubAllEnvs());
-it('planning with release policy absent or disabled never invokes the release RPC',async()=>{vi.stubEnv('FM_ENABLE_AUTO_RESERVATION_RELEASE',undefined);await planTrip(input);expect(h.adminRpc).not.toHaveBeenCalled();vi.stubEnv('FM_ENABLE_AUTO_RESERVATION_RELEASE','false');await planTrip(input);expect(h.adminRpc).not.toHaveBeenCalled();});
+it('planning releases by default and explicit suspension skips RPC',async()=>{vi.stubEnv('FM_ENABLE_AUTO_RESERVATION_RELEASE',undefined);await planTrip(input);expect(h.adminRpc).toHaveBeenCalled();h.adminRpc.mockClear();vi.stubEnv('FM_ENABLE_AUTO_RESERVATION_RELEASE','false');await planTrip(input);expect(h.adminRpc).not.toHaveBeenCalled();});
