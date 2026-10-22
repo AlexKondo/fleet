@@ -5,7 +5,7 @@ Nada desta entrega foi publicado: a `main` do GitHub e a produção estão em **
 
 ## 1. Onde está o código
 - Branch: `integracao-conclusao-2026-10-22` · commit atual **`0f1dc12`** (worktree: `C:\projects\fleet\_local\fleet-integ`).
-- Linha de commits desta entrega: `0aa2403` (publicado) → `5b5a9d0` (delta do Pacote Único integrado) → `fcc598d` (relatórios S1/S2/S3) → `0f1dc12` (correções pós-teste + relatórios F1/F2).
+- Linha de commits desta entrega: `0aa2403` (publicado) → `5b5a9d0` (delta do Pacote Único integrado) → `fcc598d` (relatórios S1/S2/S3) → `0f1dc12` (correções pós-teste + relatórios F1/F2) → commit só de documentação com este relatório.
 - O ZIP que acompanha este relatório contém o código-fonte completo desse commit, `supabase/migrations` (0001–0216 + rollbacks), testes, configurações e `.env.example` (sem segredos). **Não** contém `.env`, credenciais, backups, dados pessoais, `node_modules`, builds, capturas de tela de testes nem .zip.
 
 ## 2. O que foi feito, em ordem
@@ -58,4 +58,4 @@ Nenhuma tela, cor, fluxo ou regra foi alterada por iniciativa própria; as alter
 **GO atual:** apenas para revisão e integração local deste código.
 
 ## 9. O que pedimos ao GPT
-Revisar este commit (`0f1dc12`), em especial as migrations 0215/0216 e `lib/supabase/middleware.ts`; decidir S1-01, S3-06/08/09/12 e a política de liberação (sempre ativa vs. opt-in); definir o desenho de upload de múltiplas fotos (limite da Vercel); corrigir os P3 abertos; atualizar `V3_MIGRATION_MAP.json` e os testes/docs que citam números de migration; e preparar o plano de homologação remota. Não aplicar nada em produção sem autorização expressa.
+Revisar o código até `0f1dc12`, em especial as migrations 0215/0216 e `lib/supabase/middleware.ts`; decidir S1-01, S3-06/08/09/12 e a política de liberação (sempre ativa vs. opt-in); definir o desenho de upload de múltiplas fotos (limite da Vercel); corrigir os P3 abertos; atualizar `V3_MIGRATION_MAP.json` e os testes/docs que citam números de migration; e preparar o plano de homologação remota. Não aplicar nada em produção sem autorização expressa.
