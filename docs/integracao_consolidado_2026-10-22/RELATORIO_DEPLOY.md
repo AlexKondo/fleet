@@ -40,3 +40,23 @@ Comparação do esquema de produção (impressão digital das 173 funções, 8 c
 
 ## 6. Rollback / recuperação
 Não executar os rollbacks históricos que reabrem escrita ampla. Preferir correção adiante. O backup de 22/10 (dados + Storage + esquema) permite restaurar tabelas isoladas; restauração completa não foi ensaiada. Voltar o app antigo agora quebraria escritas (contratos ativos); nesse caso, bloquear uploads e corrigir adiante.
+
+## 7. Segunda publicação: correções F3 (commit `ee56fa5`, somente código, sem migrations)
+Publicada em seguida (Vercel READY 16:46 BRT), a pedido do responsável ("arrume logo e faça o deploy").
+| ID | Sev. | Correção | Estado |
+|---|---|---|---|
+| T2-D01 | P2 | Portaria: a tela só atualiza depois de a foto de avaria ser enviada; se falhar, mostra aviso claro e botão de tentar de novo, sem perder a checagem preenchida | **corrigido e publicado** |
+| D-T3-01 | P2 | Edição de veículo: depois de erro do servidor, a categoria escolhida e os campos digitados são mantidos | **corrigido e publicado** |
+| D-T3-02 | P2 | CNH: redução progressiva da imagem (qualidade, depois 4000→3200→2400 px, nunca abaixo de 2400); se ainda não couber, mensagem com o que fazer; o original não se perde | **corrigido e publicado** |
+| T2-D02, T2-D07 | P3 | HEIC com mensagem correta; falha de foto no checklist diz que o checklist foi salvo e leva às fotos pendentes | **corrigidos e publicados** |
+
+Verificação local antes do push: tsc 0 · vitest **1086/1086** (110 arquivos) · lint 0 · build ok. Detalhe: `F3\RELATORIO.md`.
+
+**Validação em produção após `ee56fa5` (organização fictícia):** upload real de foto no veículo HML5A05: foto salva, jornal `linked` e **atestada**, auditoria `photo.linked`=1; varredura por papel: 42 navegações, 0 erros 5xx/pageerror, único redirecionamento esperado (CNH vencida em `/trips/new` → `/account/license`); logs do Supabase desde 19:00Z: 0 erros.
+
+## 8. Abertos após a segunda publicação
+- **D-T3-03 (P3):** PDF de várias páginas vira uma imagem alta; risco com IA real, só registrado.
+- **P3:** T2-D03, T2-D05, T2-D06 (não tratados).
+- **Decisões do dono:** reserva para conduzir sem CNH só é barrada na tela `/trips/new`; Segurança sem CNH em `/trips/new`; D-1 (limite de 5 MB nas fotos de checklist), D-2 (quem vê links de evidência), T1-D02 (A→B→A só para quem enviou a foto original).
+- **Riscos não testados:** limite de 4,5 MB do corpo na Vercel × CNH de 5 MB, IA/OCR reais, celulares reais, pooler/Realtime do Supabase.
+- **Operação:** migrar a Vercel Hobby para Pro antes da operação real; Supabase sem backup automático/PITR; ledger `schema_migrations` ainda sem registro.
