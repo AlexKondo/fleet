@@ -48,8 +48,10 @@ function LicenseCaptureAttempt({ dict, onRestart }: { dict: Dictionary; onRestar
       if (original instanceof File) {
         try {
           data.set("photo", await prepareLicenseDocument(original));
-        } catch {
-          return { status: "error", error: t.documentPreparationFailed };
+        } catch (cause) {
+          // D-T3-02: even after reducing resolution/quality the photo does not fit the transport limit — say
+          // exactly what to do. The original stays selected (`file` state) and is never modified.
+          return { status: "error", error: cause instanceof Error && cause.message === "DOCUMENT_TOO_LARGE" ? t.documentTooLargeAfterReduction : t.documentPreparationFailed };
         }
       }
     }

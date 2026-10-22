@@ -1,0 +1,21 @@
+{
+ "D02": {
+  "mensagemNaTela": "Formato de foto não aceito. Envie JPEG, PNG ou WEBP (fotos HEIC do iPhone não são aceitas: em Ajustes > Câmera > Formatos, escolha \"Mais Compatível\"). Nada foi salvo; escolha outra foto e salve de novo.",
+  "validacaoNativa": "Formato de foto não aceito. Envie JPEG, PNG ou WEBP (fotos HEIC do iPhone não são aceitas: em Ajustes > Câmera > Formatos, escolha \"Mais Compatível\"). Nada foi salvo; escolha outra foto e salve de novo.",
+  "accept": "image/jpeg,image/png,image/webp",
+  "nomeNoBancoAntes": "T3 Jolion medicoes",
+  "nomeNoBancoDepois": "T3 Jolion medicoes",
+  "pendenciasHeic": "0"
+ },
+ "D07": {
+  "resultado": "alerta",
+  "mensagem": "Checklist salvo, mas a foto da avaria não foi enviada (falha de conexão). A avaria fica sem evidência até a foto chegar. Envie o formulário de novo para reenviar só a foto (o checklist não será duplicado) ou conclua depois em Minhas fotos pendentes. Abrir Minhas fotos pendentes | ",
+  "linkPendentes": 1,
+  "fotos": "",
+  "reenvio": {
+   "url": "/trips",
+   "retiradasDoMotorista": "1",
+   "fotos": "damage"
+  }
+ }
+}

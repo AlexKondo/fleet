@@ -1,0 +1,26 @@
+{
+ "f3_12mp_ruido.jpg": {
+  "largura": 4032,
+  "altura": 3024,
+  "megapixels": 12.2,
+  "bytes": 4866590,
+  "MiB": 4.64,
+  "qualidade_pil": 62
+ },
+ "f3_50mp_ruido.jpg": {
+  "largura": 8160,
+  "altura": 6120,
+  "megapixels": 49.9,
+  "bytes": 4771590,
+  "MiB": 4.55,
+  "qualidade_pil": 34
+ },
+ "f3_ruido_extremo.jpg": {
+  "largura": 2400,
+  "altura": 2400,
+  "megapixels": 5.8,
+  "bytes": 4806291,
+  "MiB": 4.58,
+  "qualidade_pil": 88
+ }
+}

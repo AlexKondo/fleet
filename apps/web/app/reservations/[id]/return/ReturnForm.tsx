@@ -1,6 +1,7 @@
 "use client";
 import {fieldsWithoutPhotos,directInspectionPhotos} from "@/lib/domain/directPhotoUpload";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import type { Database } from "@fleet/supabase-client";
@@ -39,6 +40,9 @@ export function ReturnForm({
   const [error, setError] = useState<string | null>(null);
   const [failedPhotoAngles, setFailedPhotoAngles] = useState<PhotoAngle[] | null>(null);
   const [damageEvidenceMissing, setDamageEvidenceMissing] = useState(false);
+  // T2-D07: the checklist IS saved but the damage photo did not arrive — different message (and link to
+  // "Minhas fotos pendentes") from the pre-submit "no damage photo selected" case.
+  const [damagePhotoPendingSaved, setDamagePhotoPendingSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
   const photoFiles = useRef(new Map<string, File[]>());
 
@@ -49,6 +53,7 @@ export function ReturnForm({
     setError(null);
     setFailedPhotoAngles(null);
     setDamageEvidenceMissing(false);
+    setDamagePhotoPendingSaved(false);
 
     // Photos are reported by PhotoCaptureSection via onFileChange (photoFiles ref), not
     // through the form's own native file inputs — see PhotoCapture.tsx for why. Inject
@@ -103,7 +108,7 @@ export function ReturnForm({
       if (result.damageEvidenceMissing) {
         // Checklist is saved, but BR-013/ADR-004 means this isn't optional like the other
         // angles — keep the user here (no "go to trips" escape) until it uploads.
-        setDamageEvidenceMissing(true);
+        setDamagePhotoPendingSaved(true);
         return;
       }
 
@@ -118,7 +123,7 @@ export function ReturnForm({
     });
   }
 
-  const photoBlocked = !damageEvidenceMissing && failedPhotoAngles;
+  const photoBlocked = !damageEvidenceMissing && !damagePhotoPendingSaved && failedPhotoAngles;
 
   return (
     // onSubmit (not `action`): React 19 resets uncontrolled fields after a form action, which
@@ -242,6 +247,15 @@ export function ReturnForm({
         <p role="alert" className="fm-banner fm-banner-danger ck-msg">
           {tc.damagePhotoRequired}
         </p>
+      ) : null}
+
+      {damagePhotoPendingSaved ? (
+        <div role="alert" className="fm-banner fm-banner-danger ck-msg">
+          <p>{tc.damagePhotoPendingSaved}</p>
+          <Link href="/account/photos" className="fm-btn fm-btn-ghost ck-msg-btn">
+            {tc.pendingPhotosLink}
+          </Link>
+        </div>
       ) : null}
 
       {photoBlocked ? (

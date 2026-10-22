@@ -26,6 +26,7 @@ import { CameraCaptureModal } from "./CameraCaptureModal";
  */
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 function withCount(template: string, count: number): string {
   return template.replace("{count}", String(count));
@@ -132,6 +133,12 @@ function PhotoCaptureField({
 
   function handlePicked(picked: File | undefined | null) {
     if (!picked) return;
+    // T2-D02: the direct Storage transport accepts JPEG/PNG/WEBP only — refuse other formats (HEIC...) here,
+    // instead of letting the angle silently end up "not sent".
+    if (!PHOTO_TYPES.includes(picked.type)) {
+      setError(t.fileTypeNotSupported);
+      return;
+    }
     if (picked.size > MAX_PHOTO_BYTES) {
       setError(t.fileTooLarge);
       return;
@@ -185,7 +192,7 @@ function PhotoCaptureField({
         <input
           ref={uploadInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           multiple
           className="sr-only"
           onChange={(e) => {

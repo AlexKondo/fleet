@@ -194,6 +194,7 @@ export type Dictionary = {
       noPhoto: string;
       notAnImage: string;
       documentPreparationFailed: string;
+      documentTooLargeAfterReduction: string;
       photoTooLarge: string;
       analysisFailed: string;
       saveFailed: string;
@@ -1024,6 +1025,7 @@ export type Dictionary = {
       photoCount: string;
       upload: string;
       fileTooLarge: string;
+      fileTypeNotSupported: string;
       remove: string;
       damageHint: string;
       takePhoto: string;
@@ -1056,6 +1058,10 @@ export type Dictionary = {
       dirtyExterior: string;
       dirtyInterior: string;
       damagePhotoRequired: string;
+      damagePhotoPendingSaved: string;
+      pendingPhotosLink: string;
+      evidenceDamagePhotoMissing: string;
+      photoTypeNotSupported: string;
       goToTrips: string;
       submitting: string;
     };
@@ -1127,6 +1133,7 @@ export type Dictionary = {
       photoLinkPending: string;
       photoTooLarge: string;
       photoUploadFailed: string;
+      photoTypeNotSupported: string;
       locationNameRequired: string;
       locationInvalid: string;
       locationInUse: string;
@@ -1529,6 +1536,11 @@ export type Dictionary = {
       waitingChecklist: string;
       recordMovement: string;
       checklistUnavailable: string;
+      damagePhotoFailed: string;
+      damagePhotoType: string;
+      damagePhotoTooLarge: string;
+      retryDamagePhoto: string;
+      openEvidence: string;
     };
     fleet: {
       subtitle: string;

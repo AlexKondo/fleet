@@ -1,0 +1,23 @@
+{
+ "mode": "depois",
+ "key": "g5",
+ "rid": "17aa6675-247f-4586-8cd8-34bb6f3b2829",
+ "inicio": {
+  "conferencias": ""
+ },
+ "aposQueda": {
+  "url": "/reservations/17aa6675-247f-4586-8cd8-34bb6f3b2829/pickup",
+  "alerta": "A conferência foi salva, mas a foto da avaria não chegou (falha de conexão). Sem a foto, a evidência da avaria fica incompleta. Toque em \"Enviar a foto novamente\" — a conferência não será registrada de novo. Se continuar falhando, abra as evidências desta conferência e envie a foto por lá. Abrir as evidências desta conferência | ",
+  "conferencias": 1,
+  "fotos": "",
+  "jornal": "pending",
+  "botaoReenviar": 1,
+  "linkEvidencias": 1
+ },
+ "aposReenvio": {
+  "url": "/gate",
+  "conferencias": 1,
+  "fotos": "damage",
+  "jornal": "linked"
+ }
+}

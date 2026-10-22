@@ -1,0 +1,11 @@
+﻿TAREFA li encontrados: 2
+TAREFA card botoes: ["Bloquear"]
+TAREFA banco: Ricardo Menezes | audit: 1
+MEDICAO linhas: 1
+MEDICAO botao editar encontrado: 1
+MEDICAO campo odometro: 1 valor: 15000
+MEDICAO justificativa exibida ao reduzir: 1 required: 
+MEDICAO sem justificativa -> msgs: Justificativa da correção do odômetro (obrigatória ao reduzir) |  | odometro banco: 15000
+MEDICAO com justificativa -> msgs:  | odometro banco: 15000
+MEDICAO auditoria: vehicle.measurements_updated {"odometer_km": 15000, "correction_reason": "T3 correcao: digitacao errada na devolucao", "estimated_range_km": 0, "fuel_level_percent": 70, "battery_level_perc
+pageerrors []

@@ -1,7 +1,7 @@
 "use client";
 import {createVehicleWithPhoto} from "./photoSubmission";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { createVehicle, type FleetActionState } from "./actions";
 import { FUEL_LEVEL_OPTIONS, VEHICLE_COLOR_OPTIONS } from "@/lib/domain/vehicleFieldOptions";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -68,7 +68,7 @@ export function VehicleForm({
   dict: Dictionary;
   onSaved?: () => void;
 }) {
-  const [state, formAction, pending] = useActionState((prev:FleetActionState,data:FormData)=>createVehicleWithPhoto(prev,data,createVehicle,dict.errors.fleet.photoPendingAfterCreate), initialState);
+  const [state, formAction, pending] = useActionState((prev:FleetActionState,data:FormData)=>createVehicleWithPhoto(prev,data,createVehicle,dict.errors.fleet.photoPendingAfterCreate,dict.errors.fleet.photoTypeNotSupported), initialState);
   const formRef = useRef<HTMLFormElement>(null);
   // Read once, on mount — restores whatever survived a remount after a failed submit.
   const [draft, setDraft] = useState<Record<string,string>>({});
@@ -111,8 +111,15 @@ export function VehicleForm({
   return (
     <form
       ref={formRef}
-      action={formAction}
-      onSubmit={(e) => writeDraft(new FormData(e.currentTarget))}
+      // D-T3-01: onSubmit + startTransition instead of `action`: React 19 resets a <form action> after every
+      // submission, which wiped the typed fields and left the controlled category <select> showing another
+      // option than the state after a server error. Only a successful create resets the form (effect above).
+      onSubmit={(e) => {
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        writeDraft(data);
+        startTransition(() => formAction(data));
+      }}
       className="flex flex-col gap-4"
     >
       {!managementScope?<p role="alert">Não foi possível consultar as unidades autorizadas. Recarregue antes de cadastrar.</p>:<label className="flex flex-col gap-1.5"><span>Unidade-base responsável pelo veículo</span><select name="unitId" required={managementScope.mode==="selected_units"} defaultValue={draft.unitId??""} className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2"><option value="">{managementScope.mode==="all_units"?"Sem unidade atribuída":"Selecione uma unidade autorizada"}</option>{managementScope.units.filter(u=>u.enabled).map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></label>}

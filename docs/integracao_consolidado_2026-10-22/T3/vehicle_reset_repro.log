@@ -1,0 +1,3 @@
+﻿INICIO banco: SUV Compacto|ICE|fuel=70|bat=NULL|odo=14000 | select categoria: SUV Compacto | campos: ["id","plate","name","color","photo","categoryId","odometerKm","nextServiceOdometerKm","estimatedRangeKm","fuelLevelPercent","locationId"]
+APOS ERRO msgs: Já existe um veículo com essa placa nesta organização. | select categoria agora: Hatch Elétrico | placa no campo: T3M0001 | fuel visivel: 1 | bateria visivel: 0
+APOS SALVAR DE NOVO banco: Hatch Elétrico|BEV|fuel=70|bat=NULL|odo=14000

@@ -1,0 +1,51 @@
+[
+ {
+  "arquivo": "f3_12mp_ruido.jpg",
+  "bytesEntrada": 4866590,
+  "enviado": [
+   {
+    "campo": "1_photo",
+    "tipo": "image/jpeg",
+    "bytes": 2775492,
+    "dimensoes": "3200x2400",
+    "salvo": "C:/Users/remoto/AppData/Local/Temp/claude/c--projects-fleet/c9b2838b-745c-4a4f-97f8-1c56252460c4/scratchpad/f3_docs/sent/depois_f3_12mp_ruido.jpg_enviado.jpg"
+   }
+  ],
+  "ms": 3682,
+  "mensagens": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes."
+  ],
+  "originalAindaSelecionado": true,
+  "resultado": "ENVIADO image/jpeg 2775492 B 3200x2400 (limite 3.145.728 B)"
+ },
+ {
+  "arquivo": "f3_50mp_ruido.jpg",
+  "bytesEntrada": 4771590,
+  "enviado": [
+   {
+    "campo": "1_photo",
+    "tipo": "image/jpeg",
+    "bytes": 3122433,
+    "dimensoes": "5656x4242",
+    "salvo": "C:/Users/remoto/AppData/Local/Temp/claude/c--projects-fleet/c9b2838b-745c-4a4f-97f8-1c56252460c4/scratchpad/f3_docs/sent/depois_f3_50mp_ruido.jpg_enviado.jpg"
+   }
+  ],
+  "ms": 3524,
+  "mensagens": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes."
+  ],
+  "originalAindaSelecionado": true,
+  "resultado": "ENVIADO image/jpeg 3122433 B 5656x4242 (limite 3.145.728 B)"
+ },
+ {
+  "arquivo": "f3_ruido_extremo.jpg",
+  "bytesEntrada": 4806291,
+  "enviado": [],
+  "ms": 1814,
+  "mensagens": [
+   "Esta foto continua grande demais para envio (limite de 3 MB), mesmo depois de reduzirmos a resolução e a qualidade até o mínimo que mantém a CNH legível. O que fazer: tire outra foto com a câmera em resolução menor (por exemplo 12 MP em vez de 50 MP), com boa luz e enquadrando só a CNH, ou envie o PDF da CNH Digital. Seu arquivo original continua selecionado e não foi alterado."
+  ],
+  "originalAindaSelecionado": true,
+  "resultado": "RECUSADO NA PREPARAÇÃO (nada enviado)"
+ }
+]

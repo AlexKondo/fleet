@@ -1,0 +1,17 @@
+{
+ "mode": "antes",
+ "key": "g4",
+ "rid": "4bf36090-e4a0-4a42-a404-697a845218aa",
+ "inicio": {
+  "conferencias": ""
+ },
+ "aposQueda": {
+  "url": "/reservations/4bf36090-e4a0-4a42-a404-697a845218aa/evidence/71612d13-aaeb-4228-931b-f4842d4cc4b5",
+  "alerta": "Avaria registrada sem foto: a evidência está incompleta. Escolha \"Dano observado\" e envie a foto da avaria abaixo. | ",
+  "conferencias": 1,
+  "fotos": "",
+  "jornal": "pending",
+  "botaoReenviar": 0,
+  "linkEvidencias": 0
+ }
+}

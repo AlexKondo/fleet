@@ -1,4 +1,7 @@
-﻿TAREFA card botoes: ["Bloquear"]
-TAREFA banco: NULL | audit: 0
+﻿TAREFA li encontrados: 3
+TAREFA card botoes: ["Assumir","Concluir","Cancelar"]
+TAREFA apos clique url= /dashboard banner= Atenção: um ou mais solicitantes têm reservas com horários sobrepostos em veículos diferentes. | 
+TAREFA banco: Ricardo Menezes | audit: 1
+MEDICAO linhas: 0
 MEDICAO botao editar encontrado: 0
 pageerrors []

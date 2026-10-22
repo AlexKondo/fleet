@@ -70,3 +70,36 @@ SCR-MNT-004 /maintenance/vehicles maint 1440 200  err 0 fail 0 keys 0
 SCR-MNT-004 /maintenance/vehicles maint 390 200  err 0 fail 0 keys 0
 login admin -> /
 SCR-ADM-001 /admin admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-001 /admin admin 390 200  err 0 fail 0 keys 0
+SCR-ADM-002 /settings/users admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-002 /settings/users admin 390 200  err 0 fail 0 keys 0
+SCR-ADM-003 /settings admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-003 /settings admin 390 200  err 0 fail 0 keys 0
+SCR-ADM-003 /settings/mobility-points admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-003 /settings/mobility-points admin 390 200  err 0 fail 0 keys 0
+SCR-ADM-003 /admin/units admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-003 /admin/units admin 390 200  err 0 fail 0 keys 0
+SCR-ADM-004 /admin/integrations admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-004 /admin/integrations admin 390 200  err 0 fail 0 keys 0
+SCR-ADM-005 /admin/audit admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-005 /admin/audit admin 390 200  err 0 fail 0 keys 0
+SCR-ADM-005 /account/privacy admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-005 /account/privacy admin 390 200  err 0 fail 0 keys 0
+SCR-ADM-006 /admin/ai admin 1440 200  err 0 fail 0 keys 0
+SCR-ADM-006 /admin/ai admin 390 200  err 0 fail 0 keys 0
+login fmcampinas -> /dashboard
+EXTRA /fleet fmcampinas 1440 200  err 0 fail 0 keys 0
+EXTRA /fleet fmcampinas 390 200  err 0 fail 0 keys 0
+login custodian -> /dashboard
+EXTRA /account/keys custodian 1440 200  err 0 fail 0 keys 0
+EXTRA /account/keys custodian 390 200  err 0 fail 0 keys 0
+LOC es /dashboard/command-center 200 keys 0
+LOC es /trips/new 200 keys 0
+LOC es /maintenance/work-orders 200 keys 0
+LOC en-US /dashboard/command-center 200 keys 0
+LOC en-US /trips/new 200 keys 0
+LOC en-US /maintenance/work-orders 200 keys 0
+LOC zh-CN /dashboard/command-center 200 keys 0
+LOC zh-CN /trips/new 200 keys 0
+LOC zh-CN /maintenance/work-orders 200 keys 0
+TOTAL 86 problem 2

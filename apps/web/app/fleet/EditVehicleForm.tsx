@@ -2,12 +2,13 @@
 import {directPhotoUpload,fieldsWithoutPhotos} from "@/lib/domain/directPhotoUpload";
 
 import Image from "next/image";
-import { useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { updateVehicle, type FleetActionState } from "./actions";
 import { FUEL_LEVEL_OPTIONS, VEHICLE_COLOR_OPTIONS } from "@/lib/domain/vehicleFieldOptions";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { errorLabel } from "@/lib/i18n/errorLabel";
 import { VehiclePhotoInput } from "./VehiclePhotoInput";
+import { vehiclePhotoTypeUnsupported } from "@/lib/domain/vehiclePhotoLimit";
 
 const initialState: FleetActionState = { status: "idle" };
 
@@ -45,6 +46,8 @@ export function EditVehicleForm({
   const [correctingOdometer,setCorrectingOdometer]=useState(false);
   const [state, formAction, pending] = useActionState(async (prev:FleetActionState,data:FormData):Promise<FleetActionState>=>{
     const photo=data.get('photo');
+    // T2-D02: unsupported format (HEIC...) -> format message, nothing saved, no fake "pending photo".
+    if(photo instanceof File&&vehiclePhotoTypeUnsupported(photo))return {status:'error',error:dict.errors.fleet.photoTypeNotSupported};
     const result:FleetActionState=await updateVehicle(prev,fieldsWithoutPhotos(data));
     if(result.status==='success'&&photo instanceof File&&photo.size){try{await directPhotoUpload('vehicle',vehicle.id,null,photo)}catch{return {status:'error',error:dict.errors.fleet.photoLinkPending,vehicleId:result.vehicleId};}}
     return result;
@@ -63,8 +66,14 @@ export function EditVehicleForm({
   const showBattery = energyType === "BEV" || energyType === "PHEV";
 
   return (
+    // D-T3-01: onSubmit + startTransition (not `action`) so React 19 does not reset the form after a server
+    // error: every typed field and the chosen category stay as they were (same technique as PickupForm).
     <form
-      action={formAction}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        startTransition(() => formAction(data));
+      }}
       className="flex flex-col gap-4 rounded-md border border-gwm-accent/40 bg-panel-800/40 p-4"
     >
       <input type="hidden" name="id" value={vehicle.id} />

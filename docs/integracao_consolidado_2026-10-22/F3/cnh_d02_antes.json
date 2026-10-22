@@ -1,0 +1,35 @@
+[
+ {
+  "arquivo": "f3_12mp_ruido.jpg",
+  "bytesEntrada": 4866590,
+  "enviado": [],
+  "ms": 2251,
+  "mensagens": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado."
+  ],
+  "originalAindaSelecionado": true,
+  "resultado": "RECUSADO NA PREPARAÇÃO (nada enviado)"
+ },
+ {
+  "arquivo": "f3_50mp_ruido.jpg",
+  "bytesEntrada": 4771590,
+  "enviado": [],
+  "ms": 1636,
+  "mensagens": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado."
+  ],
+  "originalAindaSelecionado": true,
+  "resultado": "RECUSADO NA PREPARAÇÃO (nada enviado)"
+ },
+ {
+  "arquivo": "f3_ruido_extremo.jpg",
+  "bytesEntrada": 4806291,
+  "enviado": [],
+  "ms": 1819,
+  "mensagens": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado."
+  ],
+  "originalAindaSelecionado": true,
+  "resultado": "RECUSADO NA PREPARAÇÃO (nada enviado)"
+ }
+]

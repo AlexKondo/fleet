@@ -20,6 +20,11 @@ export async function submitVisualCheck(form:FormData):Promise<{success:boolean;
  const response=phase==="pickup"?await db.rpc("record_pickup",{...common,p_has_damage:damage}):await db.rpc("record_return",{...common,p_has_new_damage:damage,p_current_location_id:null,p_vehicle_event:"",p_workflow_tasks:[]});
  if(response.error || !response.data)return {success:false,error:"Não foi possível registrar esta etapa. Confira o estado da viagem e os movimentos físicos."};
  if(damage&&photo instanceof File){const photos=new FormData();photos.append("photo_damage",photo as File);const failed=await uploadInspectionPhotos(db,profile.organization_id,response.data,photos);if(failed.length)return {success:false,error:"Conferência salva; a foto ainda não foi enviada. Tente novamente para completar a evidência."};}
- revalidatePath("/gate");revalidatePath(`/reservations/${id}`);revalidatePath("/trips");
+ // T2-D01: when the damage photo still has to be sent by the browser (direct Storage transport), do NOT
+ // revalidate here. Any revalidation makes Next re-render the current pickup/return page in this response,
+ // which redirects to the evidence page and unmounts the form before the photo is sent — a failed upload
+ // then went unnoticed. The client navigates/refreshes only after the photo has been attested.
+ const photoStillPending=damage&&form.get("photo_upload_pending")==="true";
+ if(!photoStillPending){revalidatePath("/gate");revalidatePath(`/reservations/${id}`);revalidatePath("/trips");}
  return {success:true,inspectionId:response.data};
 }

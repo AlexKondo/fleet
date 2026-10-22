@@ -1,0 +1,33 @@
+{
+ "mode": "depois2",
+ "key": "f4",
+ "rid": "46622fce-cfef-47bc-a818-99cbbd8beb5b",
+ "inicio": {
+  "conferencias": ""
+ },
+ "heic": {
+  "alerta": "Formato de foto não aceito. Envie JPEG, PNG ou WEBP (fotos HEIC do iPhone não são aceitas: em Ajustes > Câmera > Formatos, escolha \"Mais Compatível\"). Nada foi registrado. | ",
+  "validacao": "Formato de foto não aceito. Envie JPEG, PNG ou WEBP (fotos HEIC do iPhone não são aceitas: em Ajustes > Câmera > Formatos, escolha \"Mais Compatível\"). Nada foi registrado.",
+  "conferencias": ""
+ },
+ "aposQueda": {
+  "url": "/reservations/46622fce-cfef-47bc-a818-99cbbd8beb5b/pickup",
+  "alerta": "A conferência foi salva, mas a foto da avaria não chegou (falha de conexão). Sem a foto, a evidência da avaria fica incompleta. Toque em \"Enviar a foto novamente\" — a conferência não será registrada de novo. Se continuar falhando, abra as evidências desta conferência e envie a foto por lá. Abrir as evidências desta conferência | ",
+  "conferencias": 1,
+  "fotos": "",
+  "jornal": "pending",
+  "botaoReenviar": 1,
+  "linkEvidencias": 1
+ },
+ "recarregar": {
+  "url": "/reservations/46622fce-cfef-47bc-a818-99cbbd8beb5b/evidence/131ac500-5251-4de2-9aeb-a046b9cf3d95",
+  "alerta": "Avaria registrada sem foto: a evidência está incompleta. Escolha \"Dano observado\" e envie a foto da avaria abaixo. | ",
+  "anguloPreSelecionado": "damage"
+ },
+ "aposEnvioEvidencias": {
+  "status": "Fotos adicionadas; as evidências anteriores foram preservadas.",
+  "alerta": "",
+  "fotos": "damage",
+  "conferencias": 1
+ }
+}

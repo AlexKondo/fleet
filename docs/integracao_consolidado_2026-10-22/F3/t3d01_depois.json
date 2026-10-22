@@ -1,0 +1,27 @@
+{
+ "mode": "depois",
+ "inicio": "T3 Jolion medicoes | Hatch Elétrico | BEV | fuel=70 | bat=NULL | odo=14000",
+ "digitado": {
+  "categoria": "SUV Híbrido",
+  "placa": "GWM1H61",
+  "nome": "F3 nome digitado",
+  "odometro": "14000",
+  "combustivelVisivel": 1,
+  "bateriaVisivel": 0
+ },
+ "aposErro": {
+  "mensagem": "Já existe um veículo com essa placa nesta organização.",
+  "categoria": "SUV Híbrido",
+  "placa": "GWM1H61",
+  "nome": "F3 nome digitado",
+  "odometro": "14000",
+  "combustivelVisivel": 1,
+  "bateriaVisivel": 0
+ },
+ "aposSalvarDeNovo": {
+  "banco": "F3 nome digitado | SUV Híbrido | HEV | fuel=70 | bat=NULL | odo=14000",
+  "escolhido": "F3 nome digitado | SUV Híbrido | HEV"
+ },
+ "categoriaPreservada": true,
+ "restaurado": "T3 Jolion medicoes | SUV Compacto | ICE | fuel=70 | bat=NULL | odo=14000"
+}

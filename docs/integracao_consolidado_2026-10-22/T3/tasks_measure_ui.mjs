@@ -25,14 +25,14 @@ const card = page.locator('li', { hasText: 'T3M0001' }).filter({ has: page.locat
 const btns = await card.locator('button').allInnerTexts().catch(() => []);
 console.log('TAREFA card botoes:', JSON.stringify(btns));
 const claim = card.locator('form').first().locator('button').first();
-if (await claim.count()) {
+if (await claim.count() && /Assumir/.test(await claim.innerText())) {
   await claim.click(); await page.waitForLoadState('networkidle').catch(() => {}); await page.waitForTimeout(2500);
   console.log('TAREFA apos clique url=', page.url().replace(BASE, ''), 'banner=', (await page.locator('[role=alert]').allInnerTexts()).join(' | '));
 }
 console.log('TAREFA banco:', q(`select coalesce((select full_name from profiles where id=assigned_to),'NULL') from workflow_tasks where id='${TASK}'`), '| audit:', q(`select count(*) from audit_log where entity_id='${TASK}' and action='workflow_task.claimed'`));
 await page.screenshot({ path: `${EVD}/shots/c4_dashboard_tarefa.png`, fullPage: false });
 // --- medicoes
-await go('/fleet'); const vrow = page.locator(':is(li,tr,article,div)', { hasText: 'T3M0001' }).filter({ has: page.locator('button', { hasText: /^Editar$/ }) }).last(); console.log('MEDICAO linhas:', await vrow.count());
+await go('/fleet'); await page.locator('input[type=search]').first().fill('T3M0001'); await page.waitForTimeout(1500); const vrow = page.locator('section.vw-detail'); await vrow.locator('details.vw-admin > summary').click(); await page.waitForTimeout(500); console.log('MEDICAO linhas:', await vrow.count());
 const editBtn = vrow.locator('button', { hasText: /^Editar$/ }).first();
 console.log('MEDICAO botao editar encontrado:', await editBtn.count());
 if (await editBtn.count()) {
@@ -50,6 +50,8 @@ if (await editBtn.count()) {
   await save.click(); await page.waitForTimeout(3000);
   console.log('MEDICAO sem justificativa -> msgs:', (await page.locator('[role=alert]').allInnerTexts()).join(' | '), '| odometro banco:', q(`select odometer_km from vehicles where id='${VID}'`));
   // 2) com justificativa
+  console.log('MEDICAO apos recusa: valor odometro no formulario=', await odo.inputValue().catch(() => null), 'justificativa ainda visivel=', await reason.count());
+  await odo.fill('14000'); await page.waitForTimeout(400);
   if (await reason.count()) { await reason.fill('T3 correcao: digitacao errada na devolucao'); }
   await save.click(); await page.waitForTimeout(3500);
   console.log('MEDICAO com justificativa -> msgs:', (await page.locator('[role=alert], [role=status]').allInnerTexts()).join(' | '), '| odometro banco:', q(`select odometer_km from vehicles where id='${VID}'`));
