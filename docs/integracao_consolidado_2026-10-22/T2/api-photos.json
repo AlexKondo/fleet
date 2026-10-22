@@ -1,0 +1,462 @@
+[
+ {
+  "id": "A01",
+  "cenario": "Rota /api/photos: origem diferente, corpo > 4096 B, sem sessão, JSON inválido",
+  "papel": "admin / anônimo",
+  "esperado": "403 / 413 / 401 / 400",
+  "obtido": "origem=403; corpo grande=413; anônimo=307 /login; json inválido=400",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "A02",
+  "cenario": "Tipos: begin com HEIC/HTML/PDF/GIF/SVG; HTML disfarçado de PNG; uploads diretos ao bucket fora do jornal",
+  "papel": "admin",
+  "esperado": "begin 400 para não-JPEG/PNG/WEBP; HTML-como-PNG recusado na verificação do servidor (sem vínculo); bucket recusa PDF/HTML",
+  "obtido": "image/heic→400 text/html→400 application/pdf→400 image/gif→400 image/svg+xml→400; HTML-como-PNG: upload=200 finish=409 {\"error\":\"photo_pending\"} jornal=pending/não verificado; bucket: heic=200 pdf=400 html=400",
+  "status": "PASS",
+  "evidencia": {
+   "f": {
+    "bg": {
+     "status": 200,
+     "body": {
+      "id": "66db57a6-b2c4-4271-8f04-ed9a70011b6b",
+      "path": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_a572a03d8e6a511bf0284c1d5bb3ee20c81dc51b2201ad5e61d37aa457cf653f.png",
+      "state": "pending"
+     },
+     "ms": 213
+    },
+    "up": {
+     "status": 200,
+     "body": "{\"Key\":\"vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_a572a03d8e6a511bf0284c1d5bb3ee20c81dc51b2201ad5e61d37aa457cf653f.png\",\"Id\":\"217360c0-482f-40a2"
+    },
+    "fin": {
+     "status": 409,
+     "body": {
+      "error": "photo_pending"
+     },
+     "ms": 204
+    },
+    "j": {
+     "id": "66db57a6-b2c4-4271-8f04-ed9a70011b6b",
+     "state": "pending",
+     "verified": false,
+     "size": 3038,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_a572a03d8e6a511bf0284c1d5bb3ee20c81dc51b2201ad5e61d37aa457cf653f.png",
+     "by": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "kind": "vehicle",
+     "target": "956167de-3135-41f4-a09e-4c856499fa75",
+     "angle": null
+    }
+   },
+   "heicUp": {
+    "status": 200,
+    "body": "{\"Key\":\"vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_t2probe_1792695184003.heic\",\"Id\":\"de066ec9-66bf-4bde-8ec8-9808779dba15\"}"
+   },
+   "pdfUp": {
+    "status": 400,
+    "body": "{\"statusCode\":\"415\",\"error\":\"invalid_mime_type\",\"message\":\"mime type application/pdf is not supported\",\"code\":\"InvalidMimeType\"}"
+   },
+   "htmlUp": {
+    "status": 400,
+    "body": "{\"statusCode\":\"415\",\"error\":\"invalid_mime_type\",\"message\":\"mime type text/html is not supported\",\"code\":\"InvalidMimeType\"}"
+   },
+   "orphanHeic": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_t2probe_1792695184003.heic"
+  }
+ },
+ {
+  "id": "A03",
+  "cenario": "Tamanhos 3 / 4,5 / 8,6 / 10 MiB e 10 MiB+1 (begin e Storage direto)",
+  "papel": "admin",
+  "esperado": "até 10 MiB linked+verificado sem 5xx; 10 MiB+1: begin 400 e bucket recusa",
+  "obtido": "3.0MiB: 200/200/200 finish=227ms linked+v; 4.5MiB: 200/200/200 finish=1134ms linked+v; 8.6MiB: 200/200/200 finish=1521ms linked+v; 10.0MiB: 200/200/200 finish=408ms linked+v; +1B: begin=400 storage=400",
+  "status": "PASS",
+  "evidencia": [
+   {
+    "MiB": "3.0",
+    "begin": 200,
+    "upload": 200,
+    "finish": 200,
+    "finishMs": 227,
+    "linked": "linked",
+    "verified": true
+   },
+   {
+    "MiB": "4.5",
+    "begin": 200,
+    "upload": 200,
+    "finish": 200,
+    "finishMs": 1134,
+    "linked": "linked",
+    "verified": true
+   },
+   {
+    "MiB": "8.6",
+    "begin": 200,
+    "upload": 200,
+    "finish": 200,
+    "finishMs": 1521,
+    "linked": "linked",
+    "verified": true
+   },
+   {
+    "MiB": "10.0",
+    "begin": 200,
+    "upload": 200,
+    "finish": 200,
+    "finishMs": 408,
+    "linked": "linked",
+    "verified": true
+   }
+  ]
+ },
+ {
+  "id": "A03m",
+  "cenario": "Memória/tempo do servidor (next dev local) em 5 verificações concorrentes de 10 MiB (download + SHA-256)",
+  "papel": "t2sp",
+  "esperado": "todas 200; medir pico de memória e tempo",
+  "obtido": "status=200,200,200,200,200; tempos=1516,4204,4204,4204,4204ms; parede=4205ms; RSS base=7481MiB pico=7628MiB (Δ≈147MiB)",
+  "status": "PASS",
+  "evidencia": {
+   "pid": "31996",
+   "base": 7844859904,
+   "peak": 7998984192,
+   "fins": [
+    {
+     "status": 200,
+     "body": {
+      "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/interior_47aa1cb81091d46925052633459b8fcd86b1baf0d00ae8f6736b8e08071684b5.png"
+     },
+     "ms": 1516
+    },
+    {
+     "status": 200,
+     "body": {
+      "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/interior_d9aefd8f7be07946f294766a839ed72c5cb5eade66382038655a6a57873f12fd.png"
+     },
+     "ms": 4204
+    },
+    {
+     "status": 200,
+     "body": {
+      "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/interior_ee90c884f9f41b27dc4f7c0c29cf11d414554e76b1fc805f91cc4b77d2e2cd65.png"
+     },
+     "ms": 4204
+    },
+    {
+     "status": 200,
+     "body": {
+      "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/interior_729633c50cfb0503acb200ec1f849fea0f7735edeb6faf8b575c5dd8e75c5f0e.png"
+     },
+     "ms": 4204
+    },
+    {
+     "status": 200,
+     "body": {
+      "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/interior_9ecd344cbdcd508993432cc9bbadbaf7b2ed344e4e3056f1cf07e27b24c01201.png"
+     },
+     "ms": 4204
+    }
+   ]
+  }
+ },
+ {
+  "id": "A04",
+  "cenario": "Retry com a mesma identidade: begin 2×, upload 2× (2º = 409), finish 2×, begin após vínculo",
+  "papel": "t2sp",
+  "esperado": "mesmo id/caminho; 2º upload recusado (sem sobrescrever); 1 único vínculo; begin posterior devolve linked",
+  "obtido": "mesmo id=true; uploads=200/400 {\"statusCode\":\"409\",\"error\":\"Duplicate\",\"message\":\"The resou; finish=200/200; vínculos=1; begin pós=linked",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "A05",
+  "cenario": "Arquivo ADULTERADO de mesmo tamanho no caminho do jornal → recusa; reenvio do original bloqueado (409); restart → novo caminho → original vinculado",
+  "papel": "t2sp",
+  "esperado": "finish 409 sem atestar; objeto adulterado preservado e NUNCA vinculado; após restart, original vinculado no novo caminho",
+  "obtido": "upload adulterado=200; finish=409 jornal=pending/não v; reenvio original=400; finish=409; restart=204; novo upload=200; finish=200; final=linked+v; vinculado=true; adulterado preservado=true",
+  "status": "PASS",
+  "evidencia": {
+   "j1": {
+    "id": "450455ff-a278-4800-ab1c-b2a3f58efaa8",
+    "state": "pending",
+    "verified": false,
+    "size": 200000,
+    "mime": "image/png",
+    "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/left_side_df34a0a3457681878e338cff599ea6807ef17abadd8d7c720c415cac6f83a5ff.png",
+    "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+    "kind": "inspection",
+    "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+    "angle": "left_side"
+   },
+   "j2": {
+    "id": "450455ff-a278-4800-ab1c-b2a3f58efaa8",
+    "state": "pending",
+    "verified": false,
+    "size": 200000,
+    "mime": "image/png",
+    "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/left_side_df34a0a3457681878e338cff599ea6807ef17abadd8d7c720c415cac6f83a5ff_68b35e54-acdc-4bc0-a0f5-5a1c0df63d44.png",
+    "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+    "kind": "inspection",
+    "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+    "angle": "left_side"
+   },
+   "j3": {
+    "id": "450455ff-a278-4800-ab1c-b2a3f58efaa8",
+    "state": "linked",
+    "verified": true,
+    "size": 200000,
+    "mime": "image/png",
+    "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/left_side_df34a0a3457681878e338cff599ea6807ef17abadd8d7c720c415cac6f83a5ff_68b35e54-acdc-4bc0-a0f5-5a1c0df63d44.png",
+    "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+    "kind": "inspection",
+    "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+    "angle": "left_side"
+   }
+  }
+ },
+ {
+  "id": "A06",
+  "cenario": "Metadados errados (mimetype), owner errado (caminho ocupado por outro gestor), caminho errado",
+  "papel": "admin + fmall",
+  "esperado": "nenhum vínculo; finish 409; jornal pending não verificado; finish por outra conta negado",
+  "obtido": "(a) upload=200 finish=409 pending/-; (b) ocupação por fmall=200 admin=400 finish=409 pending/- finish por fmall=409; (c) upload outro nome=200 finish=409 (2102ms) pending; veículo aponta p/ algum=false",
+  "status": "PASS",
+  "evidencia": {
+   "squat": {
+    "status": 200,
+    "body": "{\"Key\":\"vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_a32113f887c8da0679c9e5cc146eafd74d4504b786892e2a9de8196507b13d53.png\",\"Id\":\"3189273d-7fb4-4445"
+   },
+   "own": {
+    "status": 400,
+    "body": "{\"statusCode\":\"409\",\"error\":\"Duplicate\",\"message\":\"The resource already exists\",\"code\":\"KeyAlreadyExists\"}"
+   }
+  }
+ },
+ {
+  "id": "A06b",
+  "cenario": "Ocupação do caminho por outro gestor com escopo (bloqueio da pendência alheia)",
+  "papel": "fmall vs admin",
+  "esperado": "Storage não deveria permitir que outra conta crie o objeto no caminho do jornal de outra pessoa",
+  "obtido": "upload de fmall no caminho do jornal do admin=200; consequência: pendência do admin fica bloqueada até \"nova tentativa\" (restart)",
+  "status": "FAIL",
+  "evidencia": {}
+ },
+ {
+  "id": "A07",
+  "cenario": "A → B → A na foto do veículo",
+  "papel": "fmall",
+  "esperado": "veículo aponta A, depois B, depois A de novo (sem novo upload: begin devolve linked); objetos A e B preservados; auditoria de cada vínculo",
+  "obtido": "p1=A:true p2=B:true p3=A:true; 2º A begin=linked upload=pulado finish=200; objetos A=1 B=1; auditorias A=2",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "A08",
+  "cenario": "Restart concorrente à atestação (2 abas: finish de 10 MiB × fm_photo_restart com atrasos 0–600 ms) + caso determinístico",
+  "papel": "t2sp",
+  "esperado": "nunca vincular caminho não verificado; estado final consistente; atestação do caminho antigo após restart = PHOTO_ATTEMPT_CHANGED",
+  "obtido": "d0:fin409/rs204 pending vínculo=nenhum ok=true; d30:fin409/rs204 pending vínculo=nenhum ok=true; d80:fin409/rs204 pending vínculo=nenhum ok=true; d150:fin409/rs204 pending vínculo=nenhum ok=true; d300:fin409/rs204 pending vínculo=nenhum ok=true; d600:fin409/rs204 pending vínculo=nenhum ok=true | determinístico: 400 PHOTO_ATTEMPT_CHANGED",
+  "status": "PASS",
+  "evidencia": [
+   {
+    "delay": 0,
+    "finish": 409,
+    "restart": 204,
+    "state": "pending",
+    "verified": false,
+    "pathChanged": true,
+    "linked": "nenhum",
+    "consistent": true
+   },
+   {
+    "delay": 30,
+    "finish": 409,
+    "restart": 204,
+    "state": "pending",
+    "verified": false,
+    "pathChanged": true,
+    "linked": "nenhum",
+    "consistent": true
+   },
+   {
+    "delay": 80,
+    "finish": 409,
+    "restart": 204,
+    "state": "pending",
+    "verified": false,
+    "pathChanged": true,
+    "linked": "nenhum",
+    "consistent": true
+   },
+   {
+    "delay": 150,
+    "finish": 409,
+    "restart": 204,
+    "state": "pending",
+    "verified": false,
+    "pathChanged": true,
+    "linked": "nenhum",
+    "consistent": true
+   },
+   {
+    "delay": 300,
+    "finish": 409,
+    "restart": 204,
+    "state": "pending",
+    "verified": false,
+    "pathChanged": true,
+    "linked": "nenhum",
+    "consistent": true
+   },
+   {
+    "delay": 600,
+    "finish": 409,
+    "restart": 204,
+    "state": "pending",
+    "verified": false,
+    "pathChanged": true,
+    "linked": "nenhum",
+    "consistent": true
+   }
+  ]
+ },
+ {
+  "id": "A09",
+  "cenario": "Queda após a atestação e antes da finalização/vínculo; retomada pelo finish",
+  "papel": "t2sp",
+  "esperado": "pendente+verificado, listado em fm_photo_pending; finish conclui 1 vínculo",
+  "obtido": "atestação=204; estado=pending/v; listado=true; finish=200; final=linked; vínculos=1",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "A10",
+  "cenario": "Sessão expirada (JWT vencido) e sessão revogada (logout) com cookie antigo",
+  "papel": "t2sp",
+  "esperado": "Storage recusa JWT vencido; /api/photos recusa sessão revogada (401); nada vinculado",
+  "obtido": "upload JWT vencido=400; finish sessão revogada=307 /login; upload token revogado (ainda não expirado)=200; jornal=pending",
+  "status": "PASS",
+  "evidencia": {
+   "upRevoked": {
+    "status": 200,
+    "body": "{\"Key\":\"vehicle-photos/00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/back_f8bd7713992802ee4ddfbf2e290d2306f16b1059c2820b0f0074cddc2e4ee658.png\",\"Id\":\"79ebc6ee-0189-4a33-b54"
+   }
+  }
+ },
+ {
+  "id": "A10b",
+  "cenario": "Token de sessão revogada continua aceito pelo Storage até expirar",
+  "papel": "t2sp",
+  "esperado": "observação: comportamento padrão do Supabase (JWT sem estado); o vínculo continua exigindo sessão válida",
+  "obtido": "upload=200; o objeto só é vinculado após finish com sessão válida",
+  "status": "OBS",
+  "evidencia": {}
+ },
+ {
+  "id": "A11",
+  "cenario": "Conta errada: outro colaborador na inspeção alheia; outra organização; gestor limitado fora do escopo (Rio); colaborador na foto de veículo",
+  "papel": "t2other / t2orgb / fmcampinas",
+  "esperado": "begin 403; finish do id alheio negado; Storage RLS nega; pendências alheias invisíveis; restart alheio negado",
+  "obtido": "outro begin=403 finish id alheio=409 upload=400 pendências vistas=0 restart=400; orgB begin=403 upload=400; fmcampinas→Rio begin=403 upload=400; colaborador→veículo begin=403",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "A11b",
+  "cenario": "Código HTTP do finish de upload alheio/inexistente",
+  "papel": "t2other",
+  "esperado": "403 (não autorizado)",
+  "obtido": "finish id alheio=409 {\"error\":\"photo_pending\"}",
+  "status": "OBS",
+  "evidencia": {}
+ },
+ {
+  "id": "A12",
+  "cenario": "Conta desativada",
+  "papel": "t2other",
+  "esperado": "rota nega (401/403); Storage nega",
+  "obtido": "begin=403; upload=400",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "A13",
+  "cenario": "Original preservado: upsert, PUT (update), DELETE no Storage (dono e admin); DELETE/UPDATE/INSERT diretos nas tabelas",
+  "papel": "t2sp / admin",
+  "esperado": "todos negados; bytes e metadados inalterados",
+  "obtido": "upsert=400 put=500 delete dono=200 [] delete admin=200 []; sha igual=true updated_at igual=true; SQL: delete fotos=apagadas=0; update jornal=ERR permission denied for table fm_photo_uploads; insert direto=ERR permission denied for table inspection_photos; delete storage.objects=ERR Direct deletion from storage tables is not allowed. Use ; histórico (postgres) ERR PRESERVE_INSPECTION_HISTORY; linhas=17",
+  "status": "PASS",
+  "evidencia": {
+   "del": {
+    "status": 200,
+    "body": "[]"
+   },
+   "delAdmin": {
+    "status": 200,
+    "body": "[]"
+   },
+   "r1": "apagadas=0",
+   "r2": "ERR permission denied for table fm_photo_uploads",
+   "r4": "ERR Direct deletion from storage tables is not allowed. Use the Storage API instead."
+  }
+ },
+ {
+  "id": "A14",
+  "cenario": "fm_photo_pending: só as próprias pendências; restart em foto vinculada; perda/retorno de escopo",
+  "papel": "fmcampinas / admin",
+  "esperado": "pendência listada só para o autor; restart em linked negado; sem escopo: não lista e não finaliza; com escopo de volta: conclui",
+  "obtido": "autor vê=true admin vê=false; finish=200; restart linked=400 PHOTO_ALREADY_LINKED; sem escopo lista=false finish=409; escopo de volta lista=true finish=200",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "A15",
+  "cenario": "CONTRACT: atestação antiga de 5 argumentos (c6b26da); finalize sem atestação (0aa2403); atestação pelo usuário; INSERT direto; retomada pelo escritor novo",
+  "papel": "service_role / t2sp",
+  "esperado": "5 args negado; finalize sem atestação negado; usuário não atesta; INSERT direto negado; jornal fica pending e o escritor novo conclui",
+  "obtido": "5 args=403 permission denied for function fm_photo_attest; finalize sem atestar=400 PHOTO_SERVER_VERIFICATION_REQUIRED; atestação pelo usuário=403; INSERT direto=403; jornal=pending; retomada=200 linked",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "A16",
+  "cenario": "Links de visualização (signed URL) e listagem por papel: foto de AVARIA da inspeção do t2sp e foto de veículo",
+  "papel": "todos",
+  "esperado": "decisão: hoje a política de leitura do bucket (0181) permite a QUALQUER membro da organização ler/assinar evidências de inspeção; app só gera links em /fleet",
+  "obtido": "t2sp: inspeção=200 veículo=200 listar=26 | t2other: inspeção=400 veículo=200 listar=0 | security: inspeção=200 veículo=200 listar=26 | fmcampinas: inspeção=400 veículo=200 listar=0 | fmall: inspeção=200 veículo=200 listar=26 | admin: inspeção=200 veículo=200 listar=26 | t2orgb: inspeção=400 veículo=400 listar=0 | link assinado por t2other aberto sem sessão=undefined",
+  "status": "OBS",
+  "evidencia": [
+   "t2sp: inspeção=200 veículo=200 listar=26",
+   "t2other: inspeção=400 veículo=200 listar=0",
+   "security: inspeção=200 veículo=200 listar=26",
+   "fmcampinas: inspeção=400 veículo=200 listar=0",
+   "fmall: inspeção=200 veículo=200 listar=26",
+   "admin: inspeção=200 veículo=200 listar=26",
+   "t2orgb: inspeção=400 veículo=400 listar=0"
+  ]
+ },
+ {
+  "id": "A17",
+  "cenario": "Upload interrompido no meio do corpo (conexão cortada a ~30% de 3 MiB) e retomada com o mesmo arquivo",
+  "papel": "t2sp",
+  "esperado": "nenhum objeto parcial; finish 409 (pendente); reenvio completo 200; finish 200; vínculo",
+  "obtido": "objeto após corte=0; finish=409 (25810ms); reenvio=200; finish=200; jornal=linked+v",
+  "status": "PASS",
+  "evidencia": {
+   "objAfterCut": []
+  }
+ },
+ {
+  "id": "A17-repeticao",
+  "cenario": "Upload interrompido no meio do corpo (conexão cortada a ~30% de 3 MiB) e retomada com o mesmo arquivo",
+  "papel": "t2sp",
+  "esperado": "nenhum objeto parcial; finish 409 (pendente); reenvio completo 200; finish 200; vínculo",
+  "obtido": "objeto após corte=0; finish=409 (2452ms); reenvio=200; finish=200; jornal=linked+v",
+  "status": "PASS",
+  "evidencia": {
+   "objAfterCut": []
+  }
+ }
+]

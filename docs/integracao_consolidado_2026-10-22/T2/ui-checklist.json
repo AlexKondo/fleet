@@ -1,0 +1,547 @@
+[
+ {
+  "id": "C01",
+  "cenario": "SP retirada (motorista) com 6 fotos: 2×frente, traseira 4,5 MiB, rodas, 2×avaria",
+  "papel": "t2sp / SP gate_visual",
+  "esperado": "checklist salvo; fotos [back,damage,damage,front,front,wheels] vinculadas e verificadas; actions sem bytes",
+  "obtido": "redirecionado /trips (18938ms); fotos=[back,damage,damage,front,front,wheels]; jornal 6/6 linked; action máx=1053B; /api/photos=207B:200,62B:200,207B:200,62B:200,207B:200,62B:200,208B:200,62B:200,208B:200,62B:200,208B:200,62B:200; storage=200,200,200,200,200,200; 5xx=0; equipamentos=2;   ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "C01",
+   "key": "t2sp",
+   "phase": "pickup",
+   "url0": "/reservations/7b547926-19cb-43dd-9fa3-92388cc825ea/pickup",
+   "equipment": 2,
+   "fieldErrors": "",
+   "outcome": "redirecionado /trips",
+   "ms": 18938,
+   "alert": "",
+   "net": {
+    "maxAction": 1053,
+    "api": "207B:200,62B:200,207B:200,62B:200,207B:200,62B:200,208B:200,62B:200,208B:200,62B:200,208B:200,62B:200",
+    "storage": "200,200,200,200,200,200",
+    "x5": 0
+   },
+   "inspection": "0de39cd6-4553-41f7-978d-5658e8708200",
+   "journal": [
+    {
+     "id": "e767811f-17ae-4a73-ba6a-bde5450eca42",
+     "state": "linked",
+     "verified": true,
+     "size": 400000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/front_e8fa7d3b7b8afb4b53d7ade636f3dc2644176986c8298bbc7525b6274ccb363a.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+     "angle": "front"
+    },
+    {
+     "id": "01405ea9-1165-4eaf-8cfb-43c0d9879e43",
+     "state": "linked",
+     "verified": true,
+     "size": 350000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/front_18ce4ea91499b8e910266e2f6bf4891ab9628bf16afcf4c59d33a1cb85721028.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+     "angle": "front"
+    },
+    {
+     "id": "262ce68a-fc04-41fb-89ca-94bb9ac03ccd",
+     "state": "linked",
+     "verified": true,
+     "size": 4718592,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/back_e0c02050b7570016c1f6033780b5d857d94e7fcf295590d368dbc40c6f499070.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+     "angle": "back"
+    },
+    {
+     "id": "90b29e50-5291-450d-87a4-2ec958d6777b",
+     "state": "linked",
+     "verified": true,
+     "size": 200000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/wheels_84b8ad2ee6f15c1d0d5a439ef1ed6dba0128ca220c2997fa538afd9fba34c82c.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+     "angle": "wheels"
+    },
+    {
+     "id": "b8394b2a-0531-4edf-bd17-f9790f0fef84",
+     "state": "linked",
+     "verified": true,
+     "size": 700000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/damage_4ce65284af57bfde26b647bdd6079705c6207c70b1f791391d50c6431204d002.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+     "angle": "damage"
+    },
+    {
+     "id": "0c59fa34-b451-452f-862b-5c975ca3c6b6",
+     "state": "linked",
+     "verified": true,
+     "size": 650000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/0de39cd6-4553-41f7-978d-5658e8708200/damage_a51f57fde9f370aea48ca8a66704561963136928c116fd18f39950a1fa6f7739.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "0de39cd6-4553-41f7-978d-5658e8708200",
+     "angle": "damage"
+    }
+   ]
+  }
+ },
+ {
+  "id": "C02",
+  "cenario": "SP portaria: conferência visual de retirada com avaria + foto (GateVisualForm)",
+  "papel": "security / SP",
+  "esperado": "checklist salvo; fotos [damage] vinculadas e verificadas; actions sem bytes",
+  "obtido": "redirecionado /gate (1234ms); fotos=[damage]; jornal 1/1 linked; action máx=728B; /api/photos=208B:200,62B:200; storage=200; 5xx=0; equipamentos=-;   ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "C02",
+   "phase": "pickup",
+   "validity": "",
+   "outcome": "redirecionado /gate",
+   "ms": 1234,
+   "alert": "",
+   "net": {
+    "maxAction": 728,
+    "api": "208B:200,62B:200",
+    "storage": "200",
+    "x5": 0
+   },
+   "inspection": "95707550-63ea-402b-a047-a05d083c1c72",
+   "journal": [
+    {
+     "id": "52ce98a1-6dfc-40ec-b83a-b95131aa3f14",
+     "state": "linked",
+     "verified": true,
+     "size": 900000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/95707550-63ea-402b-a047-a05d083c1c72/damage_d804850f8a70fb1f1aaed0f4a7965af81583ee503d679802e697923d13e33e24.png",
+     "by": "72a0902a-f3d4-4d3e-bc28-9e0850ca8bfe",
+     "kind": "inspection",
+     "target": "95707550-63ea-402b-a047-a05d083c1c72",
+     "angle": "damage"
+    }
+   ]
+  }
+ },
+ {
+  "id": "C03",
+  "cenario": "SP reserva sp2: retirada sem avaria (motorista+portaria) + saída e chegada físicas (pré-requisito da devolução)",
+  "papel": "security",
+  "esperado": "1 saída e 1 chegada",
+  "obtido": "retirada=redirecionado /trips; portaria=redirecionado /gate; saídas=1 chegadas=1",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "C04",
+  "cenario": "SP devolução (motorista) com 5 fotos incl. avaria 4,9 MiB",
+  "papel": "t2sp / SP",
+  "esperado": "checklist salvo; fotos [damage,damage,interior,left_side,right_side] vinculadas e verificadas; actions sem bytes",
+  "obtido": "redirecionado /trips (2740ms); fotos=[damage,damage,interior,left_side,right_side]; jornal 5/5 linked; action máx=1257B; /api/photos=211B:200,62B:200,212B:200,62B:200,211B:200,62B:200,208B:200,62B:200,209B:200,62B:200; storage=200,200,200,200,200; 5xx=0; equipamentos=2;   ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "C04",
+   "key": "t2sp",
+   "phase": "return",
+   "url0": "/reservations/6463600c-d32f-4856-936e-5255772a7de0/return",
+   "equipment": 2,
+   "fieldErrors": "",
+   "outcome": "redirecionado /trips",
+   "ms": 2740,
+   "alert": "",
+   "net": {
+    "maxAction": 1257,
+    "api": "211B:200,62B:200,212B:200,62B:200,211B:200,62B:200,208B:200,62B:200,209B:200,62B:200",
+    "storage": "200,200,200,200,200",
+    "x5": 0
+   },
+   "inspection": "45759b6e-3316-4a8b-8867-167dd4f6a925",
+   "journal": [
+    {
+     "id": "7b7be49b-3bb1-46ec-82d1-c297adf3bdb7",
+     "state": "linked",
+     "verified": true,
+     "size": 300000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/45759b6e-3316-4a8b-8867-167dd4f6a925/left_side_0d2174696bb1813777cfc7e591ed186a5ce5681639472bda5d6514e004e624b4.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "45759b6e-3316-4a8b-8867-167dd4f6a925",
+     "angle": "left_side"
+    },
+    {
+     "id": "1145d22c-0dfd-459c-b470-81ca0cb19e60",
+     "state": "linked",
+     "verified": true,
+     "size": 300000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/45759b6e-3316-4a8b-8867-167dd4f6a925/right_side_e570c1c2d5e86ad42c2422b6beee4f97d396179631bb1d56d243335452f5c618.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "45759b6e-3316-4a8b-8867-167dd4f6a925",
+     "angle": "right_side"
+    },
+    {
+     "id": "270661e0-454c-4696-84f7-233200911170",
+     "state": "linked",
+     "verified": true,
+     "size": 1200000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/45759b6e-3316-4a8b-8867-167dd4f6a925/interior_e3771c05eaade176d2cf811b146e4a791ec547b73efb9e7defa6b36f428509c5.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "45759b6e-3316-4a8b-8867-167dd4f6a925",
+     "angle": "interior"
+    },
+    {
+     "id": "c45d13d2-9fb9-4c7e-9cd2-f1a4d2d54134",
+     "state": "linked",
+     "verified": true,
+     "size": 500000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/45759b6e-3316-4a8b-8867-167dd4f6a925/damage_22dcaa56173362d6270a691ed06df361225ee8277ade08f216d379fe6bf5d1d7.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "45759b6e-3316-4a8b-8867-167dd4f6a925",
+     "angle": "damage"
+    },
+    {
+     "id": "a333d89f-a65f-4e27-8d56-0fcaabc0d2fc",
+     "state": "linked",
+     "verified": true,
+     "size": 5138022,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/45759b6e-3316-4a8b-8867-167dd4f6a925/damage_49071d14374ac66274f138db6bc512efa5f892fb2a97082ec3efb38b44a2d6a4.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "45759b6e-3316-4a8b-8867-167dd4f6a925",
+     "angle": "damage"
+    }
+   ]
+  }
+ },
+ {
+  "id": "C05",
+  "cenario": "SP portaria: conferência visual de devolução com avaria + foto 4,8 MiB",
+  "papel": "security / SP",
+  "esperado": "checklist salvo; fotos [damage] vinculadas e verificadas; actions sem bytes",
+  "obtido": "redirecionado /gate (1259ms); fotos=[damage]; jornal 1/1 linked; action máx=728B; /api/photos=209B:200,62B:200; storage=200; 5xx=0; equipamentos=-;   ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "C05",
+   "phase": "return",
+   "validity": "",
+   "outcome": "redirecionado /gate",
+   "ms": 1259,
+   "alert": "",
+   "net": {
+    "maxAction": 728,
+    "api": "209B:200,62B:200",
+    "storage": "200",
+    "x5": 0
+   },
+   "inspection": "49a423d2-464d-44b2-a403-b56141c5c87c",
+   "journal": [
+    {
+     "id": "797b7975-28a5-4ad3-a685-03627d09a2c1",
+     "state": "linked",
+     "verified": true,
+     "size": 5033165,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/49a423d2-464d-44b2-a403-b56141c5c87c/damage_db5a77d216356a3024dd2776872dd2519c3b72993c47cb83414ea8fa06bc3ff3.png",
+     "by": "72a0902a-f3d4-4d3e-bc28-9e0850ca8bfe",
+     "kind": "inspection",
+     "target": "49a423d2-464d-44b2-a403-b56141c5c87c",
+     "angle": "damage"
+    }
+   ]
+  }
+ },
+ {
+  "id": "C06",
+  "cenario": "Campinas retirada com 3 fotos (front, back, damage)",
+  "papel": "t2camp / Campinas key_custody",
+  "esperado": "checklist salvo; fotos [back,damage,front] vinculadas e verificadas; actions sem bytes",
+  "obtido": "redirecionado /trips (3848ms); fotos=[back,damage,front]; jornal 3/3 linked; action máx=1053B; /api/photos=207B:200,62B:200,206B:200,62B:200,208B:200,62B:200; storage=200,200,200; 5xx=0; equipamentos=2;   ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "C06",
+   "key": "t2camp",
+   "phase": "pickup",
+   "url0": "/reservations/99d67805-9c74-4d81-a5cf-66df21e5fdc4/pickup",
+   "equipment": 2,
+   "fieldErrors": "",
+   "outcome": "redirecionado /trips",
+   "ms": 3848,
+   "alert": "",
+   "net": {
+    "maxAction": 1053,
+    "api": "207B:200,62B:200,206B:200,62B:200,208B:200,62B:200",
+    "storage": "200,200,200",
+    "x5": 0
+   },
+   "inspection": "7bcd532c-836e-4df0-8d5b-73dbd3ecfaef",
+   "journal": [
+    {
+     "id": "86757948-f7bc-4f93-8eb5-35f4cc933e80",
+     "state": "linked",
+     "verified": true,
+     "size": 500000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/7bcd532c-836e-4df0-8d5b-73dbd3ecfaef/front_759797d6dceec064a39191a004a6f23f59571938e3d06b92efd5d5f5264acc13.png",
+     "by": "9a018b47-53e2-45af-ae18-28a96399330b",
+     "kind": "inspection",
+     "target": "7bcd532c-836e-4df0-8d5b-73dbd3ecfaef",
+     "angle": "front"
+    },
+    {
+     "id": "17f402ac-b8ba-4ee0-9960-00d4c542d0b4",
+     "state": "linked",
+     "verified": true,
+     "size": 500000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/7bcd532c-836e-4df0-8d5b-73dbd3ecfaef/back_86969e7cea7dc48528812a250719c0657d1371cf71ad6f86d126d4391ad256ec.png",
+     "by": "9a018b47-53e2-45af-ae18-28a96399330b",
+     "kind": "inspection",
+     "target": "7bcd532c-836e-4df0-8d5b-73dbd3ecfaef",
+     "angle": "back"
+    },
+    {
+     "id": "80ab2483-08da-4f32-80fa-bdd703d38b1d",
+     "state": "linked",
+     "verified": true,
+     "size": 800000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/7bcd532c-836e-4df0-8d5b-73dbd3ecfaef/damage_9bf2ebe12333c0c68edbf81f0cfab37c4932926a27515221fed3e79be1a92975.png",
+     "by": "9a018b47-53e2-45af-ae18-28a96399330b",
+     "kind": "inspection",
+     "target": "7bcd532c-836e-4df0-8d5b-73dbd3ecfaef",
+     "angle": "damage"
+    }
+   ]
+  }
+ },
+ {
+  "id": "C07",
+  "cenario": "Campinas devolução com 3 fotos (wheels, wheels, damage)",
+  "papel": "t2camp / Campinas key_custody",
+  "esperado": "checklist salvo; fotos [damage,wheels,wheels] vinculadas e verificadas; actions sem bytes",
+  "obtido": "redirecionado /trips (2302ms); fotos=[damage,wheels,wheels]; jornal 3/3 linked; action máx=1257B; /api/photos=208B:200,62B:200,208B:200,62B:200,209B:200,62B:200; storage=200,200,200; 5xx=0; equipamentos=2;   ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "C07",
+   "key": "t2camp",
+   "phase": "return",
+   "url0": "/reservations/99d67805-9c74-4d81-a5cf-66df21e5fdc4/return",
+   "equipment": 2,
+   "fieldErrors": "",
+   "outcome": "redirecionado /trips",
+   "ms": 2302,
+   "alert": "",
+   "net": {
+    "maxAction": 1257,
+    "api": "208B:200,62B:200,208B:200,62B:200,209B:200,62B:200",
+    "storage": "200,200,200",
+    "x5": 0
+   },
+   "inspection": "a43e9682-b2f7-49ff-9242-17dbf87b9cab",
+   "journal": [
+    {
+     "id": "e1688f4f-8327-4565-9cf9-58873a93aa85",
+     "state": "linked",
+     "verified": true,
+     "size": 300000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/a43e9682-b2f7-49ff-9242-17dbf87b9cab/wheels_8dded8a4f70824a22e4923d0f32cb3ec047a52b4b4bdc16cbc5be500f2012b5b.png",
+     "by": "9a018b47-53e2-45af-ae18-28a96399330b",
+     "kind": "inspection",
+     "target": "a43e9682-b2f7-49ff-9242-17dbf87b9cab",
+     "angle": "wheels"
+    },
+    {
+     "id": "fdfe4da5-2281-4df5-82b2-da5db0db352d",
+     "state": "linked",
+     "verified": true,
+     "size": 310000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/a43e9682-b2f7-49ff-9242-17dbf87b9cab/wheels_2a68714cbdb017425c89bbb07ebde991ba97106b8f5b25cb7f62d838f863d51c.png",
+     "by": "9a018b47-53e2-45af-ae18-28a96399330b",
+     "kind": "inspection",
+     "target": "a43e9682-b2f7-49ff-9242-17dbf87b9cab",
+     "angle": "wheels"
+    },
+    {
+     "id": "4c22c38e-18ea-4505-92fb-372735ac51dc",
+     "state": "linked",
+     "verified": true,
+     "size": 2097152,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/a43e9682-b2f7-49ff-9242-17dbf87b9cab/damage_c89264ed2f469c1c2a62fd860a2418a10aff61cb514a7b71e62cba419466bdce.png",
+     "by": "9a018b47-53e2-45af-ae18-28a96399330b",
+     "kind": "inspection",
+     "target": "a43e9682-b2f7-49ff-9242-17dbf87b9cab",
+     "angle": "damage"
+    }
+   ]
+  }
+ },
+ {
+  "id": "C08",
+  "cenario": "Rio retirada com 3 fotos (interior, damage, damage)",
+  "papel": "t2rio / Rio key_custody",
+  "esperado": "checklist salvo; fotos [damage,damage,interior] vinculadas e verificadas; actions sem bytes",
+  "obtido": "redirecionado /trips (1858ms); fotos=[damage,damage,interior]; jornal 3/3 linked; action máx=1053B; /api/photos=210B:200,62B:200,209B:200,62B:200,208B:200,62B:200; storage=200,200,200; 5xx=0; equipamentos=2;   ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "C08",
+   "key": "t2rio",
+   "phase": "pickup",
+   "url0": "/reservations/cb3d48f1-d37b-4e18-8717-5e4fe34259f2/pickup",
+   "equipment": 2,
+   "fieldErrors": "",
+   "outcome": "redirecionado /trips",
+   "ms": 1858,
+   "alert": "",
+   "net": {
+    "maxAction": 1053,
+    "api": "210B:200,62B:200,209B:200,62B:200,208B:200,62B:200",
+    "storage": "200,200,200",
+    "x5": 0
+   },
+   "inspection": "1a3d7810-86bc-4faa-a80f-39ed41d67a65",
+   "journal": [
+    {
+     "id": "6bee51d4-fdfa-4ac4-9e46-e6a19bcd17f8",
+     "state": "linked",
+     "verified": true,
+     "size": 600000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/1a3d7810-86bc-4faa-a80f-39ed41d67a65/interior_7d2af3bc1f9d025a296f87e05d64d88696054e630931ad9175244b2427598185.png",
+     "by": "d6686251-6cd5-4e0b-a9aa-3a2d3fcd7037",
+     "kind": "inspection",
+     "target": "1a3d7810-86bc-4faa-a80f-39ed41d67a65",
+     "angle": "interior"
+    },
+    {
+     "id": "257ac1ae-c3cf-4b35-9221-be120c3859ba",
+     "state": "linked",
+     "verified": true,
+     "size": 3145728,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/1a3d7810-86bc-4faa-a80f-39ed41d67a65/damage_f60867659f78bc795ca753e0d68a91915be7703c4ed915a41ee22d410d50a5de.png",
+     "by": "d6686251-6cd5-4e0b-a9aa-3a2d3fcd7037",
+     "kind": "inspection",
+     "target": "1a3d7810-86bc-4faa-a80f-39ed41d67a65",
+     "angle": "damage"
+    },
+    {
+     "id": "7ee72e2e-d3e8-4c53-b6e0-2b6ec8817f63",
+     "state": "linked",
+     "verified": true,
+     "size": 400000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/1a3d7810-86bc-4faa-a80f-39ed41d67a65/damage_64ee8bd31ddd30fe5cee97c4d9a5780bd8c664a3a2ea02ffbb12c3e7656941a6.png",
+     "by": "d6686251-6cd5-4e0b-a9aa-3a2d3fcd7037",
+     "kind": "inspection",
+     "target": "1a3d7810-86bc-4faa-a80f-39ed41d67a65",
+     "angle": "damage"
+    }
+   ]
+  }
+ },
+ {
+  "id": "C09",
+  "cenario": "Rio devolução com 3 fotos (front, left_side, damage)",
+  "papel": "t2rio / Rio key_custody",
+  "esperado": "checklist salvo; fotos [damage,front,left_side] vinculadas e verificadas; actions sem bytes",
+  "obtido": "redirecionado /trips (1910ms); fotos=[damage,front,left_side]; jornal 3/3 linked; action máx=1257B; /api/photos=207B:200,62B:200,211B:200,62B:200,208B:200,62B:200; storage=200,200,200; 5xx=0; equipamentos=2;   ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "C09",
+   "key": "t2rio",
+   "phase": "return",
+   "url0": "/reservations/cb3d48f1-d37b-4e18-8717-5e4fe34259f2/return",
+   "equipment": 2,
+   "fieldErrors": "",
+   "outcome": "redirecionado /trips",
+   "ms": 1910,
+   "alert": "",
+   "net": {
+    "maxAction": 1257,
+    "api": "207B:200,62B:200,211B:200,62B:200,208B:200,62B:200",
+    "storage": "200,200,200",
+    "x5": 0
+   },
+   "inspection": "e8455293-13df-47f1-a768-6803d8141644",
+   "journal": [
+    {
+     "id": "c9ce8a12-c928-4f9a-b4ae-c0d34097e3ab",
+     "state": "linked",
+     "verified": true,
+     "size": 250000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/e8455293-13df-47f1-a768-6803d8141644/front_1528517a7da4d0c364864e3a04dcd100a52ef8cf3a7a795f71559d03e5de47e5.png",
+     "by": "d6686251-6cd5-4e0b-a9aa-3a2d3fcd7037",
+     "kind": "inspection",
+     "target": "e8455293-13df-47f1-a768-6803d8141644",
+     "angle": "front"
+    },
+    {
+     "id": "c81db6f1-0488-4e9e-a4ee-0abf84349c7a",
+     "state": "linked",
+     "verified": true,
+     "size": 250000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/e8455293-13df-47f1-a768-6803d8141644/left_side_cd125483b95786bf8d9e485430b14c856d44e42ce3dd9f8046d226f1749d80ce.png",
+     "by": "d6686251-6cd5-4e0b-a9aa-3a2d3fcd7037",
+     "kind": "inspection",
+     "target": "e8455293-13df-47f1-a768-6803d8141644",
+     "angle": "left_side"
+    },
+    {
+     "id": "8a2eb598-aa86-4bf6-b952-4d7e764916bd",
+     "state": "linked",
+     "verified": true,
+     "size": 250000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/e8455293-13df-47f1-a768-6803d8141644/damage_94dcd930ef9f872ce32660b236cf7da858a3f135002a0d81c5447a3286ece99d.png",
+     "by": "d6686251-6cd5-4e0b-a9aa-3a2d3fcd7037",
+     "kind": "inspection",
+     "target": "e8455293-13df-47f1-a768-6803d8141644",
+     "angle": "damage"
+    }
+   ]
+  }
+ },
+ {
+  "id": "C10",
+  "cenario": "Evidência adicional: 2 fotos \"interior\" (8,6 MiB + 0,6 MiB) na própria inspeção de retirada",
+  "papel": "t2sp / SP",
+  "esperado": "fotos anteriores preservadas + 2 novas; action sem bytes",
+  "obtido": "antes=[back,damage,damage,front,front,wheels] depois=[back,damage,damage,front,front,interior,interior,wheels] msg=\"Fotos adicionadas; as evidências anteriores foram preservadas.\" action máx=0B api=211B:200,62B:200,210B:200,62B:200 ",
+  "status": "PASS",
+  "evidencia": {
+   "before": "back,damage,damage,front,front,wheels",
+   "after": "back,damage,damage,front,front,interior,interior,wheels",
+   "ns": {
+    "maxAction": 0,
+    "api": "211B:200,62B:200,210B:200,62B:200",
+    "storage": "200,200",
+    "x5": 0
+   }
+  }
+ }
+]

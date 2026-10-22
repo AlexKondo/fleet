@@ -1,0 +1,137 @@
+                mkveh                 
+--------------------------------------
+ 435623d5-4f6b-4639-8da4-f9dbb6b51998
+ df117b9f-f278-483a-bd9f-19c771816e27
+ e8332278-bc32-461f-828d-f0a5269e26fd
+ b6f000d3-c45c-4a92-a4f3-6d5283d52902
+ 80d81538-214d-4300-ae99-b7629e75a050
+ 6331f2fb-1a5f-4f0c-81f6-d0155cdce613
+ 028be6a1-c922-494d-a76c-80c8e0436961
+ 3aa9f9c4-aecc-4f6c-ad9a-9f1818d9f701
+ 4d016e65-47bf-4571-acf6-e5a965c39883
+ 9a40510e-ba50-4cad-b456-4b1e258dadde
+ dc1b55ec-b89f-48a3-af74-a85982b085ef
+ 57245f4e-2ae1-431e-9c33-d99ba0ceb26a
+ 5f9bf717-b5f0-4a41-9644-0b5aad7aaf79
+ ff83f91c-ed19-418c-85ae-c519b9fb4d1d
+ 237fbe5c-bce2-4c25-9258-94369902609a
+ ad9f12ff-9706-4360-bd08-5965db92754e
+ 4be29f4c-856b-47e9-8f4c-b704c6de8d3a
+ ca50099b-33a2-4429-9631-3885efc64e86
+(18 rows)
+
+                mkres                 
+--------------------------------------
+ c4114157-0d4f-4a37-9f2c-b4d8525202b4
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 3540825b-ebb9-4f7f-8eea-814ce241d5eb
+(1 row)
+
+                mkres                 
+--------------------------------------
+ e1318bd5-637b-4bdc-8002-007702936168
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 1d1fc451-f9a7-49ac-9790-b97c99bccd4c
+(1 row)
+
+                mkres                 
+--------------------------------------
+ fab59d74-b12c-4121-8532-093f336f239e
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 6d44cea5-1ed3-4698-acb3-a24d81d843d9
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 9a959fab-d640-44c9-a729-595a1120b472
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 1fdb3634-8de1-440b-8c05-9f635014defc
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 2b8b5383-9798-4f19-8094-f58c8c53fd3e
+(1 row)
+
+                mkres                 
+--------------------------------------
+ c11dc045-56d5-451d-a2d9-f116a1322623
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 2ceb0441-8be8-4147-aabb-46bdeb06067e
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 826b474a-faf3-488f-bb01-44c098dba1c6
+(1 row)
+
+                mkres                 
+--------------------------------------
+ dde70e7a-83fd-4e09-a3df-884efe0aaf87
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 343ab950-c3b0-4db7-8b99-fafc7118fb4d
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 08af117d-f5bb-4760-a351-7414835c357b
+(1 row)
+
+=== atividade real
+   ?column?   |                                                                                                                                                                                                                        as_user                                                                                                                                                                                                                         
+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ insp prepare | OK {"id": "d3d8f606-e0b4-4fdf-9294-02f231e71111", "source": "vehicle", "created_at": "2026-10-22T18:19:57.85659+00:00", "created_by": "f4f7a676-df56-4847-b841-8afa081837ad", "vehicle_id": "e8332278-bc32-461f-828d-f0a5269e26fd", "optional_names": [], "required_names": ["Extintor de Incendio"], "reservation_id": "c4114157-0d4f-4a37-9f2c-b4d8525202b4", "organization_id": "7a000000-0000-0000-0000-00000000000a", "configuration_version": 1}
+(1 row)
+
+  ?column?   |                 as_user                 
+-------------+-----------------------------------------
+ insp pickup | OK 7940ef63-c6b6-498c-91c5-8e710d2978d0
+(1 row)
+
+  ?column?   |                            as_user                            
+-------------+---------------------------------------------------------------
+ gate denied | OK {"id": "f781ff39-f6ab-4428-8cba-53181f818991", "ok": true}
+(1 row)
+
+   ?column?    |                      as_user                      
+---------------+---------------------------------------------------
+ key delivered | OK {"id": "041c03b3-9ac1-4d2d-9548-d5e6a3e2a1fd"}
+(1 row)
+
+      k       |      status      |     vstatus     | insp | gate | keyev | expired 
+--------------+------------------+-----------------+------+------+-------+---------
+ rl_conf      | confirmed        | reserved        |    0 |    0 |     0 | t
+ rl_dmg       | confirmed        | reserved        |    0 |    0 |     0 | t
+ rl_doc       | confirmed        | reserved        |    0 |    0 |     0 | t
+ rl_eqp       | confirmed        | reserved        |    0 |    0 |     0 | t
+ rl_fut       | confirmed        | reserved        |    0 |    0 |     0 | f
+ rl_g59       | confirmed        | reserved        |    0 |    0 |     0 | t
+ rl_g61       | confirmed        | reserved        |    0 |    0 |     0 | t
+ rl_gate      | confirmed        | reserved        |    0 |    1 |     0 | t
+ rl_insp      | confirmed        | awaiting_pickup |    1 |    0 |     0 | t
+ rl_key       | confirmed        | reserved        |    0 |    0 |     1 | t
+ rl_other_exp | confirmed        | reserved        |    0 |    0 |     0 | t
+ rl_other_fut | confirmed        | reserved        |    0 |    0 |     0 | f
+ rl_pend      | pending_approval | available       |    0 |    0 |     0 | t
+ rl_wo        | confirmed        | reserved        |    0 |    0 |     0 | t
+ rlb_conf     | confirmed        | reserved        |    0 |    0 |     0 | t
+(15 rows)
+

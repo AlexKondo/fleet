@@ -1,0 +1,61 @@
+{
+ "offer": "d3520345-677b-443b-b5ec-26c2a1ac0894",
+ "canonical_ride_request": [
+  {
+   "rider": "t1emp",
+   "status": 200,
+   "code": null,
+   "msg": "bb0526a7-45eb-4c09-8c7e-05d0c8dddcf2",
+   "body": "bb0526a7-45eb-4c09-8c7e-05d0c8dddcf2"
+  },
+  {
+   "rider": "t1drvexp",
+   "status": 200,
+   "code": null,
+   "msg": "8fbb7724-08a8-418a-9d6b-7cf367838345",
+   "body": "8fbb7724-08a8-418a-9d6b-7cf367838345"
+  },
+  {
+   "rider": "t1drvnull",
+   "status": 200,
+   "code": null,
+   "msg": "9eb188d0-4420-424a-a572-33aa5960e57b",
+   "body": "9eb188d0-4420-424a-a572-33aa5960e57b"
+  },
+  {
+   "rider": "t1adminnocnh",
+   "status": 200,
+   "code": null,
+   "msg": "5ef633f3-4788-4c0e-9bad-6c69166edf89",
+   "body": "5ef633f3-4788-4c0e-9bad-6c69166edf89"
+  },
+  {
+   "rider": "t1custcp",
+   "status": 200,
+   "code": null,
+   "msg": "9891bcde-f806-40cb-820f-4b9c59c94349",
+   "body": "9891bcde-f806-40cb-820f-4b9c59c94349"
+  },
+  {
+   "rider": "t1drvb",
+   "status": 400,
+   "code": "P0001",
+   "msg": "CARPOOL_OFFER_NOT_FOUND",
+   "body": {
+    "code": "P0001",
+    "details": null,
+    "hint": null,
+    "message": "CARPOOL_OFFER_NOT_FOUND"
+   }
+  }
+ ],
+ "legacy_create_carpool_participation_control": [
+  {
+   "actor": "t1custcp",
+   "cnh": "valida",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_participants\""
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+Pager usage is off.
+BEGIN
+DO
+NOTICE:  postgres UPDATE: P0001 PRESERVE_INSPECTION_HISTORY
+DO
+NOTICE:  postgres DELETE: P0001 PRESERVE_INSPECTION_HISTORY
+NOTICE:  postgres DELETE jornal: P0001 PRESERVE_INSPECTION_HISTORY
+DO
+ROLLBACK
+         c          |                            as_user                             
+--------------------+----------------------------------------------------------------
+ fmsp le historico  | ERR 42501 permission denied for table fm_photo_attempt_history
+ fmsp le jornal     | ERR 42501 permission denied for table fm_photo_uploads
+ fmsp UPDATE jornal | ERR 42501 permission denied for table fm_photo_uploads
+ fmsp INSERT jornal | ERR 42501 permission denied for table fm_photo_uploads
+(4 rows)
+
+ attempts_t1 | uploads 
+-------------+---------
+          31 |      31
+(1 row)
+

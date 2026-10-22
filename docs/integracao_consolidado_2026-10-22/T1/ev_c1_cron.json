@@ -1,0 +1,31 @@
+{
+ "secret_present": true,
+ "out": [
+  {
+   "label": "sem Authorization",
+   "status": 401,
+   "body": "{\"error\":\"unauthorized\"}"
+  },
+  {
+   "label": "segredo errado",
+   "status": 401,
+   "body": "{\"error\":\"unauthorized\"}"
+  },
+  {
+   "label": "Bearer vazio",
+   "status": 401,
+   "body": "{\"error\":\"unauthorized\"}"
+  },
+  {
+   "label": "com CRON_SECRET local",
+   "status": 200,
+   "body": "{\"released\":1,\"skipped_locked\":0,\"vehicles_released\":1,\"skipped_with_activity\":3}"
+  },
+  {
+   "label": "com CRON_SECRET local (2a vez, idempotente)",
+   "status": 200,
+   "body": "{\"released\":0,\"skipped_locked\":0,\"vehicles_released\":0,\"skipped_with_activity\":3}"
+  }
+ ]
+}
+rl_g59|cancelled|no_show_auto|available|1

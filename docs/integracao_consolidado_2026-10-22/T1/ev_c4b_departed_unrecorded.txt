@@ -1,0 +1,25 @@
+Pager usage is off.
+BEGIN
+                mkveh                 
+--------------------------------------
+ 6092b14d-cb37-4a9a-8dcc-51cd44d09cf4
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 47414b22-94a9-47b3-9ae9-82813c2e533f
+(1 row)
+
+UPDATE 1
+COMMIT
+                   c                    |           as_user            
+----------------------------------------+------------------------------
+ gestor tenta departed_unrecorded       | ERR P0001 NOT_AUTHORIZED
+ Seguranca registra departed_unrecorded | ERR P0001 CHECKLIST_REQUIRED
+(2 rows)
+
+  status   | vstatus  | gate_rows | insp_rows | rotulo_nao_saiu 
+-----------+----------+-----------+-----------+-----------------
+ confirmed | reserved |           |         0 | OK {}
+(1 row)
+

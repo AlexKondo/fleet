@@ -1,0 +1,96 @@
+Pager usage is off.
+BEGIN
+                mkveh                 
+--------------------------------------
+ 0c79d18e-b070-4107-98d3-fc1c901b0492
+ a1e1231c-eb44-466c-ad8d-c8a8f8cf02e1
+ 5807856b-66c7-481c-85dc-c8fcabfdbde1
+ c46ed30a-8b48-4272-bf39-47bce3ebecbc
+(4 rows)
+
+                mkres                 
+--------------------------------------
+ dd9e0ff0-14f0-47f9-a4da-51793fddd31b
+(1 row)
+
+                mkres                 
+--------------------------------------
+ c97b73f2-01d7-40dc-9284-61e83c414992
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 4e5ab6f1-77c3-4202-801b-0f2542aa08bb
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 279159c4-e21e-480f-ae05-1dcbbe25bbcc
+(1 row)
+
+UPDATE 4
+COMMIT
+=== C4-01 SP (gate_visual): Seguranca registra "nao saiu"
+                   c                    |                                                         as_user                                                         
+----------------------------------------+-------------------------------------------------------------------------------------------------------------------------
+ solicitante registra a propria excecao | ERR P0001 NOT_AUTHORIZED
+ gestor fora do escopo (CP)             | ERR P0001 NOT_AUTHORIZED
+ Seguranca registra                     | OK {"id": "e551271c-8f6f-4142-bb3c-01821a1d0d81", "ok": true, "outcome": "not_departed", "vehicle_status": "available"}
+(3 rows)
+
+  status   |    cancellation_reason     |  vstatus  | gate_rows | insp_rows | key_rows 
+-----------+----------------------------+-----------+-----------+-----------+----------
+ cancelled | T1 MOTIVO INTERNO SIGILOSO | available |         0 |         0 |        0
+(1 row)
+
+=== C4-02 visibilidade do resultado (rotulo) x motivo interno
+    c     |                  rotulo                   |         tabela_excecoes         | reservations_cancellation_reason |                                notificacao_propria                                 
+----------+-------------------------------------------+---------------------------------+----------------------------------+------------------------------------------------------------------------------------
+ t1drvok  | OK {dd9e0ff0-14f0-47f9-a4da-51793fddd31b} | OK 0:                           | OK 1:T1 MOTIVO INTERNO SIGILOSO  | OK 1:Sua reserva foi encerrada por exceção operacional: T1 MOTIVO INTERNO SIGILOSO
+ t1req2   | OK {}                                     | OK 0:                           | OK 0:                            | OK 0:
+ t1fmsp   | OK {dd9e0ff0-14f0-47f9-a4da-51793fddd31b} | OK 1:T1 MOTIVO INTERNO SIGILOSO | OK 1:T1 MOTIVO INTERNO SIGILOSO  | OK 0:
+ t1fmcp   | OK {}                                     | OK 0:                           | OK 0:                            | OK 0:
+ t1fmall  | OK {dd9e0ff0-14f0-47f9-a4da-51793fddd31b} | OK 1:T1 MOTIVO INTERNO SIGILOSO | OK 1:T1 MOTIVO INTERNO SIGILOSO  | OK 0:
+ t1sec    | OK {dd9e0ff0-14f0-47f9-a4da-51793fddd31b} | OK 1:T1 MOTIVO INTERNO SIGILOSO | OK 1:T1 MOTIVO INTERNO SIGILOSO  | OK 0:
+ t1adminb | OK {}                                     | OK 0:                           | OK 0:                            | OK 0:
+ t1deact  | OK {}                                     | OK 0:                           | OK 0:                            | OK 0:
+ t1emp    | OK {}                                     | OK 0:                           | OK 0:                            | OK 0:
+(9 rows)
+
+=== C4-03 Campinas (key_custody): custodia segue o fluxo existente de entrega/recebimento
+                    c                     |                                                         as_user                                                         
+------------------------------------------+-------------------------------------------------------------------------------------------------------------------------
+ custodiante entrega a chave              | OK {"id": "78018827-79ba-4cbd-b150-3f9277ca6fe1"}
+ excecao com chave pendente               | ERR P0001 KEYS_OUTSTANDING
+ custodiante RJ (outra unidade) recebe    | ERR P0001 KEY_CUSTODY_NOT_AUTHORIZED
+ custodiante CP registra recebimento real | OK {"id": "ac25b62f-6438-4106-b655-164b7ee3070d"}
+ excecao apos devolucao da chave          | OK {"id": "b04f5d21-d31c-43c6-83df-907b1f4a3566", "ok": true, "outcome": "not_departed", "vehicle_status": "available"}
+ departed_unrecorded em custodia          | ERR P0001 OFFICE_HAS_NO_GATE
+(6 rows)
+
+   kind    |  actor   | reason 
+-----------+----------+--------
+ delivered | t1custcp | 
+ received  | t1custcp | 
+(2 rows)
+
+  status   |  vstatus  | gate_rows | insp_rows 
+-----------+-----------+-----------+-----------
+ cancelled | available |         0 |         0
+(1 row)
+
+=== C4-04 Campinas: apos retirada digital, "nao saiu" e recusado (usa devolucao/recebimento)
+                c                |                      as_user                      
+---------------------------------+---------------------------------------------------
+ condutor prepara checklist      | OK true
+ custodiante entrega a chave     | OK {"id": "d177a789-ed3c-4828-941c-02085f6da99b"}
+ condutor faz retirada digital   | OK 16210bdb-3b83-42ba-b8b8-6e924343ed9f
+ excecao nao saiu apos retirada  | ERR P0001 VEHICLE_ON_TRIP
+ gestor CP excecao apos retirada | ERR P0001 VEHICLE_ON_TRIP
+(5 rows)
+
+  status   | vstatus | exc_rows 
+-----------+---------+----------
+ confirmed | in_use  |        0
+(1 row)
+

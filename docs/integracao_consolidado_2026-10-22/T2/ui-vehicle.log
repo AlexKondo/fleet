@@ -1,0 +1,11 @@
+PASS	V01	form fechado (sucesso) em 885ms; action máx=1293B; /api/photos máx=201B; storage=0B→200 objeto=300000B; 5xx=0; vinculado=true;  
+PASS	V02	form fechado (sucesso) em 1401ms; action máx=1291B; /api/photos máx=202B; storage=0B→200 objeto=3145728B; 5xx=0; vinculado=true;  
+PASS	V03	form fechado (sucesso) em 2427ms; action máx=1295B; /api/photos máx=202B; storage=0B→200 objeto=4718592B; 5xx=0; vinculado=true;  
+PASS	V04	form fechado (sucesso) em 1904ms; action máx=1293B; /api/photos máx=202B; storage=0B→200 objeto=9017754B; 5xx=0; vinculado=true;  
+PASS	V05	form fechado (sucesso) em 1995ms; action máx=1295B; /api/photos máx=203B; storage=0B→200 objeto=10485760B; 5xx=0; vinculado=true;  
+PASS	V06	alerta; alerta="A foto deve ter no máximo 10 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar."; validity="A foto deve ter no máximo 10 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar."; requisições enviadas=false; antes=
+PASS	V07	form fechado (sucesso); alerta=""; vinculado=true; api=200,200
+PASS	V08	form fechado (sucesso); alerta=""; vinculado=true; api=200,200
+FAIL	V09	alerta; alerta="Os dados foram processados, mas a foto ficou pendente. Tente reenviá-la ou consulte Minhas fotos pendentes na conta."; vinculado=false; api=
+PASS	V10	veículos=1; foto=true; action máx=1300B; 2925ms;  
+PASS	V11	veículos=1; unit=d1000000-0000-0000-0000-000000000002; foto=true; action máx=1300B;  

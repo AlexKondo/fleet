@@ -1,0 +1,1369 @@
+[
+ {
+  "file": "img_1mib.jpg",
+  "mode": "mobile",
+  "inputBytes": 985995,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "986297"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "986380"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2981885"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2865268"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2865351"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3101711"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1660723"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "img_1mib.jpg",
+    "type": "image/jpeg",
+    "size": 985995,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_img_1mib.jpg_send1.jpg"
+   },
+   {
+    "field": "1_photo",
+    "name": "img_1mib.jpg",
+    "type": "image/jpeg",
+    "size": 985995,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_img_1mib.jpg_send2.jpg"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 14,
+  "ms": 1674,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "retry": {
+   "newRequests": 1,
+   "messages": [
+    "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+    ""
+   ]
+  }
+ },
+ {
+  "file": "img_2_9mib.jpg",
+  "mode": "mobile",
+  "inputBytes": 2981581,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2981885"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2865268"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2865351"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3101711"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1660723"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "img_2_9mib.jpg",
+    "type": "image/jpeg",
+    "size": 2981581,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_img_2_9mib.jpg_send1.jpg"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 12,
+  "ms": 1546,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ },
+ {
+  "file": "img_3_5mib.jpg",
+  "mode": "mobile",
+  "inputBytes": 3630961,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2865268"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2865351"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3101711"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1660723"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "license.jpg",
+    "type": "image/jpeg",
+    "size": 2864967,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_img_3_5mib.jpg_send1.jpg"
+   },
+   {
+    "field": "1_photo",
+    "name": "license.jpg",
+    "type": "image/jpeg",
+    "size": 2864967,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_img_3_5mib.jpg_send2.jpg"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 11,
+  "ms": 1817,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "retry": {
+   "newRequests": 1,
+   "messages": [
+    "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+    ""
+   ]
+  }
+ },
+ {
+  "file": "img_4_9mib.jpg",
+  "mode": "mobile",
+  "inputBytes": 4716048,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3101711"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1660723"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "license.jpg",
+    "type": "image/jpeg",
+    "size": 3101410,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_img_4_9mib.jpg_send1.jpg"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 9,
+  "ms": 2088,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ },
+ {
+  "file": "jpg_12mp_4_5mib.jpg",
+  "mode": "mobile",
+  "inputBytes": 4588118,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1660723"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "ms": 2108,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "posts": 8
+ },
+ {
+  "file": "png_4_5mib.png",
+  "mode": "mobile",
+  "inputBytes": 4472347,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1660723"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "license.jpg",
+    "type": "image/jpeg",
+    "size": 1660422,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_png_4_5mib.png_send1.jpg"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 8,
+  "ms": 1534,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ },
+ {
+  "file": "jpg_50mp_4mib.jpg",
+  "mode": "mobile",
+  "inputBytes": 4770044,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "ms": 1501,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "posts": 7
+ },
+ {
+  "file": "img_6mib.jpg",
+  "mode": "mobile",
+  "inputBytes": 7799187,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": false,
+  "pickError": "Arquivo maior que 5MB — escolha uma foto menor. | ",
+  "posts": 7
+ },
+ {
+  "file": "invalido.txt",
+  "mode": "mobile",
+  "inputBytes": 23,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "ms": 1304,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "posts": 7
+ },
+ {
+  "file": "pdf_1p_pequeno.pdf",
+  "mode": "mobile",
+  "inputBytes": 1800,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2113"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "pdf_1p_pequeno.pdf",
+    "type": "application/pdf",
+    "size": 1800,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_pdf_1p_pequeno.pdf_send1.pdf"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 7,
+  "ms": 1419,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ },
+ {
+  "file": "pdf_3p_pequeno.pdf",
+  "mode": "mobile",
+  "inputBytes": 3304,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "3617"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "pdf_3p_pequeno.pdf",
+    "type": "application/pdf",
+    "size": 3304,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_pdf_3p_pequeno.pdf_send1.pdf"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 6,
+  "ms": 1968,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ },
+ {
+  "file": "pdf_1p_4mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 4571372,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "1061565"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "license.jpg",
+    "type": "image/jpeg",
+    "size": 1061264,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_pdf_1p_4mib.pdf_send1.jpg"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 5,
+  "ms": 2130,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ },
+ {
+  "file": "pdf_3p_4mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 4968649,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429243"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2429326"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "license.jpg",
+    "type": "image/jpeg",
+    "size": 2428942,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_pdf_3p_4mib.pdf_send1.jpg"
+   },
+   {
+    "field": "1_photo",
+    "name": "license.jpg",
+    "type": "image/jpeg",
+    "size": 2428942,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_pdf_3p_4mib.pdf_send2.jpg"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 4,
+  "ms": 2257,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "retry": {
+   "newRequests": 1,
+   "messages": [
+    "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+    ""
+   ]
+  }
+ },
+ {
+  "file": "pdf_5p_4mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 4649498,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2741573"
+   },
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "license.jpg",
+    "type": "image/jpeg",
+    "size": 2741272,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_pdf_5p_4mib.pdf_send1.jpg"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 2,
+  "ms": 4594,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ },
+ {
+  "file": "pdf_6p_4mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 5005357,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "ms": 1523,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "posts": 1
+ },
+ {
+  "file": "pdf_8p_4mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 4619566,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "ms": 1491,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "posts": 1
+ },
+ {
+  "file": "pdf_9p_4mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 4752597,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "ms": 1832,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "posts": 1
+ },
+ {
+  "file": "pdf_2p_6mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 7114224,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": false,
+  "pickError": "Arquivo maior que 5MB — escolha uma foto menor. | ",
+  "posts": 1
+ },
+ {
+  "file": "pdf_protegido_4mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 4571344,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "ms": 1534,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true,
+  "posts": 1
+ },
+ {
+  "file": "pdf_protegido_pequeno.pdf",
+  "mode": "mobile",
+  "inputBytes": 1774,
+  "requests": [
+   {
+    "url": "/account/license",
+    "requestBodySize": 0,
+    "status": 200,
+    "action": true,
+    "contentLength": "2094"
+   }
+  ],
+  "messages": [
+   "Não foi possível analisar a foto agora. Tente novamente em instantes.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [
+   {
+    "field": "1_photo",
+    "name": "pdf_protegido_pequeno.pdf",
+    "type": "application/pdf",
+    "size": 1774,
+    "saved": "C:/projects/fleet/_local/homolog/conclusao/T3/sent/mobile_pdf_protegido_pequeno.pdf_send1.pdf"
+   }
+  ],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "posts": 1,
+  "ms": 1810,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ },
+ {
+  "file": "pdf_corrompido_4mib.pdf",
+  "mode": "mobile",
+  "inputBytes": 4571372,
+  "requests": [],
+  "messages": [
+   "Não foi possível preparar este documento para envio seguro. Tente uma foto nítida ou um PDF menor, mantendo todos os dados legíveis. O documento original continua selecionado.",
+   ""
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "sent": [],
+  "landed": "/account/license",
+  "submitEnabledAfterPick": true,
+  "pickError": "",
+  "ms": 1562,
+  "fileStillShown": true,
+  "submitLabel": "Ler",
+  "submitEnabledAfterFail": true
+ }
+]

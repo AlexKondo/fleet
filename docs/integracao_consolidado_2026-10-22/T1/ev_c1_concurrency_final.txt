@@ -1,0 +1,25 @@
+Pager usage is off.
+BEGIN
+SET
+                                       final_sweep                                        
+------------------------------------------------------------------------------------------
+ {"released": 0, "skipped_locked": 0, "vehicles_released": 0, "skipped_with_activity": 0}
+(1 row)
+
+COMMIT
+  status   |       reason       |     vstatus     | has_insp | count 
+-----------+--------------------+-----------------+----------+-------
+ confirmed | -                  | reserved        | f        |     1
+ confirmed | -                  | awaiting_pickup | t        |    33
+ cancelled | expired_unapproved | available       | f        |    26
+ cancelled | no_show_auto       | available       | f        |    31
+ cancelled | T1 concorrencia    | available       | f        |    97
+(5 rows)
+
+                        c                         | count 
+--------------------------------------------------+-------
+ duplicated release audits                        |     0
+ released with activity                           |     0
+ cancelled w/o activity but vehicle not available |     0
+(3 rows)
+

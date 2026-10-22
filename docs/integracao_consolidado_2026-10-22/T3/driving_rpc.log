@@ -1,0 +1,28 @@
+﻿                             step                             |   actor   |                      result                       
+--------------------------------------------------------------+-----------+---------------------------------------------------
+ 1 reservar (create_vehicle_reservation)                      | t3admin   | OK 632d1b48-aede-4057-bd3b-28397784471d
+ 2 chaves entregues (fm_key_command) por custodiante sem CNH  | t3admin   | ERRO DRIVER_NOT_AUTHORIZED
+ 3 retirada pelo condutor (record_pickup, SP)                 | t3admin   | ERRO DRIVER_NOT_AUTHORIZED
+ 4 saida pela portaria (gate.record departure) pela Seguranca | t3admin   | ERRO DEPARTURE_BLOCKED
+ 1 reservar (create_vehicle_reservation)                      | t3exp     | OK 7359a732-0d3d-4623-b117-e81430d3ee90
+ 2 chaves entregues (fm_key_command) por custodiante sem CNH  | t3exp     | ERRO LICENSE_EXPIRED
+ 3 retirada pelo condutor (record_pickup, SP)                 | t3exp     | ERRO LICENSE_EXPIRED
+ 4 saida pela portaria (gate.record departure) pela Seguranca | t3exp     | ERRO DEPARTURE_BLOCKED
+ 1 reservar (create_vehicle_reservation)                      | t3fmtotal | OK fa8ee86a-d26e-4f1b-92b0-6fa8d94fe773
+ 2 chaves entregues (fm_key_command) por custodiante sem CNH  | t3fmtotal | ERRO DRIVER_NOT_AUTHORIZED
+ 3 retirada pelo condutor (record_pickup, SP)                 | t3fmtotal | ERRO DRIVER_NOT_AUTHORIZED
+ 4 saida pela portaria (gate.record departure) pela Seguranca | t3fmtotal | ERRO DEPARTURE_BLOCKED
+ 1 reservar (create_vehicle_reservation)                      | t3null    | OK d7b1e430-9def-478f-9f6a-0309c76ae777
+ 2 chaves entregues (fm_key_command) por custodiante sem CNH  | t3null    | ERRO DRIVER_NOT_AUTHORIZED
+ 3 retirada pelo condutor (record_pickup, SP)                 | t3null    | ERRO DRIVER_NOT_AUTHORIZED
+ 4 saida pela portaria (gate.record departure) pela Seguranca | t3null    | ERRO DEPARTURE_BLOCKED
+ 1 reservar (create_vehicle_reservation)                      | t3sec     | OK faf064dc-6f53-4f2e-91a2-f348cbb6a20e
+ 2 chaves entregues (fm_key_command) por custodiante sem CNH  | t3sec     | ERRO DRIVER_NOT_AUTHORIZED
+ 3 retirada pelo condutor (record_pickup, SP)                 | t3sec     | ERRO DRIVER_NOT_AUTHORIZED
+ 4 saida pela portaria (gate.record departure) pela Seguranca | t3sec     | ERRO GATE_SELF_RELEASE_NOT_AUTHORIZED
+ 1 reservar (create_vehicle_reservation)                      | t3valid   | OK 48fd5a1f-2dc1-4636-ae94-8d6e89eb5e94
+ 2 chaves entregues (fm_key_command) por custodiante sem CNH  | t3valid   | OK {"id": "cab5915e-2d62-493a-a701-94313e2411c8"}
+ 3 retirada pelo condutor (record_pickup, SP)                 | t3valid   | ERRO EQUIPMENT_CONFIGURATION_REQUIRED
+ 4 saida pela portaria (gate.record departure) pela Seguranca | t3valid   | ERRO DEPARTURE_BLOCKED
+(24 rows)
+

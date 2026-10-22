@@ -1,0 +1,29 @@
+### check-auto-release-policy.sql (read-only) 2026-10-22T15:22:03-03:00
+ all_explicit_settings_enabled 
+-------------------------------
+ t
+(1 row)
+
+ new_settings_default_enabled 
+------------------------------
+ t
+(1 row)
+
+### node scripts/check-auto-release-policy.mjs (ambiente efetivo local: variavel ausente em .env.local, Process/User/Machine)
+Server policy: active (including absent variable). Database check is still required: run docs/consolidado_final/check-auto-release-policy.sql read-only.
+exit=0
+### variante explicita true
+Server policy: active (including absent variable). Database check is still required: run docs/consolidado_final/check-auto-release-policy.sql read-only.
+exit=0
+### controle negativo false (deve ser NO-GO)
+NO-GO: automatic reservation release must remain active. Review the effective deployment configuration.
+exit=1
+### node --test scripts/check-auto-release-policy.test.mjs
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 385.2784

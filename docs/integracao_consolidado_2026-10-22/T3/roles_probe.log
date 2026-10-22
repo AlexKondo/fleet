@@ -1,0 +1,63 @@
+﻿== t3null /admin -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa: GWM3B52 Próxima reserva Ver
+   (shots/role_t3null_-admin.png)
+== t3null /gate -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa: GWM3B52 Próxima reserva Ver
+   (shots/role_t3null_-gate.png)
+== t3null /fleet -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa: GWM3B52 Próxima reserva Ver
+   (shots/role_t3null_-fleet.png)
+== t3null /fleet/keys -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa: GWM3B52 Próxima reserva Ver
+   (shots/role_t3null_-fleet-keys.png)
+== t3null /maintenance -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa: GWM3B52 Próxima reserva Ver
+   (shots/role_t3null_-maintenance.png)
+== t3null /dashboard/command-center -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa: GWM3B52 Próxima reserva Ver
+   (shots/role_t3null_-dashboard-command-center.png)
+== t3null /analytics -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa: GWM3B52 Próxima reserva Ver
+   (shots/role_t3null_-analytics.png)
+== t3null /carpool -> /carpool
+Buscar Carona Encontre uma carona para a sua viagem. Origem Destino Saída Retorno (opcional) Vagas necessárias Buscar caronas
+   (shots/role_t3null_-carpool.png)
+== t3null /trips -> /trips
+Minhas Reservas e Viagens Gerencie suas reservas de veículos, caronas e acompanhe todo o histórico. Nova reserva Todas (0) Próximas (0) Em andamento (0) Caronas (0) Concluídas (0) Canceladas (0) Você ainda não tem viagens. Solicite a primeira em “+ Nova viagem”. Nova reserva
+   (shots/role_t3null_-trips.png)
+== t3null /dashboard -> /dashboard
+Olá, T3! Para onde você quer ir hoje? Reservar Veículo Encontre o veículo ideal para sua viagem Buscar Carona Veja caronas disponíveis na sua rota Minhas Reservas Acompanhe e altere suas reservas Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 1 Energia baixa: GWM3B52 Próxima reserva Ver
+   (shots/role_t3null_-dashboard.png)
+== t3maint /admin -> /dashboard
+Fleet Command Center 360° Aprovações, reservas, tarefas operacionais e prontidão dos veículos em uma só tela. 28 Veículos Disponível 15 Manutenção 2 Bloqueado 3 Em Uso 2 Carregando 1 Aguardando Retirada 5 10 Tarefas abertas 9 Veículos que precisam de atenção Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação
+   (shots/role_t3maint_-admin.png)
+== t3maint /fleet -> /dashboard
+Fleet Command Center 360° Aprovações, reservas, tarefas operacionais e prontidão dos veículos em uma só tela. 28 Veículos Disponível 15 Manutenção 2 Bloqueado 3 Em Uso 2 Carregando 1 Aguardando Retirada 5 10 Tarefas abertas 9 Veículos que precisam de atenção Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação
+   (shots/role_t3maint_-fleet.png)
+== t3maint /gate -> /dashboard
+Fleet Command Center 360° Aprovações, reservas, tarefas operacionais e prontidão dos veículos em uma só tela. 28 Veículos Disponível 15 Manutenção 2 Bloqueado 3 Em Uso 2 Carregando 1 Aguardando Retirada 5 10 Tarefas abertas 9 Veículos que precisam de atenção Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação
+   (shots/role_t3maint_-gate.png)
+== t3maint /dashboard -> /dashboard
+Fleet Command Center 360° Aprovações, reservas, tarefas operacionais e prontidão dos veículos em uma só tela. 28 Veículos Disponível 15 Manutenção 2 Bloqueado 3 Em Uso 2 Carregando 1 Aguardando Retirada 5 10 Tarefas abertas 9 Veículos que precisam de atenção Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação
+   (shots/role_t3maint_-dashboard.png)
+== t3sec /admin -> /dashboard
+Fleet Command Center 360° Aprovações, reservas, tarefas operacionais e prontidão dos veículos em uma só tela. 28 Veículos Disponível 15 Manutenção 2 Bloqueado 3 Em Uso 2 Carregando 1 Aguardando Retirada 5 9 Veículos que precisam de atenção Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 
+   (shots/role_t3sec_-admin.png)
+== t3sec /trips -> /trips
+Minhas Reservas e Viagens Gerencie suas reservas de veículos, caronas e acompanhe todo o histórico. Nova reserva Todas (0) Próximas (0) Em andamento (0) Caronas (0) Concluídas (0) Canceladas (0) Você ainda não tem viagens. Solicite a primeira em “+ Nova viagem”. Nova reserva
+   (shots/role_t3sec_-trips.png)
+== t3sec /trips/new -> /trips/new
+Reservar Veículo Encontre o veículo ideal para a sua viagem. O FleetMind também verifica caronas compatíveis. 1 Viagem (etapa atual) Informe os detalhes 2 Veículo Escolha o veículo 3 Carona Veja as opções 4 Confirmação Revise e finalize Detalhes da viagem Origem Destino Data de ida Hora de ida Data de volta Hora de volta Motivo da viagem Reunião Visita a cliente Treinamento Entrega Manutenção/ofic
+   (shots/role_t3sec_-trips-new.png)
+== t3sec /fleet -> /dashboard
+Fleet Command Center 360° Aprovações, reservas, tarefas operacionais e prontidão dos veículos em uma só tela. 28 Veículos Disponível 15 Manutenção 2 Bloqueado 3 Em Uso 2 Carregando 1 Aguardando Retirada 5 9 Veículos que precisam de atenção Precisa de Atenção 1 Revisão próxima: GWM2M51 8 Avaria: GWM3B52, TDA1A02, TDA1A03, TDA1A05, TDA1A06, TDA1A07, TDA2A02, TDA3A02 1 Documentação inválida: GWM3B52 
+   (shots/role_t3sec_-fleet.png)
+== t3admin /dashboard -> /dashboard
+Fleet Command Center 360° Aprovações, reservas, tarefas operacionais e prontidão dos veículos em uma só tela. Fleet Command Center 360° Indicadores por unidade, distribuição operacional e veículos que exigem atenção. Abrir Central de Comando → 28 Veículos Disponível 15 Manutenção 2 Bloqueado 3 Em Uso 2 Carregando 1 Aguardando Retirada 5 4 Aprovações pendentes 20 Reservas ativas 5 com sobreposição 
+   (shots/role_t3admin_-dashboard.png)
+== t3admin /fleet/keys -> /fleet/keys
+Acompanhamento das chaves Acompanhe a custódia local e as exceções, mantendo a confirmação física com o responsável da unidade. Configurar unidades e responsáveis Reservas e chaves pendentes Reservas nos próximos sete dias e chaves entregues sem recebimento confirmado, inclusive de reservas canceladas. Esta visão não confirma entrega ou recebimento à distância. Unidade / veículo Condutor Período C
+   (shots/role_t3admin_-fleet-keys.png)
+== t3admin /trips -> /trips
+Minhas Reservas e Viagens Gerencie suas reservas de veículos, caronas e acompanhe todo o histórico. Nova reserva Todas (0) Próximas (0) Em andamento (0) Caronas (0) Concluídas (0) Canceladas (0) Você ainda não tem viagens. Solicite a primeira em “+ Nova viagem”. Nova reserva
+   (shots/role_t3admin_-trips.png)

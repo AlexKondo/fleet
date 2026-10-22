@@ -1,0 +1,11 @@
+### FINAL check-auto-release-policy.sql 2026-10-22T15:33:31-03:00
+t
+t
+### node scripts/check-auto-release-policy.mjs
+Server policy: active (including absent variable). Database check is still required: run docs/consolidado_final/check-auto-release-policy.sql read-only.
+exit=0
+### settings T1
+Aurora Mobilidade Corporativa S.A.|t|60
+Org B (ficticia, local)||
+T1 Org A Ficticia||
+T1 Org B Ficticia|t|60

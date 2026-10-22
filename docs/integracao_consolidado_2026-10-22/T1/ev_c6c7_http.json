@@ -1,0 +1,2261 @@
+{
+ "total": 214,
+ "fails": 9,
+ "out": [
+  {
+   "id": "C6-01",
+   "desc": "retirada (checklist do condutor) CNH vencida [insp/key/gate 0/0/0->0/0/0]",
+   "actor": "t1drvexp",
+   "expected": "negado sem efeito",
+   "status": 400,
+   "code": "P0001",
+   "msg": "LICENSE_EXPIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-02",
+   "desc": "retirada CNH NULL [insp/key/gate 0/0/0->0/0/0]",
+   "actor": "t1drvnull",
+   "expected": "negado sem efeito",
+   "status": 400,
+   "code": "P0001",
+   "msg": "LICENSE_EXPIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-03",
+   "desc": "gestor registra checklist em nome de condutor com CNH vencida [insp/key/gate 0/0/0->0/0/0]",
+   "actor": "t1fmall",
+   "expected": "negado sem efeito",
+   "status": 400,
+   "code": "P0001",
+   "msg": "LICENSE_EXPIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-04",
+   "desc": "Seguranca registra checklist para condutor com CNH vencida [insp/key/gate 0/0/0->0/0/0]",
+   "actor": "t1sec",
+   "expected": "negado sem efeito",
+   "status": 400,
+   "code": "P0001",
+   "msg": "LICENSE_EXPIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-05",
+   "desc": "custodiante entrega chave para condutor com CNH vencida (Campinas) [insp/key/gate 0/0/0->0/0/0]",
+   "actor": "t1custcp",
+   "expected": "negado sem efeito",
+   "status": 400,
+   "code": "P0001",
+   "msg": "LICENSE_EXPIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-06",
+   "desc": "saida fisica para condutor com CNH vencida [insp/key/gate 0/0/0->0/0/0]",
+   "actor": "t1sec",
+   "expected": "negado sem efeito",
+   "status": 400,
+   "code": "P0001",
+   "msg": "DEPARTURE_BLOCKED",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-07",
+   "desc": "admin SEM CNH retira o veiculo da propria reserva [insp/key/gate 0/0/0->0/0/0]",
+   "actor": "t1adminnocnh",
+   "expected": "negado sem efeito",
+   "status": 400,
+   "code": "P0001",
+   "msg": "DRIVER_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-08a",
+   "desc": "condutor (CNH valida) prepara checklist",
+   "actor": "t1req2",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-08b",
+   "desc": "condutor (CNH valida) checklist",
+   "actor": "t1req2",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "e92bd279-c0e6-44a2-828a-a62df9ac7e63",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-08c",
+   "desc": "Seguranca checklist",
+   "actor": "t1sec",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "5846b2c8-1f5c-42a1-bfe1-18e77051c295",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-08d",
+   "desc": "CNH venceu apos os checklists: Seguranca tenta saida fisica [2/0/0->2/0/0]",
+   "actor": "t1sec",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "LICENSE_EXPIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-09a",
+   "desc": "CNH valida: prepara checklist",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-09b",
+   "desc": "CNH valida: retirada",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "54e0e4dd-193e-417e-bc17-37439e480c3c",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-10",
+   "desc": "sem CNH (ou CNH vencida) - atividade administrativa/consulta: approve_reservation",
+   "actor": "t1adminnocnh",
+   "expected": "sucesso",
+   "status": 204,
+   "code": null,
+   "msg": "",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-11",
+   "desc": "sem CNH (ou CNH vencida) - atividade administrativa/consulta: approve_reservation",
+   "actor": "t1fmnocnh",
+   "expected": "sucesso",
+   "status": 204,
+   "code": null,
+   "msg": "",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-12",
+   "desc": "sem CNH (ou CNH vencida) - atividade administrativa/consulta: list_member_licenses",
+   "actor": "t1adminnocnh",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-13",
+   "desc": "sem CNH (ou CNH vencida) - atividade administrativa/consulta: list_member_license_sources",
+   "actor": "t1adminnocnh",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-14",
+   "desc": "sem CNH (ou CNH vencida) - atividade administrativa/consulta: fm_key_management_workspace",
+   "actor": "t1fmnocnh",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-15",
+   "desc": "sem CNH (ou CNH vencida) - atividade administrativa/consulta: fm_update_vehicle",
+   "actor": "t1adminnocnh",
+   "expected": "sucesso",
+   "status": 204,
+   "code": null,
+   "msg": "",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-16",
+   "desc": "sem CNH (ou CNH vencida) - atividade administrativa/consulta: fm_availability_windows",
+   "actor": "t1emp",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-17",
+   "desc": "sem CNH (ou CNH vencida) - atividade administrativa/consulta: fm_availability_windows",
+   "actor": "t1drvexp",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-18",
+   "desc": "pedir carona como PASSAGEIRO sem CNH valida",
+   "actor": "t1emp",
+   "expected": "sucesso",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_participants\"",
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-18",
+   "desc": "pedir carona como PASSAGEIRO sem CNH valida",
+   "actor": "t1adminnocnh",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "0d1f793d-5391-4907-aa79-21f80e7e5e0b",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-18",
+   "desc": "pedir carona como PASSAGEIRO sem CNH valida",
+   "actor": "t1fmnocnh",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "3b597b08-5a86-489f-b63b-f4576fb808c0",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-18",
+   "desc": "pedir carona como PASSAGEIRO sem CNH valida",
+   "actor": "t1drvexp",
+   "expected": "sucesso",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_participants\"",
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-18",
+   "desc": "pedir carona como PASSAGEIRO sem CNH valida",
+   "actor": "t1drvnull",
+   "expected": "sucesso",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_participants\"",
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-19",
+   "desc": "consulta audit_log",
+   "actor": "t1adminnocnh",
+   "expected": "200 com linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 5,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-19",
+   "desc": "consulta reservations",
+   "actor": "t1adminnocnh",
+   "expected": "200 com linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 5,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-19",
+   "desc": "consulta vehicles",
+   "actor": "t1fmnocnh",
+   "expected": "200 com linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 46,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-19",
+   "desc": "consulta vehicles",
+   "actor": "t1emp",
+   "expected": "200 com linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 46,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-19",
+   "desc": "consulta trip_requests",
+   "actor": "t1emp",
+   "expected": "200 com linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-19",
+   "desc": "consulta reservations",
+   "actor": "t1drvexp",
+   "expected": "200 com linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 2,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-20",
+   "desc": "conta desativada le vehicles",
+   "actor": "t1deact",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-20",
+   "desc": "conta desativada le reservations",
+   "actor": "t1deact",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-20",
+   "desc": "conta desativada le profiles",
+   "actor": "t1deact",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-20",
+   "desc": "conta desativada le notifications",
+   "actor": "t1deact",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-21",
+   "desc": "conta desativada pede carona",
+   "actor": "t1deact",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_requests\"",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-22",
+   "desc": "conta desativada consulta disponibilidade",
+   "actor": "t1deact",
+   "expected": "negado ou vazio",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-23",
+   "desc": "motorista CNH vencida renova via PATCH profiles",
+   "actor": "t1drvexp",
+   "expected": "sem efeito",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for table profiles",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-24",
+   "desc": "admin altera CNH lida por IA (profiles_license_lock_trg)",
+   "actor": "t1admin",
+   "expected": "negado/sem efeito",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for table profiles",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-25",
+   "desc": "apply_ai_license_read direto",
+   "actor": "t1drvok",
+   "expected": "42501",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for function apply_ai_license_read",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-26",
+   "desc": "reset_ai_license direto",
+   "actor": "t1drvok",
+   "expected": "42501",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for function reset_ai_license",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-25",
+   "desc": "apply_ai_license_read direto",
+   "actor": "t1admin",
+   "expected": "42501",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for function apply_ai_license_read",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-26",
+   "desc": "reset_ai_license direto",
+   "actor": "t1admin",
+   "expected": "42501",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for function reset_ai_license",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-25",
+   "desc": "apply_ai_license_read direto",
+   "actor": "anon",
+   "expected": "42501",
+   "status": 401,
+   "code": "42501",
+   "msg": "permission denied for function apply_ai_license_read",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-26",
+   "desc": "reset_ai_license direto",
+   "actor": "anon",
+   "expected": "42501",
+   "status": 401,
+   "code": "42501",
+   "msg": "permission denied for function reset_ai_license",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-27",
+   "desc": "list_member_license_sources mostra a origem ai",
+   "actor": "t1admin",
+   "expected": "linha com ai",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "sample": {
+    "id": "c282209b-c6f7-444b-8896-4e454ce20066",
+    "drivers_license_expiration_source": "ai"
+   },
+   "result": "PASS"
+  },
+  {
+   "id": "C6-28",
+   "desc": "list_member_license_sources por empregado",
+   "actor": "t1drvok",
+   "expected": "negado ou vazio",
+   "status": 403,
+   "code": "42501",
+   "msg": "not authorized",
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-29",
+   "desc": "admin Org B lista fontes de CNH (sem Org A)",
+   "actor": "t1adminb",
+   "expected": "sem linhas da Org A",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C6-30",
+   "desc": "criar reserva de VEICULO (conducao) com CNH vencida via create_vehicle_reservation",
+   "actor": "t1drvexp",
+   "status": 200,
+   "code": null,
+   "msg": "a3c1ea19-64a1-488a-9f49-67f6182ac8b0",
+   "result": "INFO"
+  },
+  {
+   "id": "C6-lic",
+   "desc": "licencas apos os testes",
+   "state": "T1 t1custrj:2027-11-26:true:ai ",
+   "result": "INFO"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1admin",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1admin",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1admin",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1adminnocnh",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1adminnocnh",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1adminnocnh",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1fmall",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1fmall",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1fmall",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1fmsp",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1fmsp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1fmsp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1fmcp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1fmcp",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1fmcp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1sec",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1sec",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1sec",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1maint",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1maint",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1maint",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1custcp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1custcp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1custcp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1drvok",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1drvok",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1drvok",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1emp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1emp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1emp",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1deact",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1deact",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1deact",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1adminb",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1adminb",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1adminb",
+   "expected": "200, 1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 1,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1drvb",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1drvb",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1drvb",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "t1secb",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "t1secb",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "t1secb",
+   "expected": "negado/0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em sp",
+   "actor": "anon",
+   "expected": "negado/0 linhas",
+   "status": 401,
+   "code": "42501",
+   "msg": "permission denied for table profiles",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em cp",
+   "actor": "anon",
+   "expected": "negado/0 linhas",
+   "status": 401,
+   "code": "42501",
+   "msg": "permission denied for table profiles",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-02",
+   "desc": "PATCH cadastro (name) em b",
+   "actor": "anon",
+   "expected": "negado/0 linhas",
+   "status": 401,
+   "code": "42501",
+   "msg": "permission denied for table profiles",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-01",
+   "desc": "PATCH de 11 colunas operacionais x 15 atores x 3 veiculos",
+   "actor": "todos",
+   "expected": "todos negados/0 linhas",
+   "status": 0,
+   "code": null,
+   "msg": null,
+   "cases": 495,
+   "passed": 495,
+   "state_unchanged": true,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: gestor SP aprova pedido CP",
+   "actor": "t1fmsp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: gestor CP aprova pedido SP",
+   "actor": "t1fmcp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: admin Org B aprova pedido Org A",
+   "actor": "t1adminb",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: admin Org A aprova pedido Org B",
+   "actor": "t1admin",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: Seguranca aprova",
+   "actor": "t1sec",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: empregado aprova",
+   "actor": "t1drvok",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: gestor SP bloqueia veiculo CP",
+   "actor": "t1fmsp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: admin Org B bloqueia veiculo Org A",
+   "actor": "t1adminb",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: gestor SP conclui tarefa CP",
+   "actor": "t1fmsp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: admin Org B conclui tarefa Org A",
+   "actor": "t1adminb",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: gestor CP assume tarefa SP",
+   "actor": "t1fmcp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: admin Org A assume tarefa Org B",
+   "actor": "t1admin",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: gestor SP edita medicao CP",
+   "actor": "t1fmsp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: admin A edita medicao Org B",
+   "actor": "t1admin",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: admin executa liberacao",
+   "actor": "t1admin",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for function fm_release_expired_reservations",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03",
+   "desc": "RPC fora do escopo: gestor executa liberacao",
+   "actor": "t1fmall",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for function fm_release_expired_reservations",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-03s",
+   "desc": "estado apos RPCs fora do escopo (tudo pendente/aberto, sem atribuicao)",
+   "state": "iso_b_pend=pending_approval,iso_cp_pend=pending_approval,iso_sp_pend=pending_approval | iso_task_b=open:-,iso_task_cp=open:-,iso_task_sp=open:- | available:10000,available:10000,available:10000",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le vehicles",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le reservations",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le workflow_tasks",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le profiles",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le fm_operation_exceptions",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le audit_log",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le fm_photo_uploads",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le inspection_photos",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-04",
+   "desc": "anon le organization_settings",
+   "actor": "anon",
+   "expected": "401/403 ou 0 linhas",
+   "status": 401,
+   "code": null,
+   "msg": null,
+   "rows": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C7-05",
+   "desc": "anon RPC fm_release_expired_reservations",
+   "actor": "anon",
+   "expected": "401/404 negado",
+   "status": 401,
+   "code": "42501",
+   "msg": "permission denied for function fm_release_expired_reservations",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-05",
+   "desc": "anon RPC fm_claim_workflow_task",
+   "actor": "anon",
+   "expected": "401/404 negado",
+   "status": 404,
+   "code": "PGRST202",
+   "msg": "Could not find the function public.fm_claim_workflow_task without parameters in the schema cache",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-05",
+   "desc": "anon RPC fm_update_vehicle",
+   "actor": "anon",
+   "expected": "401/404 negado",
+   "status": 404,
+   "code": "PGRST202",
+   "msg": "Could not find the function public.fm_update_vehicle without parameters in the schema cache",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-05",
+   "desc": "anon RPC fm_photo_begin",
+   "actor": "anon",
+   "expected": "401/404 negado",
+   "status": 404,
+   "code": "PGRST202",
+   "msg": "Could not find the function public.fm_photo_begin without parameters in the schema cache",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-05",
+   "desc": "anon RPC fm_photo_pending",
+   "actor": "anon",
+   "expected": "401/404 negado",
+   "status": 401,
+   "code": "42501",
+   "msg": "permission denied for function fm_photo_pending",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-05",
+   "desc": "anon RPC fm_not_departed_reservations",
+   "actor": "anon",
+   "expected": "401/404 negado",
+   "status": 404,
+   "code": "PGRST202",
+   "msg": "Could not find the function public.fm_not_departed_reservations without parameters in the schema cache",
+   "result": "PASS"
+  },
+  {
+   "id": "C7-05",
+   "desc": "anon RPC approve_reservation",
+   "actor": "anon",
+   "expected": "401/404 negado",
+   "status": 404,
+   "code": "PGRST202",
+   "msg": "Could not find the function public.approve_reservation without parameters in the schema cache",
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H1",
+   "desc": "HTTP: notas internas de tarefa SP",
+   "actor": "t1drvok",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H1",
+   "desc": "HTTP: notas internas de tarefa SP",
+   "actor": "t1emp",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H1",
+   "desc": "HTTP: notas internas de tarefa SP",
+   "actor": "t1sec",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H1",
+   "desc": "HTTP: notas internas de tarefa SP",
+   "actor": "t1custcp",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H1",
+   "desc": "HTTP: notas internas de tarefa SP",
+   "actor": "t1fmcp",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H2",
+   "desc": "HTTP: gestor SP le notas da tarefa SP",
+   "actor": "t1fmsp",
+   "expected": "1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H3",
+   "desc": "HTTP: POST workflow_tasks",
+   "actor": "t1admin",
+   "expected": "401/403",
+   "status": 403,
+   "code": null,
+   "msg": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the curr",
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H4",
+   "desc": "HTTP: PATCH workflow_tasks.assigned_to",
+   "actor": "t1admin",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for table workflow_tasks",
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H3",
+   "desc": "HTTP: POST workflow_tasks",
+   "actor": "t1fmsp",
+   "expected": "401/403",
+   "status": 403,
+   "code": null,
+   "msg": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the curr",
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H4",
+   "desc": "HTTP: PATCH workflow_tasks.assigned_to",
+   "actor": "t1fmsp",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for table workflow_tasks",
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H3",
+   "desc": "HTTP: POST workflow_tasks",
+   "actor": "t1maint",
+   "expected": "401/403",
+   "status": 403,
+   "code": null,
+   "msg": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the curr",
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H4",
+   "desc": "HTTP: PATCH workflow_tasks.assigned_to",
+   "actor": "t1maint",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for table workflow_tasks",
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H3",
+   "desc": "HTTP: POST workflow_tasks",
+   "actor": "t1drvok",
+   "expected": "401/403",
+   "status": 403,
+   "code": null,
+   "msg": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the curr",
+   "result": "PASS"
+  },
+  {
+   "id": "C2-H4",
+   "desc": "HTTP: PATCH workflow_tasks.assigned_to",
+   "actor": "t1drvok",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for table workflow_tasks",
+   "result": "PASS"
+  },
+  {
+   "id": "C4-H1",
+   "desc": "HTTP: solicitante le reservations.cancellation_reason da reserva encerrada por excecao",
+   "actor": "t1drvok",
+   "expected": "motivo interno NAO exposto",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "body": [
+    {
+     "id": "dd9e0ff0-14f0-47f9-a4da-51793fddd31b",
+     "status": "cancelled",
+     "cancellation_reason": "T1 MOTIVO INTERNO SIGILOSO"
+    }
+   ],
+   "result": "FAIL"
+  },
+  {
+   "id": "C4-H2",
+   "desc": "HTTP: notificacao recebida pelo solicitante",
+   "actor": "t1drvok",
+   "expected": "motivo interno NAO exposto",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "body": [
+    {
+     "title": "Reserva encerrada por exceção",
+     "body": "Sua reserva foi encerrada por exceção operacional: T1 MOTIVO INTERNO SIGILOSO"
+    }
+   ],
+   "result": "FAIL"
+  },
+  {
+   "id": "C4-H3",
+   "desc": "HTTP: rotulo fm_not_departed_reservations",
+   "actor": "t1drvok",
+   "expected": "contem a reserva",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "C4-H4",
+   "desc": "HTTP: solicitante le fm_operation_exceptions",
+   "actor": "t1drvok",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "G1",
+   "desc": "condutor prepara checklist SP",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "G2",
+   "desc": "checklist do condutor",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "8e416dc7-bcd2-4d42-8450-78231a5674a5",
+   "result": "PASS"
+  },
+  {
+   "id": "G3",
+   "desc": "saida fisica sem checklist da Seguranca",
+   "actor": "t1sec",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "CHECKLIST_REQUIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "G4",
+   "desc": "gestor tenta checklist como Seguranca",
+   "actor": "t1fmall",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "INSPECTION_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "G5",
+   "desc": "admin tenta checklist como Seguranca",
+   "actor": "t1admin",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "INSPECTION_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "G6",
+   "desc": "checklist independente da Seguranca",
+   "actor": "t1sec",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "80ec34b3-f447-4920-9379-a67e856075cc",
+   "result": "PASS"
+  },
+  {
+   "id": "G7",
+   "desc": "gestor registra saida fisica",
+   "actor": "t1fmall",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "G8",
+   "desc": "admin registra saida fisica",
+   "actor": "t1admin",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "G9",
+   "desc": "condutor registra a propria saida",
+   "actor": "t1drvok",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "G10",
+   "desc": "Seguranca da Org B registra saida na Org A",
+   "actor": "t1secb",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "NOT_FOUND",
+   "result": "PASS"
+  },
+  {
+   "id": "G11",
+   "desc": "Seguranca registra saida fisica",
+   "actor": "t1sec",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "G11s",
+   "desc": "estado apos saida",
+   "state": "confirmed/in_use/dmg=false insp=2 gate=departure keys=-",
+   "result": "PASS"
+  },
+  {
+   "id": "G12",
+   "desc": "condutor checklist de devolucao",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 400,
+   "code": "P0001",
+   "msg": "INVALID_CURRENT_LOCATION",
+   "result": "FAIL"
+  },
+  {
+   "id": "G13",
+   "desc": "gestor registra chegada fisica",
+   "actor": "t1fmall",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "G14",
+   "desc": "Seguranca registra chegada fisica",
+   "actor": "t1sec",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "G14s",
+   "desc": "estado final SP",
+   "state": "confirmed/returning/dmg=false insp=2 gate=departure,arrival keys=-",
+   "result": "INFO"
+  },
+  {
+   "id": "B1",
+   "desc": "gestor CP prepara checklist em nome (veiculo SP)",
+   "actor": "t1fmcp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "B2",
+   "desc": "gestor SP prepara checklist em nome",
+   "actor": "t1fmsp",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "B3",
+   "desc": "gestor SP checklist do condutor em nome dele",
+   "actor": "t1fmsp",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "2836e429-dab9-4ee5-b774-a3980bc149dd",
+   "result": "PASS"
+  },
+  {
+   "id": "B4",
+   "desc": "Seguranca checklist",
+   "actor": "t1sec",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "f6155f19-2654-49ee-8efd-10c32b320ac6",
+   "result": "PASS"
+  },
+  {
+   "id": "B5",
+   "desc": "gestor SP registra saida fisica",
+   "actor": "t1fmsp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "B6",
+   "desc": "Seguranca registra saida",
+   "actor": "t1sec",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "K1",
+   "desc": "Campinas: Seguranca tenta portaria em unidade de chaves",
+   "actor": "t1sec",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "DEPARTURE_BLOCKED",
+   "result": "PASS"
+  },
+  {
+   "id": "K2",
+   "desc": "Campinas: gestor (nao custodiante) entrega chave",
+   "actor": "t1fmall",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "KEY_CUSTODY_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "K3",
+   "desc": "Campinas: custodiante de outra unidade entrega chave",
+   "actor": "t1custrj",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "KEY_CUSTODY_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "K4",
+   "desc": "Campinas: condutor prepara checklist",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "K5",
+   "desc": "Campinas: custodiante entrega a chave real",
+   "actor": "t1custcp",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "K6",
+   "desc": "Campinas: condutor faz retirada digital",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "624d98d9-aa3d-4f93-b0c6-31c75458bb57",
+   "result": "PASS"
+  },
+  {
+   "id": "K6s",
+   "desc": "Campinas: estado apos retirada",
+   "state": "confirmed/in_use/dmg=false insp=1 gate=- keys=delivered",
+   "result": "PASS"
+  },
+  {
+   "id": "K7",
+   "desc": "Campinas: condutor registra devolucao",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 400,
+   "code": "P0001",
+   "msg": "INVALID_CURRENT_LOCATION",
+   "result": "FAIL"
+  },
+  {
+   "id": "K8",
+   "desc": "Campinas: condutor registra recebimento da propria chave",
+   "actor": "t1drvok",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "KEY_CUSTODY_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "K9",
+   "desc": "Campinas: custodiante registra recebimento real",
+   "actor": "t1custcp",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "K9s",
+   "desc": "Campinas: estado final",
+   "state": "confirmed/in_use/dmg=false insp=1 gate=- keys=delivered,received",
+   "result": "INFO"
+  },
+  {
+   "id": "R1",
+   "desc": "Rio: Seguranca tenta portaria em unidade de chaves",
+   "actor": "t1sec",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "DEPARTURE_BLOCKED",
+   "result": "PASS"
+  },
+  {
+   "id": "R2",
+   "desc": "Rio: gestor (nao custodiante) entrega chave",
+   "actor": "t1fmall",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "KEY_CUSTODY_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "R3",
+   "desc": "Rio: custodiante de outra unidade entrega chave",
+   "actor": "t1custcp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "KEY_CUSTODY_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "R4",
+   "desc": "Rio: condutor prepara checklist",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "R5",
+   "desc": "Rio: custodiante entrega a chave real",
+   "actor": "t1custrj",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "R6",
+   "desc": "Rio: condutor faz retirada digital",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "f6a20bcb-0ec4-4162-8559-e2009979da7a",
+   "result": "PASS"
+  },
+  {
+   "id": "R6s",
+   "desc": "Rio: estado apos retirada",
+   "state": "confirmed/in_use/dmg=false insp=1 gate=- keys=delivered",
+   "result": "PASS"
+  },
+  {
+   "id": "R7",
+   "desc": "Rio: condutor registra devolucao",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 400,
+   "code": "P0001",
+   "msg": "INVALID_CURRENT_LOCATION",
+   "result": "FAIL"
+  },
+  {
+   "id": "R8",
+   "desc": "Rio: condutor registra recebimento da propria chave",
+   "actor": "t1drvok",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "KEY_CUSTODY_NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "R9",
+   "desc": "Rio: custodiante registra recebimento real",
+   "actor": "t1custrj",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "R9s",
+   "desc": "Rio: estado final",
+   "state": "confirmed/in_use/dmg=false insp=1 gate=- keys=delivered,received",
+   "result": "INFO"
+  },
+  {
+   "id": "D1",
+   "desc": "gestor SP prepara checklist em nome",
+   "actor": "t1fmsp",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "D2",
+   "desc": "gestor SP registra checklist COM avaria em nome do condutor",
+   "actor": "t1fmsp",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "91d33bc0-944e-4a3c-a2ca-e475794fac1e",
+   "result": "PASS"
+  },
+  {
+   "id": "D2s",
+   "desc": "estado com avaria",
+   "state": "confirmed/awaiting_pickup/dmg=true insp=1 gate=- keys=-",
+   "task": "b660e35d-5eae-4e4e-9688-c791a5079c36",
+   "result": "PASS"
+  },
+  {
+   "id": "D3",
+   "desc": "Seguranca checklist",
+   "actor": "t1sec",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "946069e7-2a27-4789-b0d6-f13d07cd0a63",
+   "result": "PASS"
+  },
+  {
+   "id": "D4",
+   "desc": "Seguranca tenta saida com avaria bloqueante",
+   "actor": "t1sec",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "DEPARTURE_BLOCKED",
+   "result": "PASS"
+  },
+  {
+   "id": "D5",
+   "desc": "gestor PATCH direto tarefa de reparo done",
+   "actor": "t1fmall",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for table workflow_tasks",
+   "result": "PASS"
+  },
+  {
+   "id": "D6",
+   "desc": "gestor PATCH direto has_blocking_damage=false",
+   "actor": "t1fmall",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "permission denied for table vehicles",
+   "result": "PASS"
+  },
+  {
+   "id": "D7",
+   "desc": "gestor de outra unidade conclui reparo",
+   "actor": "t1fmcp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "D8",
+   "desc": "gestor que registrou a avaria tenta liberar",
+   "actor": "t1fmsp",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "DAMAGE_RELEASE_INDEPENDENT_ACTOR_REQUIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "D9",
+   "desc": "Seguranca conclui reparo",
+   "actor": "t1sec",
+   "expected": "negado",
+   "status": 400,
+   "code": "P0001",
+   "msg": "MANAGEMENT_SCOPE_DENIED",
+   "result": "PASS"
+  },
+  {
+   "id": "D10",
+   "desc": "gestor independente assume a tarefa (comando auditado 0225)",
+   "actor": "t1fmall",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "b660e35d-5eae-4e4e-9688-c791a5079c36",
+   "result": "PASS"
+  },
+  {
+   "id": "D11",
+   "desc": "gestor independente conclui reparo -> libera retencao",
+   "actor": "t1fmall",
+   "expected": "sucesso",
+   "status": 204,
+   "code": null,
+   "msg": "",
+   "result": "PASS"
+  },
+  {
+   "id": "D11s",
+   "desc": "estado apos liberacao + auditoria",
+   "state": "confirmed/awaiting_pickup/dmg=false insp=2 gate=- keys=-",
+   "audit": "workflow_task.claimed,vehicle.damage_hold_released",
+   "result": "PASS"
+  },
+  {
+   "id": "O1",
+   "desc": "leitura direta fm_work_orders",
+   "actor": "t1drvok",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "O2",
+   "desc": "leitura direta fm_work_order_lines",
+   "actor": "t1drvok",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "O3",
+   "desc": "fm_availability_windows: so janela (sem descricao/orcamento)",
+   "actor": "t1drvok",
+   "expected": "colunas end_at,kind,start_at,vehicle_id",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "columns": "end_at,kind,start_at,vehicle_id",
+   "os_window_visible": true,
+   "result": "PASS"
+  },
+  {
+   "id": "O1",
+   "desc": "leitura direta fm_work_orders",
+   "actor": "t1emp",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "O2",
+   "desc": "leitura direta fm_work_order_lines",
+   "actor": "t1emp",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "O3",
+   "desc": "fm_availability_windows: so janela (sem descricao/orcamento)",
+   "actor": "t1emp",
+   "expected": "colunas end_at,kind,start_at,vehicle_id",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "columns": "end_at,kind,start_at,vehicle_id",
+   "os_window_visible": true,
+   "result": "PASS"
+  },
+  {
+   "id": "O1",
+   "desc": "leitura direta fm_work_orders",
+   "actor": "t1sec",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "O2",
+   "desc": "leitura direta fm_work_order_lines",
+   "actor": "t1sec",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "O3",
+   "desc": "fm_availability_windows: so janela (sem descricao/orcamento)",
+   "actor": "t1sec",
+   "expected": "colunas end_at,kind,start_at,vehicle_id",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "columns": "end_at,kind,start_at,vehicle_id",
+   "os_window_visible": true,
+   "result": "PASS"
+  },
+  {
+   "id": "O1",
+   "desc": "leitura direta fm_work_orders",
+   "actor": "t1custcp",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "O2",
+   "desc": "leitura direta fm_work_order_lines",
+   "actor": "t1custcp",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "PASS"
+  },
+  {
+   "id": "O3",
+   "desc": "fm_availability_windows: so janela (sem descricao/orcamento)",
+   "actor": "t1custcp",
+   "expected": "colunas end_at,kind,start_at,vehicle_id",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "columns": "end_at,kind,start_at,vehicle_id",
+   "os_window_visible": true,
+   "result": "PASS"
+  },
+  {
+   "id": "O4",
+   "desc": "gestor SP le a OS (controle positivo)",
+   "actor": "t1fmsp",
+   "expected": "1 linha",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  },
+  {
+   "id": "O5",
+   "desc": "gestor CP le OS de veiculo SP",
+   "actor": "t1fmcp",
+   "expected": "0 linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "result": "PASS"
+  }
+ ]
+}

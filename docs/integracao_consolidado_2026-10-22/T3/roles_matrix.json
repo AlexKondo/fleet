@@ -1,0 +1,1575 @@
+[
+ {
+  "k": "t3admin",
+  "role": "administrator",
+  "cnh": "null",
+  "extra": null,
+  "landed": "/dashboard",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard/command-center",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/admin",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/analytics",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/gate",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/fleet",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/fleet/keys",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/settings",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/settings/users",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/maintenance",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/reservations/[id]",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3fmtotal",
+  "role": "fleet_manager",
+  "cnh": "null",
+  "extra": "all_units",
+  "landed": "/dashboard",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard/command-center",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/analytics",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/gate",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/fleet",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/fleet/keys",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/settings",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/settings",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/maintenance",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/reservations/[id]",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3fmlim",
+  "role": "fleet_manager",
+  "cnh": "null",
+  "extra": "campinas",
+  "landed": "/dashboard",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard/command-center",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/analytics",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/gate",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/fleet",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/fleet/keys",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/settings",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/settings",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/maintenance",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3maint",
+  "role": "maintenance_operator",
+  "cnh": "null",
+  "extra": null,
+  "landed": "/trips",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/maintenance",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3sec",
+  "role": "security",
+  "cnh": "null",
+  "extra": null,
+  "landed": "/gate",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/gate",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/trips/new",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/reservations/[id]",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/reservations/[id]/pickup",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3cust",
+  "role": "employee",
+  "cnh": "null",
+  "extra": "custodian",
+  "landed": "/dashboard",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3valid",
+  "role": "employee",
+  "cnh": "valid",
+  "extra": null,
+  "landed": "/dashboard",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/trips/new",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 404,
+    "final": "/reservations/[id]/pickup",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": true
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3exp",
+  "role": "employee",
+  "cnh": "expired",
+  "extra": null,
+  "landed": "/dashboard",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3null",
+  "role": "employee",
+  "cnh": "null",
+  "extra": null,
+  "landed": "/dashboard",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/dashboard",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/carpool",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/carpool/mine",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/trips",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3off",
+  "role": "employee",
+  "cnh": "valid",
+  "extra": "disabled",
+  "landed": "/login",
+  "loginMsg": "Situação do acesso indisponível | ",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/login",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   }
+  }
+ },
+ {
+  "k": "t3pwd",
+  "role": "employee",
+  "cnh": "null",
+  "extra": "must_change",
+  "landed": "/",
+  "loginMsg": "",
+  "routes": {
+   "/dashboard": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/dashboard/command-center": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/admin": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/analytics": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/gate": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/fleet/keys": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/settings/users": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/maintenance": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/trips/new": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/carpool/mine": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/keys": {
+    "status": 200,
+    "final": "/account/keys",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/reservations/[id]/pickup": {
+    "status": 200,
+    "final": "/account?forcePasswordChange=1",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account": {
+    "status": 200,
+    "final": "/account",
+    "cnhNotice": false,
+    "err": null,
+    "notFound": false
+   },
+   "/account/license": {
+    "status": 200,
+    "final": "/account/license",
+    "cnhNotice": true,
+    "err": null,
+    "notFound": false
+   }
+  }
+ }
+]

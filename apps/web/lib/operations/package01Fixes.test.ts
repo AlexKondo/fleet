@@ -120,6 +120,10 @@ describe.sequential("Pacote 01 corrections with the actual migrated SQL",()=>{
   await actor(security);const request=randomUUID();const first=(await exception(r.id,"not_departed",request)).rows[0]!.r;
   expect(first).toMatchObject({ok:true,vehicle_status:"available"});expect((await exception(r.id,"not_departed",request)).rows[0]!.r).toEqual(first);
   expect(await state(r.id)).toBe("cancelled/available");
+  // T1-D01: the internal reason must not reach the requester (reservation row nor notification text); it stays only in fm_operation_exceptions.
+  await asPostgres();
+  expect((await db.query<{c:string;b:string}>("select r.cancellation_reason c,(select string_agg(n.body,' | ') from notifications n where n.entity_id=r.id and n.title='Reserva encerrada por exceção') b from reservations r where r.id=$1",[r.id])).rows[0]).toEqual({c:"operation_exception:not_departed",b:expect.not.stringContaining("Exceção operacional de teste")});
+  expect((await db.query<{reason:string}>("select reason from fm_operation_exceptions where id=$1",[first.id])).rows[0]!.reason).toBe("Exceção operacional de teste");
   await asPostgres();await expect(db.query("update fm_operation_exceptions set reason='alterada' where id=$1",[first.id])).rejects.toThrow(/PRESERVE_INSPECTION_HISTORY/);
   expect((await db.query("select id from inspections where reservation_id=$1",[r.id])).rows).toHaveLength(2);
   const late=await reservation(driver,gateUnit,"now()-interval '1 minute'","now()+interval '1 hour'");await ready(late.id);

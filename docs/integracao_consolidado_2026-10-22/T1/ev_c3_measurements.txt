@@ -1,0 +1,132 @@
+Pager usage is off.
+BEGIN
+                mkveh                 
+--------------------------------------
+ d4dfbae2-6b05-4903-92dd-3f9ba0ec21c8
+ 85faaeec-bcb8-4a03-a313-b70e3ae80762
+ 5156062c-435e-4864-9315-7184837f2a85
+(3 rows)
+
+COMMIT
+=== C3-01 privilegios de coluna (0223)
+       column_name        | auth_update 
+--------------------------+-------------
+ id                       | f
+ organization_id          | f
+ plate                    | t
+ category_id              | t
+ status                   | f
+ odometer_km              | f
+ fuel_level_percent       | f
+ battery_level_percent    | f
+ estimated_range_km       | f
+ next_service_odometer_km | t
+ home_location_id         | t
+ current_location_id      | f
+ has_blocking_damage      | f
+ missing_safety_equipment | f
+ documentation_valid      | f
+ is_clean_exterior        | f
+ is_clean_interior        | f
+ created_at               | f
+ updated_at               | t
+ name                     | t
+ color                    | t
+ photo_storage_path       | f
+ pre_block_status         | f
+ vin                      | t
+ next_service_date        | t
+ archived_at              | f
+ archived_by              | f
+ archive_reason           | f
+ pre_archive_status       | f
+ lifecycle_version        | f
+(30 rows)
+
+=== C3-02 comando auditado fm_update_vehicle
+                               c                                |                    as_user                    
+----------------------------------------------------------------+-----------------------------------------------
+ fmsp aumenta odometro/combustivel (escopo)                     | OK 
+ fmsp reduz odometro SEM justificativa                          | ERR P0001 ODOMETER_CORRECTION_REASON_REQUIRED
+ fmsp reduz odometro com justificativa vazia (como o app envia) | ERR P0001 ODOMETER_CORRECTION_REASON_REQUIRED
+ fmsp reduz odometro com justificativa curta (2)                | ERR P0001 ODOMETER_CORRECTION_REASON_REQUIRED
+ fmsp reduz odometro COM justificativa                          | OK 
+ fmcp no veiculo SP (unidade errada)                            | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ fmcp no veiculo CP (escopo)                                    | OK 
+ adminB no veiculo SP (outra org)                               | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ admin A no veiculo da Org B                                    | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ condutor (employee)                                            | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ seguranca                                                      | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ manutencao                                                     | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ chave proibida (status)                                        | ERR P0001 INVALID_INPUT
+ chave proibida (documentation_valid)                           | ERR P0001 INVALID_INPUT
+ chave proibida (photo_storage_path)                            | ERR P0001 INVALID_INPUT
+ combustivel 120                                                | ERR P0001 INVALID_INPUT
+ odometro negativo                                              | ERR P0001 INVALID_INPUT
+ categoria de outra org                                         | ERR P0001 INVALID_INPUT
+ local de outra org                                             | ERR P0001 INVALID_INPUT
+ payload nao-objeto                                             | ERR P0001 INVALID_INPUT
+ admin sem CNH: cadastro+medicao (escopo)                       | OK 
+ gestor sem CNH (all units)                                     | OK 
+(22 rows)
+
+--- gestor desativado (transacao desfeita)
+BEGIN
+INSERT 0 1
+        c         |              as_user              
+------------------+-----------------------------------
+ fmall desativado | ERR P0001 MANAGEMENT_SCOPE_DENIED
+(1 row)
+
+ROLLBACK
+--- estado e auditoria
+        name        | color | odometer_km | fuel_level_percent | estimated_range_km 
+--------------------+-------+-------------+--------------------+--------------------
+ T1 ms_b            | Cinza |       10000 |                 80 |                600
+ T1 ms_cp           | Cinza |       10200 |                 65 |                600
+ T1 ms_sp renomeado | Azul  |       10060 |                 70 |                550
+(3 rows)
+
+    actor     | odo_before | odo_after | fuel_after |          reason          
+--------------+------------+-----------+------------+--------------------------
+ t1fmsp       | 10000      | 10100     | 70         | 
+ t1fmsp       | 10100      | 10050     | 70         | Correcao de digitacao T1
+ t1fmcp       | 10000      | 10200     | 80         | 
+ t1adminnocnh | 10050      | 10060     | 70         | 
+ t1fmnocnh    | 10200      | 10200     | 65         | 
+(5 rows)
+
+=== C3-03 UPDATE direto das colunas de medicao (todos os papeis) e cadastro direto (0210)
+CREATE TABLE
+GRANT
+DO
+    actor     |         role         |                      odo                       |                      fuel                      |                      batt                      |                     range                      | name_sp | name_cp | color_b 
+--------------+----------------------+------------------------------------------------+------------------------------------------------+------------------------------------------------+------------------------------------------------+---------+---------+---------
+ t1admin      | administrator        | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 1    | OK 1    | OK 0
+ t1adminb     | administrator        | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 1
+ t1adminnocnh | administrator        | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 1    | OK 1    | OK 0
+ t1custcp     | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1custrj     | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1deact      | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1drvb       | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1drvexp     | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1drvnull    | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1drvok      | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1emp        | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1req2       | employee             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1fmall      | fleet_manager        | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 1    | OK 1    | OK 0
+ t1fmcp       | fleet_manager        | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 1    | OK 0
+ t1fmnocnh    | fleet_manager        | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 1    | OK 1    | OK 0
+ t1fmsp       | fleet_manager        | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 1    | OK 0    | OK 0
+ t1maint      | maintenance_operator | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1sec        | security             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+ t1secb       | security             | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | ERR 42501 permission denied for table vehicles | OK 0    | OK 0    | OK 0
+(19 rows)
+
+        name        |  color   | odometer_km | fuel_level_percent | battery_level_percent | estimated_range_km 
+--------------------+----------+-------------+--------------------+-----------------------+--------------------
+ T1 ms_b            | t1adminb |       10000 |                 80 |                       |                600
+ T1 ms_cp t1fmnocnh | Cinza    |       10200 |                 65 |                       |                600
+ T1 ms_sp t1fmsp    | Azul     |       10060 |                 70 |                       |                550
+(3 rows)
+

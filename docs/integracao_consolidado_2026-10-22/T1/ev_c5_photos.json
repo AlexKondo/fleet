@@ -1,0 +1,329 @@
+{
+ "fails": 0,
+ "total": 45,
+ "out": [
+  {
+   "id": "P1a",
+   "desc": "gestor SP fm_photo_begin (veiculo no escopo)",
+   "expected": "200 + path",
+   "got": "200 OK",
+   "result": "PASS",
+   "path": "7a000000-0000-0000-0000-00000000000a/vehicles/34f446c3-c74c-4263-8bc5-256858e60088_f106705f4926e9c0701bf9b343b47bce169fb4eb6d32cd56977ca3296095afeb.jpg"
+  },
+  {
+   "id": "P1b",
+   "desc": "upload direto ao Storage no path retornado",
+   "expected": "200",
+   "got": "200",
+   "result": "PASS"
+  },
+  {
+   "id": "P1c",
+   "desc": "finalizacao (download+hash servidor, attest 6 args, finalize)",
+   "expected": "done + foto vinculada",
+   "got": "{\"step\":\"done\",\"path\":\"7a000000-0000-0000-0000-00000000000a/vehicles/34f446c3-c74c-4263-8bc5-256858e60088_f106705f4926e9c0701bf9b343b47bce169fb4eb6d32cd56977ca3296095afeb.jpg\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P1d",
+   "desc": "auditoria photo.linked",
+   "expected": "1",
+   "got": "1",
+   "result": "PASS"
+  },
+  {
+   "id": "P2a",
+   "desc": "service_role chama fm_photo_attest de 5 argumentos",
+   "expected": "negado (42501/PGRST)",
+   "got": "403 42501 permission denied for function fm_photo_attest",
+   "result": "PASS"
+  },
+  {
+   "id": "P2b",
+   "desc": "usuario autenticado chama fm_photo_attest de 6 argumentos",
+   "expected": "negado",
+   "got": "403 42501 permission denied for function fm_photo_attest",
+   "result": "PASS"
+  },
+  {
+   "id": "P2c",
+   "desc": "anon chama fm_photo_attest",
+   "expected": "negado",
+   "got": "401 42501 permission denied for function fm_photo_attest",
+   "result": "PASS"
+  },
+  {
+   "id": "P2d",
+   "desc": "usuario chama fm_photo_link diretamente",
+   "expected": "negado",
+   "got": "403 42501 permission denied for function fm_photo_link",
+   "result": "PASS"
+  },
+  {
+   "id": "P2e",
+   "desc": "privilegio de execucao da assinatura antiga",
+   "expected": "todos false",
+   "got": "anon=false,authenticated=false,service_role=false",
+   "result": "PASS"
+  },
+  {
+   "id": "P3a",
+   "desc": "A -> B: foto B vinculada",
+   "expected": "path B",
+   "got": "7a000000-0000-0000-0000-00000000000a/vehicles/34f446c3-c74c-4263-8bc5-256858e60088_45499f65f0d04308c5b9fb38806939f031281cc40c6bcaa122c4d24e63228330.jpg",
+   "result": "PASS"
+  },
+  {
+   "id": "P3b",
+   "desc": "B -> A: begin com o hash de A devolve a referencia antiga (linked, sem novo upload)",
+   "expected": "mesmo id/path, state linked",
+   "got": "200 OK {\"id\":\"c43c59f5-8cbd-4269-8cee-b79f5473daa3\",\"path\":\"7a000000-0000-0000-0000-00000000000a/vehicles/34f446c3-c74c-4263-8bc5-256858e60088_f106705f4926e9c0701bf9b343b47bce169fb4eb6d32cd56977ca3296095afeb.jpg\",\"state\":\"linked\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P3c",
+   "desc": "B -> A: finalizacao reaponta a foto para A",
+   "expected": "path A",
+   "got": "7a000000-0000-0000-0000-00000000000a/vehicles/34f446c3-c74c-4263-8bc5-256858e60088_f106705f4926e9c0701bf9b343b47bce169fb4eb6d32cd56977ca3296095afeb.jpg {\"step\":\"done\",\"path\":\"7a000000-0000-0000-0000-00000000000a/vehicles/34f446c3-c74c-4263-8bc5-256858e60088_f106705f4926e9c0701bf9b343b47bce169fb4eb6d32cd56977ca3296095afeb.jpg\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P3d",
+   "desc": "sem duplicar jornal (2 linhas: A e B)",
+   "expected": "2",
+   "got": "2",
+   "result": "PASS"
+  },
+  {
+   "id": "P3e",
+   "desc": "outro gestor (all units) reseleciona a foto A enviada por fmsp",
+   "expected": "observacao",
+   "got": "400 P0001 PHOTO_CONFLICT",
+   "result": "INFO"
+  },
+  {
+   "id": "P4a",
+   "desc": "condutor registra checklist (inspecao)",
+   "expected": "200 + id",
+   "got": "200 OK",
+   "result": "PASS"
+  },
+  {
+   "id": "P4b",
+   "desc": "3 fotos (front/back/left_side) no mesmo checklist",
+   "expected": "3 vinculadas",
+   "got": "3 / inspection_photos=3",
+   "result": "PASS"
+  },
+  {
+   "id": "P4c",
+   "desc": "INSERT direto em inspection_photos (t1drvok)",
+   "expected": "negado",
+   "got": "403 {\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the curr",
+   "result": "PASS"
+  },
+  {
+   "id": "P4c",
+   "desc": "INSERT direto em inspection_photos (t1fmsp)",
+   "expected": "negado",
+   "got": "403 {\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the curr",
+   "result": "PASS"
+  },
+  {
+   "id": "P4c",
+   "desc": "INSERT direto em inspection_photos (t1admin)",
+   "expected": "negado",
+   "got": "403 {\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the curr",
+   "result": "PASS"
+  },
+  {
+   "id": "P4c",
+   "desc": "INSERT direto em inspection_photos (t1sec)",
+   "expected": "negado",
+   "got": "403 {\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the curr",
+   "result": "PASS"
+  },
+  {
+   "id": "P4d",
+   "desc": "outro empregado inicia foto na inspecao alheia",
+   "expected": "NOT_AUTHORIZED",
+   "got": "400 P0001 NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "P5a",
+   "desc": "objeto enviado a um caminho diferente do retornado",
+   "expected": "nao vincula (download falha)",
+   "got": "{\"step\":\"download\",\"r\":\"400\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P5b",
+   "desc": "atestacao com p_path diferente do jornal",
+   "expected": "PHOTO_ATTEMPT_CHANGED",
+   "got": "400 P0001 PHOTO_ATTEMPT_CHANGED",
+   "result": "PASS"
+  },
+  {
+   "id": "P6",
+   "desc": "objeto no caminho certo mas com proprietario diferente (fmall)",
+   "expected": "PHOTO_INTEGRITY_MISMATCH",
+   "got": "{\"step\":\"attest\",\"r\":\"400 P0001 PHOTO_INTEGRITY_MISMATCH\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P7a",
+   "desc": "objeto com mimetype diferente do declarado (png x jpeg)",
+   "expected": "PHOTO_INTEGRITY_MISMATCH",
+   "got": "{\"step\":\"attest\",\"r\":\"400 P0001 PHOTO_INTEGRITY_MISMATCH\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P7b",
+   "desc": "objeto com tamanho diferente do declarado",
+   "expected": "recusado",
+   "got": "{\"step\":\"server_hash_mismatch\",\"db_attest_with_real_hash\":\"400 P0001 PHOTO_INTEGRITY_MISMATCH\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P7c",
+   "desc": "banco: atestacao de objeto com tamanho divergente (mesmo se o servidor errasse)",
+   "expected": "PHOTO_INTEGRITY_MISMATCH",
+   "got": "400 P0001 PHOTO_INTEGRITY_MISMATCH",
+   "result": "PASS"
+  },
+  {
+   "id": "P8a",
+   "desc": "objeto adulterado de mesmo tamanho",
+   "expected": "recusado no hash do servidor e no banco",
+   "got": "{\"step\":\"server_hash_mismatch\",\"db_attest_with_real_hash\":\"400 P0001 PHOTO_INTEGRITY_MISMATCH\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P8b",
+   "desc": "finalize sem atestacao do servidor",
+   "expected": "PHOTO_SERVER_VERIFICATION_REQUIRED",
+   "got": "400 P0001 PHOTO_SERVER_VERIFICATION_REQUIRED",
+   "result": "PASS"
+  },
+  {
+   "id": "P8c",
+   "desc": "sobrescrever objeto ja enviado (PUT/upsert) para \"consertar\" o hash",
+   "expected": "negado",
+   "got": "400",
+   "result": "PASS"
+  },
+  {
+   "id": "P9a",
+   "desc": "t1fmall: info/finalize/restart do jornal de outro usuario",
+   "expected": "NOT_AUTHORIZED x3",
+   "got": "400 P0001 NOT_AUTHORIZED | 400 P0001 NOT_AUTHORIZED | 400 P0001 NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "P9a",
+   "desc": "t1drvok: info/finalize/restart do jornal de outro usuario",
+   "expected": "NOT_AUTHORIZED x3",
+   "got": "400 P0001 NOT_AUTHORIZED | 400 P0001 NOT_AUTHORIZED | 400 P0001 NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "P9a",
+   "desc": "t1adminb: info/finalize/restart do jornal de outro usuario",
+   "expected": "NOT_AUTHORIZED x3",
+   "got": "400 P0001 NOT_AUTHORIZED | 400 P0001 NOT_AUTHORIZED | 400 P0001 NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "P9b",
+   "desc": "atestacao com p_actor diferente do autor",
+   "expected": "NOT_AUTHORIZED",
+   "got": "400 P0001 NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "P9c",
+   "desc": "gestor SP inicia foto em veiculo de Campinas",
+   "expected": "NOT_AUTHORIZED",
+   "got": "400 P0001 NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "P9d",
+   "desc": "conta desativada inicia foto",
+   "expected": "negado",
+   "got": "400 P0001 NOT_AUTHORIZED",
+   "result": "PASS"
+  },
+  {
+   "id": "P9e",
+   "desc": "anon envia objeto ao bucket",
+   "expected": "negado",
+   "got": "400",
+   "result": "PASS"
+  },
+  {
+   "id": "P9f",
+   "desc": "admin Org B envia objeto na pasta da Org A",
+   "expected": "negado",
+   "got": "400 {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\",\"code\":\"AccessDenied\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P10a",
+   "desc": "tentativa falha fica pendente e listada em fm_photo_pending",
+   "expected": "listada",
+   "got": "server_hash_mismatch pend=true",
+   "result": "PASS"
+  },
+  {
+   "id": "P10b",
+   "desc": "pendencia nao aparece para outro usuario",
+   "expected": "nao listada",
+   "got": "false",
+   "result": "PASS"
+  },
+  {
+   "id": "P10c",
+   "desc": "restart gera novo caminho, preserva caminho/objeto originais",
+   "expected": "novo path; historico 1; objeto original presente",
+   "got": "204 OK newpath=true hist=1 orig=1",
+   "result": "PASS"
+  },
+  {
+   "id": "P10d",
+   "desc": "nova tentativa com o arquivo correto conclui",
+   "expected": "done",
+   "got": "{\"step\":\"done\",\"path\":\"7a000000-0000-0000-0000-00000000000a/vehicles/34f446c3-c74c-4263-8bc5-256858e60088_8078719fab73afba7461b80a69aa7b6ec0e18b4566c2ffd94b085469a571c92a_4238d5f6-66d3-40ef-8193-b880eb3952a8.jpg\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P10e",
+   "desc": "restart de foto ja vinculada",
+   "expected": "PHOTO_ALREADY_LINKED",
+   "got": "400 P0001 PHOTO_ALREADY_LINKED",
+   "result": "PASS"
+  },
+  {
+   "id": "P11",
+   "desc": "restart x atestacao concorrentes (30 iteracoes, 2 sessoes)",
+   "expected": "sem duplicar, sem perder, sem verificar caminho errado",
+   "got": "{\"iterations\":30,\"attest_first\":29,\"restart_first\":1,\"both_failed\":0,\"inconsistent\":0,\"dup_rows\":0,\"errors\":{\"attest: PHOTO_ATTEMPT_CHANGED\":1},\"samples\":[]}",
+   "result": "PASS"
+  },
+  {
+   "id": "P12",
+   "desc": "foto de 8,6 MB: begin + upload direto + finalizacao",
+   "expected": "done",
+   "got": "200 OK upload=200 {\"step\":\"done\",\"path\":\"7a000000-0000-0000-0000-00000000000a/vehicles/34f446c3-c74c-4263-8bc5-256858e60088_4541c32ed3fd7e7fce5c3b59a2bed7f79ba0f0de8571a1a84970ff5854040047.jpg\"}",
+   "result": "PASS"
+  },
+  {
+   "id": "P12b",
+   "desc": "begin com 10 MB + 1 byte",
+   "expected": "INVALID_PHOTO",
+   "got": "400 P0001 INVALID_PHOTO",
+   "result": "PASS"
+  }
+ ]
+}

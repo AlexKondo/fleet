@@ -1,0 +1,782 @@
+[
+ {
+  "id": "V01",
+  "cenario": "Editar veículo TDA1A01 com foto 0.29 MiB",
+  "papel": "admin",
+  "esperado": "sucesso; bytes direto ao Storage; server action sem bytes; /api/photos só JSON; jornal linked+verificado; vehicles.photo_storage_path = novo objeto",
+  "obtido": "form fechado (sucesso) em 885ms; action máx=1293B; /api/photos máx=201B; storage=0B→200 objeto=300000B; 5xx=0; vinculado=true;  ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V01",
+   "user": "admin",
+   "plate": "TDA1A01",
+   "size": 300000,
+   "outcome": "form fechado (sucesso)",
+   "ms": 885,
+   "alert": "",
+   "validity": "(detached)",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_d57bcdfbecfc325187126e8fa964a4352d367c6b4908bee60c75125e68680601.webp",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_fd55bdd9a199398d4115f445158c3ead345e52af5dbe5b5938a9245cd683c61f.png",
+   "journal": [
+    {
+     "id": "b5465fde-8d7b-4eb2-8c24-579b7175e29f",
+     "state": "linked",
+     "verified": true,
+     "size": 300000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_fd55bdd9a199398d4115f445158c3ead345e52af5dbe5b5938a9245cd683c61f.png",
+     "by": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "kind": "vehicle",
+     "target": "9f5fb5f2-72ac-48e0-a56d-14bb88549f75",
+     "angle": null
+    }
+   ],
+   "object": [
+    {
+     "name": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_fd55bdd9a199398d4115f445158c3ead345e52af5dbe5b5938a9245cd683c61f.png",
+     "owner": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "size": "300000",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T18:29:10.122819+00:00",
+     "updated_at": "2026-10-22T18:29:10.122819+00:00"
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1293,
+     "status": 200,
+     "wire": 1293
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 201,
+     "status": 200,
+     "wire": 201
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1293,
+   "maxApiPhotos": 201,
+   "storageUpload": "0B→200",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V02",
+  "cenario": "Editar veículo TDA1A04 com foto 3.00 MiB",
+  "papel": "fmall",
+  "esperado": "sucesso; bytes direto ao Storage; server action sem bytes; /api/photos só JSON; jornal linked+verificado; vehicles.photo_storage_path = novo objeto",
+  "obtido": "form fechado (sucesso) em 1401ms; action máx=1291B; /api/photos máx=202B; storage=0B→200 objeto=3145728B; 5xx=0; vinculado=true;  ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V02",
+   "user": "fmall",
+   "plate": "TDA1A04",
+   "size": 3145728,
+   "outcome": "form fechado (sucesso)",
+   "ms": 1401,
+   "alert": "",
+   "validity": "(detached)",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_70d38747bb88782a620b8531ff91ad55636dcdf9c7c75003d9ebed1e63b6c9d8.png",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_84124007b2d412dd973d25e27464bc9c7a0b8d39c85e6ffd43ae8670666976c1.png",
+   "journal": [
+    {
+     "id": "2086f137-98ef-410b-92a4-334b11dbcaee",
+     "state": "linked",
+     "verified": true,
+     "size": 3145728,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_84124007b2d412dd973d25e27464bc9c7a0b8d39c85e6ffd43ae8670666976c1.png",
+     "by": "47a147ac-7292-4919-830e-0e7733876378",
+     "kind": "vehicle",
+     "target": "956167de-3135-41f4-a09e-4c856499fa75",
+     "angle": null
+    }
+   ],
+   "object": [
+    {
+     "name": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_84124007b2d412dd973d25e27464bc9c7a0b8d39c85e6ffd43ae8670666976c1.png",
+     "owner": "47a147ac-7292-4919-830e-0e7733876378",
+     "size": "3145728",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T18:29:46.44096+00:00",
+     "updated_at": "2026-10-22T18:29:46.44096+00:00"
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1291,
+     "status": 200,
+     "wire": 1291
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 202,
+     "status": 200,
+     "wire": 202
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1291,
+   "maxApiPhotos": 202,
+   "storageUpload": "0B→200",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V03",
+  "cenario": "Editar veículo TDA2A01 com foto 4.50 MiB",
+  "papel": "fmcampinas",
+  "esperado": "sucesso; bytes direto ao Storage; server action sem bytes; /api/photos só JSON; jornal linked+verificado; vehicles.photo_storage_path = novo objeto",
+  "obtido": "form fechado (sucesso) em 2427ms; action máx=1295B; /api/photos máx=202B; storage=0B→200 objeto=4718592B; 5xx=0; vinculado=true;  ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V03",
+   "user": "fmcampinas",
+   "plate": "TDA2A01",
+   "size": 4718592,
+   "outcome": "form fechado (sucesso)",
+   "ms": 2427,
+   "alert": "",
+   "validity": "(detached)",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_0e2bfaff7be58ea0204721dc748cb8e7191f729a523895aace58a247a3ff641f.png",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_f4ea5c828e13a5fa668591e4d048a5cf622130277d54f34e8abec5bd8f106b23.png",
+   "journal": [
+    {
+     "id": "45a31f8c-c89d-4e19-962f-d034e605b484",
+     "state": "linked",
+     "verified": true,
+     "size": 4718592,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_f4ea5c828e13a5fa668591e4d048a5cf622130277d54f34e8abec5bd8f106b23.png",
+     "by": "5cb30482-2c8c-4f48-baac-18738205e373",
+     "kind": "vehicle",
+     "target": "0e9c74ce-034b-4f67-968d-12148839ec64",
+     "angle": null
+    }
+   ],
+   "object": [
+    {
+     "name": "00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_f4ea5c828e13a5fa668591e4d048a5cf622130277d54f34e8abec5bd8f106b23.png",
+     "owner": "5cb30482-2c8c-4f48-baac-18738205e373",
+     "size": "4718592",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T18:30:28.944327+00:00",
+     "updated_at": "2026-10-22T18:30:28.944327+00:00"
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1295,
+     "status": 200,
+     "wire": 1295
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 202,
+     "status": 200,
+     "wire": 202
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1295,
+   "maxApiPhotos": 202,
+   "storageUpload": "0B→200",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V04",
+  "cenario": "Editar veículo TDA1A01 com foto 8.60 MiB",
+  "papel": "fmall",
+  "esperado": "sucesso; bytes direto ao Storage; server action sem bytes; /api/photos só JSON; jornal linked+verificado; vehicles.photo_storage_path = novo objeto",
+  "obtido": "form fechado (sucesso) em 1904ms; action máx=1293B; /api/photos máx=202B; storage=0B→200 objeto=9017754B; 5xx=0; vinculado=true;  ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V04",
+   "user": "fmall",
+   "plate": "TDA1A01",
+   "size": 9017754,
+   "outcome": "form fechado (sucesso)",
+   "ms": 1904,
+   "alert": "",
+   "validity": "(detached)",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_fd55bdd9a199398d4115f445158c3ead345e52af5dbe5b5938a9245cd683c61f.png",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_ef3a14e2a50802e28a9c5ec13c513ec3b04c988994eb60b6711b03dd4d2b26b6.png",
+   "journal": [
+    {
+     "id": "63c6bbfd-dea8-4b4c-983c-6717b5f15285",
+     "state": "linked",
+     "verified": true,
+     "size": 9017754,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_ef3a14e2a50802e28a9c5ec13c513ec3b04c988994eb60b6711b03dd4d2b26b6.png",
+     "by": "47a147ac-7292-4919-830e-0e7733876378",
+     "kind": "vehicle",
+     "target": "9f5fb5f2-72ac-48e0-a56d-14bb88549f75",
+     "angle": null
+    }
+   ],
+   "object": [
+    {
+     "name": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_ef3a14e2a50802e28a9c5ec13c513ec3b04c988994eb60b6711b03dd4d2b26b6.png",
+     "owner": "47a147ac-7292-4919-830e-0e7733876378",
+     "size": "9017754",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T18:31:08.173345+00:00",
+     "updated_at": "2026-10-22T18:31:08.173345+00:00"
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1293,
+     "status": 200,
+     "wire": 1293
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 202,
+     "status": 200,
+     "wire": 202
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1293,
+   "maxApiPhotos": 202,
+   "storageUpload": "0B→200",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V05",
+  "cenario": "Editar veículo TDA2A01 com foto 10.00 MiB",
+  "papel": "admin",
+  "esperado": "sucesso; bytes direto ao Storage; server action sem bytes; /api/photos só JSON; jornal linked+verificado; vehicles.photo_storage_path = novo objeto",
+  "obtido": "form fechado (sucesso) em 1995ms; action máx=1295B; /api/photos máx=203B; storage=0B→200 objeto=10485760B; 5xx=0; vinculado=true;  ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V05",
+   "user": "admin",
+   "plate": "TDA2A01",
+   "size": 10485760,
+   "outcome": "form fechado (sucesso)",
+   "ms": 1995,
+   "alert": "",
+   "validity": "(detached)",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_f4ea5c828e13a5fa668591e4d048a5cf622130277d54f34e8abec5bd8f106b23.png",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_2d44c27ee9afee17b6a4c0342c4b73a79fd014f0cab6713ae77e22e12a2c2e35.png",
+   "journal": [
+    {
+     "id": "3a86f885-8896-4148-b6a5-96d28c3896c4",
+     "state": "linked",
+     "verified": true,
+     "size": 10485760,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_2d44c27ee9afee17b6a4c0342c4b73a79fd014f0cab6713ae77e22e12a2c2e35.png",
+     "by": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "kind": "vehicle",
+     "target": "0e9c74ce-034b-4f67-968d-12148839ec64",
+     "angle": null
+    }
+   ],
+   "object": [
+    {
+     "name": "00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968d-12148839ec64_2d44c27ee9afee17b6a4c0342c4b73a79fd014f0cab6713ae77e22e12a2c2e35.png",
+     "owner": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "size": "10485760",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T18:31:47.024002+00:00",
+     "updated_at": "2026-10-22T18:31:47.024002+00:00"
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1295,
+     "status": 200,
+     "wire": 1295
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 203,
+     "status": 200,
+     "wire": 203
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/0e9c74ce-034b-4f67-968",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1295,
+   "maxApiPhotos": 203,
+   "storageUpload": "0B→200",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V06",
+  "cenario": "Editar veículo com 10 MiB + 1 byte",
+  "papel": "fmall",
+  "esperado": "mensagem clara no campo; nada enviado; foto anterior preservada",
+  "obtido": "alerta; alerta=\"A foto deve ter no máximo 10 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar.\"; validity=\"A foto deve ter no máximo 10 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar.\"; requisições enviadas=false; antes=após:true",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V06",
+   "user": "fmall",
+   "plate": "TDA1A04",
+   "size": 10485761,
+   "outcome": "alerta",
+   "ms": 96,
+   "alert": "A foto deve ter no máximo 10 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar.",
+   "validity": "A foto deve ter no máximo 10 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar.",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_84124007b2d412dd973d25e27464bc9c7a0b8d39c85e6ffd43ae8670666976c1.png",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_84124007b2d412dd973d25e27464bc9c7a0b8d39c85e6ffd43ae8670666976c1.png",
+   "journal": [],
+   "object": [],
+   "net": [],
+   "maxActionBody": 0,
+   "maxApiPhotos": 0,
+   "storageUpload": "",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V07",
+  "cenario": "Editar veículo com JPG",
+  "papel": "admin",
+  "esperado": "aceito e vinculado",
+  "obtido": "form fechado (sucesso); alerta=\"\"; vinculado=true; api=200,200",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V07",
+   "user": "admin",
+   "plate": "TDA1A01",
+   "size": 200000,
+   "outcome": "form fechado (sucesso)",
+   "ms": 1940,
+   "alert": "",
+   "validity": "(detached)",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_ef3a14e2a50802e28a9c5ec13c513ec3b04c988994eb60b6711b03dd4d2b26b6.png",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_875e3d78984255f428771fef215e2f1d047d5842a4f9788575e5fe7434f6701e.jpg",
+   "journal": [
+    {
+     "id": "ade450bf-5d1e-4d34-ac9f-6e9be966c722",
+     "state": "linked",
+     "verified": true,
+     "size": 200000,
+     "mime": "image/jpeg",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_875e3d78984255f428771fef215e2f1d047d5842a4f9788575e5fe7434f6701e.jpg",
+     "by": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "kind": "vehicle",
+     "target": "9f5fb5f2-72ac-48e0-a56d-14bb88549f75",
+     "angle": null
+    }
+   ],
+   "object": [
+    {
+     "name": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_875e3d78984255f428771fef215e2f1d047d5842a4f9788575e5fe7434f6701e.jpg",
+     "owner": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "size": "200000",
+     "mimetype": "image/jpeg",
+     "created_at": "2026-10-22T18:32:31.585667+00:00",
+     "updated_at": "2026-10-22T18:32:31.585667+00:00"
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1293,
+     "status": 200,
+     "wire": 1293
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 202,
+     "status": 200,
+     "wire": 202
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1293,
+   "maxApiPhotos": 202,
+   "storageUpload": "0B→200",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V08",
+  "cenario": "Editar veículo com WEBP",
+  "papel": "admin",
+  "esperado": "aceito e vinculado",
+  "obtido": "form fechado (sucesso); alerta=\"\"; vinculado=true; api=200,200",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V08",
+   "user": "admin",
+   "plate": "TDA1A01",
+   "size": 150000,
+   "outcome": "form fechado (sucesso)",
+   "ms": 880,
+   "alert": "",
+   "validity": "(detached)",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_875e3d78984255f428771fef215e2f1d047d5842a4f9788575e5fe7434f6701e.jpg",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_9a06f8dd60ce3f5198d0d5ad1cd77dff7f727f2fa2875f51d57c41914c0912bd.webp",
+   "journal": [
+    {
+     "id": "503b0832-c1d4-4bd0-9839-9b4e7c45b1a0",
+     "state": "linked",
+     "verified": true,
+     "size": 150000,
+     "mime": "image/webp",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_9a06f8dd60ce3f5198d0d5ad1cd77dff7f727f2fa2875f51d57c41914c0912bd.webp",
+     "by": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "kind": "vehicle",
+     "target": "9f5fb5f2-72ac-48e0-a56d-14bb88549f75",
+     "angle": null
+    }
+   ],
+   "object": [
+    {
+     "name": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_9a06f8dd60ce3f5198d0d5ad1cd77dff7f727f2fa2875f51d57c41914c0912bd.webp",
+     "owner": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "size": "150000",
+     "mimetype": "image/webp",
+     "created_at": "2026-10-22T18:33:08.16061+00:00",
+     "updated_at": "2026-10-22T18:33:08.16061+00:00"
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1293,
+     "status": 200,
+     "wire": 1293
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 202,
+     "status": 200,
+     "wire": 202
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1293,
+   "maxApiPhotos": 202,
+   "storageUpload": "0B→200",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V09",
+  "cenario": "Editar veículo com HEIC",
+  "papel": "admin",
+  "esperado": "recusa com mensagem clara de tipo (HEIC não suportado no contrato 0219+: só jpeg/png/webp)",
+  "obtido": "alerta; alerta=\"Os dados foram processados, mas a foto ficou pendente. Tente reenviá-la ou consulte Minhas fotos pendentes na conta.\"; vinculado=false; api=",
+  "status": "FAIL",
+  "evidencia": {
+   "id": "V09",
+   "user": "admin",
+   "plate": "TDA1A01",
+   "size": 120012,
+   "outcome": "alerta",
+   "ms": 1394,
+   "alert": "Os dados foram processados, mas a foto ficou pendente. Tente reenviá-la ou consulte Minhas fotos pendentes na conta.",
+   "validity": "",
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_9a06f8dd60ce3f5198d0d5ad1cd77dff7f727f2fa2875f51d57c41914c0912bd.webp",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/9f5fb5f2-72ac-48e0-a56d-14bb88549f75_9a06f8dd60ce3f5198d0d5ad1cd77dff7f727f2fa2875f51d57c41914c0912bd.webp",
+   "journal": [],
+   "object": [],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1293,
+     "status": 200,
+     "wire": 1293
+    }
+   ],
+   "maxActionBody": 1293,
+   "maxApiPhotos": 0,
+   "storageUpload": "",
+   "http500": 0
+  }
+ },
+ {
+  "id": "V10",
+  "cenario": "Criar veículo com foto 8,6 MiB",
+  "papel": "admin / SP",
+  "esperado": "1 veículo; foto vinculada; action sem bytes",
+  "obtido": "veículos=1; foto=true; action máx=1300B; 2925ms;  ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V10",
+   "user": "admin",
+   "plate": "TDA1B10",
+   "ms": 2925,
+   "alert": "",
+   "vehicle": "[{\"id\" : \"eca64f0d-5cde-4fb7-8436-7b04c2426343\", \"photo\" : \"00000000-0000-0000-0000-000000000001/vehicles/eca64f0d-5cde-4fb7-8436-7b04c2426343_f1e6c15573648867167136994620ee7830eebb75cb935ab919ee22aa040d30be.png\", \"unit\" : \"d1000000-0000-0000-0000-000000000001\"}]",
+   "journal": [
+    {
+     "id": "aff4402a-cd5f-426f-b338-4414a044ff53",
+     "state": "linked",
+     "verified": true,
+     "size": 9017754,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/eca64f0d-5cde-4fb7-8436-7b04c2426343_f1e6c15573648867167136994620ee7830eebb75cb935ab919ee22aa040d30be.png",
+     "by": "16ddf868-9ee5-4447-930f-9801538eaa6a",
+     "kind": "vehicle",
+     "target": "eca64f0d-5cde-4fb7-8436-7b04c2426343",
+     "angle": null
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1300,
+     "status": 200,
+     "wire": 1300
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 202,
+     "status": 200,
+     "wire": 202
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/eca64f0d-5cde-4fb7-843",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1300
+  }
+ },
+ {
+  "id": "V11",
+  "cenario": "Criar veículo com foto (gestor limitado, unidade do escopo)",
+  "papel": "fmcampinas / Campinas",
+  "esperado": "1 veículo na unidade Campinas; foto vinculada",
+  "obtido": "veículos=1; unit=d1000000-0000-0000-0000-000000000002; foto=true; action máx=1300B;  ",
+  "status": "PASS",
+  "evidencia": {
+   "id": "V11",
+   "user": "fmcampinas",
+   "plate": "TDA2B11",
+   "ms": 1638,
+   "alert": "",
+   "vehicle": "[{\"id\" : \"f1591452-2a98-424e-85ae-eb1b4ab6078f\", \"photo\" : \"00000000-0000-0000-0000-000000000001/vehicles/f1591452-2a98-424e-85ae-eb1b4ab6078f_8c1e8341d6333af83a4c20d37c645c0459b657267c68401b50645914a5f756ce.png\", \"unit\" : \"d1000000-0000-0000-0000-000000000002\"}]",
+   "journal": [
+    {
+     "id": "a9b6b78c-9e48-4e0b-9041-a6386389704f",
+     "state": "linked",
+     "verified": true,
+     "size": 600000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/f1591452-2a98-424e-85ae-eb1b4ab6078f_8c1e8341d6333af83a4c20d37c645c0459b657267c68401b50645914a5f756ce.png",
+     "by": "5cb30482-2c8c-4f48-baac-18738205e373",
+     "kind": "vehicle",
+     "target": "f1591452-2a98-424e-85ae-eb1b4ab6078f",
+     "angle": null
+    }
+   ],
+   "net": [
+    {
+     "m": "POST",
+     "url": "/fleet",
+     "action": true,
+     "len": 1300,
+     "status": 200,
+     "wire": 1300
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 201,
+     "status": 200,
+     "wire": 201
+    },
+    {
+     "m": "POST",
+     "url": "SUPABASE/storage/v1/object/vehicle-photos/00000000-0000-0000-0000-000000000001/vehicles/f1591452-2a98-424e-85a",
+     "action": false,
+     "len": 0,
+     "status": 200,
+     "wire": 0
+    },
+    {
+     "m": "POST",
+     "url": "/api/photos",
+     "action": false,
+     "len": 62,
+     "status": 200,
+     "wire": 62
+    }
+   ],
+   "maxActionBody": 1300
+  }
+ },
+ {
+  "id": "V12",
+  "cenario": "Foto vinculada exibida na Frota (link assinado) após o fluxo novo",
+  "papel": "admin / fmall / fmcampinas",
+  "esperado": "imagem do veículo carregada",
+  "obtido": "admin/TDA1A01: imagens=3 carregadas=2; fmall/TDA1A04: imagens=3 carregadas=2; fmcampinas/TDA2A01: imagens=3 carregadas=2",
+  "status": "PASS",
+  "evidencia": [
+   "admin/TDA1A01: imagens=3 carregadas=2",
+   "fmall/TDA1A04: imagens=3 carregadas=2",
+   "fmcampinas/TDA2A01: imagens=3 carregadas=2"
+  ]
+ }
+]

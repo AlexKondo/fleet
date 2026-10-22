@@ -1,0 +1,234 @@
+[
+ {
+  "id": "F01",
+  "cenario": "Upload da foto de AVARIA interrompido no meio (Storage abortado) durante a retirada SP",
+  "papel": "t2sp / SP",
+  "esperado": "checklist salvo; UI informa avaria pendente; jornal pending sem objeto; nada apagado",
+  "obtido": "alerta; alerta=\"A foto da avaria é obrigatória — capture-a acima e envie novamente. | \"; abortadas=1; fotos=[front]; jornal=pending; objeto=0",
+  "status": "PASS",
+  "evidencia": {
+   "r": {
+    "id": "F01",
+    "key": "t2sp",
+    "phase": "pickup",
+    "aborted": 1,
+    "url0": "/reservations/77d20d67-57a2-44f2-8f43-48bb51a3a69d/pickup",
+    "equipment": 2,
+    "fieldErrors": "",
+    "outcome": "alerta",
+    "ms": 4546,
+    "alert": "A foto da avaria é obrigatória — capture-a acima e envie novamente. | ",
+    "net": {
+     "maxAction": 1053,
+     "api": "207B:200,62B:200,208B:200,62B:409",
+     "storage": "200,",
+     "x5": 0
+    }
+   },
+   "j": [
+    {
+     "id": "a0f4a53a-a335-4dfc-b57c-65f5118accb2",
+     "state": "pending",
+     "verified": false,
+     "size": 800000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/00d11d76-28db-4c11-8a15-dca92f9fc7ef/damage_ef763e0621a4457e727bcaf8991a12ead9993b16bf69bcfcd0673348e9be59a7.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "00d11d76-28db-4c11-8a15-dca92f9fc7ef",
+     "angle": "damage"
+    }
+   ],
+   "obj": []
+  }
+ },
+ {
+  "id": "F01b",
+  "cenario": "Após F01, motorista clica novamente \"Registrar retirada\" no mesmo formulário (sem queda)",
+  "papel": "t2sp / SP",
+  "esperado": "concluir só a foto pendente, sem 2º checklist; ou orientar para Minhas fotos pendentes",
+  "obtido": "alerta=\"\"; inspeções de retirada=1; fotos=[damage,front]; jornal=linked",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "F02",
+  "cenario": "Queda após upload e antes da atestação (POST finish abortado)",
+  "papel": "t2sp / SP",
+  "esperado": "checklist salvo; objeto no Storage; jornal pending NÃO verificado; sem vínculo",
+  "obtido": "alerta; alerta=\"A foto da avaria é obrigatória — capture-a acima e envie novamente. | \"; finish abortados=1; objeto=1 (1500000B owner ok=true); jornal=pending-v; fotos=[]",
+  "status": "PASS",
+  "evidencia": {
+   "j": [
+    {
+     "id": "be877255-c0f5-4606-9f88-e1bbff311884",
+     "state": "pending",
+     "verified": false,
+     "size": 1500000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/6ae22185-2a75-48ff-a62b-10973d01e2ad/damage_7e6cb4aa3e0f56c128873e3aaa5ff38a43bbc365427367ba8ef63503d9bdd6ba.png",
+     "by": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "kind": "inspection",
+     "target": "6ae22185-2a75-48ff-a62b-10973d01e2ad",
+     "angle": "damage"
+    }
+   ],
+   "obj": [
+    {
+     "name": "00000000-0000-0000-0000-000000000001/6ae22185-2a75-48ff-a62b-10973d01e2ad/damage_7e6cb4aa3e0f56c128873e3aaa5ff38a43bbc365427367ba8ef63503d9bdd6ba.png",
+     "owner": "3d4ce60c-f23d-4cb7-beb1-9b40f5ba4c03",
+     "size": "1500000",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T18:48:23.165149+00:00",
+     "updated_at": "2026-10-22T18:48:23.165149+00:00"
+    }
+   ]
+  }
+ },
+ {
+  "id": "F02r",
+  "cenario": "Recuperação com o ORIGINAL (objeto já existe → 409 no Storage, servidor verifica e finaliza)",
+  "papel": "t2sp",
+  "esperado": "Foto concluída; vínculo; mesmo objeto (sem sobrescrita)",
+  "obtido": "msg=\"Foto concluída.\"; fotos=[damage]; jornal=linked+v; objeto inalterado=true",
+  "status": "PASS",
+  "evidencia": {
+   "cards": 1,
+   "pendingApi": [
+    "7e6cb4aa"
+   ],
+   "idx": 0,
+   "msg": "Foto concluída.",
+   "ms": 1874,
+   "state": "linked"
+  }
+ },
+ {
+  "id": "F02w",
+  "cenario": "Recuperação escolhendo um arquivo DIFERENTE (mesmo tamanho)",
+  "papel": "t2sp",
+  "esperado": "mensagem \"Selecione o arquivo original\"; nada enviado",
+  "obtido": "msg=\"Selecione o arquivo original desta pendência.\"; jornal=pending",
+  "status": "PASS",
+  "evidencia": {
+   "cards": 1,
+   "pendingApi": [
+    "7e6cb4aa"
+   ],
+   "idx": 0,
+   "msg": "Selecione o arquivo original desta pendência.",
+   "ms": 957,
+   "state": "pending"
+  }
+ },
+ {
+  "id": "F03",
+  "cenario": "Portaria (GateVisualForm): upload da foto de avaria cai; operador clica novamente",
+  "papel": "security / SP",
+  "esperado": "mensagem específica (conferência salva, foto pendente) e caminho de recuperação; 2º clique conclui a foto sem 2ª conferência",
+  "obtido": "alerta após falha=\"\"; url final=/reservations/b3e4f751-c15a-4d74-afdf-6adb49034cf5/evidence/ade3e58b-3a88-4513-a1c7-0ec8fa82b652; texto=\"Evidências do checklist · TDA1C03 Adicione fotos à sua inspeção. As observações registradas e as fotos anteriores são preservadas. Tipo de foto Frente Traseira \"; conferências=1; fotos=[]; jornal=pending",
+  "status": "FAIL",
+  "evidencia": {
+   "res": {
+    "alert1": "",
+    "url": "/reservations/b3e4f751-c15a-4d74-afdf-6adb49034cf5/evidence/ade3e58b-3a88-4513-a1c7-0ec8fa82b652",
+    "textAfter": "Evidências do checklist · TDA1C03\n\nAdicione fotos à sua inspeção. As observações registradas e as fotos anteriores são preservadas.\n\nTipo de foto\nFrente\nTraseira\nLado esquerdo\nLado direito\nRodas\nInterior\nDano observado\nFotos adicionais · até 10 MB por foto\nAdicionar fotos\nVoltar à viagem",
+    "alert2": "(não aplicável: formulário não está mais na tela)"
+   },
+   "net": {
+    "maxAction": 699,
+    "api": "208B:200,62B:409",
+    "storage": "",
+    "x5": 0
+   }
+  }
+ },
+ {
+  "id": "F03r",
+  "cenario": "Recuperação da foto da portaria por /account/photos",
+  "papel": "security",
+  "esperado": "Foto concluída; vínculo na conferência",
+  "obtido": "msg=\"Foto concluída.\"; fotos=[damage]",
+  "status": "PASS",
+  "evidencia": {
+   "cards": 1,
+   "pendingApi": [
+    "16aac51d"
+   ],
+   "idx": 0,
+   "msg": "Foto concluída.",
+   "ms": 747,
+   "state": "pending"
+  }
+ },
+ {
+  "id": "F04",
+  "cenario": "Editar veículo: queda antes da atestação (finish abortado)",
+  "papel": "fmall",
+  "esperado": "dados salvos; foto anterior mantida; mensagem de pendência; jornal pending",
+  "obtido": "alerta=\"Os dados foram processados, mas a foto ficou pendente. Tente reenviá-la ou consulte Minhas fotos pendentes na conta.\"; foto mantida=true; T2 F04 nome alterado; jornal=pending",
+  "status": "PASS",
+  "evidencia": {
+   "before": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_84124007b2d412dd973d25e27464bc9c7a0b8d39c85e6ffd43ae8670666976c1.png",
+   "after": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_84124007b2d412dd973d25e27464bc9c7a0b8d39c85e6ffd43ae8670666976c1.png | T2 F04 nome alterado",
+   "j": [
+    {
+     "id": "998a2639-f3ba-4245-8705-33ff51b2da32",
+     "state": "pending",
+     "verified": false,
+     "size": 2000000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_43ea34ddd5f6956071f11c84fd7b1a0106cb1f6e5d69b0cae4c92997ceaf5ab6.png",
+     "by": "47a147ac-7292-4919-830e-0e7733876378",
+     "kind": "vehicle",
+     "target": "956167de-3135-41f4-a09e-4c856499fa75",
+     "angle": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "F04r",
+  "cenario": "Pendência do veículo: \"Preparar nova tentativa preservando o original\" + reenvio do original",
+  "papel": "fmall",
+  "esperado": "caminho rotacionado; tentativa antiga no histórico e objeto antigo preservado; nova foto vinculada",
+  "obtido": "restart=\"Nova tentativa preparada. Reenvie o arquivo original.\"; msg=\"Foto concluída.\"; novo caminho=true; histórico=1; objeto antigo=1; veículo aponta p/ novo=true; jornal=linked",
+  "status": "PASS",
+  "evidencia": {
+   "rv": {
+    "cards": 1,
+    "pendingApi": [
+     "43ea34dd"
+    ],
+    "idx": 0,
+    "restartMsg": "Nova tentativa preparada. Reenvie o arquivo original.",
+    "msg": "Foto concluída.",
+    "ms": 631,
+    "state": "linked"
+   },
+   "j2": [
+    {
+     "id": "998a2639-f3ba-4245-8705-33ff51b2da32",
+     "state": "linked",
+     "verified": true,
+     "size": 2000000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/956167de-3135-41f4-a09e-4c856499fa75_43ea34ddd5f6956071f11c84fd7b1a0106cb1f6e5d69b0cae4c92997ceaf5ab6_7988df31-fa40-472f-a6a8-dd9edc9b4177.png",
+     "by": "47a147ac-7292-4919-830e-0e7733876378",
+     "kind": "vehicle",
+     "target": "956167de-3135-41f4-a09e-4c856499fa75",
+     "angle": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "F05",
+  "cenario": "Checklist (retirada): foto de avaria 8,6 MiB",
+  "papel": "t2sp",
+  "esperado": "decisão: o transporte novo e /evidence aceitam até 10 MB; o campo do checklist ainda recusa >5 MB",
+  "obtido": "mensagem=\"Arquivo maior que 5MB — escolha uma foto menor.\"",
+  "status": "OBS",
+  "evidencia": {}
+ }
+]

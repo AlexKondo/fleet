@@ -1,0 +1,12 @@
+﻿ROTULO t3ai ai "✦\nLido por IA (foto da CNH)" locked= 1 numDisabled= true
+ROTULO t3valid manual "✎\nPreenchido manualmente" locked= 0 numDisabled= false
+ROTULO t3null none "?\nOrigem não registrada" locked= 0 numDisabled= false
+ANTES t3ai 77700011144|B|2028-03-05|ai|auth=true
+DIALOGOS ["Redefinir a CNH de T3 Colab LidaPorIA? Número, categoria e vencimento serão apagados, o colaborador deixará de ser autorizado a dirigir e precisará enviar uma nova foto da CNH."]
+DEPOIS t3ai NULL|NULL|NULL|NULL|auth=false
+AUDIT driver_license_reset {"reset": true, "reason": "T3 teste: CNH ilegivel apos leitura", "driver_authorized": false}
+ROTULO t3ai depois none
+ANTES t3up NULL|NULL|NULL|NULL|auth=false
+DEPOIS t3up 55500011122|NULL|NULL|NULL|auth=false
+ROTULO t3up depois none "?\nOrigem não registrada"
+ERROS console []

@@ -1,0 +1,119 @@
+{
+ "fails": 5,
+ "out": [
+  {
+   "id": "G12x",
+   "desc": "devolucao com local de OUTRA org",
+   "actor": "t1drvok",
+   "expected": "INVALID_CURRENT_LOCATION",
+   "status": 400,
+   "code": "P0001",
+   "msg": "INVALID_CURRENT_LOCATION",
+   "result": "PASS"
+  },
+  {
+   "id": "G12b",
+   "desc": "SP (apos chegada fisica): checklist de devolucao do condutor com local",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "6a4e89e5-b5f8-4c17-89ca-8ffe28e8a452",
+   "state": "confirmed/returning insp=pickup:traveler,pickup:security,return:traveler gate=departure,arrival keys=-",
+   "result": "PASS"
+  },
+  {
+   "id": "K7b",
+   "desc": "Campinas (chave ja recebida): checklist de devolucao do condutor com local",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "adb7365f-7125-464f-8dce-02d936dc595c",
+   "state": "completed/available insp=pickup:traveler,return:traveler gate=- keys=delivered,received",
+   "result": "PASS"
+  },
+  {
+   "id": "R7b",
+   "desc": "Rio (chave ja recebida): checklist de devolucao do condutor com local",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "de1988f9-0935-4f79-a3da-d54e40ba492d",
+   "state": "completed/available insp=pickup:traveler,return:traveler gate=- keys=delivered,received",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-18o",
+   "desc": "anfitriao (CNH valida) habilita oferta de carona",
+   "actor": "t1drvok",
+   "expected": "sucesso",
+   "status": 200,
+   "code": null,
+   "msg": "d3520345-677b-443b-b5ec-26c2a1ac0894",
+   "result": "PASS"
+  },
+  {
+   "id": "C6-18b",
+   "desc": "pedir carona como PASSAGEIRO (oferta ativa) sem CNH valida",
+   "actor": "t1emp",
+   "expected": "sucesso",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_participants\"",
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-18b",
+   "desc": "pedir carona como PASSAGEIRO (oferta ativa) sem CNH valida",
+   "actor": "t1drvexp",
+   "expected": "sucesso",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_participants\"",
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-18b",
+   "desc": "pedir carona como PASSAGEIRO (oferta ativa) sem CNH valida",
+   "actor": "t1drvnull",
+   "expected": "sucesso",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_participants\"",
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-18b",
+   "desc": "pedir carona como PASSAGEIRO (oferta ativa) sem CNH valida",
+   "actor": "t1adminnocnh",
+   "expected": "sucesso",
+   "status": 409,
+   "code": "23505",
+   "msg": "duplicate key value violates unique constraint \"trip_participants_trip_request_id_passenger_id_key\"",
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-19b",
+   "desc": "empregado sem CNH consulta as proprias solicitacoes",
+   "actor": "t1emp",
+   "expected": "200 com linhas",
+   "status": 200,
+   "code": null,
+   "msg": null,
+   "rows": 0,
+   "result": "FAIL"
+  },
+  {
+   "id": "C6-21b",
+   "desc": "conta desativada pede carona (oferta ativa)",
+   "actor": "t1deact",
+   "expected": "negado",
+   "status": 403,
+   "code": "42501",
+   "msg": "new row violates row-level security policy for table \"trip_requests\"",
+   "result": "PASS"
+  }
+ ]
+}

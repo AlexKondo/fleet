@@ -1,0 +1,23 @@
+﻿node : [33mThe CJS build of Vite's Node API is deprecated. See 
+https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+No linha:1 caractere:352
++ ... g\apps\web; node node_modules/vitest/vitest.mjs run lib/domain/prepar ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([33mThe CJS bu...e details.[39m:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+ RUN  v2.1.9 C:/projects/fleet/_local/fleet-integ/apps/web
+
+ ✓ lib/domain/prepareLicenseDocument.test.ts (6 tests) 22ms
+ ✓ lib/domain/analyzeDriversLicense.test.ts (9 tests) 5ms
+ ✓ lib/auth/drivingValidity.test.ts (2 tests) 22ms
+ ✓ app/account/license/actions.test.ts (14 tests) 38ms
+ ✓ lib/supabase/managementLicenseBoundary.test.ts (6 tests) 13ms
+ ✓ lib/supabase/middleware.test.ts (10 tests) 116ms
+
+ Test Files  6 passed (6)
+      Tests  47 passed (47)
+   Start at  15:36:43
+   Duration  1.07s (transform 558ms, setup 0ms, collect 844ms, tests 216ms, environment 1ms, prepare 1.21s)
+

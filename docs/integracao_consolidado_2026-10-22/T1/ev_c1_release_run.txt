@@ -1,0 +1,185 @@
+Pager usage is off.
+=== C1-00 estado das configuracoes
+                 org                  | orga_has_settings | orgb_auto_release | orgb_grace | col_default 
+--------------------------------------+-------------------+-------------------+------------+-------------
+ 7a000000-0000-0000-0000-00000000000a | f                 | t                 |         60 | true
+(1 row)
+
+=== C1-01 somente service_role executa (authenticated/anon negados)
+BEGIN
+ ?column? |                                 as_user                                  
+----------+--------------------------------------------------------------------------
+ admin    | ERR 42501 permission denied for function fm_release_expired_reservations
+(1 row)
+
+ ?column? |                                 as_user                                  
+----------+--------------------------------------------------------------------------
+ fmall    | ERR 42501 permission denied for function fm_release_expired_reservations
+(1 row)
+
+SET
+DO
+RESET
+NOTICE:  anon: 42501 permission denied for function fm_release_expired_reservations
+ auth_exec | anon_exec | svc_exec 
+-----------+-----------+----------
+ f         | f         | t
+(1 row)
+
+COMMIT
+=== C1-02 primeira execucao Org A (sem linha de settings => default ATIVO, tolerancia 60)
+BEGIN
+SET
+                                           run1                                           
+------------------------------------------------------------------------------------------
+ {"released": 8, "skipped_locked": 0, "vehicles_released": 2, "skipped_with_activity": 3}
+(1 row)
+
+RESET
+COMMIT
+      k       |  status   | cancellation_reason |     vstatus     | dmg | doc | audits | notifs 
+--------------+-----------+---------------------+-----------------+-----+-----+--------+--------
+ rl_conf      | cancelled | no_show_auto        | available       | f   | t   |      1 |      1
+ rl_dmg       | cancelled | no_show_auto        | maintenance     | t   | t   |      1 |      1
+ rl_doc       | cancelled | no_show_auto        | blocked         | f   | f   |      1 |      1
+ rl_eqp       | cancelled | no_show_auto        | maintenance     | f   | t   |      1 |      1
+ rl_fut       | confirmed |                     | reserved        | f   | t   |      0 |      0
+ rl_g59       | confirmed |                     | reserved        | f   | t   |      0 |      0
+ rl_g61       | cancelled | no_show_auto        | available       | f   | t   |      1 |      1
+ rl_gate      | confirmed |                     | reserved        | f   | t   |      0 |      0
+ rl_insp      | confirmed |                     | awaiting_pickup | f   | t   |      0 |      0
+ rl_key       | confirmed |                     | reserved        | f   | t   |      0 |      0
+ rl_other_exp | cancelled | no_show_auto        | reserved        | f   | t   |      1 |      1
+ rl_other_fut | confirmed |                     | reserved        | f   | t   |      0 |      0
+ rl_pend      | cancelled | expired_unapproved  | available       | f   | t   |      1 |      1
+ rl_wo        | cancelled | no_show_auto        | maintenance     | f   | t   |      1 |      1
+ rlb_conf     | confirmed |                     | reserved        | f   | t   |      0 |      0
+(15 rows)
+
+=== C1-03 idempotencia (segunda e terceira execucao)
+BEGIN
+SET
+                                           run2                                           
+------------------------------------------------------------------------------------------
+ {"released": 0, "skipped_locked": 0, "vehicles_released": 0, "skipped_with_activity": 3}
+(1 row)
+
+RESET
+COMMIT
+BEGIN
+SET
+                                           run3                                           
+------------------------------------------------------------------------------------------
+ {"released": 0, "skipped_locked": 0, "vehicles_released": 0, "skipped_with_activity": 3}
+(1 row)
+
+RESET
+COMMIT
+ total_audits_released_t1a 
+---------------------------
+                         8
+(1 row)
+
+=== C1-04 isolamento: execucao da Org A nao tocou a Org B
+    k     |  status   
+----------+-----------
+ rlb_conf | confirmed
+(1 row)
+
+=== C1-05 Org B com linha de settings default (ativo)
+BEGIN
+SET
+                                           runb                                           
+------------------------------------------------------------------------------------------
+ {"released": 1, "skipped_locked": 0, "vehicles_released": 1, "skipped_with_activity": 0}
+(1 row)
+
+RESET
+COMMIT
+    k     |  status   | cancellation_reason |  status   
+----------+-----------+---------------------+-----------
+ rlb_conf | cancelled | no_show_auto        | available
+(1 row)
+
+=== C1-06 opt-out explicito auto_release_enabled=false (transacao desfeita ao final)
+BEGIN
+UPDATE 1
+                mkres                 
+--------------------------------------
+ 6c2f6a37-24e2-48da-8ee6-170951ff4f2d
+(1 row)
+
+UPDATE 1
+SET
+                                        run_optout                                        
+------------------------------------------------------------------------------------------
+ {"released": 0, "skipped_locked": 0, "vehicles_released": 0, "skipped_with_activity": 0}
+(1 row)
+
+RESET
+    k    |  status   |  status  
+---------+-----------+----------
+ rlb_opt | confirmed | reserved
+(1 row)
+
+ROLLBACK
+DELETE 0
+=== C1-07 tolerancia 0 / 1440 (transacoes desfeitas)
+BEGIN
+UPDATE 1
+                mkres                 
+--------------------------------------
+ b6211d7d-22a6-4cc5-92a8-80d6d092c146
+(1 row)
+
+                mkres                 
+--------------------------------------
+ b9356df5-e5a4-46fe-82b6-b2d771c12b46
+(1 row)
+
+SET
+                                        run_grace0                                        
+------------------------------------------------------------------------------------------
+ {"released": 1, "skipped_locked": 0, "vehicles_released": 0, "skipped_with_activity": 0}
+(1 row)
+
+RESET
+           c           |  status   
+-----------------------+-----------
+ grace0 ended 1min ago | cancelled
+ grace0 future         | confirmed
+(2 rows)
+
+ROLLBACK
+BEGIN
+UPDATE 1
+                mkres                 
+--------------------------------------
+ 26394c83-3449-4846-ac56-ec5d5497dd5b
+(1 row)
+
+                mkres                 
+--------------------------------------
+ 71a81331-8ab9-48b7-bd63-d8e1ef6f7930
+(1 row)
+
+SET
+                                      run_grace1440                                       
+------------------------------------------------------------------------------------------
+ {"released": 1, "skipped_locked": 0, "vehicles_released": 1, "skipped_with_activity": 0}
+(1 row)
+
+RESET
+            c            |  status   
+-------------------------+-----------
+ grace1440 ended 23h ago | confirmed
+ grace1440 ended 25h ago | cancelled
+(2 rows)
+
+ROLLBACK
+DELETE 0
+           c           | auto_release_enabled | no_show_release_grace_minutes 
+-----------------------+----------------------+-------------------------------
+ settings B restaurado | t                    |                            60
+(1 row)
+

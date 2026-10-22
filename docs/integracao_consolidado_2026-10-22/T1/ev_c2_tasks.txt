@@ -1,0 +1,151 @@
+Pager usage is off.
+BEGIN
+                mkveh                 
+--------------------------------------
+ ac3ac657-2a52-47af-9474-7fce4abe924b
+ 234554cb-a446-42f4-bbd1-780960827287
+ 0b437c89-613a-451b-902c-3157133476cc
+ 82c1ad1b-1944-43a3-828a-a9046ba89c22
+ 6060c151-a2f7-40f5-840b-f8b6b5575c95
+(5 rows)
+
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+=== C2-01 privilegios de tabela (pos-CONTRACT 0218/0226)
+    rolname    | sel | ins | upd | del |                                                                                                                                                                                                                                                                                                           col_write_grants                                                                                                                                                                                                                                                                                                            
+---------------+-----+-----+-----+-----+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ anon          | f   | f   | f   | f   | 
+ authenticated | t   | f   | f   | f   | 
+ service_role  | t   | t   | t   | t   | assigned_to:INSERT,assigned_to:REFERENCES,assigned_to:UPDATE,created_at:INSERT,created_at:REFERENCES,created_at:UPDATE,id:INSERT,id:REFERENCES,id:UPDATE,notes:INSERT,notes:REFERENCES,notes:UPDATE,organization_id:INSERT,organization_id:REFERENCES,organization_id:UPDATE,priority:INSERT,priority:REFERENCES,priority:UPDATE,resolved_at:INSERT,resolved_at:REFERENCES,resolved_at:UPDATE,source_inspection_id:INSERT,source_inspection_id:REFERENCES,source_inspection_id:UPDATE,status:INSERT,status:REFERENCES,status:UPDATE,type:INSERT,type:REFERENCES,type:UPDATE,vehicle_id:INSERT,vehicle_id:REFERENCES,vehicle_id:UPDATE
+(3 rows)
+
+=== C2-02 leitura de notas internas e escrita direta por papel (matriz)
+CREATE TABLE
+GRANT
+DO
+    actor     |         role         |         read_sp         |         read_cp         |           read_b           |         view_sp         |                         ins                          |                      upd_status                      |                      upd_assign                      |                      upd_notes                       |                         del                          
+--------------+----------------------+-------------------------+-------------------------+----------------------------+-------------------------+------------------------------------------------------+------------------------------------------------------+------------------------------------------------------+------------------------------------------------------+------------------------------------------------------
+ t1admin      | administrator        | OK 1:T1 NOTA INTERNA SP | OK 1:T1 NOTA INTERNA CP | OK 0:                      | OK 1:T1 NOTA INTERNA SP | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1adminb     | administrator        | OK 0:                   | OK 0:                   | OK 1:T1 NOTA INTERNA ORG B | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1adminnocnh | administrator        | OK 1:T1 NOTA INTERNA SP | OK 1:T1 NOTA INTERNA CP | OK 0:                      | OK 1:T1 NOTA INTERNA SP | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1custcp     | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1custrj     | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1deact      | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1drvb       | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1drvexp     | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1drvnull    | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1drvok      | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1emp        | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1req2       | employee             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1fmall      | fleet_manager        | OK 1:T1 NOTA INTERNA SP | OK 1:T1 NOTA INTERNA CP | OK 0:                      | OK 1:T1 NOTA INTERNA SP | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1fmcp       | fleet_manager        | OK 0:                   | OK 1:T1 NOTA INTERNA CP | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1fmnocnh    | fleet_manager        | OK 1:T1 NOTA INTERNA SP | OK 1:T1 NOTA INTERNA CP | OK 0:                      | OK 1:T1 NOTA INTERNA SP | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1fmsp       | fleet_manager        | OK 1:T1 NOTA INTERNA SP | OK 0:                   | OK 0:                      | OK 1:T1 NOTA INTERNA SP | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1maint      | maintenance_operator | OK 1:T1 NOTA INTERNA SP | OK 1:T1 NOTA INTERNA CP | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1sec        | security             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+ t1secb       | security             | OK 0:                   | OK 0:                   | OK 0:                      | OK 0:                   | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks | ERR 42501 permission denied for table workflow_tasks
+(19 rows)
+
+--- anon
+BEGIN
+SET
+DO
+NOTICE:  anon SELECT: 42501 permission denied for table workflow_tasks
+DO
+NOTICE:  anon UPDATE: 42501 permission denied for table workflow_tasks
+DO
+NOTICE:  anon INSERT: 42501 permission denied for table workflow_tasks
+ROLLBACK
+--- estado das tarefas apos a matriz (nada deve ter mudado)
+    k     | status | assigned_to |         notes         | n_on_vehicle 
+----------+--------+-------------+-----------------------+--------------
+ task_b   | open   |             | T1 NOTA INTERNA ORG B |            1
+ task_cp  | open   |             | T1 NOTA INTERNA CP    |            1
+ task_cp2 | open   |             | T1 NOTA CP2           |            1
+ task_sp  | open   |             | T1 NOTA INTERNA SP    |            1
+ task_sp2 | open   |             | T1 NOTA SP2           |            1
+(5 rows)
+
+=== C2-03 atribuicao pelo comando auditado fm_claim_workflow_task
+                c                |                 as_user                 
+---------------------------------+-----------------------------------------
+ emp claim sp                    | ERR P0001 NOT_AUTHORIZED
+ security claim sp               | ERR P0001 NOT_AUTHORIZED
+ deact claim sp                  | ERR P0001 NOT_AUTHORIZED
+ fmcp claim sp (fora da unidade) | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ adminB claim sp (outra org)     | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ fmsp claim sp (no escopo)       | OK b6fb45ad-bfdf-43d9-879b-fdc746e6ce6e
+ fmall claim sp (ja atribuida)   | ERR P0001 CONCURRENT_UPDATE
+ maint claim cp2                 | OK 4466e3c9-1cd2-46d9-960e-df83c2348e69
+ admin claim cp                  | OK c586400d-7212-4b37-8a32-ac83f1285fe5
+(9 rows)
+
+    k     | by_fmsp | by_maint | by_admin | status |                audit                
+----------+---------+----------+----------+--------+-------------------------------------
+ task_b   |         |          |          | open   | 
+ task_cp  | f       | f        | t        | open   | workflow_task.claimed actor=t1admin
+ task_cp2 | f       | t        | f        | open   | workflow_task.claimed actor=t1maint
+ task_sp  | t       | f        | f        | open   | workflow_task.claimed actor=t1fmsp
+ task_sp2 |         |          |          | open   | 
+(5 rows)
+
+=== C2-04 conclusao de tarefa preservada (complete_workflow_task)
+            c             |              as_user              
+--------------------------+-----------------------------------
+ emp complete sp2         | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ fmcp complete sp2 (fora) | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ fmsp complete sp2        | OK 
+(3 rows)
+
+    k     | status | resolved 
+----------+--------+----------
+ task_sp2 | done   | t
+(1 row)
+
+=== C2-05 aprovacao de pedido vencido recusada (0218); pedido no prazo aprovado
+BEGIN
+                mkveh                 
+--------------------------------------
+ 2b9732cf-e149-4706-b55e-74a0bbad91e9
+(1 row)
+
+                mkveh                 
+--------------------------------------
+ e24b0d6f-29a3-4cfe-8b28-c3e52eff2b86
+(1 row)
+
+                mkres                 
+--------------------------------------
+ bc41e5b6-6878-4b57-baca-fde8f79d398f
+(1 row)
+
+                mkres                 
+--------------------------------------
+ fce8b444-4b08-46f1-ae75-87828ea9a87e
+(1 row)
+
+COMMIT
+                   c                    |              as_user              
+----------------------------------------+-----------------------------------
+ approve vencido (fmsp)                 | ERR P0001 RESERVATION_EXPIRED
+ approve vencido (admin)                | ERR P0001 RESERVATION_EXPIRED
+ approve no prazo fora do escopo (fmcp) | ERR P0001 MANAGEMENT_SCOPE_DENIED
+ approve no prazo (fmsp)                | OK 
+(4 rows)
+
+ERROR:  table name "r" specified more than once
+   k    |      status      |  status   
+--------+------------------+-----------
+ ap_exp | pending_approval | available
+ ap_ok  | confirmed        | reserved
+(2 rows)
+

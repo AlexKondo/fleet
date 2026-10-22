@@ -1,0 +1,220 @@
+﻿t3admin administrator null -> /dashboard 
+    /dashboard                   200  [aviso CNH] 
+    /dashboard/command-center    200  [aviso CNH] 
+    /admin                       200  [aviso CNH] 
+    /analytics                   200  [aviso CNH] 
+    /gate                        200  [aviso CNH] 
+    /fleet                       200  [aviso CNH] 
+    /fleet/keys                  200  [aviso CNH] 
+    /settings                    200   
+    /settings/users              200  [aviso CNH] 
+    /maintenance                 200   
+    /trips                       200   
+    /trips/new                   200 => /account/license [aviso CNH] 
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200   
+    /reservations/[id]           200  [aviso CNH] 
+    /reservations/[id]/pickup    200 => /account/license [aviso CNH] 
+    /account                     200  [aviso CNH] 
+    /account/license             200  [aviso CNH] 
+t3fmtotal fleet_manager null -> /dashboard 
+    /dashboard                   200  [aviso CNH] 
+    /dashboard/command-center    200  [aviso CNH] 
+    /admin                       200 => /dashboard [aviso CNH] 
+    /analytics                   200  [aviso CNH] 
+    /gate                        200  [aviso CNH] 
+    /fleet                       200  [aviso CNH] 
+    /fleet/keys                  200  [aviso CNH] 
+    /settings                    200   
+    /settings/users              200 => /settings  
+    /maintenance                 200   
+    /trips                       200   
+    /trips/new                   200 => /account/license [aviso CNH] 
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200   
+    /reservations/[id]           200  [aviso CNH] 
+    /reservations/[id]/pickup    200 => /account/license [aviso CNH] 
+    /account                     200  [aviso CNH] 
+    /account/license             200  [aviso CNH] 
+t3fmlim fleet_manager null -> /dashboard 
+    /dashboard                   200  [aviso CNH] 
+    /dashboard/command-center    200  [aviso CNH] 
+    /admin                       200 => /dashboard [aviso CNH] 
+    /analytics                   200   
+    /gate                        200  [aviso CNH] 
+    /fleet                       200  [aviso CNH] 
+    /fleet/keys                  200  [aviso CNH] 
+    /settings                    200   
+    /settings/users              200 => /settings  
+    /maintenance                 200  [aviso CNH] 
+    /trips                       200   
+    /trips/new                   200 => /account/license [aviso CNH] 
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200   
+    /reservations/[id]           200 => /trips  
+    /reservations/[id]/pickup    200 => /account/license [aviso CNH] 
+    /account                     200  [aviso CNH] 
+    /account/license             200  [aviso CNH] 
+t3maint maintenance_operator null -> /trips 
+    /dashboard                   200   
+    /dashboard/command-center    200 => /dashboard  
+    /admin                       200 => /dashboard  
+    /analytics                   200 => /dashboard  
+    /gate                        200 => /dashboard  
+    /fleet                       200 => /dashboard  
+    /fleet/keys                  200 => /dashboard  
+    /settings                    200 => /dashboard  
+    /settings/users              200 => /dashboard  
+    /maintenance                 200   
+    /trips                       200   
+    /trips/new                   200 => /account/license [aviso CNH] 
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200   
+    /reservations/[id]           200 => /trips  
+    /reservations/[id]/pickup    200 => /account/license [aviso CNH] 
+    /account                     200  [aviso CNH] 
+    /account/license             200  [aviso CNH] 
+t3sec security null -> /gate 
+    /dashboard                   200   
+    /dashboard/command-center    200 => /dashboard  
+    /admin                       200 => /dashboard  
+    /analytics                   200 => /dashboard  
+    /gate                        200   
+    /fleet                       200 => /dashboard  
+    /fleet/keys                  200 => /dashboard  
+    /settings                    200 => /dashboard  
+    /settings/users              200 => /dashboard  
+    /maintenance                 200 => /dashboard  
+    /trips                       200   
+    /trips/new                   200   
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200   
+    /reservations/[id]           200   
+    /reservations/[id]/pickup    200   
+    /account                     200   
+    /account/license             200  [aviso CNH] 
+t3cust employee null -> /dashboard 
+    /dashboard                   200   
+    /dashboard/command-center    200 => /dashboard  
+    /admin                       200 => /dashboard  
+    /analytics                   200 => /dashboard  
+    /gate                        200 => /dashboard  
+    /fleet                       200 => /dashboard  
+    /fleet/keys                  200 => /dashboard  
+    /settings                    200 => /dashboard  
+    /settings/users              200 => /dashboard  
+    /maintenance                 200 => /dashboard  
+    /trips                       200   
+    /trips/new                   200 => /account/license [aviso CNH] 
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200  [aviso CNH] 
+    /reservations/[id]           200 => /trips  
+    /reservations/[id]/pickup    200 => /account/license [aviso CNH] 
+    /account                     200  [aviso CNH] 
+    /account/license             200  [aviso CNH] 
+t3valid employee valid -> /dashboard 
+    /dashboard                   200   
+    /dashboard/command-center    200 => /dashboard  
+    /admin                       200 => /dashboard  
+    /analytics                   200 => /dashboard  
+    /gate                        200 => /dashboard  
+    /fleet                       200 => /dashboard  
+    /fleet/keys                  200 => /dashboard  
+    /settings                    200 => /dashboard  
+    /settings/users              200 => /dashboard  
+    /maintenance                 200 => /dashboard  
+    /trips                       200   
+    /trips/new                   200   
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200   
+    /reservations/[id]           200 => /trips  
+    /reservations/[id]/pickup    404   
+    /account                     200   
+    /account/license             200  [aviso CNH] 
+t3exp employee expired -> /dashboard 
+    /dashboard                   200   
+    /dashboard/command-center    200 => /dashboard  
+    /admin                       200 => /dashboard  
+    /analytics                   200 => /dashboard  
+    /gate                        200 => /dashboard  
+    /fleet                       200 => /dashboard  
+    /fleet/keys                  200 => /dashboard  
+    /settings                    200 => /dashboard  
+    /settings/users              200 => /dashboard  
+    /maintenance                 200 => /dashboard  
+    /trips                       200   
+    /trips/new                   200 => /account/license [aviso CNH] 
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200   
+    /reservations/[id]           200 => /trips  
+    /reservations/[id]/pickup    200 => /account/license [aviso CNH] 
+    /account                     200   
+    /account/license             200  [aviso CNH] 
+t3null employee null -> /dashboard 
+    /dashboard                   200   
+    /dashboard/command-center    200 => /dashboard  
+    /admin                       200 => /dashboard  
+    /analytics                   200 => /dashboard  
+    /gate                        200 => /dashboard  
+    /fleet                       200 => /dashboard  
+    /fleet/keys                  200 => /dashboard  
+    /settings                    200 => /dashboard  
+    /settings/users              200 => /dashboard  
+    /maintenance                 200 => /dashboard  
+    /trips                       200   
+    /trips/new                   200 => /account/license [aviso CNH] 
+    /carpool                     200   
+    /carpool/mine                200   
+    /account/keys                200   
+    /reservations/[id]           200 => /trips  
+    /reservations/[id]/pickup    200 => /account/license [aviso CNH] 
+    /account                     200  [aviso CNH] 
+    /account/license             200  [aviso CNH] 
+t3off employee valid -> /login Situação do acesso indisponível | 
+    /dashboard                   200 => /login  
+    /dashboard/command-center    200 => /login  
+    /admin                       200 => /login  
+    /analytics                   200 => /login  
+    /gate                        200 => /login  
+    /fleet                       200 => /login  
+    /fleet/keys                  200 => /login  
+    /settings                    200 => /login  
+    /settings/users              200 => /login  
+    /maintenance                 200 => /login  
+    /trips                       200 => /login  
+    /trips/new                   200 => /login  
+    /carpool                     200 => /login  
+    /carpool/mine                200 => /login  
+    /account/keys                200 => /login  
+    /reservations/[id]           200 => /login  
+    /reservations/[id]/pickup    200 => /login  
+    /account                     200 => /login  
+    /account/license             200 => /login  
+t3pwd employee null -> / 
+    /dashboard                   200 => /account?forcePasswordChange=1  
+    /dashboard/command-center    200 => /account?forcePasswordChange=1  
+    /admin                       200 => /account?forcePasswordChange=1  
+    /analytics                   200 => /account?forcePasswordChange=1  
+    /gate                        200 => /account?forcePasswordChange=1  
+    /fleet                       200 => /account?forcePasswordChange=1  
+    /fleet/keys                  200 => /account?forcePasswordChange=1  
+    /settings                    200 => /account?forcePasswordChange=1  
+    /settings/users              200 => /account?forcePasswordChange=1  
+    /maintenance                 200 => /account?forcePasswordChange=1  
+    /trips                       200 => /account?forcePasswordChange=1  
+    /trips/new                   200 => /account?forcePasswordChange=1  
+    /carpool                     200 => /account?forcePasswordChange=1  
+    /carpool/mine                200 => /account?forcePasswordChange=1  
+    /account/keys                200   
+    /reservations/[id]           200 => /account?forcePasswordChange=1  
+    /reservations/[id]/pickup    200 => /account?forcePasswordChange=1  
+    /account                     200   
+    /account/license             200  [aviso CNH] 
