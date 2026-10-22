@@ -1,0 +1,80 @@
+[
+ {
+  "user": "fmall",
+  "plate": "GWM5O35",
+  "console": [],
+  "responses": [
+   "303 http://localhost:3100/login",
+   "200 http://localhost:3100/fleet"
+  ],
+  "sha": "b239e2b21e012367149b9c45588abd66a602f6b3d48734b5659e6a8882846e82",
+  "size": 1159,
+  "before": "00000000-0000-0000-0000-000000000001/vehicles/82bee108-d9f9-44d2-ae0b-ccaebb3c295a_6e86e6a4c3fa8215aa65ca53f3c0cd43df6096cb532b19c6b61d4404e787276c.png",
+  "outcome": "form fechado (sucesso)",
+  "ms": 879,
+  "bodyText": "Gestão Inteligente de Veículos\n\nFrota, status, propulsão, categorias e locais em um só lugar.\n\nFalar com o FleetMind\n\n12\n\nTotal de veículos\n\nDisponível\n4\nReservado\n2\nManutenção\n1\nBloqueado\n1\nEm Uso\n2\nCarregando\n1\nAguardando Retirada\n1\n\n3\n\nElétrico (BEV)\n\n2\n\nHíbrido plug-in (PHEV)\n\n3\n\nHíbrido (HEV)\n\n4\n\nCombustão (ICE)\n\nArquivo da frota e cadastros desativados\n\nVeículos\n12\nCategorias\n6\nLocalizações\n",
+  "alert": [],
+  "after": "00000000-0000-0000-0000-000000000001/vehicles/82bee108-d9f9-44d2-ae0b-ccaebb3c295a_b239e2b21e012367149b9c45588abd66a602f6b3d48734b5659e6a8882846e82.png",
+  "journal": "[{\"state\" : \"linked\", \"verified\" : true, \"by\" : \"a076d93e-63fe-4627-b8ae-daf9c36f0629\", \"path\" : \"00000000-0000-0000-0000-000000000001/vehicles/82bee108-d9f9-44d2-ae0b-ccaebb3c295a_b239e2b21e012367149b9c45588abd66a602f6b3d48734b5659e6a8882846e82.png\"}]",
+  "audit": "1",
+  "cardImages": [
+   {
+    "src": "/_next/image?url=http%3A%2F%2F127.0.0.1%3A55321%2Fstorage%2Fv1%2Fobject%2Fsign%2Fvehicle-p",
+    "ok": true
+   }
+  ],
+  "changed_to_new_photo": true
+ },
+ {
+  "user": "admin",
+  "plate": "GWM9J29",
+  "console": [],
+  "responses": [
+   "303 http://localhost:3100/login",
+   "200 http://localhost:3100/fleet"
+  ],
+  "sha": "f708f8ec8cd323195d64c76f6cd316f5623c05798810725ca4af69e0c80def32",
+  "size": 1157,
+  "before": "00000000-0000-0000-0000-000000000001/vehicles/71f7a939-3314-4460-a449-a6598e426128_7056dacad467c14b1c3f18b5c63d94b10027761e14010603184780b5defbdf0a.png",
+  "outcome": "form fechado (sucesso)",
+  "ms": 860,
+  "bodyText": "Gestão Inteligente de Veículos\n\nFrota, status, propulsão, categorias e locais em um só lugar.\n\nFalar com o FleetMind\n\n12\n\nTotal de veículos\n\nDisponível\n4\nReservado\n2\nManutenção\n1\nBloqueado\n1\nEm Uso\n2\nCarregando\n1\nAguardando Retirada\n1\n\n3\n\nElétrico (BEV)\n\n2\n\nHíbrido plug-in (PHEV)\n\n3\n\nHíbrido (HEV)\n\n4\n\nCombustão (ICE)\n\nArquivo da frota e cadastros desativados\n\nVeículos\n12\nCategorias\n6\nLocalizações\n",
+  "alert": [],
+  "after": "00000000-0000-0000-0000-000000000001/vehicles/71f7a939-3314-4460-a449-a6598e426128_f708f8ec8cd323195d64c76f6cd316f5623c05798810725ca4af69e0c80def32.png",
+  "journal": "[{\"state\" : \"linked\", \"verified\" : true, \"by\" : \"70e2beb8-231d-4779-a09d-629ee9aa29f4\", \"path\" : \"00000000-0000-0000-0000-000000000001/vehicles/71f7a939-3314-4460-a449-a6598e426128_f708f8ec8cd323195d64c76f6cd316f5623c05798810725ca4af69e0c80def32.png\"}]",
+  "audit": "1",
+  "cardImages": [
+   {
+    "src": "/_next/image?url=http%3A%2F%2F127.0.0.1%3A55321%2Fstorage%2Fv1%2Fobject%2Fsign%2Fvehicle-p",
+    "ok": true
+   }
+  ],
+  "changed_to_new_photo": true
+ },
+ {
+  "user": "fmcampinas",
+  "plate": "GWM6T36",
+  "console": [],
+  "responses": [
+   "303 http://localhost:3100/login",
+   "200 http://localhost:3100/fleet"
+  ],
+  "sha": "5cabbbf770b4c6246de9598d2bac35f45dcb47eb1a05e30ad324d2a89fba2d91",
+  "size": 1158,
+  "before": "00000000-0000-0000-0000-000000000001/vehicles/5ff79a1f-f0c9-4971-8fa6-77526c318fc9_f5f00d16fa91832295bfb168782663adf939428a560983bd21e61e7f473c21da.png",
+  "outcome": "form fechado (sucesso)",
+  "ms": 860,
+  "bodyText": "Gestão Inteligente de Veículos\n\nFrota, status, propulsão, categorias e locais em um só lugar.\n\nFalar com o FleetMind\n\n3\n\nTotal de veículos\n\nReservado\n1\nEm Uso\n1\nAguardando Retirada\n1\n\n3\n\nCombustão (ICE)\n\nArquivo da frota e cadastros desativados\n\nVeículos\n3\nCategorias\n6\nLocalizações\n3\nTodos os status\nDisponível\nReservado\nAguardando Retirada\nEm Uso\nRetornando\nInspeção\nCarregando\nLimpeza\nManutenção\nB",
+  "alert": [],
+  "after": "00000000-0000-0000-0000-000000000001/vehicles/5ff79a1f-f0c9-4971-8fa6-77526c318fc9_5cabbbf770b4c6246de9598d2bac35f45dcb47eb1a05e30ad324d2a89fba2d91.png",
+  "journal": "[{\"state\" : \"linked\", \"verified\" : true, \"by\" : \"da6a5deb-068e-48ac-bd1d-562d2f045ed8\", \"path\" : \"00000000-0000-0000-0000-000000000001/vehicles/5ff79a1f-f0c9-4971-8fa6-77526c318fc9_5cabbbf770b4c6246de9598d2bac35f45dcb47eb1a05e30ad324d2a89fba2d91.png\"}]",
+  "audit": "1",
+  "cardImages": [
+   {
+    "src": "/_next/image?url=http%3A%2F%2F127.0.0.1%3A55321%2Fstorage%2Fv1%2Fobject%2Fsign%2Fvehicle-p",
+    "ok": true
+   }
+  ],
+  "changed_to_new_photo": true
+ }
+]

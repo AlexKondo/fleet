@@ -1,0 +1,12 @@
+ACL inspection_photos|{postgres=arwdDxtm/postgres,authenticated=arwd/postgres,service_role=arwdDxtm/postgres}
+helpers_left|0
+md5 fm_release_damage_hold|49fc89973e3aab09f67c8376876eae0a|{postgres=X/postgres,service_role=X/postgres}
+md5 complete_workflow_task|cf29a11cebf3d4ddff4ba2fe3b682c10|{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}
+md5 cancel_workflow_task|c22a2fef71c40aca208f1586731f88ff|{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}
+md5 cancel_reservation|ca0fb8e6a10e763fd37db9c1f8c67633|{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}
+md5 fm_release_expired_reservations|512c3aa921367e67b606b54d7550159d|{postgres=X/postgres,service_role=X/postgres}
+md5 fm_key_command|3ce0a84a6c933a44ef7cbbad432c5dd0|{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}
+md5 record_pickup|a5d7d141509dd1a726fdf6e8d88cba23|{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}
+reapply_ok
+
+# md5(pg_get_functiondef) apos 0215_rollback (em tx) == md5(before_defs/*.sql) para as 7 funcoes (09d13ada.., 3a9b348d.., 947f064c.., 560aba68.., 32e3cf9c.., 73fda15d.., 127e3029..): ROLLBACK RESTAURA CORPOS IDENTICOS; ACL inspection_photos restaurada; helpers removidos; reaplicacao 0215+0216 idempotente (reapply_ok).

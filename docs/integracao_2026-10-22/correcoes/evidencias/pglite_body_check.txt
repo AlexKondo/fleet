@@ -1,0 +1,7 @@
+IDENTICAL fm_release_damage_hold (chain up to 0214)
+IDENTICAL complete_workflow_task (chain up to 0214)
+IDENTICAL cancel_workflow_task (chain up to 0214)
+IDENTICAL cancel_reservation (chain up to 0214)
+IDENTICAL fm_release_expired_reservations (chain up to 0214)
+IDENTICAL fm_key_command (chain up to 0214)
+IDENTICAL record_pickup (chain up to 0214)

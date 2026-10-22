@@ -1310,6 +1310,7 @@ export type Dictionary = {
       viewMyTrips: string;
       continueWithVehicle: string;
       unavailableBanner: string;
+      pointsUnavailableBanner: string;
       needsPrecisionTitle: string;
       cityLevel: string;
       stateLevel: string;
@@ -1401,6 +1402,8 @@ export type Dictionary = {
       disableConfirm: string;
       participantsTitle: string;
       noParticipants: string;
+      participantsUnavailable: string;
+      requestsUnavailable: string;
       pendingTitle: string;
       noPending: string;
       requestedSeats: string;
@@ -1931,5 +1934,10 @@ export type Dictionary = {
       reason: string;
       submit: string;
     };
+  };
+  /** Audit-log action codes -> plain-language labels (/admin, /admin/audit). Unknown codes use `fallback`. */
+  auditActions: {
+    labels: Record<string, string>;
+    fallback: string;
   };
 };

@@ -1,0 +1,27 @@
+BEGIN
+UPDATE 1
+UPDATE 1
+                                 set_config                                 
+----------------------------------------------------------------------------
+ {"sub" : "a522d447-3700-4576-aea7-d4a14596cb02", "role" : "authenticated"}
+(1 row)
+
+SET
+ cancel_reservation 
+--------------------
+ 
+(1 row)
+
+ cancel_reservation 
+--------------------
+ 
+(1 row)
+
+RESET
+  plate   |   status    | documentation_valid | has_blocking_damage 
+----------+-------------+---------------------+---------------------
+ S1CX_DMG | maintenance | t                   | t
+ S1CX_DOC | blocked     | f                   | f
+(2 rows)
+
+ROLLBACK

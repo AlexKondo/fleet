@@ -66,6 +66,9 @@ export default async function AnalyticsPage() {
     supabase
       .from("fm_managed_vehicles")
       .select("id, plate, status, odometer_km, next_service_odometer_km")
+      // S3-11: archived vehicles left the fleet - they must not show up as "underutilized" nor in the
+      // maintenance/utilization metrics (same filter the operational workspaces use).
+      .is("archived_at", null)
       .order("plate"),
     supabase
       .from("fm_managed_inspections")

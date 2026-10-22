@@ -1,0 +1,23 @@
+{
+ "tag": "BEFORE",
+ "grantsBefore": [
+  "authenticated:DELETE,INSERT,SELECT,UPDATE",
+  "postgres:DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE",
+  "service_role:DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE"
+ ],
+ "revokedAt": "2026-10-22T13:53:52.946Z",
+ "banner": "O serviço de mapas do Google está indisponível no momento, então não é possível buscar caronas agora. Você pode continuar com a reserva de veículo normalmente.",
+ "blamesGoogle": true,
+ "searchesReachingEngine": 0,
+ "grantsAfter": [
+  "authenticated:DELETE,INSERT,SELECT,UPDATE",
+  "postgres:DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE",
+  "service_role:DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE"
+ ],
+ "grantsRestored": true,
+ "log": {
+  "console": [],
+  "pageerrors": [],
+  "http5xx": []
+ }
+}

@@ -2,6 +2,8 @@
 
 **Veredito: NO-GO para produção.** Integração concluída e testada localmente; há 1 defeito P1, vários P2 de autorização/fotos/segurança de veículo e itens de decisão em aberto. Nada foi publicado, nenhuma migration foi aplicada em produção, nenhuma reserva real foi cancelada por este trabalho e nenhum deploy foi feito.
 
+> **Atualização 22/10 (após as correções):** o P1 S3-03 e os P2 S2-D01, S2-D02, S1-02, S1-04, S1-05, S1-06, S3-01 e S3-02 foram **corrigidos na branch e verificados localmente** (seção 10). O veredito continua **NO-GO**: restam decisões, P3, homologação remota, rollback e autorização expressa.
+
 ## 1. Base, branch e commits
 - Pacote: `FleetMind_v3_Pacote_Unico_Kondo_2026-10-22.zip` (1.139 entradas; extraído em pasta separada, nunca sobre o checkout). Base declarada: `0aa2403`.
 - Branch: `integracao-conclusao-2026-10-22` (worktree `C:\projects\fleet-integ`).
@@ -81,3 +83,19 @@ Regra/risco adicional: o código novo exige `SUPABASE_SERVICE_ROLE_KEY` no servi
 
 ## 9. Pendências restantes (resumo)
 Corrigir S3-03 e os P2; decidir S1-01, S3-06/08/09/12, política de liberação (sempre ativa) e tolerância; homologar remotamente; ensaiar rollback; reconciliar ledger; validar IA/voz/OCR/Google/e-mail; migrar Vercel para Pro; backup automático do Supabase; autorização expressa para deploy.
+
+## 10. Correções aplicadas depois dos testes (22/10) — local, não publicadas
+Relatórios detalhados: `docs/integracao_2026-10-22/correcoes/F1_RELATORIO.md` (SQL) e `F2_RELATORIO.md` (aplicação).
+| ID | Estado | Correção |
+|---|---|---|
+| **S3-03 (P1)** | corrigido (local) | portão de CNH do middleware libera as telas administrativas para administrador, gestor e operador de manutenção; condução (`/trips*`, `/carpool*`, retirada) continua barrada; colaborador, conta desativada e troca de senha inicial inalterados; rotas administrativas barradas por CNH: 12 → 0 (navegador, antes/depois) |
+| S2-D01 (P2) | corrigido (local) | migration **0216** (CONTRACT): sem INSERT direto em `inspection_photos`; nenhum código do app (novo ou 0aa2403) insere direto |
+| S1-02/04/05/06 (P2) | corrigidos (local) | migration **0215** (EXPAND): checagem única de "veículo seguro para voltar ao uso" usada por liberação automática, cancelamento, entrega de chave, retirada de escritório e conclusão de tarefa; avaria só sai pelo comando auditado da 0205; 7 funções recriadas com diff mínimo; rollbacks ensaiados |
+| S3-01 (P2) | corrigido (local) | embed desambiguado; erro de leitura mostra "não conseguimos carregar" |
+| S3-02 (P2) | corrigido (local) | busca do passageiro fecha com segurança quando os pontos não podem ser lidos |
+| S2-D02 (P2) | corrigido (local) | limite de foto do veículo 4 MB validado no navegador e no servidor, mensagem clara (3 MB salva; 8,6 MB não é mais enviado) |
+| S3-04/05/07/10/11 (P3) | corrigidos (local) | formulário de saída impedida só onde a RPC aceita; aviso de sucesso; checkbox mantém marcado; rótulos de auditoria; arquivados fora de /analytics |
+**Verificação final desta etapa (executada):** `tsc` 0 · web **1015/1015** (101 arquivos) · lint 0 · build ok · cadeia 0001→0216 do zero em Postgres local · concorrência (180 + 120 execuções) sem deadlock · S1 (permissões 0210, saída impedida, SP/Campinas) sem regressão · S2 17/19 (2 por desenho pós-0214) · cadastro de foto pela Frota funciona para 3 papéis.
+**Ordem de aplicação em produção (quando autorizado):** 0210–0213 → publicar o código novo → confirmar upload real atestado → **0214** e **0216** (CONTRACT) só depois que nenhuma instância antiga escreve; **0215** (EXPAND) pode ir junto com as anteriores.
+**Riscos que ficam (novos):** (a) limite de 4,5 MB do corpo na Vercel não testável localmente; (b) checklists de retirada/devolução enviam várias fotos numa só action e podem passar dos limites — exige decisão de desenho (envio por foto, compressão ou upload direto ao Storage); (c) upload da CNH (5 MB) também passa de 4,5 MB; (d) veículo pode ficar em `maintenance` sem tarefa aberta (reparo/OS cancelados ou avaria antiga sem tarefa) e só sai com nova OS/tarefa; (e) a retirada mostra `DEPARTURE_BLOCKED` cru e a conclusão de tarefa não traduz `DAMAGE_RELEASE_INDEPENDENT_ACTOR_REQUIRED` (texto a tratar).
+**Ainda abertos:** S1-01, S3-06, S3-08, S3-09, S3-12 (decisões); S1-03, S1-07, S1-08, S2-D03…D06 (P3); homologação remota; rollback ensaiado; ledger; serviços externos; Vercel Pro; autorização expressa.

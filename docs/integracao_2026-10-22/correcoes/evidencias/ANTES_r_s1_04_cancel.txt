@@ -1,0 +1,36 @@
+CREATE FUNCTION
+BEGIN
+CREATE TABLE
+UPDATE 2
+UPDATE 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+SET
+INSERT 0 1
+SET
+         caso          | chamada |  esperado   
+-----------------------+---------+-------------
+ RESULT|S1-04|S1CX_DMG | OK:     | maintenance
+ RESULT|S1-04|S1CX_DOC | OK:     | blocked
+ RESULT|S1-04|S1CX_EQP | OK:     | maintenance
+ RESULT|S1-04|S1CX_OK  | OK:     | available
+ RESULT|S1-04|S1CX_TWO | OK:     | reserved
+ RESULT|S1-04|S1CX_WO  | OK:     | maintenance
+(6 rows)
+
+         caso          |  esperado   |  obtido   |  reserva  | documentation_valid | has_blocking_damage | veredito 
+-----------------------+-------------+-----------+-----------+---------------------+---------------------+----------
+ RESULT|S1-04|S1CX_DMG | maintenance | available | cancelled | t                   | t                   | FAIL
+ RESULT|S1-04|S1CX_DOC | blocked     | available | cancelled | f                   | f                   | FAIL
+ RESULT|S1-04|S1CX_EQP | maintenance | available | cancelled | t                   | f                   | FAIL
+ RESULT|S1-04|S1CX_OK  | available   | available | cancelled | t                   | f                   | PASS
+ RESULT|S1-04|S1CX_TWO | reserved    | reserved  | cancelled | f                   | f                   | PASS
+ RESULT|S1-04|S1CX_WO  | maintenance | available | cancelled | t                   | f                   | FAIL
+(6 rows)
+
+ROLLBACK

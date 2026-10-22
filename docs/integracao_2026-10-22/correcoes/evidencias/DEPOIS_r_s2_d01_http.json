@@ -1,0 +1,15 @@
+{
+ "lucas_insert": {
+  "http": 403,
+  "code": "42501",
+  "message": "permission denied for table inspection_photos"
+ },
+ "anon_insert": {
+  "http": 401,
+  "code": "42501",
+  "message": "permission denied for table inspection_photos"
+ },
+ "rows_before": "52",
+ "rows_after": "52",
+ "verdict": "PASS"
+}

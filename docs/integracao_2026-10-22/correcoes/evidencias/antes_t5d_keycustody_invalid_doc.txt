@@ -1,0 +1,21 @@
+BEGIN
+UPDATE 1
+INSERT 0 1
+                                 set_config                                 
+----------------------------------------------------------------------------
+ {"sub" : "a66bb95e-4004-4e42-93b5-553262878224", "role" : "authenticated"}
+(1 row)
+
+SET
+ERROR:  DRIVER_NOT_AUTHORIZED
+CONTEXT:  PL/pgSQL function fm_assert_can_drive(uuid,uuid) line 5 at RAISE
+SQL statement "SELECT fm_assert_can_drive(v_requester,v_org)"
+PL/pgSQL function fm_key_command(uuid,text,text,uuid) line 34 at PERFORM
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK

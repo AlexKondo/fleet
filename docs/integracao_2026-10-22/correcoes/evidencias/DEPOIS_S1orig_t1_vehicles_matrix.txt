@@ -1,0 +1,31 @@
+BEGIN
+UPDATE 6
+DROP TABLE
+CREATE TABLE
+DO
+   actor    | vehicle |                                                                             updated_cols                                                                             
+------------+---------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ admin      | cp1     | battery_level_percent,category_id,color,estimated_range_km,fuel_level_percent,home_location_id,name,next_service_date,next_service_odometer_km,odometer_km,plate,vin
+ admin      | sp1     | battery_level_percent,category_id,color,estimated_range_km,fuel_level_percent,home_location_id,name,next_service_date,next_service_odometer_km,odometer_km,plate,vin
+ fmall      | cp1     | battery_level_percent,category_id,color,estimated_range_km,fuel_level_percent,home_location_id,name,next_service_date,next_service_odometer_km,odometer_km,plate,vin
+ fmall      | sp1     | battery_level_percent,category_id,color,estimated_range_km,fuel_level_percent,home_location_id,name,next_service_date,next_service_odometer_km,odometer_km,plate,vin
+ fmcampinas | cp1     | battery_level_percent,category_id,color,estimated_range_km,fuel_level_percent,home_location_id,name,next_service_date,next_service_odometer_km,odometer_km,plate,vin
+ s1adminb   | b1      | battery_level_percent,category_id,color,estimated_range_km,fuel_level_percent,home_location_id,name,next_service_date,next_service_odometer_km,odometer_km,plate,vin
+ s1fmsp     | sp1     | battery_level_percent,category_id,color,estimated_range_km,fuel_level_percent,home_location_id,name,next_service_date,next_service_odometer_km,odometer_km,plate,vin
+(7 rows)
+
+                      outcome                      | count 
+---------------------------------------------------+-------
+ DENIED 42501 permission denied for table vehicles |   297
+ NO_EFFECT rows=0 (RLS)                            |   240
+ UPDATED rows=1                                    |    84
+(3 rows)
+
+ plate |  status   | has_blocking_damage | documentation_valid |            name             | odometer_km |                                                                   photo_storage_path                                                                    
+-------+-----------+---------------------+---------------------+-----------------------------+-------------+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ S1B1  | available | f                   | t                   | S1 Teste b1 via s1adminb    |       10000 | b5000000-0000-0000-0000-00000000000b/vehicles/5b000000-0000-0000-0000-000000000001_613dce63904f0c4cba27b0a0c80f1bb43a167eb12ac27c045fa6a523b4ac2365.png
+ S1CP1 | blocked   | f                   | t                   | S1 Teste cp1 via fmcampinas |       10000 | 00000000-0000-0000-0000-000000000001/vehicles/5a000000-0000-0000-0000-000000000011_1ff9c1bf79cd147e45084e305cca3b242ce156b1147ff74e654a78f325e3a184.png
+ S1SP1 | blocked   | f                   | t                   | S1 Teste sp1 via s1fmsp     |       10000 | 
+(3 rows)
+
+ROLLBACK

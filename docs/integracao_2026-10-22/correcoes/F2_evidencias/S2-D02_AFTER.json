@@ -1,0 +1,31 @@
+{
+ "tag": "AFTER",
+ "attempts": [
+  {
+   "label": "valid_8_6MB",
+   "sizeBytes": 8601813,
+   "inlineError": "A foto deve ter no máximo 4 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar.",
+   "validationMessage": "A foto deve ter no máximo 4 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar.",
+   "postStatuses": [],
+   "http5xx": [],
+   "pageerrors": [],
+   "globalErrorPage": false,
+   "alerts": "A foto deve ter no máximo 4 MB. Escolha uma foto menor ou reduza o tamanho dela antes de enviar. | ",
+   "photoChanged": false
+  },
+  {
+   "label": "valid_3MB",
+   "sizeBytes": 3001518,
+   "inlineError": "",
+   "validationMessage": "",
+   "postStatuses": [
+    200
+   ],
+   "http5xx": [],
+   "pageerrors": [],
+   "globalErrorPage": false,
+   "alerts": "",
+   "photoChanged": true
+  }
+ ]
+}

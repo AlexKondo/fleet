@@ -1,0 +1,20 @@
+{
+ "tag": "FINAL",
+ "nav": {
+  "status": 200,
+  "err": null,
+  "path": "/reservations/7d810d39-0671-4644-9872-06c3c86e4b2c"
+ },
+ "acceptedInDb": "Mariana Teixeira, Thiago Ribeiro",
+ "participantsListed": [
+  "Mariana Teixeira1 vaga(s)\n\nEmbarque: Matriz Faria Lima → Desembarque: Centro Técnico Campinas",
+  "Thiago Ribeiro1 vaga(s)\n\nEmbarque: Matriz Faria Lima → Desembarque: Centro Técnico Campinas"
+ ],
+ "saysNone": false,
+ "saysUnavailable": false,
+ "log": {
+  "console": [],
+  "pageerrors": [],
+  "http5xx": []
+ }
+}

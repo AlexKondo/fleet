@@ -1,0 +1,6 @@
+ Test Files  99 passed (99)
+      Tests  1003 passed (1003)
+   Start at  11:05:32
+   Duration  17.68s (transform 6.06s, setup 0ms, collect 13.77s, tests 62.34s, environment 18ms, prepare 10.46s)
+
+tsc --noEmit (apps/web): exit 0 (2026-10-22 11:05)

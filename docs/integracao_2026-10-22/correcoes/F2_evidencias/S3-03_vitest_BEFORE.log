@@ -1,0 +1,58 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/projects/fleet-integ/apps/web[39m
+
+ [31m❯[39m lib/supabase/middleware.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[90m 91[2mms[22m[39m
+[31m   [31m×[31m CNH gate versus administrative access (S3-03)[2m > [22madministrator without CNH reaches every administrative route and keeps the CNH notice, but driving routes stay gated[90m 11[2mms[22m[31m[39m
+[31m     → /: expected 307 to be 200 // Object.is equality[39m
+[31m   [31m×[31m CNH gate versus administrative access (S3-03)[2m > [22mfleet manager with expired CNH reaches every administrative route and keeps the CNH notice, but driving routes stay gated[90m 24[2mms[22m[31m[39m
+[31m     → /: expected 307 to be 200 // Object.is equality[39m
+[31m   [31m×[31m CNH gate versus administrative access (S3-03)[2m > [22mmaintenance operator without CNH reaches its workspaces and the dashboard; driving stays gated[90m 6[2mms[22m[31m[39m
+[31m     → /dashboard: expected 307 to be 200 // Object.is equality[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 3 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m lib/supabase/middleware.test.ts[2m > [22mCNH gate versus administrative access (S3-03)[2m > [22madministrator without CNH reaches every administrative route and keeps the CNH notice, but driving routes stay gated
+[31m[1m[7m FAIL [27m[22m[39m lib/supabase/middleware.test.ts[2m > [22mCNH gate versus administrative access (S3-03)[2m > [22mfleet manager with expired CNH reaches every administrative route and keeps the CNH notice, but driving routes stay gated
+[31m[1mAssertionError[22m: /: expected 307 to be 200 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 200[39m
+[31m+ 307[39m
+
+[36m [2m❯[22m lib/supabase/middleware.test.ts:[2m85:32[22m[39m
+    [90m 83| [39m    [35mfor[39m ([35mconst[39m path [35mof[39m [33mADMIN_PATHS[39m) {
+    [90m 84| [39m      [35mconst[39m res [33m=[39m [35mawait[39m [34mgo[39m(path)[33m;[39m
+    [90m 85| [39m      [34mexpect[39m(res[33m.[39mstatus[33m,[39m path)[33m.[39m[34mtoBe[39m([34m200[39m)[33m;[39m
+    [90m   | [39m                               [31m^[39m
+    [90m 86| [39m      [34mexpect[39m([34mfwd[39m(res[33m,[39m [32m"x-fleet-license-missing"[39m)[33m,[39m path)[33m.[39m[34mtoBe[39m([32m"1"[39m)[33m;[39m
+    [90m 87| [39m    }
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m lib/supabase/middleware.test.ts[2m > [22mCNH gate versus administrative access (S3-03)[2m > [22mmaintenance operator without CNH reaches its workspaces and the dashboard; driving stays gated
+[31m[1mAssertionError[22m: /dashboard: expected 307 to be 200 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 200[39m
+[31m+ 307[39m
+
+[36m [2m❯[22m lib/supabase/middleware.test.ts:[2m94:132[22m[39m
+    [90m 92| [39m  [34mit[39m([32m"maintenance operator without CNH reaches its workspaces and the [39m…
+    [90m 93| [39m    [35mconst[39m go [33m=[39m [35mawait[39m [34mload[39m({ role[33m:[39m [32m"maintenance_operator"[39m[33m,[39m license[33m:[39m [33mNO_[39m…
+    [90m 94| [39m    [35mfor[39m ([35mconst[39m path [35mof[39m [[32m"/maintenance"[39m[33m,[39m [32m"/maintenance/work-orders"[39m[33m,[39m [32m"/[39m…
+    [90m   | [39m                                                                                                                                   [31m^[39m
+    [90m 95| [39m    [35mfor[39m ([35mconst[39m path [35mof[39m [[32m"/trips/new"[39m[33m,[39m [32m"/reservations/abc/pickup"[39m]) [34mexp[39m…
+    [90m 96| [39m    vi[33m.[39m[34mdoUnmock[39m([32m"@supabase/ssr"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m7 passed[39m[22m[90m (10)[39m
+[2m   Start at [22m 10:42:49
+[2m   Duration [22m 727ms[2m (transform 72ms, setup 0ms, collect 167ms, tests 91ms, environment 0ms, prepare 145ms)[22m
+

@@ -11,6 +11,10 @@ export interface HostCarpoolData {
   history: HostRequestView[];
   policyEnabled: boolean;
   showSection: boolean;
+  /** S3-01: the confirmed-passenger read failed - the screen must say so, never "no passengers". */
+  participantsUnavailable: boolean;
+  /** The ride-request read failed - pending/history are unknown, not empty. */
+  requestsUnavailable: boolean;
 }
 
 /** One row of host_ride_request_places (0064): coarse while PENDING, exact once ACCEPTED, else null. */
@@ -52,7 +56,7 @@ export async function loadHostCarpool(
   organizationId: string,
   tripRequestId: string,
 ): Promise<HostCarpoolData> {
-  const [policyLoad, { data: offerRows }, { data: participantRows }, { data: placeRows }] = await Promise.all([
+  const [policyLoad, { data: offerRows }, { data: participantRows, error: participantsError }, { data: placeRows }] = await Promise.all([
     loadLatestPolicy(supabase, organizationId),
     supabase
       .from("carpool_offers")
@@ -61,7 +65,9 @@ export async function loadHostCarpool(
       .order("created_at", { ascending: false }),
     supabase
       .from("trip_participants")
-      .select("id, passenger_id, passenger_count, passenger:profiles(full_name)")
+      // S3-01: trip_participants has TWO FKs to profiles since 0185 (passenger_id and left_by); an unqualified
+      // `profiles(...)` embed is ambiguous (PGRST201) and the whole read fails, so name the passenger FK.
+      .select("id, passenger_id, passenger_count, passenger:profiles!trip_participants_passenger_id_fkey(full_name)")
       .eq("trip_request_id", tripRequestId)
       .eq("status", "accepted")
       .order("joined_at", { ascending: true }),
@@ -75,7 +81,7 @@ export async function loadHostCarpool(
   );
 
   const offerIds = (offerRows ?? []).map((o) => o.id);
-  const { data: requestRows } =
+  const { data: requestRows, error: requestsError } =
     offerIds.length > 0
       ? await supabase
           .from("carpool_ride_requests")
@@ -84,7 +90,7 @@ export async function loadHostCarpool(
           )
           .in("carpool_offer_id", offerIds)
           .order("created_at", { ascending: true })
-      : { data: [] };
+      : { data: [], error: null };
 
   const all = requestRows ?? [];
   const toView = (r: (typeof all)[number]): HostRequestView => ({
@@ -129,6 +135,9 @@ export async function loadHostCarpool(
       .slice(0, 20)
       .map(toView),
     policyEnabled,
-    showSection: policyEnabled || offer !== null || all.length > 0,
+    // A failed read keeps the section visible so the failure notice is shown instead of hiding it.
+    showSection: policyEnabled || offer !== null || all.length > 0 || Boolean(participantsError) || Boolean(requestsError),
+    participantsUnavailable: Boolean(participantsError),
+    requestsUnavailable: Boolean(requestsError),
   };
 }

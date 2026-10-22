@@ -1,5 +1,6 @@
 "use server";
 import { uploadImmutablePhoto } from "@/lib/domain/immutablePhoto";
+import { vehiclePhotoTooLarge, vehiclePhotoTooLargeMessage } from "@/lib/domain/vehiclePhotoLimit";
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -13,7 +14,7 @@ export interface FleetActionState {
   error?: string;
 }
 
-const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+// S2-D02: same limit the browser enforces before sending (see lib/domain/vehiclePhotoLimit.ts for the why).
 
 /** Private immutable reference photo: journal before upload, content-addressed path,
  * no overwrite/delete, atomic link finalization. Failed links remain recoverable. */
@@ -27,8 +28,8 @@ async function uploadVehiclePhoto(
   if (!file.type.startsWith("image/")) {
     return { error: dict.errors.fleet.photoMustBeImage };
   }
-  if (file.size > MAX_PHOTO_BYTES) {
-    return { error: dict.errors.fleet.photoTooLarge };
+  if (vehiclePhotoTooLarge(file)) {
+    return { error: vehiclePhotoTooLargeMessage(dict.errors.fleet.photoTooLarge) };
   }
   try { return await uploadImmutablePhoto(supabase,"vehicle",vehicleId,null,file); }
   catch { return {error:dict.errors.fleet.photoUploadFailed}; }

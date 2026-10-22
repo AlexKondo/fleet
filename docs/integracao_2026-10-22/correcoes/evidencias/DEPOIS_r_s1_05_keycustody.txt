@@ -1,0 +1,39 @@
+CREATE FUNCTION
+BEGIN
+UPDATE 1
+CREATE TABLE
+CREATE FUNCTION
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+SET
+INSERT 0 1
+SET
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+                    caso                    |       esperado        |        obtido         | veredito 
+--------------------------------------------+-----------------------+-----------------------+----------
+ RESULT|S1-05|a_entrega_chave_doc_irregular | ERR:VEHICLE_NOT_READY | ERR:VEHICLE_NOT_READY | PASS
+ RESULT|S1-05|a_status_veiculo              | reserved              | reserved              | PASS
+ RESULT|S1-05|b_contrato_equip              | OK                    | OK                    | PASS
+ RESULT|S1-05|b_entrega_chave_seguro        | OK                    | OK                    | PASS
+ RESULT|S1-05|b_retirada_doc_irregular      | ERR:DEPARTURE_BLOCKED | ERR:DEPARTURE_BLOCKED | PASS
+ RESULT|S1-05|b_status_veiculo              | reserved              | reserved              | PASS
+ RESULT|S1-05|c_entrega_chave_os_andamento  | ERR:VEHICLE_NOT_READY | ERR:VEHICLE_NOT_READY | PASS
+ RESULT|S1-05|d_controle_contrato           | OK                    | OK                    | PASS
+ RESULT|S1-05|d_controle_entrega            | OK                    | OK                    | PASS
+ RESULT|S1-05|d_controle_retirada           | OK                    | OK                    | PASS
+ RESULT|S1-05|d_controle_retry_identico     | OK                    | OK                    | PASS
+ RESULT|S1-05|d_controle_status             | in_use                | in_use                | PASS
+(12 rows)
+
+ROLLBACK

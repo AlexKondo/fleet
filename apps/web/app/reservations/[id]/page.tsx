@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { OperationExceptionForm } from "./OperationExceptionForm";
 import { loadChecklistState } from "@/lib/operations/checklistState";
+import { canShowOperationExceptionForm, loadNotDepartedException } from "@/lib/operations/operationExceptionUi";
+import { exceptionText } from "@/lib/operations/exceptionText";
 import { OfficeCustodyNotice } from "./OfficeCustodyNotice";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -85,14 +87,15 @@ export default async function ReservationDetailPage({
   // screen, since accepting a passenger is the host's own call, not a fleet-ops one
   // (fleet managers can still be granted the RPC itself for support cases, see
   // 0020_carpool_host_acceptance.sql, but this UI doesn't surface it for them).
-  const { data: pendingCarpoolRequests } = isOwnReservation
+  // S3-01: name the passenger FK (trip_participants also references profiles via left_by since 0185).
+  const { data: pendingCarpoolRequests, error: pendingCarpoolError } = isOwnReservation
     ? await supabase
         .from("trip_participants")
-        .select("id, passenger_count, joined_at, passenger:profiles(full_name)")
+        .select("id, passenger_count, joined_at, passenger:profiles!trip_participants_passenger_id_fkey(full_name)")
         .eq("trip_request_id", reservation.trip_request.id)
         .eq("status", "pending")
         .order("joined_at", { ascending: true })
-    : { data: [] };
+    : { data: [], error: null };
 
   // Phase C5 host carpool view (offer, seats, confirmed riders, pending + past requests). Only the
   // reservation's own host sees it; every row is read under the host's own RLS context.
@@ -118,6 +121,8 @@ export default async function ReservationDetailPage({
   // of a separate row of buttons with no context.
   const vehicleStatus = reservation.vehicle?.status;
   const checklistState=await loadChecklistState(supabase,id);
+  // S3-05: only the operation roles see the exception confirmation; the requester's label is decision S3-08.
+  const exceptionRecorded = isPrivileged && !isOwnReservation && reservation.status === "cancelled" && (await loadNotDepartedException(supabase, id));
   const canPickup=checklistState?.can_pickup ?? false;
   const canReturn=checklistState?.can_return ?? false;
   // Mirrors cancel_reservation's own guard (0010_cancel_reservation.sql): once the vehicle
@@ -198,7 +203,15 @@ export default async function ReservationDetailPage({
           participants={hostCarpool.participants}
           pending={hostCarpool.pending}
           history={hostCarpool.history}
+          participantsUnavailable={hostCarpool.participantsUnavailable}
+          requestsUnavailable={hostCarpool.requestsUnavailable}
         />
+      ) : null}
+
+      {isOwnReservation && pendingCarpoolError ? (
+        <p role="alert" data-testid="legacy-carpool-requests-unavailable" className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-4 text-sm text-signal-red">
+          {dict.carpool.host.requestsUnavailable}
+        </p>
       ) : null}
 
       {isOwnReservation && pendingCarpoolRequests && pendingCarpoolRequests.length > 0 ? (
@@ -308,7 +321,10 @@ export default async function ReservationDetailPage({
           {checklistState.own_return_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_return_id}`}>Fotos da devolução</Link> : null}
         </nav> : null}
         <OfficeCustodyNotice state={checklistState}/>
-        {isPrivileged && !isOwnReservation && reservation.status==='confirmed' && checklistState && !checklistState.departed && (checklistState.pickup_traveler || checklistState.pickup_security) ? <OperationExceptionForm reservationId={id} requestId={randomUUID()} locale={locale}/> : null}
+        {/* S3-04: offered only to whom fm_operation_exception accepts (security in gate_visual, managers in scope). inScope: this reservation was read under the viewer RLS, which already hides out-of-scope reservations from limited managers (redirect above); the RPC re-checks. */}
+        {!isOwnReservation && reservation.status==='confirmed' && checklistState && !checklistState.departed && (checklistState.pickup_traveler || checklistState.pickup_security) && canShowOperationExceptionForm({role:profile?.role,workflow:checklistState.workflow,inScope:true}) ? <OperationExceptionForm reservationId={id} requestId={randomUUID()} locale={locale}/> : null}
+        {/* S3-05: persistent confirmation once the reservation was closed by exception (the form itself unmounts with the status change). */}
+        {exceptionRecorded ? <p role="status" className="fm-panel" data-testid="operation-exception-notice">{exceptionText(locale).done}</p> : null}
         {canPickup || canReturn || canCancel ? (
             <div className="rd-actions">
               {canPickup ? (

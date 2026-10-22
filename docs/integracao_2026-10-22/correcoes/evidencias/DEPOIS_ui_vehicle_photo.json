@@ -1,0 +1,106 @@
+[
+ {
+  "user": "fmall",
+  "plate": "GWM5O35",
+  "console": [],
+  "responses": [
+   "303 http://localhost:3100/login",
+   "200 http://localhost:3100/fleet"
+  ],
+  "sha": "6e86e6a4c3fa8215aa65ca53f3c0cd43df6096cb532b19c6b61d4404e787276c",
+  "size": 1160,
+  "before": "00000000-0000-0000-0000-000000000001/vehicles/82bee108-d9f9-44d2-ae0b-ccaebb3c295a_6e86e6a4c3fa8215aa65ca53f3c0cd43df6096cb532b19c6b61d4404e787276c.png",
+  "outcome": "form fechado (sucesso)",
+  "ms": 861,
+  "bodyText": "Gestão Inteligente de Veículos\n\nFrota, status, propulsão, categorias e locais em um só lugar.\n\nFalar com o FleetMind\n\n12\n\nTotal de veículos\n\nDisponível\n4\nReservado\n2\nManutenção\n1\nBloqueado\n1\nEm Uso\n2\nCarregando\n1\nAguardando Retirada\n1\n\n3\n\nElétrico (BEV)\n\n2\n\nHíbrido plug-in (PHEV)\n\n3\n\nHíbrido (HEV)\n\n4\n\nCombustão (ICE)\n\nArquivo da frota e cadastros desativados\n\nVeículos\n12\nCategorias\n6\nLocalizações\n",
+  "alert": [],
+  "after": "00000000-0000-0000-0000-000000000001/vehicles/82bee108-d9f9-44d2-ae0b-ccaebb3c295a_6e86e6a4c3fa8215aa65ca53f3c0cd43df6096cb532b19c6b61d4404e787276c.png",
+  "journal": "[{\"state\" : \"linked\", \"verified\" : true, \"by\" : \"a076d93e-63fe-4627-b8ae-daf9c36f0629\", \"path\" : \"00000000-0000-0000-0000-000000000001/vehicles/82bee108-d9f9-44d2-ae0b-ccaebb3c295a_6e86e6a4c3fa8215aa65ca53f3c0cd43df6096cb532b19c6b61d4404e787276c.png\"}]",
+  "audit": "1",
+  "cardImages": [
+   {
+    "src": "/_next/image?url=http%3A%2F%2F127.0.0.1%3A55321%2Fstorage%2Fv1%2Fobject%2Fsign%2Fvehicle-p",
+    "ok": true
+   }
+  ]
+ },
+ {
+  "user": "admin",
+  "plate": "GWM9J29",
+  "console": [],
+  "responses": [
+   "303 http://localhost:3100/login",
+   "200 http://localhost:3100/fleet"
+  ],
+  "sha": "7056dacad467c14b1c3f18b5c63d94b10027761e14010603184780b5defbdf0a",
+  "size": 1158,
+  "before": "00000000-0000-0000-0000-000000000001/vehicles/71f7a939-3314-4460-a449-a6598e426128_7056dacad467c14b1c3f18b5c63d94b10027761e14010603184780b5defbdf0a.png",
+  "outcome": "form fechado (sucesso)",
+  "ms": 872,
+  "bodyText": "Gestão Inteligente de Veículos\n\nFrota, status, propulsão, categorias e locais em um só lugar.\n\nFalar com o FleetMind\n\n12\n\nTotal de veículos\n\nDisponível\n4\nReservado\n2\nManutenção\n1\nBloqueado\n1\nEm Uso\n2\nCarregando\n1\nAguardando Retirada\n1\n\n3\n\nElétrico (BEV)\n\n2\n\nHíbrido plug-in (PHEV)\n\n3\n\nHíbrido (HEV)\n\n4\n\nCombustão (ICE)\n\nArquivo da frota e cadastros desativados\n\nVeículos\n12\nCategorias\n6\nLocalizações\n",
+  "alert": [],
+  "after": "00000000-0000-0000-0000-000000000001/vehicles/71f7a939-3314-4460-a449-a6598e426128_7056dacad467c14b1c3f18b5c63d94b10027761e14010603184780b5defbdf0a.png",
+  "journal": "[{\"state\" : \"linked\", \"verified\" : true, \"by\" : \"70e2beb8-231d-4779-a09d-629ee9aa29f4\", \"path\" : \"00000000-0000-0000-0000-000000000001/vehicles/71f7a939-3314-4460-a449-a6598e426128_7056dacad467c14b1c3f18b5c63d94b10027761e14010603184780b5defbdf0a.png\"}]",
+  "audit": "1",
+  "cardImages": [
+   {
+    "src": "/_next/image?url=http%3A%2F%2F127.0.0.1%3A55321%2Fstorage%2Fv1%2Fobject%2Fsign%2Fvehicle-p",
+    "ok": true
+   }
+  ]
+ },
+ {
+  "user": "fmcampinas",
+  "plate": "GWM6T36",
+  "console": [],
+  "responses": [
+   "303 http://localhost:3100/login",
+   "200 http://localhost:3100/fleet"
+  ],
+  "sha": "f5f00d16fa91832295bfb168782663adf939428a560983bd21e61e7f473c21da",
+  "size": 1158,
+  "before": "00000000-0000-0000-0000-000000000001/vehicles/5ff79a1f-f0c9-4971-8fa6-77526c318fc9_f5f00d16fa91832295bfb168782663adf939428a560983bd21e61e7f473c21da.png",
+  "outcome": "form fechado (sucesso)",
+  "ms": 877,
+  "bodyText": "Gestão Inteligente de Veículos\n\nFrota, status, propulsão, categorias e locais em um só lugar.\n\nFalar com o FleetMind\n\n3\n\nTotal de veículos\n\nReservado\n1\nEm Uso\n1\nAguardando Retirada\n1\n\n3\n\nCombustão (ICE)\n\nArquivo da frota e cadastros desativados\n\nVeículos\n3\nCategorias\n6\nLocalizações\n3\nTodos os status\nDisponível\nReservado\nAguardando Retirada\nEm Uso\nRetornando\nInspeção\nCarregando\nLimpeza\nManutenção\nB",
+  "alert": [],
+  "after": "00000000-0000-0000-0000-000000000001/vehicles/5ff79a1f-f0c9-4971-8fa6-77526c318fc9_f5f00d16fa91832295bfb168782663adf939428a560983bd21e61e7f473c21da.png",
+  "journal": "[{\"state\" : \"linked\", \"verified\" : true, \"by\" : \"da6a5deb-068e-48ac-bd1d-562d2f045ed8\", \"path\" : \"00000000-0000-0000-0000-000000000001/vehicles/5ff79a1f-f0c9-4971-8fa6-77526c318fc9_f5f00d16fa91832295bfb168782663adf939428a560983bd21e61e7f473c21da.png\"}]",
+  "audit": "1",
+  "cardImages": [
+   {
+    "src": "/_next/image?url=http%3A%2F%2F127.0.0.1%3A55321%2Fstorage%2Fv1%2Fobject%2Fsign%2Fvehicle-p",
+    "ok": true
+   }
+  ]
+ },
+ {
+  "user": "fmall",
+  "plate": "GWM2H62",
+  "console": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+   "%o\n\n%s Error: Body exceeded 8mb limit.\nTo configure the body size limit for Server Actions, see: https://nextjs.org/docs/app/api-reference/next-config-js/serverActions#bodysizelimit\n    at resolveErrorDev (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.5.9_react-dom@19.2.8_"
+  ],
+  "responses": [
+   "303 http://localhost:3100/login",
+   "500 http://localhost:3100/fleet",
+   "200 http://localhost:3100/__nextjs_original-stack-frames"
+  ],
+  "sha": "8bac2d5b918082138f0ff2fa4763d1d3491e0d2e9f19e75848810cf655ea14af",
+  "size": 8999937,
+  "before": "00000000-0000-0000-0000-000000000001/vehicles/37461c96-c9d0-496f-b5bb-eb2198e8dc14_c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77.png",
+  "outcome": "form fechado (sucesso)",
+  "ms": 1378,
+  "bodyText": "FleetMind\n\nAlgo deu errado por aqui.\n\nNão foi possível carregar esta página agora. Tente novamente em instantes; se o problema continuar, avise o administrador do sistema.\n\nCódigo: 795481604@E394\n\nTentar novamente",
+  "alert": [],
+  "after": "00000000-0000-0000-0000-000000000001/vehicles/37461c96-c9d0-496f-b5bb-eb2198e8dc14_c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77.png",
+  "journal": "",
+  "audit": "0",
+  "cardImages": [
+   {
+    "src": "/_next/image?url=http%3A%2F%2F127.0.0.1%3A55321%2Fstorage%2Fv1%2Fobject%2Fsign%2Fvehicle-p",
+    "ok": true
+   }
+  ]
+ }
+]

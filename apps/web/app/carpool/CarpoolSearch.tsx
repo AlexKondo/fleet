@@ -212,7 +212,7 @@ export function CarpoolSearch({ dict, locale }: { dict: Dictionary; locale: Loca
       case "unavailable":
         return (
           <p role="status" className="fm-banner" data-testid="carpool-unavailable">
-            {t.unavailableBanner}
+            {r.reason === "points_unavailable" ? t.pointsUnavailableBanner : t.unavailableBanner}
           </p>
         );
       case "blocked":

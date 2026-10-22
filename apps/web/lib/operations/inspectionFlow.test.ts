@@ -76,16 +76,19 @@ describe.sequential("verified inspection flow with actual migrated SQL",()=>{
  it("preserves observations, rejects cross-actor photos and cannot alter existing evidence",async()=>{
   const {reservation}=await fixture();await actor(driver);const inspection=await pickup(reservation);
   await actor(other);
-  await expect(db.query("insert into inspection_photos(organization_id,inspection_id,angle,storage_path) values($1,$2,'damage',$3)",[org,inspection,`${org}/${inspection}/damage.jpg`])).rejects.toThrow(/row-level security/);
+  await expect(db.query("insert into inspection_photos(organization_id,inspection_id,angle,storage_path) values($1,$2,'damage',$3)",[org,inspection,`${org}/${inspection}/damage.jpg`])).rejects.toThrow(/permission denied for table inspection_photos/);
   await db.exec("reset role");
   await expect(db.query("update inspections set damage_notes='changed' where id=$1",[inspection])).rejects.toThrow(/PRESERVE_INSPECTION_HISTORY/);
  });
- it("requires a real stored object owned by the inspector and prevents bystander reads",async()=>{
+ it("refuses direct photo links even with a stored object (0216, S2-D01) and prevents bystander reads",async()=>{
   const {reservation}=await fixture();await actor(driver);const inspection=await pickup(reservation);
   const name=`${org}/${inspection}/damage_${randomUUID()}.jpg`;
   const photo=()=>db.query("insert into inspection_photos(organization_id,inspection_id,angle,storage_path) values($1,$2,'damage',$3)",[org,inspection,name]);
-  await expect(photo()).rejects.toThrow(/row-level security/);
-  await db.query("insert into storage.objects(bucket_id,name) values('vehicle-photos',$1)",[name]);await photo();
+  await expect(photo()).rejects.toThrow(/permission denied for table inspection_photos/);
+  await db.query("insert into storage.objects(bucket_id,name) values('vehicle-photos',$1)",[name]);
+  // Before 0216 the inspector could link the stored object directly (bypassing journal/attestation); now only fm_photo_link can.
+  await expect(photo()).rejects.toThrow(/permission denied for table inspection_photos/);
+  await db.exec("reset role");await photo();await actor(driver);
   expect((await db.query("select id from inspection_photos where inspection_id=$1",[inspection])).rows).toHaveLength(1);
   await actor(other);expect((await db.query("select id from storage.objects where name=$1",[name])).rows).toHaveLength(0);
   expect((await db.query("select id from inspection_photos where inspection_id=$1",[inspection])).rows).toHaveLength(0);

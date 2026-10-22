@@ -5,6 +5,7 @@ import { createVehicle, type FleetActionState } from "./actions";
 import { FUEL_LEVEL_OPTIONS, VEHICLE_COLOR_OPTIONS } from "@/lib/domain/vehicleFieldOptions";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { errorLabel } from "@/lib/i18n/errorLabel";
+import { VehiclePhotoInput } from "./VehiclePhotoInput";
 
 const initialState: FleetActionState = { status: "idle" };
 
@@ -156,10 +157,8 @@ export function VehicleForm({
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.photoLabel}</span>
-          <input
-            type="file"
-            name="photo"
-            accept="image/*"
+          <VehiclePhotoInput
+            dict={dict}
             className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-xs text-fog-400 outline-none file:mr-2 file:rounded-sm file:border-0 file:bg-line-800 file:px-2 file:py-1 file:text-xs file:text-paper-50 focus-visible:border-gwm-accent"
           />
         </label>

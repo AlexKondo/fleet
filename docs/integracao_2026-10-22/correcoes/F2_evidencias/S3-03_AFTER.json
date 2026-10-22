@@ -1,0 +1,84 @@
+{
+ "tag": "AFTER",
+ "at": "2026-10-22T13:48:29.482Z",
+ "licenses": [
+  "s3admin@frota-aurora.test role=administrator cnh=NULL auth=false",
+  "s3fmexp@frota-aurora.test role=fleet_manager cnh=2026-01-10 auth=true"
+ ],
+ "users": {
+  "s3admin": {
+   "landed": "/",
+   "admin": {
+    "/admin": "/admin",
+    "/admin/units": "/admin/units",
+    "/admin/integrations": "/admin/integrations",
+    "/admin/audit": "/admin/audit",
+    "/admin/ai": "/admin/ai",
+    "/analytics": "/analytics",
+    "/analytics/carpool": "/analytics/carpool",
+    "/dashboard": "/dashboard",
+    "/dashboard/command-center": "/dashboard/command-center",
+    "/gate": "/gate",
+    "/gate/exceptions": "/gate/exceptions",
+    "/gate/history": "/gate/history",
+    "/fleet": "/fleet",
+    "/fleet/carpools": "/fleet/carpools",
+    "/settings": "/settings",
+    "/maintenance": "/maintenance"
+   },
+   "driving": {
+    "/trips/new": "/account/license",
+    "/trips": "/account/license",
+    "/carpool": "/account/license"
+   },
+   "blockedAdmin": [],
+   "drivingGated": [
+    "/trips/new",
+    "/trips",
+    "/carpool"
+   ],
+   "log": {
+    "console": [],
+    "pageerrors": [],
+    "http5xx": []
+   }
+  },
+  "s3fmexp": {
+   "landed": "/dashboard",
+   "admin": {
+    "/admin": "/dashboard",
+    "/admin/units": "/dashboard",
+    "/admin/integrations": "/dashboard",
+    "/admin/audit": "/dashboard",
+    "/admin/ai": "/dashboard",
+    "/analytics": "/analytics",
+    "/analytics/carpool": "/analytics/carpool",
+    "/dashboard": "/dashboard",
+    "/dashboard/command-center": "/dashboard/command-center",
+    "/gate": "/gate",
+    "/gate/exceptions": "/gate/exceptions",
+    "/gate/history": "/gate/history",
+    "/fleet": "/fleet",
+    "/fleet/carpools": "/fleet/carpools",
+    "/settings": "/settings",
+    "/maintenance": "/maintenance"
+   },
+   "driving": {
+    "/trips/new": "/account/license",
+    "/trips": "/account/license",
+    "/carpool": "/account/license"
+   },
+   "blockedAdmin": [],
+   "drivingGated": [
+    "/trips/new",
+    "/trips",
+    "/carpool"
+   ],
+   "log": {
+    "console": [],
+    "pageerrors": [],
+    "http5xx": []
+   }
+  }
+ }
+}

@@ -1,0 +1,28 @@
+CREATE FUNCTION
+BEGIN
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+SET
+INSERT 0 1
+SET
+SET
+  call   |                                            r                                             
+---------+------------------------------------------------------------------------------------------
+ release | {"released": 7, "skipped_locked": 0, "vehicles_released": 2, "skipped_with_activity": 3}
+(1 row)
+
+RESET
+          caso           |  esperado   |  obtido   | confirmed_left | audit_vehicle_status | veredito 
+-------------------------+-------------+-----------+----------------+----------------------+----------
+ RESULT|S1-02|S1F1RL_DMG | maintenance | reserved  |              0 | reserved             | FAIL
+ RESULT|S1-02|S1F1RL_DOC | blocked     | reserved  |              0 | reserved             | FAIL
+ RESULT|S1-02|S1F1RL_EQP | maintenance | reserved  |              0 | reserved             | FAIL
+ RESULT|S1-02|S1F1RL_OK  | available   | available |              0 | available            | PASS
+ RESULT|S1-02|S1F1RL_TWO | reserved    | reserved  |              1 | reserved             | PASS
+ RESULT|S1-02|S1F1RL_WO  | maintenance | reserved  |              0 | reserved             | FAIL
+(6 rows)
+
+ROLLBACK

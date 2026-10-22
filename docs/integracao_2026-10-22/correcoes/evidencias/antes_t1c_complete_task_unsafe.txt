@@ -1,0 +1,21 @@
+BEGIN
+UPDATE 1
+INSERT 0 1
+                                 set_config                                 
+----------------------------------------------------------------------------
+ {"sub" : "883f8eab-5576-4af5-8016-e3f9a4c6933a", "role" : "authenticated"}
+(1 row)
+
+SET
+ complete_workflow_task 
+------------------------
+ 
+(1 row)
+
+RESET
+  plate   |  status   | documentation_valid | has_blocking_damage 
+----------+-----------+---------------------+---------------------
+ S1CT_DOC | available | f                   | f
+(1 row)
+
+ROLLBACK

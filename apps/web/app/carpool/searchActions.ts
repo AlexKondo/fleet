@@ -51,7 +51,11 @@ export async function searchBuscarCarona(raw: {
 
   const geocoder = createGooglePlacesProvider(profile.organization_id);
   const pointsResult = await listCorporateMobilityPoints(supabase, profile.organization_id);
-  const points = pointsResult.status === "ok" ? pointsResult.data : [];
+  // S3-02: fail closed (like the host side in actions.ts). An unreadable list of corporate points must never
+  // be treated as "no points": the typed place would then go to the external geocoder instead of resolving to
+  // the company's canonical point.
+  if (pointsResult.status !== "ok") return { status: "unavailable", reason: "points_unavailable" };
+  const points = pointsResult.data;
 
   return runCarpoolFirst(
     {

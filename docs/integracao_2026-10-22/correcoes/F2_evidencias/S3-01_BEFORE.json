@@ -1,0 +1,17 @@
+{
+ "tag": "BEFORE",
+ "nav": {
+  "status": 200,
+  "err": null,
+  "path": "/reservations/7d810d39-0671-4644-9872-06c3c86e4b2c"
+ },
+ "acceptedInDb": "Mariana Teixeira, Thiago Ribeiro",
+ "participantsListed": [],
+ "saysNone": true,
+ "saysUnavailable": false,
+ "log": {
+  "console": [],
+  "pageerrors": [],
+  "http5xx": []
+ }
+}

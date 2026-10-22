@@ -13,6 +13,8 @@ import {
   date,
 } from "@/app/operations/Workspace";
 import { adminCommand } from "./actions";
+import { getDictionary } from "@/lib/i18n/getLocale";
+import { auditActionLabel } from "@/lib/i18n/auditActionLabel";
 type Governance = {
   policy: { enabled: boolean; version: number; confirmation_required: boolean };
   policy_versions: {
@@ -44,30 +46,6 @@ function governance(v: unknown): Governance | null {
     ? (r as Governance)
     : null;
 }
-const auditLabels: Record<string, string> = {
-  "maintenance.policy": "Política de aprovação de manutenção alterada",
-  "work_order.approval": "Orçamento aprovado pela pessoa autorizada",
-  "work_order.approve_budget": "Revisão do orçamento aprovada",
-  "work_order.create": "OS criada",
-  "work_order.transition": "Estado da OS alterado",
-  "work_order.line": "Item da OS registrado",
-  "work_order.budget": "Orçamento revisado",
-  "work_order.void_line": "Item anulado",
-  "gate.record": "Movimento físico registrado",
-  "incident.ack": "Ciência registrada",
-  "energy.record": "Energia registrada",
-  "energy.void": "Lançamento anulado",
-  "vehicle.identity": "Identidade técnica atualizada",
-  "ai.policy": "Política do assistente alterada",
-  "privacy.submitted": "Solicitação de privacidade",
-  "privacy.respond": "Tratamento de solicitação",
-  "gate.departure": "Saída registrada na portaria",
-  "reservation.approve": "Reserva aprovada",
-  "reservation.cancel": "Reserva cancelada",
-  "member.update_role": "Perfil de acesso alterado",
-  "vehicle.block": "Veículo bloqueado",
-  "equipment.checklist_contract": "Contrato de checklist de equipamentos registrado",
-};
 export async function AdminWorkspace({
   view,
   params,
@@ -76,6 +54,7 @@ export async function AdminWorkspace({
   params: { q?: string; action?: string; error?: string; success?: string };
 }) {
   const data = await loadOperationalWorkspace(["administrator"]);
+  const dict = await getDictionary();
   const org = data.profile.organization_id;
   const [audit, users, quota, adminResult] = await Promise.all([
     pageAll("admin audit", (a, b) =>
@@ -249,7 +228,7 @@ export async function AdminWorkspace({
                       <li key={a.id}>
                         <Tag>{a.entity_type}</Tag>
                         <div>
-                          <strong>{auditLabels[a.action] ?? a.action}</strong>
+                          <strong>{auditActionLabel(dict, a.action)}</strong>
                           <small>
                             {date(a.created_at, true)} ·{" "}
                             {a.actor_role ?? "Sistema"}
@@ -568,7 +547,7 @@ export async function AdminWorkspace({
                       .sort()
                       .map((a) => (
                         <option key={a} value={a}>
-                          {auditLabels[a] ?? a}
+                          {auditActionLabel(dict, a)}
                         </option>
                       ))}
                   </select>
@@ -595,7 +574,7 @@ export async function AdminWorkspace({
                       {filtered.map((a) => (
                         <tr key={a.id}>
                           <td>{date(a.created_at, true)}</td>
-                          <td>{auditLabels[a.action] ?? a.action}</td>
+                          <td>{auditActionLabel(dict, a.action)}</td>
                           <td>{a.actor_role ?? "Sistema"}</td>
                           <td>
                             {a.entity_type}

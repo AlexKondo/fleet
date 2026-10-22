@@ -1,0 +1,52 @@
+{
+ "tag": "BEFORE",
+ "fixture": "f2000000-0000-0000-0000-0000000000b1",
+ "s304_security_keyCustody_formVisible": true,
+ "s304_security_gateVisual_formVisible": true,
+ "s310_raw_codes_/admin": [
+  "photo.linked"
+ ],
+ "s310_raw_codes_/admin/audit": [
+  "return_inspection_recorded",
+  "keys.delivered",
+  "operation.exception",
+  "vehicle_unblocked",
+  "carpool_ride_accepted",
+  "fleet.lifecycle",
+  "pickup_inspection_recorded",
+  "vehicle.created",
+  "keys.received",
+  "vehicle_blocked",
+  "workflow_task_completed",
+  "vehicle.damage_hold_released",
+  "reservation_approved",
+  "carpool_ride_rejected",
+  "photo.linked"
+ ],
+ "s311_archived_in_db": 11,
+ "s311_archived_plates_on_analytics": [
+  "STT3A01",
+  "S1SP4",
+  "S1SP3",
+  "S1CP2",
+  "S1SP1",
+  "S1SP2",
+  "S1SP6",
+  "S1CP3",
+  "S1SP5",
+  "S1CP1",
+  "S1RL_ORGA"
+ ],
+ "s305_formVisible_before_submit": true,
+ "s307_error_message": "Há registro de saída ou viagem em andamento. Registre a chegada e siga o fluxo de devolução.",
+ "s307_checkbox_checked_after_error": false,
+ "s307_reason_kept": "F2: veículo não saiu, teste local",
+ "s305_reservation_status_db": "cancelled",
+ "s305_notice_after_submit": "",
+ "s305_notice_after_reload": "",
+ "log": {
+  "console": [],
+  "pageerrors": [],
+  "http5xx": []
+ }
+}

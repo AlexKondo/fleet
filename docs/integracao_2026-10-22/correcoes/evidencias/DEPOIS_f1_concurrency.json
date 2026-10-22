@@ -1,0 +1,64 @@
+{
+ "iterations_per_scenario": 30,
+ "release_unsafe": {
+  "iterations": 30,
+  "deadlocks_40P01": 0,
+  "inconsistent": 0,
+  "outcomes": {
+   "cancelled/exception/veh=blocked/dmg=f/task=-/key=0/pickup=0": 27,
+   "cancelled/user_cancel/veh=blocked/dmg=f/task=-/key=0/pickup=0": 3
+  },
+  "errors": {
+   "cancel: P0001 Cannot cancel a reservation with status cancelled": 27,
+   "approve: P0001 Vehicle is not available to approve (current status: blocked)": 30,
+   "exception: P0001 RESERVATION_NOT_CONFIRMED": 3
+  },
+  "samples": []
+ },
+ "task_damage": {
+  "iterations": 30,
+  "deadlocks_40P01": 0,
+  "inconsistent": 0,
+  "outcomes": {
+   "cancelled/user_cancel/veh=blocked/dmg=f/task=done/key=0/pickup=0": 30
+  },
+  "errors": {},
+  "samples": []
+ },
+ "key_unsafe": {
+  "iterations": 30,
+  "deadlocks_40P01": 0,
+  "inconsistent": 0,
+  "outcomes": {
+   "cancelled/user_cancel/veh=blocked/dmg=f/task=-/key=0/pickup=0": 20,
+   "cancelled/exception/veh=blocked/dmg=f/task=-/key=0/pickup=0": 10
+  },
+  "errors": {
+   "delivered: P0001 VEHICLE_NOT_READY": 16,
+   "pickup: P0001 KEY_DELIVERY_REQUIRED": 30,
+   "exception: P0001 RESERVATION_NOT_CONFIRMED": 20,
+   "delivered: P0001 RESERVATION_NOT_CONFIRMED": 14,
+   "cancel: P0001 Cannot cancel a reservation with status cancelled": 10
+  },
+  "samples": []
+ },
+ "key_safe_race": {
+  "iterations": 30,
+  "deadlocks_40P01": 0,
+  "inconsistent": 0,
+  "outcomes": {
+   "cancelled/exception/veh=blocked/dmg=f/task=-/key=1/pickup=0": 11,
+   "confirmed/-/veh=blocked/dmg=f/task=-/key=1/pickup=0": 17,
+   "confirmed/-/veh=in_use/dmg=f/task=-/key=1/pickup=1": 2
+  },
+  "errors": {
+   "pickup: P0001 KEYS_ALREADY_RECEIVED": 24,
+   "pickup: P0001 VEHICLE_NOT_READY": 4,
+   "exception: P0001 KEYS_OUTSTANDING": 17,
+   "block: P0001 Vehicle cannot be blocked from its current status": 2,
+   "exception: P0001 VEHICLE_ON_TRIP": 2
+  },
+  "samples": []
+ },
+ "org_b_flag_after": "false/60"
+}

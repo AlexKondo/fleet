@@ -22,6 +22,25 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/api/cron/",
 ];
 
+const MANAGEMENT_ROLES = ["fleet_manager", "administrator", "maintenance_operator"];
+const ADMINISTRATIVE_PREFIXES = ["/fleet", "/settings", "/maintenance", "/admin", "/analytics", "/dashboard", "/gate"];
+
+export function isManagementRole(role: string | null | undefined): boolean {
+  return MANAGEMENT_ROLES.includes(role ?? "");
+}
+
+/**
+ * Administrative / management workspaces that never drive a vehicle. Each page still enforces its own
+ * role authorization (e.g. a maintenance operator opening /admin is redirected by the page); this list only
+ * decides that the CNH gate does not apply. "/" is the per-role landing redirector, and the reservation
+ * detail (exact path) is where managers approve and regularize - its /pickup subroute stays gated.
+ */
+export function isAdministrativePath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  if (/^\/reservations\/[^/]+\/?$/.test(pathname)) return true;
+  return ADMINISTRATIVE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 /**
  * Strips any client-supplied copy of the verified-identity headers. These are set below
  * from `supabase.auth.getUser()` and trusted downstream by lib/auth/currentUser.ts, so
@@ -127,11 +146,13 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
       supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
       getOwnLicense(supabase),
     ]);
-    // Driving requires a successful license read; administrative workspaces remain separate.
-    // These exact pages explicitly set FmShell.nonDrivingWorkspace. Match that
-    // existing contract here; driving routes and other roles keep the CNH gate.
-    const administrativePath = pathname === "/fleet" || pathname.startsWith("/fleet/") || pathname === "/settings" || pathname.startsWith("/settings/") || pathname === "/maintenance" || pathname.startsWith("/maintenance/");
-    const explicitManagerWorkspace = administrativePath && ["fleet_manager", "administrator", "maintenance_operator"].includes(ownProfile?.role ?? "");
+    // Driving requires a successful license read; administrative workspaces remain separate
+    // (approved rule: the CNH blocks DRIVING - pickup, keys for driving, departure - never the
+    // administrative access of a manager/administrator/maintenance operator). The driving routes
+    // (/trips*, /carpool*, /reservations/[id]/pickup) and every other role keep the CNH gate; the
+    // driving ACTIONS stay blocked server-side (RPCs) regardless of this routing decision, and the
+    // CNH notice keeps showing (LICENSE_MISSING_HEADER below).
+    const explicitManagerWorkspace = isManagementRole(ownProfile?.role) && isAdministrativePath(pathname);
     if (ownProfile?.role !== "security" && !explicitManagerWorkspace && !canDrive(ownLicense)) {
       return NextResponse.redirect(new URL("/account/license", request.url));
     }

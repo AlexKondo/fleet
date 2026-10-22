@@ -1,0 +1,90 @@
+CREATE FUNCTION
+BEGIN
+CREATE TABLE
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+SET
+RESET
+INSERT 0 1
+UPDATE 1
+SET
+RESET
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+                caso                 |             esperado             |              obtido              | veredito 
+-------------------------------------+----------------------------------+----------------------------------+----------
+ R1_01_contrato                      | OK                               | OK                               | PASS
+ R1_02_checklist_condutor            | OK                               | OK                               | PASS
+ R1_03_saida_sem_checklist_seg       | ERR:CHECKLIST_REQUIRED           | ERR:CHECKLIST_REQUIRED           | PASS
+ R1_04_checklist_seguranca           | OK                               | OK                               | PASS
+ R1_05_saida_gestor                  | ERR:NOT_AUTHORIZED               | ERR:NOT_AUTHORIZED               | PASS
+ R1_06_saida_seguranca               | OK                               | OK                               | PASS
+ R1_07_status_in_use                 | in_use                           | in_use                           | PASS
+ R1_08_chegada_seguranca             | OK                               | OK                               | PASS
+ R1_09_devolucao_condutor            | OK                               | OK                               | PASS
+ R1_10_devolucao_seguranca           | OK                               | OK                               | PASS
+ R1_11_final                         | completed/available              | completed/available              | PASS
+ R2_01_contrato                      | OK                               | OK                               | PASS
+ R2_02_checklist_com_avaria          | OK                               | OK                               | PASS
+ R2_03_checklist_seguranca           | OK                               | OK                               | PASS
+ R2_04_saida_com_avaria              | ERR:DEPARTURE_BLOCKED            | ERR:DEPARTURE_BLOCKED            | PASS
+ R2_05_tarefa_reparo_criada          | 1                                | 1                                | PASS
+ R2_06_gestor_libera_avaria_de_outro | OK:                              | OK:                              | PASS
+ R2_07_avaria_liberada_auditada      | f/1                              | f/1                              | PASS
+ R2_08_saida_apos_reparo             | OK                               | OK                               | PASS
+ R3_01_portaria_em_custodia          | ERR:DEPARTURE_BLOCKED            | ERR:DEPARTURE_BLOCKED            | PASS
+ R3_02_gestor_nao_custodiante        | ERR:KEY_CUSTODY_NOT_AUTHORIZED   | ERR:KEY_CUSTODY_NOT_AUTHORIZED   | PASS
+ R3_03_entrega_custodiante           | OK                               | OK                               | PASS
+ R3_04_contrato                      | OK                               | OK                               | PASS
+ R3_05_retirada_digital              | OK                               | OK                               | PASS
+ R3_06_status                        | in_use                           | in_use                           | PASS
+ R3_07_recebimento                   | OK                               | OK                               | PASS
+ R3_08_devolucao                     | OK                               | OK                               | PASS
+ R3_09_final                         | completed/available              | completed/available              | PASS
+ R4_01_flag_desligada                | 0                                | 0                                | PASS
+ R4_02_menos59_permanece             | confirmed/reserved               | confirmed/reserved               | PASS
+ R4_03_menos61_liberada              | cancelled/no_show_auto/available | cancelled/no_show_auto/available | PASS
+ R4_04_com_atividade_intocada        | confirmed                        | confirmed                        | PASS
+ R4_05_idempotente                   | 0                                | 0                                | PASS
+ R4_06_auditoria_unica               | 1                                | 1                                | PASS
+(34 rows)
+
+release_on={"released": 3, "skipped_locked": 0, "vehicles_released": 1, "skipped_with_activity": 1}
+ROLLBACK

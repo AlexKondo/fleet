@@ -1,0 +1,22 @@
+{
+ "tag": "AFTER",
+ "fixture": "f2000000-0000-0000-0000-0000000000b2",
+ "s304_security_keyCustody_formVisible": false,
+ "s304_security_gateVisual_formVisible": true,
+ "s310_raw_codes_/admin": [],
+ "s310_raw_codes_/admin/audit": [],
+ "s311_archived_in_db": 11,
+ "s311_archived_plates_on_analytics": [],
+ "s305_formVisible_before_submit": true,
+ "s307_error_message": "Há registro de saída ou viagem em andamento. Registre a chegada e siga o fluxo de devolução.",
+ "s307_checkbox_checked_after_error": true,
+ "s307_reason_kept": "F2: veículo não saiu, teste local",
+ "s305_reservation_status_db": "cancelled",
+ "s305_notice_after_submit": "Exceção registrada. A reserva foi encerrada; os registros foram preservados.",
+ "s305_notice_after_reload": "Exceção registrada. A reserva foi encerrada; os registros foram preservados.",
+ "log": {
+  "console": [],
+  "pageerrors": [],
+  "http5xx": []
+ }
+}

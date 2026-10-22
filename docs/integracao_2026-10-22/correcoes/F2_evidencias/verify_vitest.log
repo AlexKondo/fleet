@@ -1,0 +1,132 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/projects/fleet-integ/apps/web[39m
+
+ [32m✓[39m app/trips/new/actions.test.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+ [32m✓[39m app/chat/carpoolChatSecurity.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 44[2mms[22m[39m
+ [32m✓[39m app/chat/carpoolChat.test.ts [2m([22m[2m55 tests[22m[2m)[22m[90m 172[2mms[22m[39m
+ [32m✓[39m app/chat/noVehicleFlow.test.ts [2m([22m[2m104 tests[22m[2m)[22m[90m 267[2mms[22m[39m
+ [32m✓[39m app/carpool/actions.test.ts [2m([22m[2m28 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+ [32m✓[39m lib/operations/database.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 2933[2mms[22m[39m
+ [32m✓[39m lib/operations/noShowRelease.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 5290[2mms[22m[39m
+ [32m✓[39m lib/operations/keyCustody.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 4366[2mms[22m[39m
+ [32m✓[39m lib/operations/fixSql2.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3307[2mms[22m[39m
+ [32m✓[39m lib/operations/package01Fixes.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 5761[2mms[22m[39m
+   [33m[2m✓[22m[39m Pacote 01 corrections with the actual migrated SQL[2m > [22mDEF-01: only an independent security actor records departure, arrival and denial [33m652[2mms[22m[39m
+   [33m[2m✓[22m[39m Pacote 01 corrections with the actual migrated SQL[2m > [22mD1-05: scope, CNH of the driver and custodian independence still apply [33m333[2mms[22m[39m
+ [32m✓[39m lib/operations/managerScope.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 4214[2mms[22m[39m
+ [32m✓[39m app/chat/carpoolDispatch.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m lib/carpool/runCarpoolSearch.test.ts [2m([22m[2m17 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m lib/operations/safeReturnCheck.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 4684[2mms[22m[39m
+ [32m✓[39m lib/carpool/resolveLocationText.test.ts [2m([22m[2m27 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m app/carpool/routeMapActions.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m lib/operations/inspectionFlow.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 2886[2mms[22m[39m
+ [32m✓[39m lib/carpool/carpoolFirst.test.ts [2m([22m[2m17 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m lib/geospatial/costGuard.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m lib/carpool/sqlMirror.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m app/reservations/[id]/detailShell.test.ts [2m([22m[2m35 tests[22m[2m)[22m[33m 935[2mms[22m[39m
+[90mstderr[2m | app/carpool/requestActions.test.ts[2m > [22m[2mrequestCarpoolRide[2m > [22m[2mmaps an RPC exception to a stable code (raw message not leaked)
+[22m[39mcreate_carpool_ride_request_as_rider failed: CARPOOL_NO_SEATS_AVAILABLE
+
+ [32m✓[39m app/carpool/requestActions.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m lib/operations/keyCustodyRender.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 397[2mms[22m[39m
+ [32m✓[39m lib/supabase/middleware.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 108[2mms[22m[39m
+ [32m✓[39m lib/geospatial/placeAutocomplete.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m app/carpool/placeAutocompleteActions.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m app/account/license/actions.test.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m lib/documents/documentsSql.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3461[2mms[22m[39m
+ [32m✓[39m lib/operations/maintenanceApproval.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 5083[2mms[22m[39m
+   [33m[2m✓[22m[39m configurable maintenance approval with actual SQL[2m > [22mallows the fleet manager to approve a budget submitted by maintenance and records the applied policy [33m333[2mms[22m[39m
+ [32m✓[39m app/operations/workspaces.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 251[2mms[22m[39m
+ [32m✓[39m lib/operations/package01.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 4469[2mms[22m[39m
+ [32m✓[39m app/account/accountShell.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 265[2mms[22m[39m
+ [32m✓[39m lib/equipment/equipmentSql.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 5981[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves a return observation path for a journey recorded before equipment contracts [33m2663[2mms[22m[39m
+ [32m✓[39m lib/carpool/kpi/aggregate.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m lib/geospatial/keyLeak.test.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m lib/geospatial/googlePlacesProvider.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m lib/operations/incidentCases.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 4460[2mms[22m[39m
+ [32m✓[39m app/chat/persistedPending.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m lib/dashboard/loadCommandCenter.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 29[2mms[22m[39m
+ [32m✓[39m lib/carpool/policyInput.test.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m lib/operations/financialAdjustments.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2279[2mms[22m[39m
+ [32m✓[39m app/dashboard/command-center/render.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 112[2mms[22m[39m
+ [32m✓[39m lib/geospatial/googleRoutingProvider.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m app/reservations/[id]/loadHostCarpool.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/trips/tripGroups.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/geospatial/routeMap.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 128[2mms[22m[39m
+ [32m✓[39m app/api/geo/geoRoutes.test.ts [2m([22m[2m32 tests[22m[2m)[22m[90m 23[2mms[22m[39m
+ [32m✓[39m app/chat/loadLatestChatState.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m lib/carpool/buscarCarona.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 26[2mms[22m[39m
+[90mstderr[2m | app/settings/carpoolPolicyActions.test.ts[2m > [22m[2mpublishCarpoolPolicy[2m > [22m[2ma concurrent publish (unique violation) is reported as a conflict, not swallowed
+[22m[39mpublishCarpoolPolicy failed: dup
+
+ [32m✓[39m app/settings/carpoolPolicyActions.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+[90mstderr[2m | app/settings/carpoolPolicyActions.test.ts[2m > [22m[2mpublishCarpoolPolicy[2m > [22m[2man RLS/DB failure is a generic save error
+[22m[39mpublishCarpoolPolicy failed: rls
+
+ [32m✓[39m app/carpool/formActions.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m app/settings/users/driverUpdate.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m app/settings/users/resetLicense.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m app/api/cron/daily-dispatcher.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m lib/auth/licenseToken.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m lib/carpool/notificationBodies.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m lib/operations/fleetLifecycle.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 2899[2mms[22m[39m
+ [32m✓[39m lib/trips/reservarForm.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m lib/domain/immutablePhoto.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 24[2mms[22m[39m
+ [32m✓[39m lib/trips/tripPrefill.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 25[2mms[22m[39m
+[90mstderr[2m | app/chat/dispatch.test.ts[2m > [22m[2mdispatchIntent CREATE_RESERVATION (carpool branch)[2m > [22m[2mrefuses (and never calls the RPC) when the trip_request id could not be resolved
+[22m[39mchat dispatch reservation failed: carpool_trip_unresolved
+
+ [32m✓[39m app/chat/dispatch.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 25[2mms[22m[39m
+ [32m✓[39m lib/geospatial/polyline.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 87[2mms[22m[39m
+ [32m✓[39m app/carpool/searchActions.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/carpool/managementRender.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 50[2mms[22m[39m
+ [32m✓[39m lib/operations/forms.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m lib/supabase/managementLicenseBoundary.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m lib/documents/routes.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m lib/operations/keyCustodyModels.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m lib/documents/files.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m app/shellGuard.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 33[2mms[22m[39m
+ [32m✓[39m lib/carpool/kpi/loadKpis.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m lib/operations/newPanelsValidation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 40[2mms[22m[39m
+[90mstderr[2m | app/api/cron/reservation-expiry.test.ts[2m > [22m[2mcron reservation-expiry[2m > [22m[2man RPC error is reported as 500 (visible in the cron log)
+[22m[39mreservation-expiry RPC failed { code: [90mundefined[39m }
+
+ [32m✓[39m app/api/cron/reservation-expiry.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m lib/carpool/management.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 29[2mms[22m[39m
+ [32m✓[39m app/gate/visualChecks.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m app/api/cron/cron-auth.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m app/settings/users/access.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/operations/operationExceptionUi.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/carpool/managementActions.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m lib/domain/signUpOrganization.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/domain/vehiclePhotoLimit.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/operations/vehicleWorkspaceRender.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 34[2mms[22m[39m
+ [32m✓[39m app/ganttZoomActions.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m app/reservations/[id]/exceptionAction.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/operations/auditActionLabel.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m lib/carpool/rpcErrors.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/operations/checklistState.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m lib/documents/personalExport.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m app/api/cron/preservation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m lib/trips/brasiliaLocalDateTime.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/dashboard/period.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 23[2mms[22m[39m
+ [32m✓[39m lib/geospatial/routeMapCache.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m lib/operations/vehicleSelection.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/operations/aiPolicy.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 2[2mms[22m[39m
+ [32m✓[39m app/dashboard/energyGaugeModel.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 2[2mms[22m[39m
+ [32m✓[39m lib/auth/accountAccess.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m lib/auth/drivingValidity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+ [32m✓[39m lib/operations/organizationMetrics.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m lib/trips/textLimits.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m lib/auth/ownLicense.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 2[2mms[22m[39m
+ [32m✓[39m lib/operations/migrationChain.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1521[2mms[22m[39m
+   [33m[2m✓[22m[39m applies the actual migration chain to a disposable platform scaffold [33m1520[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m101 passed[39m[22m[90m (101)[39m
+[2m      Tests [22m [1m[32m1015 passed[39m[22m[90m (1015)[39m
+[2m   Start at [22m 11:08:57
+[2m   Duration [22m 19.92s[2m (transform 10.97s, setup 0ms, collect 20.57s, tests 67.23s, environment 18ms, prepare 11.51s)[22m
+
+vitest exit 0

@@ -68,6 +68,8 @@ export function CarpoolHostSection({
   participants,
   pending,
   history,
+  participantsUnavailable = false,
+  requestsUnavailable = false,
 }: {
   reservationId: string;
   tripRequestId: string;
@@ -81,6 +83,10 @@ export function CarpoolHostSection({
   participants: HostParticipantView[];
   pending: HostRequestView[];
   history: HostRequestView[];
+  /** The confirmed-passenger read failed: show the failure, never "no passengers". */
+  participantsUnavailable?: boolean;
+  /** The ride-request read failed: show the failure, never "no pending requests". */
+  requestsUnavailable?: boolean;
 }) {
   const t = dict.carpool.host;
   const isActive = offer?.status === "active";
@@ -151,7 +157,9 @@ export function CarpoolHostSection({
 
       {/* Confirmed passengers */}
       <h3 className="mb-2 mt-5 text-xs font-semibold uppercase tracking-widest text-fog-400">{t.participantsTitle}</h3>
-      {participants.length === 0 ? (
+      {participantsUnavailable ? (
+        <p role="alert" data-testid="carpool-participants-unavailable" className="text-sm text-signal-red">{t.participantsUnavailable}</p>
+      ) : participants.length === 0 ? (
         <p className="text-sm text-fog-600">{t.noParticipants}</p>
       ) : (
         <ul data-testid="carpool-participants" className="flex flex-col gap-1.5">
@@ -173,7 +181,9 @@ export function CarpoolHostSection({
 
       {/* Pending requests */}
       <h3 className="mb-2 mt-5 text-xs font-semibold uppercase tracking-widest text-signal-blue">{t.pendingTitle}</h3>
-      {pending.length === 0 ? (
+      {requestsUnavailable ? (
+        <p role="alert" data-testid="carpool-requests-unavailable" className="text-sm text-signal-red">{t.requestsUnavailable}</p>
+      ) : pending.length === 0 ? (
         <p className="text-sm text-fog-600">{t.noPending}</p>
       ) : (
         <ul data-testid="carpool-pending" className="flex flex-col gap-3">

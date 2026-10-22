@@ -1,0 +1,22 @@
+{
+ "tag": "BEFORE",
+ "attempts": [
+  {
+   "label": "valid_8_6MB",
+   "sizeBytes": 8601813,
+   "inlineError": "",
+   "validationMessage": "",
+   "postStatuses": [
+    500,
+    200
+   ],
+   "http5xx": [
+    "500 /fleet"
+   ],
+   "pageerrors": [],
+   "globalErrorPage": true,
+   "alerts": "",
+   "photoChanged": false
+  }
+ ]
+}

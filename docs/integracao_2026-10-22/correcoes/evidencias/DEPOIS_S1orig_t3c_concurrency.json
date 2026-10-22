@@ -1,0 +1,37 @@
+{
+ "pending": {
+  "iterations": 30,
+  "deadlocks": 0,
+  "inconsistent": 0,
+  "double_cancel": 0,
+  "outcomes": {
+   "cancelled/user_cancel/veh=available": 22,
+   "cancelled/expired_unapproved/veh=available": 8
+  },
+  "errors": {
+   "approve: P0001 Reservation is not pending approval": 28,
+   "pickup: P0001 RESERVATION_NOT_CONFIRMED": 30,
+   "cancel: P0001 Cannot cancel a reservation with status cancelled": 8
+  },
+  "samples": []
+ },
+ "confirmed": {
+  "iterations": 30,
+  "deadlocks": 0,
+  "inconsistent": 0,
+  "double_cancel": 0,
+  "outcomes": {
+   "cancelled/user_cancel/veh=available": 8,
+   "cancelled/exception/veh=available": 22
+  },
+  "errors": {
+   "approve: P0001 Reservation is not pending approval": 30,
+   "pickup: P0001 RESERVATION_NOT_CONFIRMED": 22,
+   "exception: P0001 RESERVATION_NOT_CONFIRMED": 8,
+   "cancel: P0001 Cannot cancel a reservation with status cancelled": 22,
+   "pickup: P0001 PICKUP_WINDOW_ENDED": 8
+  },
+  "samples": []
+ },
+ "org_b_flag_after": "false/60"
+}

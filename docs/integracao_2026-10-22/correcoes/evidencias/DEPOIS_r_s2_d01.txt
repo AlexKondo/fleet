@@ -1,0 +1,32 @@
+CREATE FUNCTION
+BEGIN
+CREATE TABLE
+GRANT
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+SET
+ fm_photo_attest 
+-----------------
+ 
+(1 row)
+
+RESET
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+                  caso                   |                     esperado                      |                      obtido                       | veredito 
+-----------------------------------------+---------------------------------------------------+---------------------------------------------------+----------
+ RESULT|S2-D01|bypass_sem_vinculo        | 0                                                 | 0                                                 | PASS
+ RESULT|S2-D01|caminho_oficial_finalize  | OK:                                               | OK:                                               | PASS
+ RESULT|S2-D01|caminho_oficial_jornal    | linked                                            | linked                                            | PASS
+ RESULT|S2-D01|caminho_oficial_vinculo   | 1                                                 | 1                                                 | PASS
+ RESULT|S2-D01|insert_direto_lucas       | ERR:permission denied for table inspection_photos | ERR:permission denied for table inspection_photos | PASS
+ RESULT|S2-D01|priv_insert_anon          | false                                             | false                                             | PASS
+ RESULT|S2-D01|priv_insert_authenticated | false                                             | false                                             | PASS
+(7 rows)
+
+ROLLBACK

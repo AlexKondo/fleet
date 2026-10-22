@@ -1,0 +1,60 @@
+
+ RUN  v2.1.9 C:/projects/fleet-integ/apps/web
+
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-01 checklist retirada: front + damage pelo uploadInspectionPhotos (código novo) 1014ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-01b checklist devolução (custodian) e avaria da portaria (security) 566ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-02 evidência original imutável (UPDATE/upsert/DELETE de objeto negados) 547ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-03 upload interrompido no meio (antes de o objeto existir) + retry 2433ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-04 interrupção APÓS upload e ANTES da atestação + retry (409 conteúdo igual) 781ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-05 interrupção APÓS atestação e ANTES do vínculo + retry 1642ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-06 retry após vínculo concluído é idempotente 820ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-07 409 com conteúdo DIFERENTE / adulterado de mesmo tamanho (DEF-02) 412ms
+ × ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-07b cliente ANTIGO (0aa2403) com objeto adulterado: pré-0214 vincula; com 0214 (tx) bloqueia 346ms
+   → expected false to be true // Object.is equality
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-08 MIME divergente 688ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-09 sessão perdida no meio do fluxo (antes da atestação e antes do vínculo) 1394ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-10 isolamento: outro usuário, outra unidade, outra organização, papéis não gestores 530ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-11 limite 10 MB e custo de memória/tempo do download+SHA-256 no servidor 1333ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-12 links/visualização (URL assinada local) por papel 2918ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-13 vínculo direto em inspection_photos sem jornal/atestação (bypass)
+ × ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-14 previsão 0214: cliente antigo × código novo (veículo e inspeção), não destrutivo 1793ms
+   → expected false to be true // Object.is equality
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-15 recuperação: fm_photo_pending e nada apagado
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-16 concorrência: 3 envios simultâneos do mesmo arquivo (duplo clique / abas) 607ms
+ ✓ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-17 veículo: voltar para uma foto anterior (A -> B -> A) 644ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-07b cliente ANTIGO (0aa2403) com objeto adulterado: pré-0214 vincula; com 0214 (tx) bloqueia
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts:219:14
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts > S2-14 previsão 0214: cliente antigo × código novo (veículo e inspeção), não destrutivo
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ ../../../_homolog/conclusao/S2/scripts/photos.s2.test.ts:390:14
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 17 passed (19)
+   Start at  10:55:04
+   Duration  20.18s (transform 159ms, setup 0ms, collect 227ms, tests 19.64s, environment 0ms, prepare 124ms)
+

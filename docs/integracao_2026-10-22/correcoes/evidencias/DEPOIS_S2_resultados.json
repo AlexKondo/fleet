@@ -1,0 +1,508 @@
+[
+ {
+  "id": "S2-00",
+  "cenario": "Baseline do banco/Storage local",
+  "papel": "-",
+  "esperado": "max(version)=0213; fm_photo_link = corpo 0199",
+  "obtido": "0216 / md5 fm_photo_link=c6f1856922590e2b13942fb36bf42937",
+  "status": "OBS",
+  "evidencia": {
+   "objects": 90,
+   "journal": 86,
+   "photos": 47
+  }
+ },
+ {
+  "id": "S2-01",
+  "cenario": "Upload normal checklist retirada (front) + AVARIA (damage), vínculo no jornal, hash/tamanho/MIME, atestação 0212",
+  "papel": "employee lucas / SP / inspeção própria",
+  "esperado": "failed=[]; jornal linked; server_verified_at preenchido; objeto size/mime/owner = jornal; 1 linha inspection_photos cada; auditoria photo.linked",
+  "obtido": "failed=[] ms=214 audit=2",
+  "status": "PASS",
+  "evidencia": {
+   "ja": [
+    {
+     "id": "db28771e-d405-4ee8-b21f-74ec71df49aa",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:06.025076+00:00",
+     "size": 48000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_c4fd0a8798ab375b56659c7d6ce291cd42cddf5260e2a06206eaf73a0e76ed3e.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ],
+   "jd": [
+    {
+     "id": "3e5e1e9c-ebef-4cae-b95c-07030e3285c0",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:06.032496+00:00",
+     "size": 52000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/damage_4e05a733fa1e864b7dddd57cf4b853757892caa4f811d3ebc48d3e31b590b354.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ],
+   "oa": [
+    {
+     "id": "03ca6dbb-b507-4ee2-9d6a-40ad9cbb9d5a",
+     "owner": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb",
+     "size": "48000",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T13:55:05.910802+00:00"
+    }
+   ],
+   "od": [
+    {
+     "id": "970b9aa1-6a8e-4b91-b975-2ef0a047dc8d",
+     "owner": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb",
+     "size": "52000",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T13:55:05.909813+00:00"
+    }
+   ]
+  }
+ },
+ {
+  "id": "S2-01b",
+  "cenario": "Devolução (driver_checklist) e avaria de portaria gate_visual",
+  "papel": "employee custodian (Campinas) / security (SP)",
+  "esperado": "ambas linked + atestadas",
+  "obtido": "failedRet=[] failedGate=[]",
+  "status": "PASS",
+  "evidencia": {
+   "jb": [
+    {
+     "id": "fc39cd28-3e80-4c9e-8905-7fda3c7aba09",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:07.081678+00:00",
+     "size": 30000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/e8618b22-cb9c-47f0-a1f8-cb63fb8cea4e/back_46385634e9f621f63ff1bf832b18f96874d6e1ae337754d548059d67500dc029.png",
+     "by": "a66bb95e-4004-4e42-93b5-553262878224"
+    }
+   ],
+   "jd": [
+    {
+     "id": "6218bd62-eda7-41f9-99f9-3cd65118c578",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:07.079403+00:00",
+     "size": 31000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/3cb3bb09-660f-4d0c-8f46-5731ee518c82/damage_92b3e2133aa55566afd350b8b5392a0781da2dd915fc4a8534d1b20897369667.png",
+     "by": "85c5eaf8-b229-4789-bec7-e5d16d57489e"
+    }
+   ]
+  }
+ },
+ {
+  "id": "S2-02",
+  "cenario": "Imutabilidade do original no bucket vehicle-photos",
+  "papel": "employee lucas (dono) e fleet_manager fmall",
+  "esperado": "upsert/update/move com erro; remove não apaga (0 itens); bytes iguais",
+  "obtido": "upsert=new row violates row-level security policy | update=new row violates row-level security policy | remove(lucas)=[]/ | remove(fmall)=[] | move=Object not found | bytesIntactos=true | sqlUpdate(authenticated)=OK",
+  "status": "PASS",
+  "evidencia": {
+   "objBefore": "[{\"id\" : \"0189fb2d-6b3e-41b8-8a19-0e51bf186a7c\", \"owner\" : \"bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb\", \"size\" : \"20000\", \"mimetype\" : \"image/png\", \"created_at\" : \"2026-10-22T13:55:07.439365+00:00\"}]",
+   "objAfter": "[{\"id\" : \"0189fb2d-6b3e-41b8-8a19-0e51bf186a7c\", \"owner\" : \"bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb\", \"size\" : \"20000\", \"mimetype\" : \"image/png\", \"created_at\" : \"2026-10-22T13:55:07.439365+00:00\"}]"
+  }
+ },
+ {
+  "id": "S2-03",
+  "cenario": "Upload cortado no meio (socket destruído com 50% do corpo) antes de o objeto existir; depois retry",
+  "papel": "employee lucas",
+  "esperado": "nenhum objeto parcial; jornal pending listado em fm_photo_pending; retry conclui com o MESMO id, 1 objeto, 1 vínculo",
+  "obtido": "corte=destroyed after half body; objetoAposCorte=[]; pendingListado=true; retry=OK",
+  "status": "PASS",
+  "evidencia": {
+   "j": [
+    {
+     "id": "cae7b8bb-5680-4f88-a5f9-0d126545bedd",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:10.046594+00:00",
+     "size": 400000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/right_side_f0714eb25c6119a38cbdd6f523b7b2e965a541504b0f6512bb6d367a9481d7f9.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ],
+   "o": [
+    {
+     "id": "2cce91b8-396a-4503-904f-d16f36e41d92",
+     "owner": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb",
+     "size": "400000",
+     "mimetype": "image/png",
+     "created_at": "2026-10-22T13:55:09.951006+00:00"
+    }
+   ]
+  }
+ },
+ {
+  "id": "S2-04",
+  "cenario": "Queda após upload, antes da atestação; retry com mesma identidade (409 com conteúdo igual)",
+  "papel": "employee lucas",
+  "esperado": "pending sem server_verified_at; 2º upload = 409; retry conclui sem duplicar objeto/jornal/vínculo",
+  "obtido": "upload1=ok; pendingListado=true; upload2=409 The resource already exists; retry=OK; objetoInalterado=true",
+  "status": "PASS",
+  "evidencia": {
+   "j1": [
+    {
+     "id": "81a7dd7f-8abe-4c46-ad0f-32d223413d7f",
+     "state": "pending",
+     "verified": false,
+     "verified_at": null,
+     "size": 60000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/wheels_7bb51d00c4b17fb0930d4030c24d8d2b5b7d9785a3dc360f623cf51750a0f947.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ],
+   "j2": [
+    {
+     "id": "81a7dd7f-8abe-4c46-ad0f-32d223413d7f",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:10.807854+00:00",
+     "size": 60000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/wheels_7bb51d00c4b17fb0930d4030c24d8d2b5b7d9785a3dc360f623cf51750a0f947.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ],
+   "o2": "[{\"id\" : \"8355538d-697b-47e3-874b-3197740ebf46\", \"owner\" : \"bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb\", \"size\" : \"60000\", \"mimetype\" : \"image/png\", \"created_at\" : \"2026-10-22T13:55:10.422695+00:00\"}]"
+  }
+ },
+ {
+  "id": "S2-05",
+  "cenario": "Queda após atestação, antes de fm_photo_finalize; retry",
+  "papel": "employee lucas (+service_role do servidor)",
+  "esperado": "pending atestado listado; retry vincula 1 vez",
+  "obtido": "attest=ok; pendingListado=true; retry=OK; verified_at antes=2026-10-22T13:55:11.226766+00:00 depois=2026-10-22T13:55:12.592898+00:00 (reatestação sobrescreve o instante)",
+  "status": "PASS",
+  "evidencia": {
+   "j1": [
+    {
+     "id": "b5e4c5a8-5ff1-4aa9-a045-32d41a9ad563",
+     "state": "pending",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:11.226766+00:00",
+     "size": 61000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/interior_6911d7f58f252f970c863c3a1f5ccedf09a296c14620a38a0cefb29b6ab3b2c8.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ],
+   "j2": [
+    {
+     "id": "b5e4c5a8-5ff1-4aa9-a045-32d41a9ad563",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:12.592898+00:00",
+     "size": 61000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/interior_6911d7f58f252f970c863c3a1f5ccedf09a296c14620a38a0cefb29b6ab3b2c8.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ]
+  }
+ },
+ {
+  "id": "S2-06",
+  "cenario": "Reenvio do mesmo arquivo após concluído (duplo clique / retry)",
+  "papel": "employee lucas",
+  "esperado": "sem duplicata de jornal, objeto ou inspection_photos",
+  "obtido": "retry2=OK retry3=OK; jornal=1; vinculos=1",
+  "status": "PASS",
+  "evidencia": {}
+ },
+ {
+  "id": "S2-07",
+  "cenario": "Objeto no caminho do jornal com bytes diferentes do SHA declarado (mesmo tamanho); 409 com conteúdo diferente",
+  "papel": "employee lucas",
+  "esperado": "código novo rejeita (PHOTO_UPLOAD_FAILED) ANTES de atestar; jornal pending, sem server_verified_at, sem vínculo; objeto preservado; authenticated não consegue chamar fm_photo_attest",
+  "obtido": "retry=PHOTO_UPLOAD_FAILED; jornal=pending/verified=false; vinculos=0; objetoPreservado=true; attest(authenticated)=permission denied for function fm_photo_attest",
+  "status": "PASS",
+  "evidencia": {
+   "j": [
+    {
+     "id": "caf427d0-98c5-49fe-94bb-f683096895b7",
+     "state": "pending",
+     "verified": false,
+     "verified_at": null,
+     "size": 70000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_6a3cf921b11704341e434d0a41409b2b9d899e816651dc6599bb090562215187.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ]
+  }
+ },
+ {
+  "id": "S2-07b",
+  "cenario": "DEF-02 residual: cliente antigo (sem atestação) finalizando objeto adulterado de mesmo tamanho",
+  "papel": "employee lucas (SQL como authenticated, BEGIN…ROLLBACK)",
+  "esperado": "pré-0214: vincula (lacuna conhecida, fechada só pela 0214); com 0214: PHOTO_SERVER_VERIFICATION_REQUIRED",
+  "obtido": "pre0214=ERR PHOTO_SERVER_VERIFICATION_REQUIRED; com0214=ERR PHOTO_SERVER_VERIFICATION_REQUIRED; fm_photo_link md5 pós-teste=c6f1856922590e2b13942fb36bf42937 (inalterado); jornal continua pending",
+  "status": "FAIL",
+  "evidencia": {}
+ },
+ {
+  "id": "S2-08",
+  "cenario": "MIME divergente: (a) png declarado com bytes JPEG; (b) HEIC; (c) SVG; (d) text/html direto no bucket; (e) objeto gravado como image/jpeg com jornal image/png",
+  "papel": "employee lucas",
+  "esperado": "(a)(b)(c) INVALID_PHOTO sem criar jornal; (d) bucket rejeita; (e) não vincula",
+  "obtido": "(a)=INVALID_PHOTO jornal=0; (b)=INVALID_PHOTO; (c)=INVALID_PHOTO; (d)=mime type text/html is not supported; (e) upload=ok retry=PHOTO_LINK_PENDING jornal=pending verified=true",
+  "status": "PASS",
+  "evidencia": {
+   "j4": [
+    {
+     "id": "b5ddd7b7-6d68-49a3-9e2f-eb3e4059d282",
+     "state": "pending",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:14.674167+00:00",
+     "size": 33000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/damage_ce7f16aafc05041654ad2b9d89c41fc854a9f95b0c8f97ee040773e20cd25634.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ],
+   "obj": "[{\"id\" : \"bce081dd-f779-4713-85d1-dbc6190a15ee\", \"owner\" : \"bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb\", \"size\" : \"33000\", \"mimetype\" : \"image/jpeg\", \"created_at\" : \"2026-10-22T13:55:14.545531+00:00\"}]"
+  }
+ },
+ {
+  "id": "S2-09",
+  "cenario": "Sessão perdida (signOut local) (a) após upload/antes da atestação; (b) após atestação/antes do vínculo; retomada com nova sessão",
+  "papel": "employee lucas",
+  "esperado": "PHOTO_LINK_PENDING; (a) não atestado, (b) atestado; ambos em fm_photo_pending; nova sessão conclui sem duplicar",
+  "obtido": "(a)=PHOTO_LINK_PENDING verified=false; (b)=PHOTO_LINK_PENDING verified=true; pending contém ambos=true; retomada a=OK b=OK",
+  "status": "PASS",
+  "evidencia": {
+   "ja2": [
+    {
+     "id": "b347de33-21d6-4637-885e-5416714ea72f",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:16.156521+00:00",
+     "size": 25000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/left_side_562850a4a7b167a6ae374799b1d2adca2e19cb065120e9381239b717ab1265d9.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ],
+   "jb2": [
+    {
+     "id": "93c11402-49fa-41a4-b301-391652e51adc",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:16.269049+00:00",
+     "size": 26000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/left_side_b1d8da612322839c17fa89eedd579969c77073eebf421ff5f8abe0ad8b6171dd.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ]
+  }
+ },
+ {
+  "id": "S2-10",
+  "cenario": "Autorização/isolamento de begin/upload/finalize/attest/leitura por usuário, unidade, organização e papel",
+  "papel": "mariana, fmcampinas, maint, security, lucas, admin org B, anon, service_role com ator errado",
+  "esperado": "todas as tentativas negadas sem efeito; org B não vê pendências de A",
+  "obtido": "{\"mariana_begin_inspecao_lucas\":\"NOT_AUTHORIZED\",\"mariana_upload_pasta_lucas\":\"new row violates row-level security policy\",\"mariana_finalize_jornal_lucas\":\"NOT_AUTHORIZED\",\"fmcampinas_begin_veiculo_SP\":\"NOT_AUTHORIZED\",\"fmcampinas_upload_veiculo_SP\":\"new row violates row-level security policy\",\"maint_begin_veiculo\":\"NOT_AUTHORIZED\",\"security_begin_veiculo\":\"NOT_AUTHORIZED\",\"lucas_begin_veiculo\":\"NOT_AUTHORIZED\",\"orgB_begin_veiculo_orgA\":\"NOT_AUTHORIZED\",\"orgB_begin_inspecao_orgA\":\"NOT_AUTHORIZED\",\"orgB_finalize_jornal_orgA\":\"NOT_AUTHORIZED\",\"orgB_download_objeto_orgA\":\"NEGADO\",\"orgB_signedUrl_objeto_orgA\":\"Object not found\",\"orgB_pending_ve_orgA\":\"[]\",\"anon_begin\":\"permission denied for function fm_photo_begin\",\"attest_atorErrado\":\"PHOTO_INTEGRITY_MISMATCH\",\"attest_atorOrgB\":\"PHOTO_INTEGRITY_MISMATCH\",\"fmall_update_photo_storage_path\":\"permission denied for table vehicles\",\"lucas_update_photo_storage_path\":\"permission denied for table vehicles\",\"journal_select_direto\":\"\\\"permission denied for table fm_photo_uploads\\\"\"}",
+  "status": "PASS",
+  "evidencia": {
+   "mariana_begin_inspecao_lucas": "NOT_AUTHORIZED",
+   "mariana_upload_pasta_lucas": "new row violates row-level security policy",
+   "mariana_finalize_jornal_lucas": "NOT_AUTHORIZED",
+   "fmcampinas_begin_veiculo_SP": "NOT_AUTHORIZED",
+   "fmcampinas_upload_veiculo_SP": "new row violates row-level security policy",
+   "maint_begin_veiculo": "NOT_AUTHORIZED",
+   "security_begin_veiculo": "NOT_AUTHORIZED",
+   "lucas_begin_veiculo": "NOT_AUTHORIZED",
+   "orgB_begin_veiculo_orgA": "NOT_AUTHORIZED",
+   "orgB_begin_inspecao_orgA": "NOT_AUTHORIZED",
+   "orgB_finalize_jornal_orgA": "NOT_AUTHORIZED",
+   "orgB_download_objeto_orgA": "NEGADO",
+   "orgB_signedUrl_objeto_orgA": "Object not found",
+   "orgB_pending_ve_orgA": "[]",
+   "anon_begin": "permission denied for function fm_photo_begin",
+   "attest_atorErrado": "PHOTO_INTEGRITY_MISMATCH",
+   "attest_atorOrgB": "PHOTO_INTEGRITY_MISMATCH",
+   "fmall_update_photo_storage_path": "permission denied for table vehicles",
+   "lucas_update_photo_storage_path": "permission denied for table vehicles",
+   "journal_select_direto": "\"permission denied for table fm_photo_uploads\""
+  }
+ },
+ {
+  "id": "S2-11",
+  "cenario": "Arquivos 9,5 MB e 10 MB exatos (aceitos), 10 MB+1 (rejeitado pelo código e pelo bucket); tempo/memória do processo Node local",
+  "papel": "fleet_manager fmall / veículo GWM3B52",
+  "esperado": "aceita ≤10 MB, rejeita >10 MB; medir custo",
+  "obtido": "9.5MB={\"r\":\"OK\",\"ms\":504,\"rssDeltaMB\":77,\"arrayBuffersDeltaMB\":null,\"heapDeltaMB\":0,\"rssPeakMB\":199.9} | 10MB={\"r\":\"OK\",\"ms\":449,\"rssDeltaMB\":60.3,\"arrayBuffersDeltaMB\":null,\"heapDeltaMB\":0.2,\"rssPeakMB\":226.4} | 10MB+1 código=INVALID_PHOTO bucket=413 The object exceeded the maximum allowed size",
+  "status": "PASS",
+  "evidencia": {
+   "j10": [
+    {
+     "id": "79416a41-87d7-4024-afdf-ab54a57c8457",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:17.958889+00:00",
+     "size": 10485760,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/vehicles/10bdedaa-3815-4e46-a7c2-784148ddf4d5_180d18febb24c3e827cda9c7b1750b1b2b4683c73b82520485f15803255a6147.png",
+     "by": "a076d93e-63fe-4627-b8ae-daf9c36f0629"
+    }
+   ],
+   "vpath": "00000000-0000-0000-0000-000000000001/vehicles/10bdedaa-3815-4e46-a7c2-784148ddf4d5_180d18febb24c3e827cda9c7b1750b1b2b4683c73b82520485f15803255a6147.png"
+  }
+ },
+ {
+  "id": "S2-12",
+  "cenario": "URL assinada local e leitura de evidência por papel",
+  "papel": "lucas (executor), mariana/thiago (outros colaboradores), fmcampinas (outra unidade), fmall, security, admin org B",
+  "esperado": "executor gera e baixa bytes íntegros; org B negado; colaborador sem relação com a reserva NÃO deveria ler (aprovado: colaborador só na própria reserva)",
+  "obtido": "{\"lucas_executor\":\"GEROU http=200 shaOk=true\",\"mariana_outro_colaborador_mesma_org\":\"NEGADO: Object not found\",\"thiago_colaborador\":\"NEGADO: Object not found\",\"fmcampinas_gestor_outra_unidade\":\"NEGADO: Object not found\",\"fmall_gestor\":\"GEROU http=200 shaOk=true\",\"security\":\"GEROU http=200 shaOk=true\",\"orgB_admin\":\"NEGADO: Object not found\",\"mariana_le_inspection_photos_de_lucas\":\"0 linhas\",\"orgB_le_inspection_photos\":\"0 linhas\",\"url_expirada\":\"http=400\"}",
+  "status": "PASS",
+  "evidencia": {
+   "lucas_executor": "GEROU http=200 shaOk=true",
+   "mariana_outro_colaborador_mesma_org": "NEGADO: Object not found",
+   "thiago_colaborador": "NEGADO: Object not found",
+   "fmcampinas_gestor_outra_unidade": "NEGADO: Object not found",
+   "fmall_gestor": "GEROU http=200 shaOk=true",
+   "security": "GEROU http=200 shaOk=true",
+   "orgB_admin": "NEGADO: Object not found",
+   "mariana_le_inspection_photos_de_lucas": "0 linhas",
+   "orgB_le_inspection_photos": "0 linhas",
+   "url_expirada": "http=400"
+  }
+ },
+ {
+  "id": "S2-13",
+  "cenario": "Upload de objeto arbitrário (sem fm_photo_begin) na pasta da própria inspeção + INSERT direto em inspection_photos",
+  "papel": "employee lucas",
+  "esperado": "vínculo de evidência só via fm_photo_finalize (jornal + atestação)",
+  "obtido": "upload objeto sem jornal=OK; INSERT (tx, pré-0214)=ERR permission denied for table inspection_photos; INSERT (tx, com 0214)=ERR permission denied for table inspection_photos; INSERT via PostgREST=não executado (equivalente ao teste em tx)",
+  "status": "PASS",
+  "evidencia": {
+   "name": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_bypass_1792677321261.png"
+  }
+ },
+ {
+  "id": "S2-14",
+  "cenario": "Previsão 0214: cliente antigo (0aa2403) × código novo, inspeção e veículo",
+  "papel": "lucas / fmall",
+  "esperado": "pré-0214 antigo conclui; com 0214 (tx) antigo falha PHOTO_SERVER_VERIFICATION_REQUIRED e novo passa; banco compartilhado inalterado",
+  "obtido": "{\"http_cliente_antigo_inspecao_pre0214\":\"PHOTO_LINK_PENDING\",\"jornal_cliente_antigo\":\"pending server_verified=false\",\"http_cliente_antigo_veiculo_pre0214\":\"PHOTO_LINK_PENDING\",\"jornal_veiculo_antigo\":\"pending server_verified=false\",\"tx_antigo_inspecao_0214\":\"ERR PHOTO_SERVER_VERIFICATION_REQUIRED\",\"tx_antigo_inspecao_1arg_0214\":\"ERR PHOTO_SERVER_VERIFICATION_REQUIRED\",\"tx_antigo_veiculo_0214\":\"ERR PHOTO_SERVER_VERIFICATION_REQUIRED\",\"tx_antigo_inspecao_SEM0214\":\"ERR PHOTO_SERVER_VERIFICATION_REQUIRED\",\"tx_novo_inspecao_0214\":\"OK\",\"tx_novo_veiculo_0214\":\"OK\",\"md5_fm_photo_link_pos\":\"c6f1856922590e2b13942fb36bf42937\",\"estado_pos_tx\":\"[\\\"pending\\\",\\\"pending\\\"]\",\"conclusao_real_codigo_novo\":\"OK/OK\"}",
+  "status": "FAIL",
+  "evidencia": {
+   "http_cliente_antigo_inspecao_pre0214": "PHOTO_LINK_PENDING",
+   "jornal_cliente_antigo": "pending server_verified=false",
+   "http_cliente_antigo_veiculo_pre0214": "PHOTO_LINK_PENDING",
+   "jornal_veiculo_antigo": "pending server_verified=false",
+   "tx_antigo_inspecao_0214": "ERR PHOTO_SERVER_VERIFICATION_REQUIRED",
+   "tx_antigo_inspecao_1arg_0214": "ERR PHOTO_SERVER_VERIFICATION_REQUIRED",
+   "tx_antigo_veiculo_0214": "ERR PHOTO_SERVER_VERIFICATION_REQUIRED",
+   "tx_antigo_inspecao_SEM0214": "ERR PHOTO_SERVER_VERIFICATION_REQUIRED",
+   "tx_novo_inspecao_0214": "OK",
+   "tx_novo_veiculo_0214": "OK",
+   "md5_fm_photo_link_pos": "c6f1856922590e2b13942fb36bf42937",
+   "estado_pos_tx": "[\"pending\",\"pending\"]",
+   "conclusao_real_codigo_novo": "OK/OK"
+  }
+ },
+ {
+  "id": "S2-15",
+  "cenario": "Pendências restantes do lucas e contagens antes/depois",
+  "papel": "employee lucas",
+  "esperado": "pendências irrecuperáveis (adulterado S2-07, MIME S2-08e) continuam listadas; nenhuma contagem diminui",
+  "obtido": "pendentes=11; antes={\"objects\":90,\"journal\":86,\"photos\":47} depois={\"objects\":110,\"journal\":105,\"photos\":59}",
+  "status": "PASS",
+  "evidencia": {
+   "stuck": [
+    {
+     "id": "78ad5d3b-7fd3-400a-92d7-0147aa6a97ff",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_bc87ce35306981f72285974e69ede3086390dae9bd802b218b17202b7c7f4936.png"
+    },
+    {
+     "id": "634db64d-e706-4625-bc1f-a4dd2f8d1822",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/damage_ca93347118762b26a61242a66aca2df4e4d83d5895b8eb99d0a247bdf42df63e.png"
+    },
+    {
+     "id": "b5ddd7b7-6d68-49a3-9e2f-eb3e4059d282",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/damage_ce7f16aafc05041654ad2b9d89c41fc854a9f95b0c8f97ee040773e20cd25634.png"
+    },
+    {
+     "id": "16a126bc-6aa3-4e7d-af1a-423800605461",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_71d1f1c013e4be978d1189c1aee1b6692f938d3f481232aff6ef9a4d787acc64.png"
+    },
+    {
+     "id": "1e145022-ade7-4ecc-87d0-36bc286c941e",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/damage_af5524b508a91bdafe26ae1aff3336efd8fbbec3265e072c824e915864fa8fa7.png"
+    },
+    {
+     "id": "caf427d0-98c5-49fe-94bb-f683096895b7",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_6a3cf921b11704341e434d0a41409b2b9d899e816651dc6599bb090562215187.png"
+    },
+    {
+     "id": "32e7b548-f0a7-46ec-aef0-30a12c2ec978",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_f698d808379ae1899b6433152b301fe72bca81627378ac8a59bf2abc7db992d3.png"
+    },
+    {
+     "id": "3baca329-76c1-45f6-9c32-7bece3997b40",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_b21d6e0c29df327c18f8839a2b1a07ee4964d986bebfc82d0c723a8637b799b7.png"
+    },
+    {
+     "id": "1fcba40b-19b1-4607-8046-0efd498470e9",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_9494e3107502f3efd9f9823b86f6e41e8ddbaf81b8c1dc203800f1618d23aa56.png"
+    },
+    {
+     "id": "d4f37c25-f75d-4aac-98a8-c618c7d1e473",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/damage_53ad893f7f457d587ccc6fb49ca34055a9955f293c0594c70475446fd2a5b745.png"
+    },
+    {
+     "id": "4c2b2d16-4be5-4758-b189-7a63fdd2898f",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_15019c9466a714bbf23492bae153b416ad361ba073df073483a382c924d5f981.png"
+    }
+   ]
+  }
+ },
+ {
+  "id": "S2-16",
+  "cenario": "3 chamadas concorrentes com os mesmos bytes/alvo/ângulo",
+  "papel": "employee lucas",
+  "esperado": "1 jornal, 1 objeto, 1 vínculo; todas retornam OK",
+  "obtido": "resultados=[\"OK\",\"OK\",\"OK\"]; jornal=1; vinculos=1",
+  "status": "PASS",
+  "evidencia": {
+   "j": [
+    {
+     "id": "cc001b7c-6485-41a0-8110-bcefc8c37ed1",
+     "state": "linked",
+     "verified": true,
+     "verified_at": "2026-10-22T13:55:23.595828+00:00",
+     "size": 40000,
+     "mime": "image/png",
+     "path": "00000000-0000-0000-0000-000000000001/b16613dd-6012-4b63-8843-7a02680f5de2/front_e71b1ca7648529555b7c3f0b959d69832110ed2aec0c807b5d33a2b394615804.png",
+     "by": "bcda4a32-a430-4ba7-bf3f-dea5a82a5fbb"
+    }
+   ]
+  }
+ },
+ {
+  "id": "S2-17",
+  "cenario": "Gestor troca a foto do veículo para B e depois volta para a foto A já usada antes",
+  "papel": "fleet_manager fmall / GWM3B52",
+  "esperado": "após o 3º envio (sucesso reportado), vehicles.photo_storage_path aponta para A",
+  "obtido": "envios=OK/OK/OK; após A=A; após B=B; após A de novo=B (NÃO voltou)",
+  "status": "FAIL",
+  "evidencia": {
+   "p1": "00000000-0000-0000-0000-000000000001/vehicles/10bdedaa-3815-4e46-a7c2-784148ddf4d5_b5b7980936c721c11290452938216d691c7bb74f0692e5d0bc4dd2a14d9f88cc.png",
+   "p2": "00000000-0000-0000-0000-000000000001/vehicles/10bdedaa-3815-4e46-a7c2-784148ddf4d5_8a4114dbcd439e7dbf65830d58d950fe71ef293cb44e347f9bc22b15b6c41f00.png",
+   "p3": "00000000-0000-0000-0000-000000000001/vehicles/10bdedaa-3815-4e46-a7c2-784148ddf4d5_8a4114dbcd439e7dbf65830d58d950fe71ef293cb44e347f9bc22b15b6c41f00.png"
+  }
+ }
+]

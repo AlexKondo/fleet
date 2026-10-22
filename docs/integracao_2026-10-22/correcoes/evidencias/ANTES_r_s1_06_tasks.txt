@@ -1,0 +1,45 @@
+CREATE FUNCTION
+BEGIN
+CREATE TABLE
+CREATE FUNCTION
+CREATE FUNCTION
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+SET
+INSERT 0 1
+SET
+INSERT 0 1
+INSERT 0 1
+                     caso                      |                   esperado                    |         obtido          | veredito 
+-----------------------------------------------+-----------------------------------------------+-------------------------+----------
+ RESULT|S1-06|a_complete_doc_irregular_chamada | OK:                                           | OK:                     | PASS
+ RESULT|S1-06|a_complete_doc_irregular_status  | blocked                                       | available               | FAIL
+ RESULT|S1-06|a2_cancel_doc_irregular_chamada  | OK:                                           | OK:                     | PASS
+ RESULT|S1-06|a2_cancel_doc_irregular_status   | blocked                                       | available               | FAIL
+ RESULT|S1-06|b_estado_inalterado              | maintenance/t/open                            | available/f/done        | FAIL
+ RESULT|S1-06|b_reporter_completa_reparo       | ERR:DAMAGE_RELEASE_INDEPENDENT_ACTOR_REQUIRED | OK:                     | FAIL
+ RESULT|S1-06|c_auditoria_0205                 | 1                                             | 0                       | FAIL
+ RESULT|S1-06|c_estado                         | reserved_or_available/f                       | reserved_or_available/f | PASS
+ RESULT|S1-06|c_independente_completa          | OK:                                           | OK:                     | PASS
+ RESULT|S1-06|d_cancel_reparo                  | OK:                                           | OK:                     | PASS
+ RESULT|S1-06|d_estado                         | maintenance/t                                 | available/f             | FAIL
+ RESULT|S1-06|e_controle                       | OK:                                           | OK:                     | PASS
+ RESULT|S1-06|e_controle_status                | available                                     | available               | PASS
+ RESULT|S1-06|f_os_propria_tarefa              | OK:                                           | OK:                     | PASS
+ RESULT|S1-06|f_os_status                      | available                                     | available               | PASS
+(15 rows)
+
+ROLLBACK
