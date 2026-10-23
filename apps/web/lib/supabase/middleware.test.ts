@@ -22,7 +22,7 @@ describe("middleware header hygiene (L6 + identity headers)", () => {
 describe("/api/geo/* without a session", () => {
   it("answers 401 JSON (no-store), never a redirect to /login", async () => {
     vi.resetModules();
-    vi.doMock("@supabase/ssr", () => ({ createServerClient: () => ({ auth: { getUser: async () => ({ data: { user: null } }) } }) }));
+    vi.doMock("@supabase/ssr", () => ({ createServerClient: () => ({ auth: { getUser: async () => ({ data: { user: null } }), getSession: async () => ({ data: { session: null } }) }, rpc: async () => ({ data: true, error: null }), from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) }) }) }));
     const { updateSupabaseSession: run } = await import("./middleware");
     for (const path of ["/api/geo/autocomplete", "/api/geo/route-map"]) {
       const res = await run(new NextRequest(`http://localhost${path}`, { method: "POST" }));
@@ -40,7 +40,7 @@ describe("/api/geo/* without a session", () => {
 describe("deactivated session",()=>{
   it("blocks pages and API requests before forwarding verified identity",async()=>{
     vi.resetModules();
-    vi.doMock("@supabase/ssr",()=>({createServerClient:()=>({auth:{getUser:async()=>({data:{user:{id:"disabled",email:"member@example.invalid"}}})},rpc:async()=>({data:false,error:null})})}));
+    vi.doMock("@supabase/ssr",()=>({createServerClient:()=>({auth:{getUser:async()=>({data:{user:{id:"disabled",email:"member@example.invalid"}}}),getSession:async()=>({data:{session:{user:{id:"disabled"}}}})},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:null})})})}),rpc:async()=>({data:false,error:null})})}));
     const {updateSupabaseSession:run}=await import("./middleware");
     const page=await run(new NextRequest("http://localhost/dashboard",{headers:{"x-fleet-user-id":"forged"}}));
     expect(page.status).toBe(307);
@@ -65,7 +65,7 @@ describe("CNH gate versus administrative access (S3-03)", () => {
     vi.resetModules();
     vi.doMock("@supabase/ssr", () => ({
       createServerClient: () => ({
-        auth: { getUser: async () => ({ data: { user: { id: "u1", email: "u1@example.invalid", app_metadata: { must_change_password: opts.mustChange ?? false } } } }) },
+        auth: { getUser: async () => ({ data: { user: { id: "u1", email: "u1@example.invalid", app_metadata: { must_change_password: opts.mustChange ?? false } } } }), getSession: async () => ({ data: { session: { user: { id: "u1" } } } }) },
         rpc: async (name: string) => ({ error: null, data: name === "fm_account_enabled" ? (opts.enabled ?? true) : [opts.license] }),
         from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { role: opts.role }, error: null }) }) }) }),
       }),

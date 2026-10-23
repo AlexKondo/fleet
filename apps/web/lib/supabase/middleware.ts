@@ -99,9 +99,25 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // The middleware may run far from the database (edge location nearest the user vs the Supabase region), so every sequential
+  // call costs a full round trip. The identity check, the account check and the gate reads do not depend on each other's
+  // result (all use the caller's own token; decisions are still taken in the same order below), so they go out together:
+  // one round trip instead of three. The auth client serializes a token refresh internally, so this cannot double-refresh.
+  const returnOrEvidence = /^\/reservations\/[^/]+\/(?:return|evidence\/[^/]+)\/?$/.test(pathname);
+  const nonDrivingDocuments = returnOrEvidence || pathname === "/fleet/archive" || pathname === "/fleet/equipment" || pathname === "/documents" || pathname.startsWith("/documents/") || pathname.startsWith("/api/exports/");
+  const needsGateReads = !pathname.startsWith("/account") && !isGeoApi && !nonDrivingDocuments;
+  // The own-profile read needs the caller's id BEFORE getUser answers: read it from the session cookie (local, no network). It is
+  // only a filter: the query itself runs with the caller's token under RLS, and the identity used for every decision below is
+  // still the one verified by getUser().
+  const sessionUserId = needsGateReads ? (await supabase.auth.getSession()).data.session?.user.id : undefined;
+  const [userResult, enabled, gateReads] = await Promise.all([
+    supabase.auth.getUser(),
+    accountEnabled(supabase),
+    needsGateReads && sessionUserId
+      ? Promise.all([supabase.from("profiles").select("role").eq("id", sessionUserId).maybeSingle(), getOwnLicense(supabase)])
+      : Promise.resolve(null),
+  ]);
+  const user = userResult.data.user;
 
   if (!user && isGeoApi) {
     return NextResponse.json({ error: "not_authenticated" }, { status: 401, headers: { "Cache-Control": "no-store" } });
@@ -111,7 +127,7 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     return NextResponse.redirect(loginUrl);
   }
 
-  if (!(await accountEnabled(supabase))) {
+  if (!enabled) {
     if (pathname.startsWith("/api/")) return NextResponse.json({ error: "account_unavailable" }, { status: 403, headers: { "Cache-Control": "no-store" } });
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("access", "unavailable");
@@ -138,14 +154,9 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
   // "security" is exempt — gate staff record vehicle movements, they don't drive. /account
   // (change password, personal data) stays reachable too — the user menu is visible during
   // this gate specifically so those two screens don't need the CNH uploaded first.
-  const returnOrEvidence = /^\/reservations\/[^/]+\/(?:return|evidence\/[^/]+)\/?$/.test(pathname);
-  const nonDrivingDocuments = returnOrEvidence || pathname === "/fleet/archive" || pathname === "/fleet/equipment" || pathname === "/documents" || pathname.startsWith("/documents/") || pathname.startsWith("/api/exports/");
-  if (!pathname.startsWith("/account") && !isGeoApi && !nonDrivingDocuments) {
+  if (gateReads) {
     // 0063: the license columns are revoked from `authenticated`; get_my_license() is the own-row reader.
-    const [{ data: ownProfile }, ownLicense] = await Promise.all([
-      supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
-      getOwnLicense(supabase),
-    ]);
+    const [{ data: ownProfile }, ownLicense] = gateReads;
     // Driving requires a successful license read; administrative workspaces remain separate
     // (approved rule: the CNH blocks DRIVING - pickup, keys for driving, departure - never the
     // administrative access of a manager/administrator/maintenance operator). The driving routes

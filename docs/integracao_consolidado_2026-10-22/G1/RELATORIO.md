@@ -43,3 +43,10 @@ tsc 0 · vitest **1106/1106** (112 arquivos; +20) · lint 0 · `next build` ok. 
 - **Limite físico:** com função e banco em Oregon, uma ida e volta São Paulo–Oregon já custa ~0,2 s; meta de 300 ms em toda navegação exige mover funcionalmente o banco/funções para perto dos usuários (decisão e custo à parte).
 - **Frota, Documentos duplicado:** a aba "Documentos" e a ação rápida "Documentos" levavam ao mesmo lugar. A aba foi removida; as Ações rápidas passam a ter "Documentos" e "Configurar equipamentos" (antes escondido na aba).
 - **Verificação local:** tsc 0 · vitest 1124/1124 · build ok (middleware Node) · login e Frota no navegador local.
+
+## 7. Resultado da medição depois do deploy 5771064 e nova correção do middleware
+- **Tela branca:** 0 de 14 cliques (antes 13 de 14). Resolvido.
+- **Tempo:** sem melhora no servidor (mediana 2,2 s; antes 1,9 s). A troca do middleware para o runtime Node **não** o aproximou do banco (as chamadas continuaram ~220 ms uma da outra); foi desfeita.
+- **Onde está o tempo (medido):** o banco executa cada consulta em 1–19 ms; localmente a página inteira responde em 150–260 ms; em produção leva 1,4–2,4 s. Piso de qualquer página dinâmica em produção ≈ 0,5 s (a página de login, sem consulta ao banco, leva 0,44–0,68 s: usuário → São Paulo → Oregon). O resto vem do middleware (3 consultas em série a ~220 ms) e de ~3 grupos de consultas da página.
+- **Correção:** no middleware, identidade (`getUser`), conta ativa e leituras do bloqueio de CNH (perfil + CNH) agora saem juntas, numa única ida e volta em vez de três (ganho esperado ≈ 0,4–0,45 s por navegação). As decisões e a ordem delas não mudaram; testes das regras (conta desativada, CNH, troca de senha, 401 nas rotas geo) passam.
+- **Verificação local:** tsc 0 · vitest 1124/1124 · lint 0 · build ok · login/telas no build de produção local; anônimo `/fleet` → 307 e `/api/geo/route-map` → 401.

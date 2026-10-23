@@ -22,10 +22,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Node.js runtime (stable in Next 15.5): the middleware runs in the function region (vercel.json "regions": pdx1), next to the
-  // Supabase database (us-west-2). On the default Edge runtime it ran in the edge location nearest the user (São Paulo) and its
-  // 3 sequential Supabase calls (getUser, account check, profile+license) each crossed the continent: ~1 s before the page started.
-  runtime: "nodejs",
   // Every request that reaches this middleware pays for a Supabase auth round trip
   // (updateSupabaseSession), so anything that can never need a session is excluded here
   // rather than filtered inside the handler — a matched-but-skipped request still costs a

@@ -3,7 +3,7 @@ import {NextRequest} from 'next/server';
 const m=vi.hoisted(()=>({role:'fleet_manager',enabled:true,password:false}));
 vi.mock('./env',()=>({getSupabasePublicEnv:()=>({url:'http://localhost',anonKey:'test-key'})}));
 vi.mock('@supabase/ssr',()=>({createServerClient:()=>({
- auth:{getUser:async()=>({data:{user:{id:'00000000-0000-4000-8000-000000000001',email:'fixture@example.invalid',app_metadata:{must_change_password:m.password}}}})},
+ auth:{getUser:async()=>({data:{user:{id:'00000000-0000-4000-8000-000000000001',email:'fixture@example.invalid',app_metadata:{must_change_password:m.password}}}}),getSession:async()=>({data:{session:{user:{id:'00000000-0000-4000-8000-000000000001'}}}})},
  rpc:async(name:string)=>({error:null,data:name==='fm_account_enabled'?m.enabled:[{drivers_license_number:null,driver_authorized:false}]}),
  from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{role:m.role},error:null})})})}),
 })}));
