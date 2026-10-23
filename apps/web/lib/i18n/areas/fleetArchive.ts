@@ -1,0 +1,88 @@
+import type { AreaTexts } from "../areaText";
+
+export type FleetArchiveKey =
+  | "title" | "subtitle" | "activeFleet"
+  | "errorInvalidReference" | "errorConcurrent" | "errorGeneric" | "successRestored"
+  | "unavailable"
+  | "panelVehicles" | "panelCategories" | "panelLocations"
+  | "empty" | "bookingHistory" | "exportRecord" | "documents"
+  | "reasonLabel" | "restore";
+
+export const fleetArchiveTexts: AreaTexts<FleetArchiveKey> = {
+  "pt-BR": {
+    title: "Arquivo da frota e cadastros desativados",
+    subtitle: "Históricos e documentos preservados. Reativar um veículo mantém bloqueios de avaria, documentação e equipamentos.",
+    activeFleet: "Frota ativa",
+    errorInvalidReference: "Reative primeiro a unidade, o modelo e os locais vinculados a este veículo.",
+    errorConcurrent: "O registro mudou. Recarregue antes de reativar.",
+    errorGeneric: "Não foi possível reativar. Confira sua autorização, a justificativa e o estado atual.",
+    successRestored: "Reativação registrada e auditada.",
+    unavailable: "Arquivo indisponível no seu escopo.",
+    panelVehicles: "Veículos arquivados",
+    panelCategories: "Modelos desativados",
+    panelLocations: "Locais desativados",
+    empty: "Nenhum registro neste escopo.",
+    bookingHistory: "Histórico de reservas",
+    exportRecord: "Exportar prontuário",
+    documents: "Documentos",
+    reasonLabel: "Justificativa da reativação",
+    restore: "Reativar registro",
+  },
+  "en-US": {
+    title: "Fleet archive and deactivated records",
+    subtitle: "Histories and documents are preserved. Reactivating a vehicle keeps its damage, documentation and equipment blocks.",
+    activeFleet: "Active fleet",
+    errorInvalidReference: "First reactivate the unit, model and locations linked to this vehicle.",
+    errorConcurrent: "The record has changed. Reload before reactivating.",
+    errorGeneric: "Could not reactivate. Check your authorization, the reason and the current status.",
+    successRestored: "Reactivation recorded and audited.",
+    unavailable: "Archive unavailable in your scope.",
+    panelVehicles: "Archived vehicles",
+    panelCategories: "Deactivated models",
+    panelLocations: "Deactivated locations",
+    empty: "No records in this scope.",
+    bookingHistory: "Booking history",
+    exportRecord: "Export vehicle record",
+    documents: "Documents",
+    reasonLabel: "Reason for reactivation",
+    restore: "Reactivate record",
+  },
+  es: {
+    title: "Archivo de la flota y registros desactivados",
+    subtitle: "Historiales y documentos preservados. Reactivar un vehículo mantiene los bloqueos por avería, documentación y equipamiento.",
+    activeFleet: "Flota activa",
+    errorInvalidReference: "Reactive primero la unidad, el modelo y las ubicaciones vinculados a este vehículo.",
+    errorConcurrent: "El registro cambió. Recargue antes de reactivar.",
+    errorGeneric: "No fue posible reactivar. Revise su autorización, la justificación y el estado actual.",
+    successRestored: "Reactivación registrada y auditada.",
+    unavailable: "Archivo no disponible en su alcance.",
+    panelVehicles: "Vehículos archivados",
+    panelCategories: "Modelos desactivados",
+    panelLocations: "Ubicaciones desactivadas",
+    empty: "Ningún registro en este alcance.",
+    bookingHistory: "Historial de reservas",
+    exportRecord: "Exportar expediente",
+    documents: "Documentos",
+    reasonLabel: "Justificación de la reactivación",
+    restore: "Reactivar registro",
+  },
+  "zh-CN": {
+    title: "车队档案与已停用记录",
+    subtitle: "历史记录和文件均已保留。重新启用车辆会保留故障、证件和装备方面的限制。",
+    activeFleet: "在用车队",
+    errorInvalidReference: "请先重新启用与该车辆关联的单位、车型和地点。",
+    errorConcurrent: "记录已变更。请刷新后再重新启用。",
+    errorGeneric: "无法重新启用。请检查您的权限、理由和当前状态。",
+    successRestored: "重新启用已记录并审计。",
+    unavailable: "您的范围内无法查看档案。",
+    panelVehicles: "已归档车辆",
+    panelCategories: "已停用车型",
+    panelLocations: "已停用地点",
+    empty: "此范围内没有记录。",
+    bookingHistory: "预订历史",
+    exportRecord: "导出车辆档案",
+    documents: "文件",
+    reasonLabel: "重新启用理由",
+    restore: "重新启用记录",
+  },
+};

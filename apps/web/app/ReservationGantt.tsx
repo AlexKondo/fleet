@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatDateTime, formatDayMonth } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
+import { ganttTexts, type GanttKey } from "@/lib/i18n/areas/gantt";
 import { setGanttZoomPreference, type GanttZoomLevel } from "./ganttZoomActions";
 
 const BRASILIA_OFFSET_MS = 3 * 3_600_000;
@@ -43,12 +44,12 @@ function barVisual(status: string, startMs: number, endMs: number, now: number):
 }
 
 // Kept in sync with barVisual() below — one entry per distinct color+icon it can produce.
-const GANTT_LEGEND: { className: string; icon: string; label: string }[] = [
-  { className: "bg-gwm-accent", icon: "?", label: "Aguardando aprovação" },
-  { className: "bg-fog-600", icon: "🕐", label: "Reservado, não retirado" },
-  { className: "bg-signal-blue", icon: "▶", label: "Em andamento" },
-  { className: "bg-line-700", icon: "✓", label: "Concluída" },
-  { className: "bg-signal-red/80", icon: "✕", label: "Cancelada" },
+const GANTT_LEGEND: { className: string; icon: string; label: GanttKey }[] = [
+  { className: "bg-gwm-accent", icon: "?", label: "pending" },
+  { className: "bg-fog-600", icon: "🕐", label: "reserved" },
+  { className: "bg-signal-blue", icon: "▶", label: "inProgress" },
+  { className: "bg-line-700", icon: "✓", label: "completed" },
+  { className: "bg-signal-red/80", icon: "✕", label: "cancelled" },
 ];
 
 // Pixels-per-day per zoom level — "zoom in" (week) spreads days out for detail, "zoom out"
@@ -71,6 +72,7 @@ export function ReservationGantt({
   initialZoom: GanttZoomLevel;
 }) {
   const [zoom, setZoom] = useState<GanttZoomLevel>(initialZoom);
+  const T = ganttTexts[locale] ?? ganttTexts["pt-BR"];
 
   function changeZoom(next: GanttZoomLevel) {
     setZoom(next);
@@ -124,7 +126,7 @@ export function ReservationGantt({
               <span aria-hidden="true" className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm text-[9px] text-ink-950 ${item.className}`}>
                 {item.icon}
               </span>
-              {item.label}
+              {T[item.label]}
             </span>
           ))}
         </div>
@@ -133,21 +135,21 @@ export function ReservationGantt({
           type="button"
           onClick={() => changeZoom(ZOOM_ORDER[Math.max(zoomIndex - 1, 0)]!)}
           disabled={zoomIndex === 0}
-          title="Diminuir zoom"
-          aria-label="Diminuir zoom"
+          title={T.zoomOut}
+          aria-label={T.zoomOut}
           className="rounded-sm border border-line-700 px-2 py-1 text-xs text-fog-400 hover:border-gwm-accent hover:text-gwm-accent disabled:opacity-40"
         >
           −
         </button>
         <span className="w-16 text-center text-[11px] uppercase tracking-widest text-fog-600">
-          {zoom === "week" ? "Semana" : zoom === "month" ? "Mês" : "Trimestre"}
+          {zoom === "week" ? T.week : zoom === "month" ? T.month : T.quarter}
         </span>
         <button
           type="button"
           onClick={() => changeZoom(ZOOM_ORDER[Math.min(zoomIndex + 1, ZOOM_ORDER.length - 1)]!)}
           disabled={zoomIndex === ZOOM_ORDER.length - 1}
-          title="Aumentar zoom"
-          aria-label="Aumentar zoom"
+          title={T.zoomIn}
+          aria-label={T.zoomIn}
           className="rounded-sm border border-line-700 px-2 py-1 text-xs text-fog-400 hover:border-gwm-accent hover:text-gwm-accent disabled:opacity-40"
         >
           +
@@ -190,7 +192,7 @@ export function ReservationGantt({
                   <div
                     className="absolute top-0 bottom-0 w-px bg-signal-red"
                     style={{ left: nowLeft }}
-                    title="Agora"
+                    title={T.now}
                   />
                 ) : null}
                 {rowBars.map((r) => {

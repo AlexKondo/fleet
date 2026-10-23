@@ -5,6 +5,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { FmShell } from "@/app/carpool/FmShell";
 import { Panel, Empty, Tag, Submit, date } from "@/app/operations/Workspace";
+import { getAreaText, fmt } from "@/lib/i18n/areaText";
+import { accountPrivacyTexts } from "@/lib/i18n/areas/accountPrivacy";
 import { submitPrivacy } from "./actions";
 export default async function PrivacyPage({
   searchParams,
@@ -12,6 +14,7 @@ export default async function PrivacyPage({
   searchParams: Promise<{ error?: string; success?: string }>;
 }) {
   const params = await searchParams;
+  const T = await getAreaText(accountPrivacyTexts);
   const db = await createSupabaseServerClient();
   const user = await getCurrentUser(db);
   if (!user) redirect("/login");
@@ -42,28 +45,27 @@ export default async function PrivacyPage({
       role={p.role}
       isFleetManager={["fleet_manager", "administrator"].includes(p.role)}
       isAdministrator={p.role === "administrator"}
-      title="Perfil e Privacidade"
-      subtitle="Acompanhe solicitações relacionadas aos seus dados."
+      title={T.pageTitle}
+      subtitle={T.pageSubtitle}
       wide
     >
-      <div className="ow"><p><a href="/api/exports/personal">Baixar meus dados em JSON</a></p><p>A exportação reúne seus registros estruturados. Fotos e arquivos binários não são incluídos neste JSON; seus documentos continuam nos acessos autenticados correspondentes.</p>
+      <div className="ow"><p><a href="/api/exports/personal">{T.download}</a></p><p>{T.exportNote}</p>
         {params.error && (
           <p role="alert" className="ow-banner ow-error">
-            Não foi possível registrar a solicitação. Confira os dados e tente
-            novamente.
+            {T.error}
           </p>
         )}
         {params.success && (
           <p role="status" className="ow-banner">
-            Solicitação registrada. Acompanhe o tratamento abaixo.
+            {T.success}
           </p>
         )}
         <div className="ow-grid">
-          <Panel title="Minhas solicitações">
+          <Panel title={T.myRequests}>
             {records === null ? (
-              <Empty>Não foi possível consultar suas solicitações.</Empty>
+              <Empty>{T.loadFail}</Empty>
             ) : !records.length ? (
-              <Empty>Nenhuma solicitação enviada.</Empty>
+              <Empty>{T.none}</Empty>
             ) : (
               <ul className="ow-list">
                 {records.map((r) => (
@@ -74,37 +76,37 @@ export default async function PrivacyPage({
                         {
                           (
                             {
-                              access: "Acesso aos dados",
-                              correction: "Correção",
-                              export: "Exportação",
-                              deletion: "Exclusão",
+                              access: T.kAccess,
+                              correction: T.kCorrection,
+                              export: T.kExport,
+                              deletion: T.kDeletion,
                             } as Record<string, string>
                           )[r.kind]
                         }
                       </strong>
                       <p>{r.summary}</p>
                       <small>{date(r.created_at, true)}</small>
-                      {r.response && <p>Resposta: {r.response}</p>}
+                      {r.response && <p>{fmt(T.response, { r: r.response })}</p>}
                     </div>
                   </li>
                 ))}
               </ul>
             )}
           </Panel>
-          <Panel title="Nova solicitação">
+          <Panel title={T.newRequest}>
             <form action={submitPrivacy} className="ow-form">
               <input type="hidden" name="request_id" value={randomUUID()} />
               <label className="ow-field">
-                <span>Tipo</span>
+                <span>{T.type}</span>
                 <select name="kind">
-                  <option value="access">Acesso aos dados</option>
-                  <option value="correction">Correção de dados</option>
-                  <option value="export">Exportação</option>
-                  <option value="deletion">Exclusão</option>
+                  <option value="access">{T.kAccess}</option>
+                  <option value="correction">{T.oCorrection}</option>
+                  <option value="export">{T.kExport}</option>
+                  <option value="deletion">{T.kDeletion}</option>
                 </select>
               </label>
               <label className="ow-field">
-                <span>Descreva sua solicitação</span>
+                <span>{T.describe}</span>
                 <textarea
                   name="summary"
                   minLength={3}
@@ -113,15 +115,13 @@ export default async function PrivacyPage({
                 />
               </label>
               <p className="ow-wide">
-                Pedidos são analisados conforme finalidade, base legal e
-                retenção aplicável. O envio não apaga automaticamente históricos
-                operacionais.
+                {T.legal}
               </p>
-              <Submit disabled={records === null}>Enviar solicitação</Submit>
+              <Submit disabled={records === null}>{T.submit}</Submit>
             </form>
             <p className="ow-note">
               <Link className="ow-link" href="/account/profile">
-                Editar meus dados de perfil →
+                {T.editProfile}
               </Link>
             </p>
           </Panel>

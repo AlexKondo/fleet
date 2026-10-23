@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTimeShort } from "@/lib/formatDateTime";
 import { FmShell } from "../carpool/FmShell";
 import { leaveCarpool } from "./actions";
+import { dashboardMiscTexts } from "@/lib/i18n/areas/dashboardMisc";
 import { riderCancelRequest } from "../carpool/formActions";
 import {
   carpoolErrorText,
@@ -565,7 +566,7 @@ export async function TripsWorkspace({
                           {formatDateTimeShort(r.start_at, locale)}
                         </p>
                         <p className="tp-meta">
-                          {leftAt?"Cancelada pelo passageiro":reservationStatusLabel(r.status)}
+                          {leftAt?dashboardMiscTexts[locale].leftByPassenger:reservationStatusLabel(r.status)}
                           {status === "pending" ? (
                             <> · {dict.trips.list.awaitingDriverAcceptance}</>
                           ) : null}

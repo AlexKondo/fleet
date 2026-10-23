@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { loadCarpoolKpis } from "@/lib/carpool/kpi/loadKpis";
 import { KPI_RANGE_DAYS, ROAD_DISTANCE_FACTOR } from "@/lib/carpool/kpi/config";
 import { FmShell } from "../../carpool/FmShell";
+import { dashboardMiscTexts } from "@/lib/i18n/areas/dashboardMisc";
 import { StatBar } from "../StatBar";
 
 /**
@@ -86,7 +87,7 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
         </Link>
       }
     >
-      {!organizationScope&&<p role="status">Os registros históricos de busca e provedor não possuem atribuição confiável por unidade. Esta consulta organizacional está restrita à gestão central.</p>}
+      {!organizationScope&&<p role="status">{dashboardMiscTexts[locale].carpoolOrgScope}</p>}
       <div data-testid="carpool-kpi-page">
         <div className="rp-range" role="group" aria-label={t.rangeLabel}>
           <span className="rp-range-label">{t.rangeLabel}</span>

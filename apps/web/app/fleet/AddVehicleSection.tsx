@@ -4,6 +4,7 @@ import { useState } from "react";
 import { VehicleForm } from "./VehicleForm";
 import { SafetyEquipmentSection } from "../settings/SafetyEquipmentSection";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { FleetKey } from "@/lib/i18n/areas/fleet";
 
 /**
  * "+ Adicionar Veículo" reveal — the create form starts hidden and only appears once
@@ -24,12 +25,14 @@ export function AddVehicleSection({
   managementScope,
   equipmentItems,
   dict,
+  T,
 }: {
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
   managementScope: {mode:"all_units"|"selected_units";units:{id:string;name:string;enabled:boolean}[]}|null;
   equipmentItems: { id: string; name: string }[];
   dict: Dictionary;
+  T: Record<FleetKey, string>;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -64,9 +67,10 @@ export function AddVehicleSection({
         locations={locations}
         managementScope={managementScope}
         dict={dict}
+        T={T}
         onSaved={() => setOpen(false)}
       />
-      <SafetyEquipmentSection dict={dict} items={equipmentItems} />
+      <SafetyEquipmentSection dict={dict} deactivateLabel={T.deactivate} items={equipmentItems} />
     </div>
   );
 }

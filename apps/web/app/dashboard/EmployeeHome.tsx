@@ -325,13 +325,13 @@ export async function EmployeeHome({
                       {showFuel ? (
                         <div>
                           <dt>{t.vehicles.fuel}</dt>
-                          <dd><EnergyGauge percent={row.fuel_level_percent} kind="fuel" dict={dict} /></dd>
+                          <dd><EnergyGauge percent={row.fuel_level_percent} kind="fuel" dict={dict} locale={locale} /></dd>
                         </div>
                       ) : null}
                       {showBattery ? (
                         <div>
                           <dt>{t.vehicles.battery}</dt>
-                          <dd><EnergyGauge percent={row.battery_level_percent} kind="battery" dict={dict} /></dd>
+                          <dd><EnergyGauge percent={row.battery_level_percent} kind="battery" dict={dict} locale={locale} /></dd>
                         </div>
                       ) : null}
                       <div>

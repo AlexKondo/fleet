@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
 import { pageAll } from "@/lib/carpool/kpi/loadKpis";
+import { getAreaText } from "@/lib/i18n/areaText";
+import { fleetDriversTexts } from "@/lib/i18n/areas/fleetDrivers";
 import {
   Workspace,
   Metrics,
@@ -17,6 +19,7 @@ export default async function Drivers({
   searchParams: Promise<{ q?: string; driver?: string; status?: string }>;
 }) {
   const params = await searchParams;
+  const T = await getAreaText(fleetDriversTexts);
   const data = await loadOperationalWorkspace([
     "fleet_manager",
     "administrator",
@@ -62,52 +65,51 @@ export default async function Drivers({
   const selected =
     filtered?.find((r) => r.id === params.driver) ?? filtered?.[0];
   const label: Record<string, string> = {
-    unknown: "Indisponível",
-    missing: "Documentação pendente",
-    expired: "CNH vencida",
-    unauthorized: "Sem autorização",
-    ready: "Habilitação e autorização válidas",
+    unknown: T.stateUnknown,
+    missing: T.stateMissing,
+    expired: T.stateExpired,
+    unauthorized: T.stateUnauthorized,
+    ready: T.stateReady,
   };
   return (
     <Workspace
       data={data}
-      title="Gestão Inteligente de Motoristas e Condutores"
-      subtitle="Habilitação, validade documental e autorização para conduzir veículos da frota."
+      title={T.title}
+      subtitle={T.subtitle}
       active="drivers"
       managerView
     >
       {!licenseAvailable && (
         <p role="alert" className="ow-banner ow-error">
-          Não foi possível consultar as habilitações. Nenhuma ausência ou
-          autorização foi inferida a partir dessa falha.
+          {T.licenseLookupFailed}
         </p>
       )}
       <Metrics
         items={[
-          { label: "Colaboradores no escopo", value: rows?.length ?? null },
+          { label: T.metricMembers, value: rows?.length ?? null },
           {
-            label: "Aptos nos registros atuais",
+            label: T.metricReady,
             value: licenseAvailable
               ? (rows?.filter((r) => r.state === "ready").length ?? null)
               : null,
             tone: "green",
           },
           {
-            label: "CNH vencida",
+            label: T.stateExpired,
             value: licenseAvailable
               ? (rows?.filter((r) => r.state === "expired").length ?? null)
               : null,
             tone: "red",
           },
           {
-            label: "Documentação pendente",
+            label: T.stateMissing,
             value: licenseAvailable
               ? (rows?.filter((r) => r.state === "missing").length ?? null)
               : null,
             tone: "amber",
           },
           {
-            label: "Sem autorização",
+            label: T.stateUnauthorized,
             value: licenseAvailable
               ? (rows?.filter((r) => r.state === "unauthorized").length ?? null)
               : null,
@@ -115,18 +117,18 @@ export default async function Drivers({
         ]}
       />
       <div className="ow-grid">
-        <Panel title="Motoristas e colaboradores">
+        <Panel title={T.panelDrivers}>
           <form method="get" className="ow-filters">
             <Field
-              label="Buscar nome"
+              label={T.searchName}
               name="q"
               value={params.q}
               maxLength={100}
             />
             <label className="ow-field">
-              <span>Situação</span>
+              <span>{T.situation}</span>
               <select name="status" defaultValue={params.status ?? ""}>
-                <option value="">Todas</option>
+                <option value="">{T.all}</option>
                 {Object.entries(label).map(([key, text]) => (
                   <option key={key} value={key}>
                     {text}
@@ -134,10 +136,10 @@ export default async function Drivers({
                 ))}
               </select>
             </label>
-            <Submit>Filtrar</Submit>
+            <Submit>{T.filter}</Submit>
           </form>
           {members === null ? (
-            <Empty>Colaboradores indisponíveis.</Empty>
+            <Empty>{T.membersUnavailable}</Empty>
           ) : !filtered?.length ? (
             <Empty />
           ) : (
@@ -145,13 +147,13 @@ export default async function Drivers({
               <table className="ow-table">
                 <thead>
                   <tr>
-                    <th>Colaborador</th>
-                    <th>Perfil</th>
-                    <th>CNH</th>
-                    <th>Categoria</th>
-                    <th>Validade</th>
-                    <th>Autorização</th>
-                    <th>Detalhes</th>
+                    <th>{T.colMember}</th>
+                    <th>{T.colProfile}</th>
+                    <th>{T.colLicense}</th>
+                    <th>{T.colCategory}</th>
+                    <th>{T.colExpiry}</th>
+                    <th>{T.colAuthorization}</th>
+                    <th>{T.colDetails}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -164,11 +166,11 @@ export default async function Drivers({
                         {
                           (
                             {
-                              employee: "Colaborador",
-                              fleet_manager: "Gestor de Frota",
-                              administrator: "Administrador",
-                              maintenance_operator: "Manutenção",
-                              security: "Portaria",
+                              employee: T.roleEmployee,
+                              fleet_manager: T.roleFleetManager,
+                              administrator: T.roleAdministrator,
+                              maintenance_operator: T.roleMaintenance,
+                              security: T.roleSecurity,
                             } as Record<string, string>
                           )[r.role]
                         }
@@ -178,7 +180,7 @@ export default async function Drivers({
                           ? r.license?.drivers_license_number
                             ? "••••" +
                               r.license.drivers_license_number.slice(-4)
-                            : "Não informada"
+                            : T.notInformed
                           : "—"}
                       </td>
                       <td>
@@ -206,7 +208,7 @@ export default async function Drivers({
                       </td>
                       <td>
                         <Link href={`/fleet/drivers?driver=${r.id}`}>
-                          Abrir →
+                          {T.open}
                         </Link>
                       </td>
                     </tr>
@@ -217,9 +219,9 @@ export default async function Drivers({
           )}
         </Panel>
         <aside className="ow-stack">
-          <Panel title="Detalhes do condutor">
+          <Panel title={T.panelDriverDetails}>
             {!selected ? (
-              <Empty>Selecione um colaborador.</Empty>
+              <Empty>{T.selectMember}</Empty>
             ) : (
               <>
                 <div className="ow-detail-head">
@@ -230,7 +232,7 @@ export default async function Drivers({
                 </div>
                 <dl className="ow-data-grid">
                   <div>
-                    <dt>Categoria da CNH</dt>
+                    <dt>{T.licenseCategory}</dt>
                     <dd>
                       {licenseAvailable
                         ? (selected.license?.drivers_license_category ?? "—")
@@ -238,7 +240,7 @@ export default async function Drivers({
                     </dd>
                   </div>
                   <div>
-                    <dt>Validade</dt>
+                    <dt>{T.expiry}</dt>
                     <dd>
                       {licenseAvailable
                         ? date(
@@ -249,34 +251,31 @@ export default async function Drivers({
                     </dd>
                   </div>
                   <div>
-                    <dt>Autorização cadastrada</dt>
+                    <dt>{T.registeredAuthorization}</dt>
                     <dd>
                       {licenseAvailable
                         ? selected.license?.driver_authorized
-                          ? "Sim"
-                          : "Não"
-                        : "Indisponível"}
+                          ? T.yes
+                          : T.no
+                        : T.unavailable}
                     </dd>
                   </div>
                 </dl>
                 {data.profile.role === "administrator" ? (
                   <Link className="ow-button" href="/settings/users">
-                    Administrar documentos e autorização
+                    {T.manageDocs}
                   </Link>
                 ) : (
                   <p className="ow-note">
-                    A alteração dos documentos e da autorização permanece
-                    restrita ao administrador, conforme a permissão existente.
+                    {T.adminOnlyNote}
                   </p>
                 )}
               </>
             )}
           </Panel>
-          <Panel title="Privacidade e elegibilidade">
+          <Panel title={T.panelPrivacy}>
             <p className="ow-muted">
-              Número da CNH mascarado. As validações da reserva e da retirada
-              continuam sendo executadas no backend; a consulta desta tela não
-              concede autorização.
+              {T.privacyNote}
             </p>
           </Panel>
         </aside>

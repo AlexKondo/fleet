@@ -8,6 +8,8 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { getDictionary } from "@/lib/i18n/getLocale";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { getAreaText } from "@/lib/i18n/areaText";
+import { fleetActionTexts } from "@/lib/i18n/areas/fleet";
 
 export interface FleetActionState {
   status: "idle" | "success" | "error";
@@ -95,11 +97,12 @@ export async function updateLocation(
 }
 
 async function lifecycleAction(kind:string,formData:FormData):Promise<FleetActionState>{
+ const T=await getAreaText(fleetActionTexts);
  const {supabase,organizationId}=await requireFleetManager();if(!organizationId)return{status:"error",error:"not_authorized"};
  const id=String(formData.get("id")??"");const version=Number(formData.get("lifecycleVersion")??1);
- if(!/^[0-9a-f-]{36}$/i.test(id)||!Number.isSafeInteger(version)||version<1)return{status:"error",error:"Confira o registro e recarregue a página."};
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!Number.isSafeInteger(version)||version<1)return{status:"error",error:T.invalidRecord};
  const {error}=await supabase.rpc("fm_fleet_lifecycle",{p_kind:kind,p_id:id,p_enabled:false,p_version:version,p_reason:String(formData.get("archiveReason")??"").trim()||"Desativação solicitada pela gestão de frota",p_request_id:crypto.randomUUID()});
- if(error)return{status:"error",error:({ACTIVE_OPERATION:"Há reserva, chaves ou manutenção em andamento. Regularize a operação antes de arquivar.",ACTIVE_REFERENCE:"Este cadastro ainda está vinculado a veículo ativo.",CONCURRENT_UPDATE:"O registro mudou. Recarregue e confira o estado atual.",NOT_AUTHORIZED:"Seu acesso não permite esta alteração."} as Record<string,string>)[error.message]??"Não foi possível alterar o estado do registro."};
+ if(error)return{status:"error",error:({ACTIVE_OPERATION:T.activeOperation,ACTIVE_REFERENCE:T.activeReference,CONCURRENT_UPDATE:T.concurrentUpdate,NOT_AUTHORIZED:T.notAuthorized} as Record<string,string>)[error.message]??T.lifecycleFailed};
  revalidatePath("/fleet","layout");revalidatePath("/dashboard","layout");return{status:"success"};
 }
 export async function deleteLocation(_prevState:FleetActionState,formData:FormData):Promise<FleetActionState>{return lifecycleAction("location",formData);}
@@ -255,7 +258,7 @@ export async function createVehicle(
   if (error || !inserted) {
     const friendlyError = error?.message.includes("duplicate") || error?.message.includes("unique")
       ? dict.errors.fleet.duplicatePlate
-      : error?.message === "MANAGEMENT_SCOPE_DENIED" ? "Selecione uma unidade-base autorizada para sua gestão." : dict.errors.fleet.vehicleCreateFailed;
+      : error?.message === "MANAGEMENT_SCOPE_DENIED" ? (await getAreaText(fleetActionTexts)).scopeDenied : dict.errors.fleet.vehicleCreateFailed;
     return { status: "error", error: friendlyError };
   }
 
@@ -266,7 +269,7 @@ export async function createVehicle(
     const uploadResult = await uploadVehiclePhoto(supabase, organizationId, inserted.id, photo, dict);
     if ("error" in uploadResult) {
       revalidatePath("/fleet");
-      return {status:"error",error:"Veículo criado. A foto não foi concluída; use Editar neste veículo para tentar novamente, sem repetir o cadastro."};
+      return {status:"error",error:(await getAreaText(fleetActionTexts)).createdWithoutPhoto};
     }
   }
 

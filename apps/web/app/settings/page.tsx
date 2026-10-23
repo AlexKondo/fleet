@@ -12,6 +12,8 @@ import { getChatUsageStats } from "../chat/queries";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getDictionary, getLocale } from "../../lib/i18n/getLocale";
 import { CarpoolPolicySection, type PolicyVersionView } from "./CarpoolPolicySection";
+import { areaText } from "@/lib/i18n/areaText";
+import { settingsMiscTexts } from "@/lib/i18n/areas/settingsMisc";
 import { POLICY_COLUMNS, policyFromRow, type PolicyRow } from "@/lib/carpool/loadPolicy";
 
 /**
@@ -25,6 +27,7 @@ export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
   const locale = await getLocale();
+  const T = areaText(settingsMiscTexts, locale);
 
   const user = await getCurrentUser(supabase);
   if (!user) {
@@ -43,7 +46,7 @@ export default async function SettingsPage() {
     redirect("/dashboard");
   }
 
-  if(!(await organizationMetricsAllowed(supabase)))return <FmShell active="settings" orgName={profile.organization?.name??"—"} userName={profile.full_name} role={profile.role} isFleetManager isAdministrator={isAdministrator} wide><p role="status">As configurações e métricas desta página abrangem toda a organização. Seu acesso de gestão é por unidade ou não pôde ser confirmado. Solicite as alterações globais ao administrador.</p><Link href="/fleet">Voltar à frota autorizada</Link></FmShell>;
+  if(!(await organizationMetricsAllowed(supabase)))return <FmShell active="settings" orgName={profile.organization?.name??"—"} userName={profile.full_name} role={profile.role} isFleetManager isAdministrator={isAdministrator} wide><p role="status">{T.orgWideNotice}</p><Link href="/fleet">{T.backToFleet}</Link></FmShell>;
 
   const [{ data: settings }, { data: equipmentItems }, chatUsageStats, { data: policyRows }] = await Promise.all([
     supabase
@@ -141,7 +144,7 @@ export default async function SettingsPage() {
           }}
         />
         <div className="st-side">
-          <div className="fm-panel"><SafetyEquipmentSection dict={dict} items={equipmentItems ?? []} /></div>
+          <div className="fm-panel"><SafetyEquipmentSection dict={dict} deactivateLabel={T.deactivate} items={equipmentItems ?? []} /></div>
           <div className="fm-panel"><ChatUsageSummary dict={dict} stats={chatUsageStats} /></div>
           <div className="fm-panel"><CarpoolPolicySection dict={dict} locale={locale} versions={policyVersions} /></div>
           <div className="fm-panel">

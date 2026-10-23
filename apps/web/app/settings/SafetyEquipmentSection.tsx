@@ -14,9 +14,11 @@ const initialState: EquipmentActionState = { status: "idle" };
  */
 export function SafetyEquipmentSection({
   dict,
+  deactivateLabel,
   items,
 }: {
   dict: Dictionary;
+  deactivateLabel: string;
   items: { id: string; name: string }[];
 }) {
   const t = dict.settings.safetyEquipment;
@@ -40,7 +42,7 @@ export function SafetyEquipmentSection({
                 type="submit"
                 className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red"
               >
-                Desativar
+                {deactivateLabel}
               </button>
             </form>
           </li>

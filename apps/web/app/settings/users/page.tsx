@@ -10,7 +10,7 @@ import { UserRow } from "./UserRow";
 import { UserTable } from "./UserTable";
 import { getRoleLabels } from "./ROLE_LABELS";
 import { pageAll } from "@/lib/carpool/kpi/loadKpis";
-import { getDictionary } from "../../../lib/i18n/getLocale";
+import { getDictionary, getLocale } from "../../../lib/i18n/getLocale";
 
 /**
  * Team management: create/read/update/deactivate for the people inside an organization —
@@ -26,6 +26,7 @@ function toSource(s: string | null | undefined): "ai" | "manual" | null {
 export default async function UsersPage() {
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
+  const locale = await getLocale();
 
   const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
@@ -180,6 +181,7 @@ export default async function UsersPage() {
             node: (
               <UserRow
                 key={m.id}
+                locale={locale}
                 member={{
                   id: m.id,
                   full_name: m.full_name,

@@ -16,6 +16,7 @@ import { BlockVehicleForm } from "../BlockVehicleForm";
 import { StatusBadge } from "../ui/StatusBadge";
 import { RevealAction } from "../ui/RevealAction";
 import { EmployeeHome } from "./EmployeeHome";
+import { dashboardMiscTexts } from "@/lib/i18n/areas/dashboardMisc";
 import { ClientGantt as ReservationGantt } from "../trips/ClientGantt";
 import type { GanttZoomLevel } from "../ganttZoomActions";
 import {
@@ -235,9 +236,9 @@ export default async function DashboardPage({
       {isFleetManager ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
           <div><strong className="text-slate-900">Fleet Command Center 360°</strong>
-            <p className="text-sm text-slate-700">Indicadores por unidade, distribuição operacional e veículos que exigem atenção.</p>
+            <p className="text-sm text-slate-700">{dashboardMiscTexts[locale].commandDesc}</p>
           </div>
-          <Link href="/dashboard/command-center" className="inline-flex min-h-11 items-center rounded-lg bg-blue-700 px-4 font-semibold text-white hover:bg-blue-800">Abrir Central de Comando →</Link>
+          <Link href="/dashboard/command-center" className="inline-flex min-h-11 items-center rounded-lg bg-blue-700 px-4 font-semibold text-white hover:bg-blue-800">{dashboardMiscTexts[locale].commandOpen}</Link>
         </div>
       ) : null}
       {fleetActionError ? (
@@ -859,13 +860,13 @@ export default async function DashboardPage({
                           {showFuel ? (
                             <div>
                               <p className="uppercase tracking-widest text-fog-600">{t.vehicles.fuel}</p>
-                              <EnergyGauge percent={row.fuel_level_percent} kind="fuel" dict={dict} />
+                              <EnergyGauge percent={row.fuel_level_percent} kind="fuel" dict={dict} locale={locale} />
                             </div>
                           ) : null}
                           {showBattery ? (
                             <div>
                               <p className="uppercase tracking-widest text-fog-600">{t.vehicles.battery}</p>
-                              <EnergyGauge percent={row.battery_level_percent} kind="battery" dict={dict} />
+                              <EnergyGauge percent={row.battery_level_percent} kind="battery" dict={dict} locale={locale} />
                             </div>
                           ) : null}
                         </>

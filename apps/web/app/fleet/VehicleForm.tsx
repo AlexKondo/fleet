@@ -7,6 +7,7 @@ import { FUEL_LEVEL_OPTIONS, VEHICLE_COLOR_OPTIONS } from "@/lib/domain/vehicleF
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { errorLabel } from "@/lib/i18n/errorLabel";
 import { VehiclePhotoInput } from "./VehiclePhotoInput";
+import { fleetTexts, type FleetKey } from "@/lib/i18n/areas/fleet";
 
 const initialState: FleetActionState = { status: "idle" };
 
@@ -60,12 +61,14 @@ export function VehicleForm({
   locations,
   managementScope,
   dict,
+  T = fleetTexts["pt-BR"],
   onSaved,
 }: {
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
   managementScope: {mode:"all_units"|"selected_units";units:{id:string;name:string;enabled:boolean}[]}|null;
   dict: Dictionary;
+  T?: Record<FleetKey, string>;
   onSaved?: () => void;
 }) {
   const [state, formAction, pending] = useActionState((prev:FleetActionState,data:FormData)=>createVehicleWithPhoto(prev,data,createVehicle,dict.errors.fleet.photoPendingAfterCreate,dict.errors.fleet.photoTypeNotSupported), initialState);
@@ -122,7 +125,7 @@ export function VehicleForm({
       }}
       className="flex flex-col gap-4"
     >
-      {!managementScope?<p role="alert">Não foi possível consultar as unidades autorizadas. Recarregue antes de cadastrar.</p>:<label className="flex flex-col gap-1.5"><span>Unidade-base responsável pelo veículo</span><select name="unitId" required={managementScope.mode==="selected_units"} defaultValue={draft.unitId??""} className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2"><option value="">{managementScope.mode==="all_units"?"Sem unidade atribuída":"Selecione uma unidade autorizada"}</option>{managementScope.units.filter(u=>u.enabled).map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></label>}
+      {!managementScope?<p role="alert">{T.unitsLoadFailed}</p>:<label className="flex flex-col gap-1.5"><span>{T.baseUnitOwner}</span><select name="unitId" required={managementScope.mode==="selected_units"} defaultValue={draft.unitId??""} className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2"><option value="">{managementScope.mode==="all_units"?T.noUnitAssigned:T.selectAuthorizedUnit}</option>{managementScope.units.filter(u=>u.enabled).map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></label>}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.vehicleForm.plateLabel}</span>

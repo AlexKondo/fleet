@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
+import { getAreaText } from "@/lib/i18n/areaText";
+import { getLocale } from "@/lib/i18n/getLocale";
+import { fleetEnergyTexts } from "@/lib/i18n/areas/fleetEnergy";
 import {
   Workspace,
   Metrics,
@@ -26,6 +29,8 @@ export default async function EnergyPage({
   }>;
 }) {
   const params = await searchParams;
+  const T = await getAreaText(fleetEnergyTexts);
+  const locale = await getLocale();
   const data = await loadOperationalWorkspace([
     "fleet_manager",
     "administrator",
@@ -61,8 +66,8 @@ export default async function EnergyPage({
   return (
     <Workspace
       data={data}
-      title="Abastecimento e Recarga Inteligente"
-      subtitle="Registros reais por motorização, custos e rastreabilidade dos lançamentos."
+      title={T.title}
+      subtitle={T.subtitle}
       active="energy"
       managerView
       error={params.error}
@@ -70,33 +75,33 @@ export default async function EnergyPage({
     >
       <Metrics
         items={[
-          { label: "Lançamentos válidos", value: valid?.length ?? null },
+          { label: T.metricValidEntries, value: valid?.length ?? null },
           {
-            label: "Combustível registrado",
-            value: fuel === null ? null : fuel.toLocaleString("pt-BR") + " L",
+            label: T.metricFuel,
+            value: fuel === null ? null : fuel.toLocaleString(locale) + " L",
             tone: "amber",
           },
           {
-            label: "Energia registrada",
+            label: T.metricEnergy,
             value:
-              charge === null ? null : charge.toLocaleString("pt-BR") + " kWh",
+              charge === null ? null : charge.toLocaleString(locale) + " kWh",
             tone: "green",
           },
-          { label: "Custo no filtro", value: money(total) },
+          { label: T.metricCostFilter, value: money(total) },
           {
-            label: "Veículos com registros",
+            label: T.metricVehicles,
             value: valid ? new Set(valid.map((e) => e.vehicle_id)).size : null,
           },
         ]}
       />
       <div className="ow-grid">
         <div className="ow-stack">
-          <Panel title="Últimos abastecimentos e recargas">
+          <Panel title={T.panelRecent}>
             <form method="get" className="ow-filters">
               <label className="ow-field">
-                <span>Veículo</span>
+                <span>{T.vehicle}</span>
                 <select name="vehicle" defaultValue={params.vehicle ?? ""}>
-                  <option value="">Todos</option>
+                  <option value="">{T.all}</option>
                   {data.vehicles?.map((v) => (
                     <option key={v.id} value={v.id}>
                       {v.plate}
@@ -105,19 +110,19 @@ export default async function EnergyPage({
                 </select>
               </label>
               <label className="ow-field">
-                <span>Tipo</span>
+                <span>{T.type}</span>
                 <select name="kind" defaultValue={params.kind ?? ""}>
-                  <option value="">Todos</option>
-                  <option value="fuel">Combustível</option>
-                  <option value="charge">Recarga elétrica</option>
+                  <option value="">{T.all}</option>
+                  <option value="fuel">{T.fuel}</option>
+                  <option value="charge">{T.electricCharge}</option>
                 </select>
               </label>
-              <Field label="De" name="from" type="date" value={params.from} />
-              <Field label="Até" name="to" type="date" value={params.to} />
-              <Submit>Filtrar</Submit>
+              <Field label={T.from} name="from" type="date" value={params.from} />
+              <Field label={T.to} name="to" type="date" value={params.to} />
+              <Submit>{T.filter}</Submit>
             </form>
             {events === undefined ? (
-              <Empty>Registros indisponíveis.</Empty>
+              <Empty>{T.recordsUnavailable}</Empty>
             ) : !events.length ? (
               <Empty />
             ) : (
@@ -125,14 +130,14 @@ export default async function EnergyPage({
                 <table className="ow-table">
                   <thead>
                     <tr>
-                      <th>Data</th>
-                      <th>Veículo</th>
-                      <th>Tipo</th>
-                      <th>Quantidade</th>
-                      <th>Custo</th>
-                      <th>Odômetro</th>
-                      <th>Fornecedor</th>
-                      <th>Correção</th>
+                      <th>{T.colDate}</th>
+                      <th>{T.colVehicle}</th>
+                      <th>{T.colType}</th>
+                      <th>{T.colQuantity}</th>
+                      <th>{T.colCost}</th>
+                      <th>{T.colOdometer}</th>
+                      <th>{T.colSupplier}</th>
+                      <th>{T.colCorrection}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -158,21 +163,21 @@ export default async function EnergyPage({
                             }
                           >
                             {e.voided_at
-                              ? "Anulado"
+                              ? T.voided
                               : e.kind === "charge"
-                                ? "Recarga"
+                                ? T.charge
                                 : (
                                     {
-                                      gasoline: "Gasolina",
-                                      ethanol: "Etanol",
-                                      diesel: "Diesel",
+                                      gasoline: T.gasoline,
+                                      ethanol: T.ethanol,
+                                      diesel: T.diesel,
                                     } as Record<string, string>
                                   )[e.fuel_type ?? ""]}
                           </Tag>
                           {e.voided_at && <small>{e.void_reason}</small>}
                         </td>
                         <td>
-                          {e.quantity.toLocaleString("pt-BR")}{" "}
+                          {e.quantity.toLocaleString(locale)}{" "}
                           {e.kind === "fuel" ? "L" : "kWh"}
                         </td>
                         <td>
@@ -182,24 +187,24 @@ export default async function EnergyPage({
                             {e.kind === "fuel" ? "L" : "kWh"}
                           </small>
                         </td>
-                        <td>{e.odometer_km.toLocaleString("pt-BR")} km</td>
-                        <td>{e.supplier || "—"}<br/><Link href={`/documents?target=energy_event&id=${e.id}`}>Comprovantes</Link></td>
+                        <td>{e.odometer_km.toLocaleString(locale)} km</td>
+                        <td>{e.supplier || "—"}<br/><Link href={`/documents?target=energy_event&id=${e.id}`}>{T.receipts}</Link></td>
                         <td>
                           {!e.voided_at && (
                             <details>
-                              <summary>Anular</summary>
+                              <summary>{T.void}</summary>
                               <OperationForm
                                 command="energy.void"
                                 returnTo="/fleet/energy"
                                 values={{ id: e.id }}
                               >
                                 <Field
-                                  label="Justificativa"
+                                  label={T.reason}
                                   name="reason"
                                   required
                                   maxLength={500}
                                 />
-                                <Submit>Registrar anulação</Submit>
+                                <Submit>{T.registerVoid}</Submit>
                               </OperationForm>
                             </details>
                           )}
@@ -211,9 +216,9 @@ export default async function EnergyPage({
               </div>
             )}
           </Panel>
-          <Panel title="Custos por veículo">
+          <Panel title={T.panelCosts}>
             {!byVehicle || !valid ? (
-              <Empty>Dados indisponíveis.</Empty>
+              <Empty>{T.dataUnavailable}</Empty>
             ) : (
               <ul className="ow-list">
                 {byVehicle
@@ -235,26 +240,26 @@ export default async function EnergyPage({
           </Panel>
         </div>
         <aside className="ow-stack">
-          <Panel title="Novo lançamento">
+          <Panel title={T.panelNew}>
             <OperationForm command="energy.record" returnTo="/fleet/energy">
               <VehicleSelect data={data} />
               <label className="ow-field">
-                <span>Tipo</span>
+                <span>{T.type}</span>
                 <select name="kind">
-                  <option value="fuel">Abastecimento</option>
-                  <option value="charge">Recarga elétrica</option>
+                  <option value="fuel">{T.refuel}</option>
+                  <option value="charge">{T.electricCharge}</option>
                 </select>
               </label>
               <label className="ow-field">
-                <span>Combustível · somente abastecimento</span>
+                <span>{T.fuelTypeLabel}</span>
                 <select name="fuel_type">
-                  <option value="gasoline">Gasolina</option>
-                  <option value="ethanol">Etanol</option>
-                  <option value="diesel">Diesel</option>
+                  <option value="gasoline">{T.gasoline}</option>
+                  <option value="ethanol">{T.ethanol}</option>
+                  <option value="diesel">{T.diesel}</option>
                 </select>
               </label>
               <Field
-                label="Quantidade · litros ou kWh"
+                label={T.quantityLabel}
                 name="quantity"
                 type="number"
                 min={0.001}
@@ -262,7 +267,7 @@ export default async function EnergyPage({
                 required
               />
               <Field
-                label="Valor total (R$)"
+                label={T.totalValueLabel}
                 name="total_cost"
                 type="number"
                 min={0}
@@ -270,7 +275,7 @@ export default async function EnergyPage({
                 required
               />
               <Field
-                label="Odômetro (km)"
+                label={T.odometerLabel}
                 name="odometer_km"
                 type="number"
                 min={0}
@@ -278,31 +283,27 @@ export default async function EnergyPage({
                 required
               />
               <Field
-                label="Data e hora · Brasília"
+                label={T.eventAtLabel}
                 name="event_at"
                 type="datetime-local"
                 required
               />
               <Field
-                label="Fornecedor / estação"
+                label={T.supplierLabel}
                 name="supplier"
                 maxLength={200}
               />
               <p className="ow-wide">
-                BEV aceita recarga; ICE aceita combustível; PHEV aceita ambos. O
-                registro não altera automaticamente o nível atual de combustível
-                ou bateria.
+                {T.newEntryNote}
               </p>
               <Submit disabled={data.migrationUnavailable || !data.vehicles}>
-                Registrar lançamento
+                {T.registerEntry}
               </Submit>
             </OperationForm>
           </Panel>
-          <Panel title="Indicadores com fonte validada">
+          <Panel title={T.panelIndicators}>
             <p className="ow-muted">
-              Economia contra gasolina, eficiência real e CO₂ evitado precisam
-              de distância efetivamente percorrida e fatores aprovados. Nenhum
-              valor é estimado a partir destes lançamentos isoladamente.
+              {T.indicatorsNote}
             </p>
           </Panel>
         </aside>

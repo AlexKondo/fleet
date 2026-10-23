@@ -15,6 +15,8 @@ import {
 import { adminCommand } from "./actions";
 import { getDictionary } from "@/lib/i18n/getLocale";
 import { auditActionLabel } from "@/lib/i18n/auditActionLabel";
+import { fmt, getAreaText } from "@/lib/i18n/areaText";
+import { adminWorkspaceTexts } from "@/lib/i18n/areas/adminWorkspace";
 type Governance = {
   policy: { enabled: boolean; version: number; confirmation_required: boolean };
   policy_versions: {
@@ -55,6 +57,7 @@ export async function AdminWorkspace({
 }) {
   const data = await loadOperationalWorkspace(["administrator"]);
   const dict = await getDictionary();
+  const T = await getAreaText(adminWorkspaceTexts);
   const org = data.profile.organization_id;
   const [audit, users, quota, adminResult] = await Promise.all([
     pageAll("admin audit", (a, b) =>
@@ -89,10 +92,10 @@ export async function AdminWorkspace({
   ]);
   const state = adminResult.error ? null : governance(adminResult.data);
   const titles = {
-    overview: "Administração do Sistema — Command Center",
-    integrations: "Integrações e Saúde do Sistema",
-    audit: "Auditoria, Segurança e Privacidade",
-    ai: "Configuração de Inteligência Artificial",
+    overview: T.titleOverview,
+    integrations: T.titleIntegrations,
+    audit: T.titleAudit,
+    ai: T.titleAi,
   };
   const filtered = audit
     ?.filter(
@@ -107,33 +110,33 @@ export async function AdminWorkspace({
   const links = [
     [
       "/settings/users",
-      "Usuários, Perfis e Permissões",
-      "Gestão existente de contas, CNH e autorização",
+      T.linkUsers,
+      T.linkUsersD,
     ],
     [
       "/settings",
-      "Políticas Operacionais",
-      "Configurações existentes da organização",
+      T.linkPolicies,
+      T.linkPoliciesD,
     ],
     [
       "/admin/integrations",
-      "Integrações e Saúde",
-      "Configuração e leituras reais dos adapters",
+      T.linkIntegrations,
+      T.linkIntegrationsD,
     ],
     [
       "/admin/audit",
-      "Auditoria e Privacidade",
-      "Trilha imutável e solicitações dos titulares",
+      T.linkAudit,
+      T.linkAuditD,
     ],
     [
       "/admin/ai",
-      "Governança de IA",
-      "Controle efetivo do assistente e versões",
+      T.linkAi,
+      T.linkAiD,
     ],
     [
       "/settings/mobility-points",
-      "Locais de Mobilidade",
-      "Pontos corporativos já cadastrados",
+      T.linkMobility,
+      T.linkMobilityD,
     ],
   ];
   const google = Boolean(process.env.GOOGLE_MAPS_API_KEY),
@@ -152,18 +155,18 @@ export async function AdminWorkspace({
     <Workspace
       data={data}
       title={titles[view]}
-      subtitle="Visão geral, configuração segura, rastreabilidade e governança da plataforma."
+      subtitle={T.subtitle}
       active="settings"
       error={params.error}
       success={params.success}
     >
-      <nav className="ow-tabs" aria-label="Administração">
+      <nav className="ow-tabs" aria-label={T.navAria}>
         {[
-          ["overview", "/admin", "Visão geral"],
-          ["integrations", "/admin/integrations", "Integrações"],
-          ["audit", "/admin/audit", "Auditoria e privacidade"],
-          ["ai", "/admin/ai", "Governança de IA"],
-          ["units", "/admin/units", "Unidades e chaves"],
+          ["overview", "/admin", T.tabOverview],
+          ["integrations", "/admin/integrations", T.tabIntegrations],
+          ["audit", "/admin/audit", T.tabAudit],
+          ["ai", "/admin/ai", T.tabAi],
+          ["units", "/admin/units", T.tabUnits],
         ].map(([k, url, label]) => (
           <Link
             href={url!}
@@ -176,36 +179,35 @@ export async function AdminWorkspace({
       </nav>
       {!state && (
         <p role="alert" className="ow-banner ow-error">
-          A governança não pôde ser consultada. Verifique a migração 0075 e a
-          conexão. Nenhuma política foi presumida como ativa.
+          {T.govUnavailable}
         </p>
       )}
       <Metrics
         items={[
           {
-            label: "Veículos cadastrados",
+            label: T.mVehicles,
             value: data.vehicles?.length ?? null,
           },
-          { label: "Usuários no escopo", value: users?.length ?? null },
+          { label: T.mUsers, value: users?.length ?? null },
           {
-            label: "Locais cadastrados",
+            label: T.mLocations,
             value: data.locations?.length ?? null,
           },
           {
-            label: "Solicitações de privacidade abertas",
+            label: T.mPrivacyOpen,
             value:
               state?.privacy_requests.filter(
                 (r) => !["completed", "rejected"].includes(r.status),
               ).length ?? null,
             tone: "amber",
           },
-          { label: "Eventos auditados", value: audit?.length ?? null },
+          { label: T.mAudited, value: audit?.length ?? null },
         ]}
       />
       {view === "overview" ? (
         <>
-          <Panel title="Módulos administrativos">
-            <nav className="ow-links" aria-label="Módulos">
+          <Panel title={T.modulesPanel}>
+            <nav className="ow-links" aria-label={T.modulesAria}>
               {links.map(([url, label, detail]) => (
                 <Link href={url!} key={url}>
                   {label}
@@ -215,9 +217,9 @@ export async function AdminWorkspace({
             </nav>
           </Panel>
           <div className="ow-grid-equal">
-            <Panel title="Atividade recente">
+            <Panel title={T.recentPanel}>
               {!audit ? (
-                <Empty>Auditoria indisponível.</Empty>
+                <Empty>{T.auditUnavailable}</Empty>
               ) : (
                 <ul className="ow-list">
                   {audit
@@ -231,7 +233,7 @@ export async function AdminWorkspace({
                           <strong>{auditActionLabel(dict, a.action)}</strong>
                           <small>
                             {date(a.created_at, true)} ·{" "}
-                            {a.actor_role ?? "Sistema"}
+                            {a.actor_role ?? T.system}
                           </small>
                         </div>
                       </li>
@@ -240,38 +242,37 @@ export async function AdminWorkspace({
                 </ul>
               )}
             </Panel>
-            <Panel title="Governança e saúde observada">
+            <Panel title={T.govPanel}>
               <ul className="ow-list">
                 <li>
-                  <strong>Assistente FleetMind</strong>
+                  <strong>{T.fleetmindAssistant}</strong>
                   <Tag tone={state?.policy.enabled ? "green" : "amber"}>
                     {state
                       ? state.policy.enabled
-                        ? "Habilitado"
-                        : "Desativado"
-                      : "Indisponível"}
+                        ? T.enabled
+                        : T.disabled
+                      : T.unavailable}
                   </Tag>
                 </li>
                 <li>
                   <strong>Google Maps / Routes</strong>
                   <span>
                     {google
-                      ? "Credencial configurada; conferir leituras"
-                      : "Credencial não configurada"}
+                      ? T.googleOk
+                      : T.googleNo}
                   </span>
                 </li>
                 <li>
                   <strong>SMTP</strong>
                   <span>
                     {smtp
-                      ? "Configurado; entrega não comprovada"
-                      : "Não configurado"}
+                      ? T.smtpOk
+                      : T.smtpNo}
                   </span>
                 </li>
               </ul>
               <p className="ow-note">
-                A presença de uma credencial não comprova disponibilidade ou
-                entrega.
+                {T.credNote}
               </p>
             </Panel>
           </div>
@@ -280,10 +281,10 @@ export async function AdminWorkspace({
         <div className="ow-grid">
           <div className="ow-stack">
             <Panel
-              title="Status das integrações"
+              title={T.intStatusPanel}
               action={
                 <Link className="ow-link" href="/admin/integrations">
-                  Atualizar leituras
+                  {T.refreshReadings}
                 </Link>
               }
             >
@@ -291,10 +292,10 @@ export async function AdminWorkspace({
                 <table className="ow-table">
                   <thead>
                     <tr>
-                      <th>Integração</th>
-                      <th>Configuração</th>
-                      <th>Evidência disponível</th>
-                      <th>Observação</th>
+                      <th>{T.thIntegration}</th>
+                      <th>{T.thConfig}</th>
+                      <th>{T.thEvidence}</th>
+                      <th>{T.thNote}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -302,79 +303,79 @@ export async function AdminWorkspace({
                       <td>Supabase</td>
                       <td>
                         <Tag tone={dbConfig ? "green" : "amber"}>
-                          {dbConfig ? "Configurado" : "Não configurado"}
+                          {dbConfig ? T.configured : T.notConfigured}
                         </Tag>
                       </td>
                       <td>
                         {users
-                          ? "Consulta autenticada concluída"
-                          : "Consulta não confirmada"}
+                          ? T.dbQueryDone
+                          : T.dbQueryUnconfirmed}
                       </td>
-                      <td>Autenticação, dados e armazenamento</td>
+                      <td>{T.dbNote}</td>
                     </tr>
                     <tr>
                       <td>Google Maps / Routes</td>
                       <td>
                         <Tag tone={google ? "green" : "amber"}>
-                          {google ? "Configurado" : "Não configurado"}
+                          {google ? T.configured : T.notConfigured}
                         </Tag>
                       </td>
                       <td>
                         {calls === null
-                          ? "Leituras indisponíveis"
-                          : `${calls} chamadas · ${failures} erros registrados`}
+                          ? T.readingsUnavailable
+                          : fmt(T.callsErrors, { calls: calls, failures: failures ?? 0 })}
                       </td>
                       <td>
-                        Contadores operacionais; sem teste sintético faturável
+                        {T.googleNote}
                       </td>
                     </tr>
                     <tr>
                       <td>SMTP transacional</td>
                       <td>
                         <Tag tone={smtp ? "green" : "amber"}>
-                          {smtp ? "Configurado" : "Não configurado"}
+                          {smtp ? T.configured : T.notConfigured}
                         </Tag>
                       </td>
-                      <td>Entrega não comprovada por esta consulta</td>
+                      <td>{T.smtpEvidence}</td>
                       <td>
-                        Configuração permanece no ambiente; valores não expostos
+                        {T.smtpNote}
                       </td>
                     </tr>
                     <tr>
                       <td>SAP</td>
                       <td>
-                        <Tag>Futuro / condicional</Tag>
+                        <Tag>{T.futureConditional}</Tag>
                       </td>
-                      <td>Sem adapter validado</td>
-                      <td>Integração não declarada ativa</td>
+                      <td>{T.noValidatedAdapter}</td>
+                      <td>{T.notDeclaredActive}</td>
                     </tr>
                     <tr>
                       <td>WhatsApp</td>
                       <td>
-                        <Tag>Não integrado</Tag>
+                        <Tag>{T.notIntegrated}</Tag>
                       </td>
-                      <td>Sem fornecedor validado</td>
-                      <td>Comunicação in-app permanece disponível</td>
+                      <td>{T.noValidatedProvider}</td>
+                      <td>{T.inAppAvailable}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </Panel>
-            <Panel title="Leituras do provedor geográfico">
+            <Panel title={T.geoPanel}>
               {!quota ? (
-                <Empty>Contadores indisponíveis.</Empty>
+                <Empty>{T.countersUnavailable}</Empty>
               ) : !quota.length ? (
-                <Empty>Ainda não há chamadas registradas.</Empty>
+                <Empty>{T.noCallsYet}</Empty>
               ) : (
                 <div className="ow-table-scroll">
                   <table className="ow-table">
                     <thead>
                       <tr>
-                        <th>Data</th>
-                        <th>Operação</th>
-                        <th>Chamadas</th>
-                        <th>Erros</th>
-                        <th>Latência média observada</th>
+                        <th>{T.thDate}</th>
+                        <th>{T.thOperation}</th>
+                        <th>{T.thCalls}</th>
+                        <th>{T.thErrors}</th>
+                        <th>{T.thLatency}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -402,66 +403,61 @@ export async function AdminWorkspace({
               )}
             </Panel>
           </div>
-          <Panel title="Segurança das integrações">
+          <Panel title={T.intSecurityPanel}>
             <p className="ow-muted">
-              Credenciais ficam no ambiente e não são retornadas ao navegador. A
-              atualização desta tela consulta evidências existentes; não envia
-              mensagens, não reprocessa transações e não altera as cotas.
+              {T.intSecurityText}
             </p>
           </Panel>
         </div>
       ) : view === "ai" ? (
         <div className="ow-grid">
           <div className="ow-stack">
-            <Panel title="Recursos de inteligência e automação">
+            <Panel title={T.aiResourcesPanel}>
               <div className="ow-links">
                 <div className="ow-panel">
-                  <strong>Assistente FleetMind</strong>
+                  <strong>{T.fleetmindAssistant}</strong>
                   <p className="ow-note">
-                    O controle é verificado no servidor antes de mensagens e
-                    confirmações.
+                    {T.assistantControl}
                   </p>
                   <Tag tone={state?.policy.enabled ? "green" : "amber"}>
                     {state
                       ? state.policy.enabled
-                        ? "Habilitado"
-                        : "Desativado"
-                      : "Indisponível"}
+                        ? T.enabled
+                        : T.disabled
+                      : T.unavailable}
                   </Tag>
                 </div>
                 <div className="ow-panel">
-                  <strong>Reserva inteligente</strong>
+                  <strong>{T.smartBooking}</strong>
                   <p className="ow-note">
-                    Política determinística configurada na organização; os
-                    fluxos manuais permanecem disponíveis.
+                    {T.smartBookingText}
                   </p>
                   <Link className="ow-link" href="/settings">
-                    Abrir políticas
+                    {T.openPolicies}
                   </Link>
                 </div>
                 <div className="ow-panel">
-                  <strong>Smart Carpool</strong>
+                  <strong>{T.smartCarpool}</strong>
                   <p className="ow-note">
-                    Matching explicável, tolerâncias e consentimento
-                    preservados.
+                    {T.smartCarpoolText}
                   </p>
                   <Link className="ow-link" href="/settings">
-                    Abrir política de caronas
+                    {T.openCarpoolPolicy}
                   </Link>
                 </div>
               </div>
             </Panel>
-            <Panel title="Histórico de versões">
+            <Panel title={T.versionsPanel}>
               {state ? (
                 <>
                   <div className="ow-table-scroll">
                     <table className="ow-table">
                       <thead>
                         <tr>
-                          <th>Versão</th>
-                          <th>Assistente</th>
-                          <th>Motivo</th>
-                          <th>Data</th>
+                          <th>{T.thVersion}</th>
+                          <th>{T.thAssistant}</th>
+                          <th>{T.thReason}</th>
+                          <th>{T.thDate}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -470,8 +466,8 @@ export async function AdminWorkspace({
                             <td>{v.version}</td>
                             <td>
                               {v.assistant_enabled
-                                ? "Habilitado"
-                                : "Desativado"}
+                                ? T.enabled
+                                : T.disabled}
                             </td>
                             <td>{v.reason}</td>
                             <td>{date(v.created_at, true)}</td>
@@ -482,17 +478,16 @@ export async function AdminWorkspace({
                   </div>
                   {state && state.policy_versions.length === 0 && (
                     <Empty>
-                      Nenhuma alteração publicada. A política inicial preserva o
-                      funcionamento existente.
+                      {T.noChange}
                     </Empty>
                   )}
                 </>
               ) : (
-                <Empty>Histórico indisponível.</Empty>
+                <Empty>{T.historyUnavailable}</Empty>
               )}
             </Panel>
           </div>
-          <Panel title="Publicar política do assistente">
+          <Panel title={T.publishPanel}>
             <form action={adminCommand} className="ow-form">
               <input type="hidden" name="command" value="ai.policy" />
               <input type="hidden" name="request_id" value={randomUUID()} />
@@ -508,10 +503,10 @@ export async function AdminWorkspace({
                   defaultChecked={state?.policy.enabled ?? false}
                   disabled={!state}
                 />
-                Assistente habilitado
+                {T.assistantEnabledLabel}
               </label>
               <label className="ow-field">
-                <span>Justificativa</span>
+                <span>{T.justification}</span>
                 <textarea
                   name="reason"
                   minLength={3}
@@ -520,29 +515,27 @@ export async function AdminWorkspace({
                 />
               </label>
               <p className="ow-wide">
-                Ações críticas continuam exigindo confirmação humana. Esta tela
-                não habilita autonomia para aprovar, reservar ou liberar
-                veículos.
+                {T.criticalActions}
               </p>
-              <Submit disabled={!state}>Publicar nova versão</Submit>
+              <Submit disabled={!state}>{T.publishNew}</Submit>
             </form>
           </Panel>
         </div>
       ) : (
         <>
           <div className="ow-grid">
-            <Panel title="Lista de eventos de auditoria">
+            <Panel title={T.auditListPanel}>
               <form className="ow-filters" method="get">
                 <Field
-                  label="Buscar ação, entidade ou correlação"
+                  label={T.searchLabel}
                   name="q"
                   value={params.q}
                   maxLength={100}
                 />
                 <label className="ow-field">
-                  <span>Ação</span>
+                  <span>{T.actionLabel}</span>
                   <select name="action" defaultValue={params.action ?? ""}>
-                    <option value="">Todas</option>
+                    <option value="">{T.all}</option>
                     {[...new Set(audit?.map((a) => a.action))]
                       .sort()
                       .map((a) => (
@@ -552,10 +545,10 @@ export async function AdminWorkspace({
                       ))}
                   </select>
                 </label>
-                <Submit>Filtrar</Submit>
+                <Submit>{T.filter}</Submit>
               </form>
               {!filtered ? (
-                <Empty>Auditoria indisponível.</Empty>
+                <Empty>{T.auditUnavailable}</Empty>
               ) : !filtered.length ? (
                 <Empty />
               ) : (
@@ -563,11 +556,11 @@ export async function AdminWorkspace({
                   <table className="ow-table">
                     <thead>
                       <tr>
-                        <th>Data</th>
-                        <th>Ação</th>
-                        <th>Perfil</th>
-                        <th>Entidade</th>
-                        <th>Correlação</th>
+                        <th>{T.thDate}</th>
+                        <th>{T.thAction}</th>
+                        <th>{T.thProfile}</th>
+                        <th>{T.thEntity}</th>
+                        <th>{T.thCorrelation}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -575,7 +568,7 @@ export async function AdminWorkspace({
                         <tr key={a.id}>
                           <td>{date(a.created_at, true)}</td>
                           <td>{auditActionLabel(dict, a.action)}</td>
-                          <td>{a.actor_role ?? "Sistema"}</td>
+                          <td>{a.actor_role ?? T.system}</td>
                           <td>
                             {a.entity_type}
                             <small>{a.entity_id}</small>
@@ -590,24 +583,20 @@ export async function AdminWorkspace({
                 </div>
               )}
             </Panel>
-            <Panel title="Auditoria e privacidade">
+            <Panel title={T.auditPrivacyPanel}>
               <p className="ow-muted">
-                Eventos são imutáveis nos fluxos normais. O relatório não expõe
-                números de CNH, segredos nem payloads completos de dados
-                pessoais.
+                {T.auditImmutable}
               </p>
               <p className="ow-note">
-                Solicitações de exclusão exigem análise de finalidade, base
-                legal e retenção; sua conclusão não executa uma exclusão
-                automática.
+                {T.deletionNote}
               </p>
             </Panel>
           </div>
-          <Panel title="Solicitações de privacidade dos titulares">
+          <Panel title={T.privacyPanel}>
             {!state ? (
-              <Empty>Solicitações indisponíveis.</Empty>
+              <Empty>{T.requestsUnavailable}</Empty>
             ) : !state.privacy_requests.length ? (
-              <Empty>Nenhuma solicitação registrada.</Empty>
+              <Empty>{T.noRequests}</Empty>
             ) : (
               <ul className="ow-list">
                 {state.privacy_requests.map((r) => (
@@ -617,25 +606,25 @@ export async function AdminWorkspace({
                         {
                           (
                             {
-                              access: "Acesso aos dados",
-                              correction: "Correção",
-                              export: "Exportação",
-                              deletion: "Exclusão",
+                              access: T.kindAccess,
+                              correction: T.kindCorrection,
+                              export: T.kindExport,
+                              deletion: T.kindDeletion,
                             } as Record<string, string>
                           )[r.kind]
                         }{" "}
                         ·{" "}
                         {users?.find((u) => u.id === r.subject_id)?.full_name ??
-                          "Titular"}
+                          T.subject}
                       </strong>
                       <p>{r.summary}</p>
                       <small>
                         {date(r.created_at, true)} · {r.status}
                       </small>
-                      {r.response && <p>Resposta: {r.response}</p>}
+                      {r.response && <p>{fmt(T.responseLine, { response: r.response })}</p>}
                       {!["completed", "rejected"].includes(r.status) && (
                         <details>
-                          <summary>Tratar solicitação</summary>
+                          <summary>{T.handleRequest}</summary>
                           <form action={adminCommand} className="ow-form">
                             <input
                               type="hidden"
@@ -654,17 +643,17 @@ export async function AdminWorkspace({
                               value={r.version}
                             />
                             <label className="ow-field">
-                              <span>Situação</span>
+                              <span>{T.situation}</span>
                               <select name="status">
-                                <option value="in_review">Em análise</option>
-                                <option value="completed">Concluída</option>
+                                <option value="in_review">{T.inReview}</option>
+                                <option value="completed">{T.completed}</option>
                                 <option value="rejected">
-                                  Indeferida com justificativa
+                                  {T.rejectedJustified}
                                 </option>
                               </select>
                             </label>
                             <label className="ow-field">
-                              <span>Resposta / fundamentação</span>
+                              <span>{T.responseBasis}</span>
                               <textarea
                                 name="response"
                                 minLength={3}
@@ -672,7 +661,7 @@ export async function AdminWorkspace({
                                 required
                               />
                             </label>
-                            <Submit>Registrar tratamento</Submit>
+                            <Submit>{T.registerHandling}</Submit>
                           </form>
                         </details>
                       )}

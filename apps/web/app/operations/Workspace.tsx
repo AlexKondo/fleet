@@ -11,10 +11,10 @@ export const money = (value: number | null) =>
   value === null
     ? "—"
     : value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-export const date = (value: string | null, time = false) =>
+export const date = (value: string | null, time = false, locale = "pt-BR") =>
   !value
     ? "—"
-    : new Intl.DateTimeFormat("pt-BR", {
+    : new Intl.DateTimeFormat(locale, {
         timeZone: "America/Sao_Paulo",
         day: "2-digit",
         month: "2-digit",

@@ -13,6 +13,8 @@ import { getRoleOptions } from "./ROLE_LABELS";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
 import { errorLabel } from "@/lib/i18n/errorLabel";
+import { accessErrorText } from "@/lib/i18n/areas/settingsMisc";
+import type { Locale } from "@/lib/i18n/locales";
 
 const initialState: UserActionState = { status: "idle" };
 const AUTO_SAVED_VISIBLE_MS = 2500;
@@ -34,9 +36,11 @@ export function UserRow({
   member,
   isSelf,
   dict,
+  locale,
   licensesAvailable = true,
 }: {
   dict: Dictionary;
+  locale: Locale;
   /** false when list_member_licenses() failed: license/authorization controls are rendered disabled and carry NO fields. */
   licensesAvailable?: boolean;
   member: {
@@ -279,7 +283,7 @@ export function UserRow({
         ) : null}
         {removeState.status === "error" ? (
           <p role="alert" className="mt-1 text-xs text-signal-red">
-            {errorLabel(dict, removeState.error)}
+            {accessErrorText(locale, removeState.error) ?? errorLabel(dict, removeState.error)}
           </p>
         ) : null}
       </td>

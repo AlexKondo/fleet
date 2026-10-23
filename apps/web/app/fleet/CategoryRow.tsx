@@ -5,14 +5,17 @@ import { deleteCategory, updateCategory, type FleetActionState } from "./actions
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { errorLabel } from "@/lib/i18n/errorLabel";
+import type { FleetKey } from "@/lib/i18n/areas/fleet";
 
 const initialState: FleetActionState = { status: "idle" };
 
 export function CategoryRow({
   category,
   dict,
+  T,
 }: {
   dict: Dictionary;
+  T: Record<FleetKey, string>;
   category: {
     lifecycle_version?:number;
     id: string;
@@ -130,13 +133,13 @@ export function CategoryRow({
         <form action={deleteAction}>
           <input type="hidden" name="id" value={category.id} />
           <input type="hidden" name="lifecycleVersion" value={category.lifecycle_version??1}/>
-          <input name="archiveReason" aria-label="Motivo da desativação" placeholder="Motivo da desativação" required minLength={3} maxLength={1000}/>
+          <input name="archiveReason" aria-label={T.archiveReason} placeholder={T.archiveReason} required minLength={3} maxLength={1000}/>
           <ConfirmSubmitButton
-            confirmMessage={"Arquivar ou desativar este registro preservando seus históricos?"}
+            confirmMessage={T.archiveConfirm}
             disabled={deletePending}
             className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
           >
-            {deletePending ? "Registrando…" : "Desativar"}
+            {deletePending ? T.registering : T.deactivate}
           </ConfirmSubmitButton>
         </form>
       </div>

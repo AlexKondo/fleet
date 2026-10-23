@@ -13,6 +13,9 @@ import {
   OperationForm,
 } from "@/app/operations/Workspace";
 import { pageAll } from "@/lib/carpool/kpi/loadKpis";
+import { getAreaText } from "@/lib/i18n/areaText";
+import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
+import { gateHistoryTexts } from "@/lib/i18n/areas/gateHistory";
 export default async function GateHistory({
   searchParams,
 }: {
@@ -25,6 +28,9 @@ export default async function GateHistory({
   }>;
 }) {
   const params = await searchParams;
+  const T = await getAreaText(gateHistoryTexts);
+  const locale = await getLocale();
+  const opsShell = (await getDictionary()).opsShell;
   const data = await loadOperationalWorkspace([
     "security",
     "fleet_manager",
@@ -54,84 +60,83 @@ export default async function GateHistory({
   return (
     <Workspace
       data={data}
-      title="Portaria — Histórico de Movimentações"
-      subtitle="Saídas e chegadas físicas confirmadas, tentativas impedidas e trilha imutável."
+      title={T.title}
+      subtitle={T.subtitle}
       active="gateHistory"
       error={params.error}
       success={params.success}
     >
       <Metrics
+        ariaLabel={opsShell.metricsAria}
         items={[
           {
-            label: "Movimentações no filtro",
+            label: T.mMovements,
             value: rows?.filter((e) => e.kind !== "denied").length ?? null,
           },
           {
-            label: "Saídas confirmadas",
+            label: T.mDepartures,
             value: rows?.filter((e) => e.kind === "departure").length ?? null,
             tone: "green",
           },
           {
-            label: "Chegadas confirmadas",
+            label: T.mArrivals,
             value: rows?.filter((e) => e.kind === "arrival").length ?? null,
           },
           {
-            label: "Saídas impedidas",
+            label: T.mDenied,
             value: rows?.filter((e) => e.kind === "denied").length ?? null,
             tone: "red",
           },
         ]}
       />
-      <nav className="ow-tabs" aria-label="Portaria">
-        <Link href="/gate">Fila operacional</Link>
-        <Link href="/gate/exceptions">Ocorrências e exceções</Link>
+      <nav className="ow-tabs" aria-label={T.navAria}>
+        <Link href="/gate">{T.tabQueue}</Link>
+        <Link href="/gate/exceptions">{T.tabExceptions}</Link>
         <Link href="/gate/history" aria-current="page">
-          Histórico e auditoria
+          {T.tabHistory}
         </Link>
       </nav>
       <div className="ow-grid">
         <div className="ow-stack">
-          <Panel title="Histórico de movimentos">
+          <Panel title={T.historyPanel}>
             <form className="ow-filters" method="get">
               <Field
-                label="Buscar placa"
+                label={T.searchPlate}
                 name="q"
                 value={params.q}
                 maxLength={20}
               />
               <label className="ow-field">
-                <span>Movimento</span>
+                <span>{T.movement}</span>
                 <select name="kind" defaultValue={params.kind ?? ""}>
-                  <option value="">Todos</option>
-                  <option value="departure">Saída</option>
-                  <option value="arrival">Chegada</option>
-                  <option value="denied">Saída impedida</option>
+                  <option value="">{T.all}</option>
+                  <option value="departure">{T.optDeparture}</option>
+                  <option value="arrival">{T.optArrival}</option>
+                  <option value="denied">{T.optDenied}</option>
                 </select>
               </label>
-              <Submit>Filtrar</Submit>
+              <Submit>{T.filter}</Submit>
             </form>
             {rows === undefined ? (
-              <Empty>Histórico indisponível.</Empty>
+              <Empty>{T.historyUnavailable}</Empty>
             ) : !rows.length ? (
-              <Empty>
-                Nenhuma movimentação física registrada neste módulo.
-              </Empty>
+              <Empty>{T.noMovements}</Empty>
             ) : (
               <div className="ow-table-scroll">
                 <table className="ow-table">
                   <thead>
                     <tr>
-                      <th>Data / hora</th>
-                      <th>Movimento</th>
-                      <th>Veículo</th>
-                      <th>Registro</th>
-                      <th>Reserva</th>
+                      <th>{T.thDateTime}</th>
+                      <th>{T.thMovement}</th>
+                      <th>{T.thVehicle}</th>
+                      <th>{T.thRecord}</th>
+                      <th>{T.thReservation}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((e) => (
                       <tr key={e.id} data-selected={e.id === selected?.id}>
-                        <td>{date(e.created_at, true)}</td>
+                        <td>{date(e.created_at, true, locale)}</td>
                         <td>
                           <Tag
                             tone={
@@ -143,10 +148,10 @@ export default async function GateHistory({
                             }
                           >
                             {e.kind === "departure"
-                              ? "Saída"
+                              ? T.tagDeparture
                               : e.kind === "arrival"
-                                ? "Chegada"
-                                : "Impedida"}
+                                ? T.tagArrival
+                                : T.tagDenied}
                           </Tag>
                         </td>
                         <td>
@@ -156,11 +161,10 @@ export default async function GateHistory({
                           </strong>
                         </td>
                         <td>
-                          {e.reason || "Confirmação operacional"}
+                          {e.reason || T.operationalConfirmation}
                           {e.legacy_arrival && (
                             <small>
-                              Sem saída anterior registrada · chegada legada
-                              justificada
+                              {T.legacyArrival}
                             </small>
                           )}
                         </td>
@@ -168,7 +172,7 @@ export default async function GateHistory({
                           <Link
                             href={`/gate/history?reservation=${e.reservation_id}`}
                           >
-                            Linha do tempo →
+                            {T.timeline}
                           </Link>
                         </td>
                       </tr>
@@ -178,64 +182,60 @@ export default async function GateHistory({
               </div>
             )}
           </Panel>
-          <Panel title="Registrar movimento físico">
+          <Panel title={T.recordPanel}>
             <p className="ow-muted">
-              Saída exige reserva válida, veículo sem bloqueios e os dois
-              checklists de retirada. Chegada real pode ser registrada mesmo com
-              veículo bloqueado. Uma tentativa impedida nunca conta como saída.
+              {T.recordNote}
             </p>
             <OperationForm command="gate.record" returnTo="/gate/history">
               <label className="ow-field">
-                <span>Reserva / viagem</span>
+                <span>{T.reservationTrip}</span>
                 <select name="reservation_id" required defaultValue={params.reservation ?? ""}>
-                  <option value="">Selecione</option>
+                  <option value="">{T.select}</option>
                   {reservations?.map((r) => (
                     <option key={r.id} value={r.id}>
                       {data.vehicles?.find((v) => v.id === r.vehicle_id)?.plate}{" "}
                       · {r.trip_request?.requester?.full_name} ·{" "}
-                      {date(r.start_at, true)}
+                      {date(r.start_at, true, locale)}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="ow-field">
-                <span>Movimento</span>
+                <span>{T.movement}</span>
                 <select name="kind" defaultValue={params.kind === "arrival" ? "arrival" : params.kind === "denied" ? "denied" : "departure"}>
-                  <option value="departure">Confirmar saída física</option>
-                  <option value="arrival">Confirmar chegada física</option>
-                  <option value="denied">Registrar saída impedida</option>
+                  <option value="departure">{T.confirmDeparture}</option>
+                  <option value="arrival">{T.confirmArrival}</option>
+                  <option value="denied">{T.recordDenied}</option>
                 </select>
               </label>
               <label className="ow-field">
-                <span>Motivo / observação</span>
+                <span>{T.reasonNote}</span>
                 <textarea name="reason" maxLength={1000} />
               </label>
               <p className="ow-wide">
-                Se a viagem começou antes da implantação deste registro,
-                justifique a chegada sem saída prévia. A confirmação física não
-                substitui os checklists.
+                {T.legacyNote}
               </p>
               <Submit
                 disabled={data.migrationUnavailable || reservations === null}
               >
-                Confirmar e auditar movimento
+                {T.confirmAudit}
               </Submit>
             </OperationForm>
             {reservations === null && (
               <p role="alert" className="ow-note">
-                Não foi possível consultar as reservas.
+                {T.reservationsFail}
               </p>
             )}
           </Panel>
         </div>
         <aside className="ow-stack">
-          <Panel title="Linha do tempo da viagem">
+          <Panel title={T.timelinePanel}>
             {!selected ? (
-              <Empty>Selecione uma movimentação.</Empty>
+              <Empty>{T.selectMovement}</Empty>
             ) : (
               <>
                 <div className="ow-detail-head">
-                  <small>Veículo</small>
+                  <small>{T.vehicle}</small>
                   <h3>
                     {data.vehicles?.find((v) => v.id === selected.vehicle_id)
                       ?.plate ?? "—"}
@@ -244,7 +244,7 @@ export default async function GateHistory({
                     className="ow-link"
                     href={`/reservations/${selected.reservation_id}`}
                   >
-                    Abrir reserva e checklists →
+                    {T.openReservation}
                   </Link>
                 </div>
                 <ul className="ow-list">
@@ -258,13 +258,13 @@ export default async function GateHistory({
                       <li key={e.id}>
                         <Tag tone={e.kind === "denied" ? "red" : "blue"}>
                           {e.kind === "departure"
-                            ? "Saída"
+                            ? T.tagDeparture
                             : e.kind === "arrival"
-                              ? "Chegada"
-                              : "Impedida"}
+                              ? T.tagArrival
+                              : T.tagDenied}
                         </Tag>
                         <div>
-                          <strong>{date(e.created_at, true)}</strong>
+                          <strong>{date(e.created_at, true, locale)}</strong>
                           <p>{e.reason}</p>
                         </div>
                       </li>
@@ -273,11 +273,9 @@ export default async function GateHistory({
               </>
             )}
           </Panel>
-          <Panel title="Integridade do histórico">
+          <Panel title={T.integrityPanel}>
             <p className="ow-muted">
-              Registros físicos não são editáveis ou excluíveis pela interface.
-              O horário vem do servidor e o responsável vem da sessão
-              autenticada.
+              {T.integrityNote}
             </p>
           </Panel>
         </aside>

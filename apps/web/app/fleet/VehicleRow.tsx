@@ -11,6 +11,7 @@ import { EditVehicleForm, type EditableVehicle } from "./EditVehicleForm";
 import { useVehicleDialog } from "./VehicleEditDialog";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/locales";
+import type { FleetKey } from "@/lib/i18n/areas/fleet";
 import { VEHICLE_COLOR_OPTIONS, type VehicleColorValue } from "@/lib/domain/vehicleFieldOptions";
 import { errorLabel } from "@/lib/i18n/errorLabel";
 
@@ -32,6 +33,7 @@ export function VehicleRow({
   locations,
   dict,
   locale,
+  T,
 }: {
   vehicle: EditableVehicle;
   statusMeta: StatusMeta;
@@ -41,6 +43,7 @@ export function VehicleRow({
   locations: { id: string; name: string }[];
   dict: Dictionary;
   locale: Locale;
+  T: Record<FleetKey, string>;
 }) {
   // Rendered inside the edit popup of VehicleFilterGrid (pencil icon): the form is always open; saving / cancelling closes the popup.
   const { close } = useVehicleDialog();
@@ -115,13 +118,13 @@ export function VehicleRow({
         <form action={deleteAction}>
           <input type="hidden" name="id" value={vehicle.id} />
           <input type="hidden" name="lifecycleVersion" value={vehicle.lifecycle_version??1}/>
-          <input name="archiveReason" aria-label="Motivo da desativação" placeholder="Motivo da desativação" required minLength={3} maxLength={1000}/>
+          <input name="archiveReason" aria-label={T.archiveReason} placeholder={T.archiveReason} required minLength={3} maxLength={1000}/>
           <ConfirmSubmitButton
-            confirmMessage={"Arquivar ou desativar este registro preservando seus históricos?"}
+            confirmMessage={T.archiveConfirm}
             disabled={deletePending}
             className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
           >
-            {deletePending ? "Registrando…" : "Arquivar"}
+            {deletePending ? T.registering : T.archive}
           </ConfirmSubmitButton>
         </form>
       </div>

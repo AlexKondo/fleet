@@ -25,3 +25,12 @@ Pedido do responsável após o deploy `ee56fa5`. Estado: **implementado e testad
 
 ## 4. Verificação
 tsc 0 · vitest **1106/1106** (112 arquivos; +20) · lint 0 · `next build` ok. Nenhuma migration; nenhuma mudança em produção.
+
+## 5. Ajuste do contorno e textos que não acompanhavam o idioma (2026-10-23, segunda parte)
+- **Frota, linha selecionada:** removida a linha azul interna; ficou só o contorno externo da linha (`vehicle-workspace.css`).
+- **Idioma:** uma varredura em inglês de 45 telas achou ~450 textos fixos em português (Frota, caronas, energia, motoristas, ocorrências, portaria, administração, chaves, privacidade, calendário, painel). Foram movidos para arquivos por área em `apps/web/lib/i18n/areas/` (pt-BR, en-US, es, zh-CN, mesmas chaves e mesmos `{parâmetros}`), com o mecanismo `lib/i18n/areaText.ts` e o teste `lib/domain/i18nAreas.test.ts` (chaves completas, sem texto vazio, mesmos parâmetros).
+- **Quantidade por área:** Frota ~340 · caronas/chaves/privacidade ~177 · ocorrências/portaria/manutenção ~193 · administração/painel/viagens ~240.
+- **Português preservado:** o texto de todas as telas em pt-BR foi comparado com a referência de antes (`i18n_base_ptBR.json` x `i18n_after_ptBR.json`): só mudam textos que passaram a sair juntos no mesmo trecho e o aviso de notificações. Nenhum texto em português mudou.
+- **Em outros idiomas:** en-US de 699 para 281 trechos suspeitos e zh-CN 214; o que sobra é dado do banco (nomes, locais, descrições digitadas, motivos) e frases já em inglês/espanhol.
+- **Pendências conhecidas:** mensagens de erro de chaves (`lib/operations/keyCustody.ts`) e e-mail de convite de usuário seguem só em português; datas e valores em reais do painel de energia/motoristas/manutenção seguem no formato brasileiro; nomes do catálogo de equipamentos e textos digitados vêm do banco.
+- **Verificação:** tsc 0 · vitest 1124/1124 (113 arquivos) · lint 0 · `next build` ok; popup da Frota e fluxo de origem repetidos no navegador local.

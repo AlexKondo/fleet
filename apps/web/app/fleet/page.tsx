@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
+import { areaText } from "@/lib/i18n/areaText";
+import { fleetTexts } from "@/lib/i18n/areas/fleet";
 import { VEHICLE_STATUSES, getStatusMeta } from "../dashboard/statusMeta";
 import { FmShell } from "../carpool/FmShell";
 import { FmCarIcon } from "../fmIcons";
@@ -32,6 +34,7 @@ export default async function FleetPage() {
   const [managementScope,unitDimension]=await Promise.all([loadManagementScope(supabase),loadUnitDimension(supabase)]);
   const dict = await getDictionary();
   const locale = await getLocale();
+  const T = areaText(fleetTexts, locale);
   const statusMeta = getStatusMeta(dict);
   // Options for the client-side status filter, localized here so the client component
   // never needs the status → label map itself.
@@ -124,11 +127,11 @@ export default async function FleetPage() {
       role={profile.role}
       isFleetManager={isFleetManager}
       isAdministrator={isAdministrator}
-      title="Gestão Inteligente de Veículos"
+      title={T.pageTitle}
       subtitle={o.subtitle}
       nonDrivingWorkspace
       legacy
-      headerActions={<AssistantTrigger voice className="fm-btn fm-btn-primary">Falar com o FleetMind</AssistantTrigger>}
+      headerActions={<AssistantTrigger voice className="fm-btn fm-btn-primary">{T.talkToFleetMind}</AssistantTrigger>}
       wide
     >
       <section className="fm-kpis fleet-kpis" aria-label={o.kpisLabel} data-testid="fleet-kpis">
@@ -180,7 +183,7 @@ export default async function FleetPage() {
         </div>
       ) : null}
 
-      <p><Link href="/fleet/archive">Arquivo da frota e cadastros desativados</Link></p>
+      <p><Link href="/fleet/archive">{T.archiveLink}</Link></p>
       <section>
         <FleetTabs
           tabs={[
@@ -193,6 +196,8 @@ export default async function FleetPage() {
                   {vehicles && vehicles.length > 0 ? (
                     <VehicleFilterGrid
                       dict={dict}
+                      T={T}
+                      locale={locale}
                       dimensionsAvailable={unitDimension!==null}
                       statusOptions={statusOptions}
                       vehicles={vehicles.map((v) => ({
@@ -212,6 +217,7 @@ export default async function FleetPage() {
                           <VehicleRow
                             key={v.id}
                             locale={locale}
+                            T={T}
                             vehicle={{
                               id: v.id,
                               lifecycle_version:v.lifecycle_version,
@@ -239,7 +245,7 @@ export default async function FleetPage() {
                         ),
                       }))}
                     />
-                  ) : vehiclesError ? <p role="status">Lista de veículos indisponível. Recarregue para consultar os dados.</p> : (
+                  ) : vehiclesError ? <p role="status">{T.vehiclesUnavailable}</p> : (
                     <EmptyState
                       lead={dict.fleet.emptyState.vehiclesLead}
                       hint={dict.fleet.emptyState.vehiclesHint}
@@ -251,6 +257,7 @@ export default async function FleetPage() {
                     locations={locations ?? []}
                     equipmentItems={equipmentItems ?? []}
                     dict={dict}
+                    T={T}
                   />
                 </div>
               ),
@@ -264,7 +271,7 @@ export default async function FleetPage() {
                   {categories && categories.length > 0 ? (
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                       {categories.map((c) => (
-                        <CategoryRow key={c.id} category={c} dict={dict} />
+                        <CategoryRow key={c.id} category={c} dict={dict} T={T} />
                       ))}
                     </ul>
                   ) : (
@@ -286,7 +293,7 @@ export default async function FleetPage() {
                   {locations && locations.length > 0 ? (
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                       {locations.map((l) => (
-                        <LocationRow key={l.id} location={l} dict={dict} />
+                        <LocationRow key={l.id} location={l} dict={dict} T={T} />
                       ))}
                     </ul>
                   ) : (

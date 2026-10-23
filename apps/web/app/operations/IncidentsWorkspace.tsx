@@ -4,6 +4,9 @@ import {incidentCommand} from "@/app/fleet/incidents/actions";
 import {randomUUID} from "node:crypto";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
 import { pageAll } from "@/lib/carpool/kpi/loadKpis";
+import { fmt, getAreaText } from "@/lib/i18n/areaText";
+import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
+import { incidentsTexts } from "@/lib/i18n/areas/incidents";
 import {
   Workspace,
   Metrics,
@@ -31,6 +34,9 @@ export async function IncidentsWorkspace({
     caseError?: string;
   };
 }) {
+  const T = await getAreaText(incidentsTexts);
+  const locale = await getLocale();
+  const opsShell = (await getDictionary()).opsShell;
   const data = await loadOperationalWorkspace(
     gate
       ? ["security", "fleet_manager", "administrator"]
@@ -69,19 +75,19 @@ export async function IncidentsWorkspace({
     filtered?.find((i) => i.id === params.inspection) ?? filtered?.[0];
   const base = gate ? "/gate/exceptions" : "/fleet/incidents";
   const acks = data.records.acknowledgements;
-  const casePanel=!gate?await IncidentCases({data,params}):null;
+  const casePanel=!gate?await IncidentCases({data,params,T,locale}):null;
   return (
     <Workspace
       data={data}
       title={
         gate
-          ? "Portaria — Ocorrências e Exceções"
-          : "Gestão Inteligente de Ocorrências e Checklists"
+          ? T.gateTitle
+          : T.title
       }
       subtitle={
         gate
-          ? "Análise dos relatos de checklist, bloqueios e registro de ciência da portaria."
-          : "Evidências, equipamentos e ações operacionais vinculadas aos checklists da frota."
+          ? T.gateSubtitle
+          : T.subtitle
       }
       active={gate ? "gateExceptions" : "incidents"}
       managerView={!gate}
@@ -90,88 +96,87 @@ export async function IncidentsWorkspace({
     >
       {casePanel}
       <Metrics
+        ariaLabel={opsShell.metricsAria}
         items={[
           {
-            label: "Relatos identificados",
+            label: T.mReports,
             value: incidents?.length ?? null,
             tone: "red",
           },
           {
-            label: "Checklists consultados",
+            label: T.mChecklists,
             value: inspections?.length ?? null,
           },
           {
-            label: "Relatos de dano",
+            label: T.mDamage,
             value: incidents?.filter((i) => i.has_new_damage).length ?? null,
             tone: "amber",
           },
           {
-            label: "Equipamento ausente",
+            label: T.mEquipment,
             value:
               incidents?.filter((i) => (i.missing_safety_equipment?.length ?? 0))
                 .length ?? null,
           },
           {
-            label: "Ciências registradas",
+            label: T.mAcks,
             value: acks?.length ?? null,
             tone: "green",
           },
         ]}
       />
       {gate && (
-        <nav className="ow-tabs" aria-label="Portaria">
-          <Link href="/gate">Fila operacional</Link>
+        <nav className="ow-tabs" aria-label={T.gateNavAria}>
+          <Link href="/gate">{T.tabQueue}</Link>
           <Link href="/gate/exceptions" aria-current="page">
-            Ocorrências e exceções
+            {T.tabExceptions}
           </Link>
-          <Link href="/gate/history">Histórico e auditoria</Link>
+          <Link href="/gate/history">{T.tabHistory}</Link>
         </nav>
       )}
       <div className="ow-grid">
         <div className="ow-stack">
-          <Panel title="Ocorrências registradas nos checklists">
+          <Panel title={T.panelRegistered}>
             <form method="get" className="ow-filters">
               <Field
-                label="Buscar placa ou relato"
+                label={T.searchLabel}
                 name="q"
                 value={params.q}
                 maxLength={100}
               />
               <label className="ow-field">
-                <span>Tipo de relato</span>
+                <span>{T.reportType}</span>
                 <select name="type" defaultValue={params.type ?? ""}>
-                  <option value="">Todos</option>
-                  <option value="damage">Dano</option>
-                  <option value="equipment">Equipamento</option>
-                  <option value="cleaning">Limpeza</option>
+                  <option value="">{T.all}</option>
+                  <option value="damage">{T.typeDamage}</option>
+                  <option value="equipment">{T.typeEquipment}</option>
+                  <option value="cleaning">{T.typeCleaning}</option>
                 </select>
               </label>
-              <Submit>Filtrar</Submit>
+              <Submit>{T.filter}</Submit>
             </form>
             {inspections === null ? (
-              <Empty>Não foi possível consultar os checklists.</Empty>
+              <Empty>{T.loadFail}</Empty>
             ) : !filtered?.length ? (
-              <Empty>
-                Nenhum relato de dano, limpeza ou equipamento neste filtro.
-              </Empty>
+              <Empty>{T.noneInFilter}</Empty>
             ) : (
               <div className="ow-table-scroll">
                 <table className="ow-table">
                   <thead>
                     <tr>
-                      <th>Data / hora</th>
-                      <th>Veículo</th>
-                      <th>Relato</th>
-                      <th>Checklist</th>
-                      <th>Origem</th>
-                      <th>Ciência</th>
-                      <th>Abrir</th>
+                      <th>{T.thDateTime}</th>
+                      <th>{T.thVehicle}</th>
+                      <th>{T.thReport}</th>
+                      <th>{T.thChecklist}</th>
+                      <th>{T.thOrigin}</th>
+                      <th>{T.thAck}</th>
+                      <th>{T.thOpen}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((i) => (
                       <tr key={i.id} data-selected={i.id === selected?.id}>
-                        <td>{date(i.created_at, true)}</td>
+                        <td>{date(i.created_at, true, locale)}</td>
                         <td>
                           <strong>
                             {data.vehicles?.find((v) => v.id === i.vehicle_id)
@@ -179,32 +184,32 @@ export async function IncidentsWorkspace({
                           </strong>
                         </td>
                         <td>
-                          {i.has_new_damage && <Tag tone="red">Dano</Tag>}{" "}
+                          {i.has_new_damage && <Tag tone="red">{T.typeDamage}</Tag>}{" "}
                           {(i.missing_safety_equipment?.length ?? 0) > 0 && (
-                            <Tag tone="amber">Equipamento</Tag>
+                            <Tag tone="amber">{T.typeEquipment}</Tag>
                           )}{" "}
                           {(i.is_dirty_exterior || i.is_dirty_interior) && (
-                            <Tag>Limpeza</Tag>
+                            <Tag>{T.typeCleaning}</Tag>
                           )}
                         </td>
                         <td>
-                          {i.type === "pickup" ? "Retirada" : "Devolução"}
+                          {i.type === "pickup" ? T.pickup : T.returnTrip}
                         </td>
                         <td>
                           {i.performed_by_role === "security"
-                            ? "Portaria"
-                            : "Colaborador"}
+                            ? T.security
+                            : T.employee}
                         </td>
                         <td>
                           {acks === null
                             ? "—"
                             : acks.some((a) => a.inspection_id === i.id)
-                              ? "Registrada"
-                              : "Sem ciência"}
+                              ? T.ackDone
+                              : T.ackNone}
                         </td>
                         <td>
                           <Link href={`${base}?inspection=${i.id}`}>
-                            Analisar →
+                            {T.analyze}
                           </Link>
                         </td>
                       </tr>
@@ -214,60 +219,58 @@ export async function IncidentsWorkspace({
               </div>
             )}
           </Panel>
-          <Panel title="Integridade das inspeções">
+          <Panel title={T.integrityPanel}>
             <p className="ow-muted">
-              Os registros do colaborador e da portaria permanecem
-              independentes. Dar ciência não encerra o relato, não apaga
-              evidências e não libera um veículo bloqueado.
+              {T.integrityNote}
             </p>
           </Panel>
         </div>
         <aside className="ow-stack">
-          <Panel title="Análise da ocorrência">
+          <Panel title={T.analysisPanel}>
             {!selected ? (
-              <Empty>Selecione um relato.</Empty>
+              <Empty>{T.selectReport}</Empty>
             ) : (
               <>
                 <div className="ow-detail-head">
                   <small>
                     {selected.performed_by_role === "security"
-                      ? "Portaria"
-                      : "Colaborador"}{" "}
-                    · {date(selected.created_at, true)}
+                      ? T.security
+                      : T.employee}{" "}
+                    · {date(selected.created_at, true, locale)}
                   </small>
                   <h3>
                     {data.vehicles?.find((v) => v.id === selected.vehicle_id)
                       ?.plate ?? "—"}
                   </h3>
-                  <p>{selected.damage_notes || "Sem descrição adicional."}</p>
+                  <p>{selected.damage_notes || T.noExtraDescription}</p>
                 </div>
                 <dl className="ow-data-grid">
                   <div>
-                    <dt>Odômetro</dt>
-                    <dd>{selected.odometer_km===null ? "Não observado nesta conferência" : `${selected.odometer_km.toLocaleString("pt-BR")} km`}</dd>
+                    <dt>{T.odometer}</dt>
+                    <dd>{selected.odometer_km===null ? T.odometerNotObserved : fmt(T.odometerValue, { km: selected.odometer_km.toLocaleString(locale) })}</dd>
                   </div>
                   <div>
-                    <dt>Checklist</dt>
+                    <dt>{T.thChecklist}</dt>
                     <dd>
-                      {selected.type === "pickup" ? "Retirada" : "Devolução"}
+                      {selected.type === "pickup" ? T.pickup : T.returnTrip}
                     </dd>
                   </div>
                   <div>
-                    <dt>Equipamentos ausentes</dt>
+                    <dt>{T.missingEquipment}</dt>
                     <dd>
                       {(selected.missing_safety_equipment ?? []).join(", ") ||
-                        "Nenhum registrado"}
+                        T.noneRecorded}
                     </dd>
                   </div>
                   <div>
-                    <dt>Limpeza</dt>
+                    <dt>{T.cleaning}</dt>
                     <dd>
                       {[
-                        selected.is_dirty_exterior ? "Externa" : null,
-                        selected.is_dirty_interior ? "Interna" : null,
+                        selected.is_dirty_exterior ? T.exterior : null,
+                        selected.is_dirty_interior ? T.interior : null,
                       ]
                         .filter(Boolean)
-                        .join(" / ") || "Sem relato"}
+                        .join(" / ") || T.noReport}
                     </dd>
                   </div>
                 </dl>
@@ -275,33 +278,33 @@ export async function IncidentsWorkspace({
                   className="ow-link"
                   href={`/reservations/${selected.reservation_id}`}
                 >
-                  Abrir reserva, fotos e checklists →
+                  {T.openReservation}
                 </Link>
-                {!gate&&<details><summary>Abrir tratamento deste relato</summary><form action={incidentCommand} className="ow-form"><input type="hidden" name="command" value="create"/><input type="hidden" name="request_id" value={randomUUID()}/><input type="hidden" name="vehicle_id" value={selected.vehicle_id}/><input type="hidden" name="inspection_id" value={selected.id}/><input type="hidden" name="reservation_id" value={selected.reservation_id}/><input type="hidden" name="kind" value={selected.has_new_damage?'damage':selected.missing_safety_equipment?.length?'equipment':'cleaning'}/><Field label="Título da ocorrência" name="title" required maxLength={160} value={selected.has_new_damage?'Relato de dano no checklist':selected.missing_safety_equipment?.length?'Equipamento ausente no checklist':'Relato de limpeza no checklist'}/><label className="ow-field">Severidade<select name="severity"><option value="low">Baixa</option><option value="medium">Média</option><option value="high">Alta</option><option value="critical">Crítica</option></select></label><label className="ow-field">Descrição e contexto<textarea name="notes" required minLength={3} maxLength={3000} defaultValue={selected.damage_notes??''}/></label><Submit>Registrar ocorrência vinculada</Submit></form></details>}
+                {!gate&&<details><summary>{T.openTreatment}</summary><form action={incidentCommand} className="ow-form"><input type="hidden" name="command" value="create"/><input type="hidden" name="request_id" value={randomUUID()}/><input type="hidden" name="vehicle_id" value={selected.vehicle_id}/><input type="hidden" name="inspection_id" value={selected.id}/><input type="hidden" name="reservation_id" value={selected.reservation_id}/><input type="hidden" name="kind" value={selected.has_new_damage?'damage':selected.missing_safety_equipment?.length?'equipment':'cleaning'}/><Field label={T.incidentTitleLabel} name="title" required maxLength={160} value={selected.has_new_damage?T.titleDamage:selected.missing_safety_equipment?.length?T.titleEquipment:T.titleCleaning}/><label className="ow-field">{T.severity}<select name="severity"><option value="low">{T.sevLow}</option><option value="medium">{T.sevMedium}</option><option value="high">{T.sevHigh}</option><option value="critical">{T.sevCritical}</option></select></label><label className="ow-field">{T.descContext}<textarea name="notes" required minLength={3} maxLength={3000} defaultValue={selected.damage_notes??''}/></label><Submit>{T.registerLinked}</Submit></form></details>}
                 {acks === null ? (
-                  <Empty>Ciências indisponíveis.</Empty>
+                  <Empty>{T.acksUnavailable}</Empty>
                 ) : acks.some(
                     (a) =>
                       a.inspection_id === selected.id &&
                       a.actor_id === data.profile.id,
                   ) ? (
                   <p className="ow-banner">
-                    Você já registrou ciência deste relato.
+                    {T.alreadyAcked}
                   </p>
                 ) : (
                   <details open>
-                    <summary>Registrar ciência</summary>
+                    <summary>{T.registerAck}</summary>
                     <OperationForm
                       command="incident.ack"
                       returnTo={`${base}?inspection=${selected.id}`}
                       values={{ inspection_id: selected.id }}
                     >
                       <label className="ow-field">
-                        <span>Observação</span>
+                        <span>{T.note}</span>
                         <textarea name="notes" maxLength={1000} />
                       </label>
                       <Submit disabled={data.migrationUnavailable}>
-                        Confirmar ciência
+                        {T.confirmAck}
                       </Submit>
                     </OperationForm>
                   </details>
@@ -311,10 +314,10 @@ export async function IncidentsWorkspace({
                     ?.filter((a) => a.inspection_id === selected.id)
                     .map((a) => (
                       <li key={a.id}>
-                        <Tag tone="green">Ciência</Tag>
+                        <Tag tone="green">{T.ackTag}</Tag>
                         <div>
-                          <strong>{date(a.created_at, true)}</strong>
-                          <p>{a.notes || "Relato analisado."}</p>
+                          <strong>{date(a.created_at, true, locale)}</strong>
+                          <p>{a.notes || T.reportAnalyzed}</p>
                         </div>
                       </li>
                     ))}
@@ -322,19 +325,19 @@ export async function IncidentsWorkspace({
               </>
             )}
           </Panel>
-          <Panel title="Ações operacionais">
+          <Panel title={T.actionsPanel}>
             <div className="ow-actions">
               <Link className="ow-button ow-button-secondary" href="/gate">
-                Abrir fila da portaria
+                {T.openGateQueue}
               </Link>
               {data.manager && (
                 <Link className="ow-button" href="/dashboard#open-tasks">
-                  Tratar tarefas e bloqueios
+                  {T.treatTasks}
                 </Link>
               )}
             </div>
             <p className="ow-note">
-              A ciência não substitui a resolução operacional das pendências.
+              {T.ackNote}
             </p>
           </Panel>
         </aside>
