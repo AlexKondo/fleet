@@ -34,3 +34,12 @@ tsc 0 · vitest **1106/1106** (112 arquivos; +20) · lint 0 · `next build` ok. 
 - **Em outros idiomas:** en-US de 699 para 281 trechos suspeitos e zh-CN 214; o que sobra é dado do banco (nomes, locais, descrições digitadas, motivos) e frases já em inglês/espanhol.
 - **Pendências conhecidas:** mensagens de erro de chaves (`lib/operations/keyCustody.ts`) e e-mail de convite de usuário seguem só em português; datas e valores em reais do painel de energia/motoristas/manutenção seguem no formato brasileiro; nomes do catálogo de equipamentos e textos digitados vêm do banco.
 - **Verificação:** tsc 0 · vitest 1124/1124 (113 arquivos) · lint 0 · `next build` ok; popup da Frota e fluxo de origem repetidos no navegador local.
+
+## 6. Tela branca "Carregando informações da operação…" e lentidão nas transições (2026-10-23)
+- **Medição em produção (organização fictícia):** transição por clique mediana ~2,9 s; resposta do servidor por página mediana ~1,9 s; 13 de 14 cliques mostraram a tela branca com mensagem.
+- **Tela branca:** 5 arquivos `loading.tsx` (Frota, Administração, Painel/Central de Comando, Portaria, Manutenção) trocavam a página inteira por um aviso sem menu. Removidos; a página anterior fica na tela com a barra de progresso e o realce do clique que já existiam até a nova chegar.
+- **Lentidão (causa medida pelos logs do Supabase):** o middleware rodava no ponto da Vercel mais próximo do usuário (São Paulo, `gru1`) e fazia 3 chamadas ao banco em sequência (usuário, conta ativa, perfil+CNH). O banco está em Oregon (`us-west-2`), então cada chamada cruzava o continente: ~1 s antes de a página começar. Correção: middleware no runtime Node (estável no Next 15.5), que roda na região das funções (`pdx1`), ao lado do banco.
+- **Cache de navegação:** `experimental.staleTimes = { dynamic: 30, static: 180 }`: página visitada nos últimos 30 s reabre instantaneamente; qualquer gravação (ações, redirect) limpa o cache.
+- **Limite físico:** com função e banco em Oregon, uma ida e volta São Paulo–Oregon já custa ~0,2 s; meta de 300 ms em toda navegação exige mover funcionalmente o banco/funções para perto dos usuários (decisão e custo à parte).
+- **Frota, Documentos duplicado:** a aba "Documentos" e a ação rápida "Documentos" levavam ao mesmo lugar. A aba foi removida; as Ações rápidas passam a ter "Documentos" e "Configurar equipamentos" (antes escondido na aba).
+- **Verificação local:** tsc 0 · vitest 1124/1124 · build ok (middleware Node) · login e Frota no navegador local.

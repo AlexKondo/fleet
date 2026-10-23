@@ -14,6 +14,10 @@ const supabaseOrigin = (() => {
 const nextConfig: NextConfig = {
   transpilePackages: ["@fleet/domain", "@fleet/supabase-client"],
   experimental: {
+    // Router cache for dynamic pages: a page visited in the last 30 s opens instantly when the user comes back to it
+    // (sidebar links, back button). Mutations (server actions, revalidatePath, redirect) clear it, so what the user just
+    // changed is never shown stale. Default is 0 (every click waits for the server).
+    staleTimes: { dynamic: 30, static: 180 },
     // Server Actions default to a 1MB request body — silently below the 5MB photo/PDF
     // limit the CNH upload screen actually advertises (account/license/actions.ts), which
     // is why a real CNH Digital PDF (routinely 1-3MB) failed with a generic "couldn't
