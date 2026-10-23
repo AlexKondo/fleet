@@ -4,7 +4,7 @@
  */
 .fm-routemap {
   --rm-surface: var(--fm-surface, #ffffff);
-  --rm-border: var(--fm-border, #dce4ee);
+  --rm-border: var(--fm-border, var(--lt-dce4ee, #dce4ee));
   --rm-text: var(--fm-text, #19283b);
   --rm-muted: var(--fm-text-muted, #627389);
   --rm-blue: var(--fm-blue-600, #2369c8);
@@ -80,14 +80,14 @@
   padding: 8px 12px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.96);
-  color: #19283b;
+  color: var(--lt-19283b, #19283b);
   box-shadow: 0 2px 10px rgba(15, 35, 65, 0.22);
   font-size: 14px;
   line-height: 1.25;
 }
 .fm-routemap-chip-sub {
   font-size: 12px;
-  color: #556579;
+  color: var(--lt-556579, #556579);
 }
 .fm-routemap-labels {
   margin: 0;

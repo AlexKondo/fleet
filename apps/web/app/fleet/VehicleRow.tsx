@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { deleteVehicle, type FleetActionState } from "./actions";
 import type { StatusMeta } from "../dashboard/statusMeta";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { StatusBadge } from "../ui/StatusBadge";
 import { EditVehicleForm, type EditableVehicle } from "./EditVehicleForm";
+import { useVehicleDialog } from "./VehicleEditDialog";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/locales";
 import { VEHICLE_COLOR_OPTIONS, type VehicleColorValue } from "@/lib/domain/vehicleFieldOptions";
@@ -41,7 +42,8 @@ export function VehicleRow({
   dict: Dictionary;
   locale: Locale;
 }) {
-  const [editing, setEditing] = useState(false);
+  // Rendered inside the edit popup of VehicleFilterGrid (pencil icon): the form is always open; saving / cancelling closes the popup.
+  const { close } = useVehicleDialog();
   const [deleteState, deleteAction, deletePending] = useActionState(deleteVehicle, initialState);
   const meta = statusMeta;
 
@@ -93,6 +95,16 @@ export function VehicleRow({
         ) : null}
       </div>
 
+      <div className="border-t border-line-800 pt-3">
+        <EditVehicleForm
+          vehicle={vehicle}
+          categories={categories}
+          locations={locations}
+          dict={dict}
+          onSaved={close}
+          onCancel={close}
+        />
+      </div>
       <div className="flex items-center gap-3 border-t border-line-800 pt-3">
         <Link
           href={`/fleet/vehicles/${vehicle.id}`}
@@ -100,13 +112,6 @@ export function VehicleRow({
         >
           {dict.fleet.vehicleRow.viewSchedule}
         </Link>
-        <button
-          type="button"
-          onClick={() => setEditing((v) => !v)}
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
-        >
-          {editing ? dict.common.close : dict.common.edit}
-        </button>
         <form action={deleteAction}>
           <input type="hidden" name="id" value={vehicle.id} />
           <input type="hidden" name="lifecycleVersion" value={vehicle.lifecycle_version??1}/>
@@ -127,18 +132,6 @@ export function VehicleRow({
         </p>
       ) : null}
 
-      {editing ? (
-        <div className="border-t border-line-800 pt-3">
-          <EditVehicleForm
-            vehicle={vehicle}
-            categories={categories}
-            locations={locations}
-            dict={dict}
-            onSaved={() => setEditing(false)}
-            onCancel={() => setEditing(false)}
-          />
-        </div>
-      ) : null}
     </li>
   );
 }

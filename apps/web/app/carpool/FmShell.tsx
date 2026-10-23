@@ -224,8 +224,8 @@ export async function FmShell({
           {licenseGateActive ? null : searchContent}
           <div className="fm-topbar-right">
             <LanguageToggle locale={locale} dict={dict} />
-            {/* the FleetMind v2.0 look is light-only; the theme toggle would do nothing on these screens */}
-            {legacy ? null : <ThemeToggle dict={dict} />}
+            {/* the light/dark toggle is on EVERY screen (the FleetMind look has a dark theme: `:root[data-theme="dark"] .fm-theme` in fm-theme.css) */}
+            <ThemeToggle dict={dict} />
           {licenseGateActive ? null : (
             <div className="fm-mobilenav">
               <MobileNav

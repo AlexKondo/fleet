@@ -212,7 +212,7 @@
   padding: 8px 14px;
   border: 1px solid var(--fm-border);
   border-radius: var(--fm-radius-md);
-  background: #f7faff;
+  background: var(--lt-f7faff, #f7faff);
   cursor: pointer;
 }
 .fm-theme .rv-toggle-text {
@@ -251,7 +251,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--fm-surface, #fff);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: transform 0.15s;
 }
@@ -308,7 +308,7 @@
   color: var(--fm-text-muted);
   border-style: dashed;
   border-color: var(--fm-border-strong);
-  background: #f7faff;
+  background: var(--lt-f7faff, #f7faff);
 }
 .fm-theme .rv-mapempty-icon {
   width: 52px;
@@ -338,8 +338,8 @@
   gap: 14px;
 }
 .fm-theme .rv-block-carpool {
-  background: #eef8f3;
-  border-color: #bfe0d0;
+  background: var(--lt-eef8f3, #eef8f3);
+  border-color: var(--lt-bfe0d0, #bfe0d0);
 }
 .fm-theme .rv-head {
   display: flex;
@@ -358,7 +358,7 @@
   color: var(--fm-blue-600);
 }
 .fm-theme .rv-block-carpool .rv-head-icon {
-  background: #d9efe5;
+  background: var(--lt-d9efe5, #d9efe5);
   color: var(--fm-success);
 }
 .fm-theme .rv-head-icon svg {
@@ -371,7 +371,7 @@
   color: var(--fm-text-muted);
 }
 .fm-theme .rv-block-carpool .rv-sub {
-  color: #4d5f74;
+  color: var(--lt-4d5f74, #4d5f74);
 }
 .fm-theme .rv-offers {
   list-style: none;
@@ -403,7 +403,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e5edf7;
+  background: var(--lt-e5edf7, #e5edf7);
   color: var(--fm-navy-800);
 }
 .fm-theme .rv-offer-avatar svg {
@@ -443,7 +443,7 @@
 }
 .fm-theme .rv-ok {
   font-weight: 700;
-  color: #1a6b4d;
+  color: var(--lt-1a6b4d, #1a6b4d);
 }
 .fm-theme .rv-link {
   display: inline-flex;
@@ -515,7 +515,7 @@
 .fm-theme .rv-vcard-rec {
   grid-column: 1 / -1;
   border: 2px solid var(--fm-blue-600);
-  background: #f7faff;
+  background: var(--lt-f7faff, #f7faff);
 }
 .fm-theme .rv-vmain {
   display: flex;
@@ -530,7 +530,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8f1fd, #f3f7fd);
+  background: linear-gradient(135deg, var(--lt-e8f1fd, #e8f1fd), var(--lt-f3f7fd, #f3f7fd));
   color: var(--fm-blue-600);
 }
 .fm-theme .rv-vmedia svg {
@@ -569,8 +569,8 @@
 }
 .fm-theme .rv-vchip-energy {
   background: var(--fm-blue-100);
-  border-color: #c8dcf7;
-  color: #1b57ab;
+  border-color: var(--lt-c8dcf7, #c8dcf7);
+  color: var(--lt-1b57ab, #1b57ab);
 }
 .fm-theme .rv-vfacts {
   list-style: none;
@@ -654,8 +654,8 @@
   padding: 12px 14px;
   border-radius: var(--fm-radius-md);
   border: 1px solid #ecd29a;
-  background: #fdf5e2;
-  color: #7a5110;
+  background: var(--lt-fdf5e2, #fdf5e2);
+  color: var(--lt-7a5110, #7a5110);
 }
 .fm-theme .rv-warn-title {
   font-weight: 700;
@@ -725,8 +725,8 @@
   cursor: pointer;
 }
 .fm-theme .rv-stepper-btn:hover {
-  background: #d6e6fb;
-  color: #174b94;
+  background: var(--lt-d6e6fb, #d6e6fb);
+  color: var(--lt-174b94, #174b94);
 }
 .fm-theme .rv-hint {
   font-size: 12.5px;
@@ -739,7 +739,7 @@
 }
 .fm-theme .rv-error {
   font-weight: 600;
-  color: #a13a3a;
+  color: var(--lt-a13a3a, #a13a3a);
 }
 
 @media (min-width: 920px) {

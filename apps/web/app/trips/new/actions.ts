@@ -39,6 +39,7 @@ import {
 import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
 import { loadOfferCardRows } from "@/lib/carpool/offerCardRows";
 import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
+import { resolveOriginLocation, splitByOrigin, type OriginCheck } from "@/lib/trips/originLocation";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
 import { searchCompatibleCarpool } from "@/app/carpool/actions";
@@ -59,6 +60,11 @@ export interface TripFormInput {
    * candidate, so it has no effect on the current search — only on whether THIS booking,
    * once made, can later be offered to someone else). */
   allowCarpool: boolean;
+  /** Registered departure location picked in the form (vehicles.current_location_id). Without it the origin text is
+   * matched to a location name; vehicles are only offered when they are at that location. */
+  originLocationId?: string | null;
+  /** The requester explicitly asked to see vehicles from other locations too (shown with a warning). */
+  includeOtherLocations?: boolean;
 }
 
 /** Real facts shown on a vehicle card (nothing invented: fields the vehicle does not have are null). */
@@ -70,6 +76,7 @@ export interface VehicleCardInfo {
   estimatedRangeKm: number | null;
   odometerKm: number | null;
   locationName: string | null;
+  locationId: string | null;
 }
 
 export interface PlanTripResult {
@@ -126,6 +133,8 @@ export interface PlanTripResult {
   /** Phase C5: result of the carpool-first search (only from planTripAction, only when the
    * org policy has carpool + carpool-first enabled). */
   carpoolFirst?: CarpoolFirstState;
+  /** Where the vehicle search looked: the origin location and, when nothing is there, which other locations have vehicles. */
+  originCheck?: OriginCheck;
 }
 
 interface CarpoolCandidateWithPlate extends CarpoolCandidate {
@@ -230,12 +239,36 @@ async function buildPlanInputs(input: TripFormInput) {
   if (busyError || !busyWindows) return {error:"availability_unavailable" as const};
   const vehicleIdsWithActiveReservation = new Set((busyWindows ?? []).map((w) => w.vehicle_id));
 
-  const vehicleCandidates: CandidateVehicle[] = (vehicleRows ?? [])
+  const allCandidates: CandidateVehicle[] = (vehicleRows ?? [])
     .filter((row) => row.category && !vehicleIdsWithActiveReservation.has(row.id))
     .map((row) => ({
       vehicle: toDomainVehicle(row, row.category!.energy_type),
       category: toDomainCategory(row.category!),
     }));
+
+  // Origin rule: a vehicle is only offered when it is at the departure location (vehicles.current_location_id).
+  // No vehicle at the origin => nothing is offered from there (other locations only on explicit request, with a warning).
+  const locations = (locationRows ?? []).map((l) => ({ id: l.id, name: l.name }));
+  const resolution = resolveOriginLocation(locations, {
+    originLocationId: input.originLocationId,
+    originText: input.origin,
+  });
+  const originLocation = resolution.kind === "location" ? resolution.location : null;
+  let vehicleCandidates = allCandidates;
+  let originCheck: OriginCheck = { status: "ok", includeOthers: false, others: [], withoutLocation: 0 };
+  if (resolution.kind !== "no_locations") {
+    const split = splitByOrigin(allCandidates, (c) => c.vehicle.currentLocationId, locations, originLocation?.id ?? null);
+    const includeOthers = input.includeOtherLocations === true;
+    vehicleCandidates = includeOthers ? allCandidates : split.atOrigin;
+    originCheck = {
+      status: resolution.kind === "unknown" ? "unknown" : split.atOrigin.length > 0 ? "ok" : "none_at_origin",
+      originLocationId: originLocation?.id,
+      originLocationName: originLocation?.name,
+      includeOthers,
+      others: split.atOrigin.length > 0 ? [] : split.others,
+      withoutLocation: split.withoutLocation,
+    };
+  }
 
   // Phase C7 (0063): the OLD city-string carpool matcher (planMobility's carpoolCandidates) needs
   // other travelers' origin/destination/justification, which are no longer readable by the caller
@@ -248,7 +281,7 @@ async function buildPlanInputs(input: TripFormInput) {
   // (dead code kept on purpose).
   const carpoolCandidates: CarpoolCandidateWithPlate[] = [];
 
-  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, locationNameById, gating, supabase, vehicleIdsWithActiveReservation };
+  return { user, profile, now, config, vehicleCandidates, carpoolCandidates, vehicleNameByPlate, locationNameById, gating, supabase, vehicleIdsWithActiveReservation, originCheck };
 }
 
 /**
@@ -278,6 +311,7 @@ function cardInfo(candidate: CandidateVehicle | undefined, locationNameById: Map
     estimatedRangeKm: v?.estimatedRangeKm ?? null,
     odometerKm: v?.odometerKm ?? null,
     locationName: (v?.currentLocationId && locationNameById.get(v.currentLocationId)) || null,
+    locationId: v?.currentLocationId ?? null,
   };
 }
 
@@ -292,6 +326,8 @@ function parseTripFormInput(formData: FormData): TripFormInput {
     requiresCargo: formData.get("requiresCargo") === "on",
     justification: clampText(formData.get("justification"), MAX_JUSTIFICATION_TEXT),
     allowCarpool: formData.get("allowCarpool") === "on",
+    originLocationId: clampText(formData.get("originLocationId"), 64) || null,
+    includeOtherLocations: formData.get("includeOtherLocations") === "on",
   };
 }
 
@@ -363,7 +399,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
   if ("error" in built) {
     return { type: "none", reasons: [], bookingMode: "ai_recommended", error: built.error };
   }
-  const { now, config, vehicleCandidates, vehicleNameByPlate, locationNameById, gating } = built;
+  const { now, config, vehicleCandidates, vehicleNameByPlate, locationNameById, gating, originCheck } = built;
   // Phase C5 gating: when the new geospatial engine owns carpool for this org the old
   // city-string matcher is NOT consulted (empty candidates => planMobility never returns a
   // carpool plan). NOTE: the chat path (chat/actions.ts, chat/dispatch.ts) also goes through
@@ -402,6 +438,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
       reasons: plan.reasons,
       bookingMode: config.bookingMode,
       carpoolGating: gating,
+      originCheck,
       carpoolOptions: plan.carpoolOptions.map((option) => {
         const candidate = carpoolCandidates.find((c) => c.reservationId === option.reservationId);
         return {
@@ -443,6 +480,7 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
       reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
       bookingMode: config.bookingMode,
       carpoolGating: gating,
+      originCheck,
       vehicle: {
         maxOfferableSeats: maxOfferableSeats(candidate?.category.passengerCapacity, input.passengerCount),
         vehicleId: plan.vehicle.recommendedVehicleId,
@@ -458,12 +496,19 @@ export async function planTrip(input: TripFormInput): Promise<PlanTripResult> {
     };
   }
 
+  // Nothing at the departure location (or the origin is not a registered location): say THAT, not a fleet-wide count
+  // (the chat explains from `reasons` when `fleet` is absent).
+  const originIssue = originCheck.status !== "ok" && !originCheck.includeOthers;
   return {
     type: "none",
-    reasons: filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
+    reasons: [
+      ...(originIssue ? [originCheck.status === "none_at_origin" ? "no_vehicles_at_origin" : "origin_location_unknown"] : []),
+      ...filterTrafficRestrictionReasons(plan.reasons, trafficRestrictionEnabled),
+    ],
     bookingMode: config.bookingMode,
     carpoolGating: gating,
-    fleet: await loadFleetSummary(built.supabase, built.vehicleIdsWithActiveReservation, input),
+    originCheck,
+    fleet: originIssue ? undefined : await loadFleetSummary(built.supabase, built.vehicleIdsWithActiveReservation, input),
   };
 }
 

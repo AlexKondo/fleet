@@ -39,6 +39,18 @@ export default async function NewTripPage({
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
 
+  // Registered departure locations (vehicle_locations) with how many vehicles are there right now: the requester picks
+  // where the vehicle leaves from, and only vehicles at that location are offered (see buildPlanInputs).
+  const [{ data: locationRows }, { data: locatedVehicles }] = await Promise.all([
+    supabase.from("vehicle_locations").select("id, name").order("name"),
+    supabase.from("vehicles").select("current_location_id").is("archived_at", null).in("status", ["available", "charging", "cleaning"]),
+  ]);
+  const vehiclesAt = new Map<string, number>();
+  for (const v of locatedVehicles ?? []) {
+    if (v.current_location_id) vehiclesAt.set(v.current_location_id, (vehiclesAt.get(v.current_location_id) ?? 0) + 1);
+  }
+  const pickupLocations = (locationRows ?? []).map((l) => ({ id: l.id, name: l.name, vehicles: vehiclesAt.get(l.id) ?? 0 }));
+
   return (
     <FmShell
       active="book"
@@ -50,7 +62,7 @@ export default async function NewTripPage({
     >
       <h1 className="fm-title">{dict.trips.reservar.title}</h1>
       <p className="fm-subtitle">{dict.trips.reservar.subtitle}</p>
-      <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} prefill={prefill} />
+      <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} prefill={prefill} pickupLocations={pickupLocations} />
     </FmShell>
   );
 }

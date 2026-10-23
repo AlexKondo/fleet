@@ -65,7 +65,7 @@
   padding: 8px 10px;
 }
 .ow {
-  color: #142644;
+  color: var(--lt-142644, #142644);
 }
 .ow h1 {
   font-size: 27px;
@@ -94,9 +94,9 @@
 }
 .ow-panel {
   padding: 16px;
-  border: 1px solid #dfe8f4;
+  border: 1px solid var(--lt-dfe8f4, #dfe8f4);
   border-radius: 9px;
-  background: white;
+  background: var(--fm-surface, white);
   min-width: 0;
 }
 .ow-panel > header {
@@ -110,7 +110,7 @@
   font-size: 15px;
   font-weight: 700;
   margin: 0;
-  color: #183454;
+  color: var(--lt-183454, #183454);
 }
 .ow-metrics {
   display: grid;
@@ -149,7 +149,7 @@
   color: #ee5165;
 }
 .ow-metric-symbol.green {
-  color: #11a979;
+  color: var(--lt-11a979, #11a979);
 }
 .ow-metric-symbol.amber {
   color: #efa53a;
@@ -194,13 +194,13 @@
 .ow input,
 .ow select,
 .ow textarea {
-  border: 1px solid #c6d4e7;
+  border: 1px solid var(--lt-c6d4e7, #c6d4e7);
   border-radius: 6px;
   padding: 9px 10px;
   font-size: 12px;
   min-height: 38px;
-  background: #fff;
-  color: #183454;
+  background: var(--fm-surface, #fff);
+  color: var(--lt-183454, #183454);
   max-width: 100%;
 }
 .ow input:focus-visible,
@@ -270,9 +270,9 @@
   cursor: not-allowed;
 }
 .ow-button-secondary {
-  background: #fff;
+  background: var(--fm-surface, #fff);
   color: #0868f9 !important;
-  border-color: #c7d9f2;
+  border-color: var(--lt-c7d9f2, #c7d9f2);
 }
 .ow-table-scroll {
   overflow-x: auto;
@@ -285,20 +285,20 @@
 }
 .ow-table th {
   text-align: left;
-  background: #f0f5fc;
+  background: var(--lt-f0f5fc, #f0f5fc);
   padding: 11px 10px;
   font-weight: 600;
   color: #577092;
   font-size: 11px;
-  border-bottom: 1px solid #dfe9f5;
+  border-bottom: 1px solid var(--lt-dfe9f5, #dfe9f5);
 }
 .ow-table td {
   padding: 12px 10px;
-  border-bottom: 1px solid #edf2f9;
+  border-bottom: 1px solid var(--lt-edf2f9, #edf2f9);
   vertical-align: middle;
 }
 .ow-table tr[data-selected="true"] {
-  background: #edf5ff;
+  background: var(--lt-edf5ff, #edf5ff);
 }
 .ow-table td a {
   color: #0868f9;
@@ -329,21 +329,21 @@
   border-radius: 5px;
   font-size: 10px;
   line-height: 1.2;
-  background: #e9f2ff;
-  color: #0964d8;
+  background: var(--lt-e9f2ff, #e9f2ff);
+  color: var(--lt-0964d8, #0964d8);
   white-space: nowrap;
 }
 .ow-tag.green {
-  color: #09875e;
-  background: #e3f7ee;
+  color: var(--lt-09875e, #09875e);
+  background: var(--lt-e3f7ee, #e3f7ee);
 }
 .ow-tag.red {
   color: #d93851;
-  background: #ffe9ed;
+  background: var(--lt-ffe9ed, #ffe9ed);
 }
 .ow-tag.amber {
-  color: #aa7107;
-  background: #fff1d4;
+  color: var(--lt-aa7107, #aa7107);
+  background: var(--lt-fff1d4, #fff1d4);
 }
 .ow-empty {
   font-size: 13px;
@@ -355,16 +355,16 @@
 .ow-banner {
   padding: 12px 16px;
   border-radius: 7px;
-  background: #e7f8ed;
+  background: var(--lt-e7f8ed, #e7f8ed);
   border: 1px solid #9bd3ad;
-  color: #176c39;
+  color: var(--lt-176c39, #176c39);
   font-size: 13px;
   margin-bottom: 16px;
 }
 .ow-error {
-  background: #fff4dd;
+  background: var(--lt-fff4dd, #fff4dd);
   border-color: #e6c37c;
-  color: #79531a;
+  color: var(--lt-79531a, #79531a);
 }
 .ow-list {
   padding: 0;
@@ -372,7 +372,7 @@
   margin: 0;
 }
 .ow-list li {
-  border-bottom: 1px solid #edf2f9;
+  border-bottom: 1px solid var(--lt-edf2f9, #edf2f9);
   padding: 11px 0;
   display: flex;
   gap: 10px;
@@ -407,8 +407,8 @@
   margin: 15px 0;
 }
 .ow-costs > div {
-  background: #f1f6ff;
-  border: 1px solid #dce8f9;
+  background: var(--lt-f1f6ff, #f1f6ff);
+  border: 1px solid var(--lt-dce8f9, #dce8f9);
   border-radius: 7px;
   padding: 12px;
 }
@@ -424,11 +424,11 @@
   margin-top: 5px;
 }
 .ow-costs > div:last-child strong {
-  color: #079a68;
+  color: var(--lt-079a68, #079a68);
 }
 .ow-detail-head {
   padding: 16px;
-  background: #edf4fc;
+  background: var(--lt-edf4fc, #edf4fc);
   border-radius: 7px;
   margin-bottom: 14px;
 }
@@ -451,7 +451,7 @@
   gap: 5px;
   flex-wrap: wrap;
   margin: 0 0 16px;
-  border-bottom: 1px solid #dce7f5;
+  border-bottom: 1px solid var(--lt-dce7f5, #dce7f5);
   padding-bottom: 10px;
 }
 .ow-tabs a {
@@ -461,7 +461,7 @@
   color: #577092;
 }
 .ow-tabs a[aria-current="page"] {
-  background: #e4f0ff;
+  background: var(--lt-e4f0ff, #e4f0ff);
   color: #0868f9;
   font-weight: 700;
 }
@@ -491,7 +491,7 @@
 }
 .ow-bars strong {
   font-size: 10px;
-  color: #496786;
+  color: var(--lt-496786, #496786);
   margin-bottom: 4px;
 }
 .ow-bars small {
@@ -508,7 +508,7 @@
 .ow-timeline span {
   padding: 6px 9px;
   border-radius: 5px;
-  background: #edf2f9;
+  background: var(--lt-edf2f9, #edf2f9);
   color: #6b7e96;
   font-size: 10px;
 }
@@ -538,7 +538,7 @@
   min-height: 0;
 }
 .ow details {
-  border: 1px solid #dce7f5;
+  border: 1px solid var(--lt-dce7f5, #dce7f5);
   border-radius: 7px;
   padding: 12px;
   margin: 12px 0;
@@ -573,7 +573,7 @@
 }
 .ow-calendar-row > div {
   position: relative;
-  background: #eff4fa;
+  background: var(--lt-eff4fa, #eff4fa);
   height: 34px;
   border-radius: 4px;
 }
@@ -584,7 +584,7 @@
   border-radius: 4px;
   background: #77b2ff;
   font-size: 10px;
-  color: #063f86;
+  color: var(--lt-063f86, #063f86);
   padding: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -632,10 +632,10 @@
 }
 .ow-links a {
   padding: 18px;
-  border: 1px solid #dce7f5;
+  border: 1px solid var(--lt-dce7f5, #dce7f5);
   border-radius: 8px;
   color: #0868f9;
-  background: #f8fbff;
+  background: var(--fm-surface, #f8fbff);
   font-weight: 600;
 }
 .ow-links small {

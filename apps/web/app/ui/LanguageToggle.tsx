@@ -79,9 +79,12 @@ export function LanguageToggle({
         aria-expanded={isOpen}
         aria-label={dict.chrome.language}
         title={LOCALE_LABELS[locale]}
-        className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-800 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent disabled:opacity-50"
+        className="flex h-8 min-w-8 items-center justify-center gap-1 rounded-sm border border-line-800 px-1.5 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gwm-accent disabled:opacity-50"
+        data-testid="language-toggle"
       >
         <GlobeIcon className="h-4 w-4" />
+        {/* the current language is written next to the globe so the control is recognizable at a glance */}
+        <span className="text-xs font-semibold uppercase" data-testid="language-code">{locale.split("-")[0]}</span>
       </button>
 
       {isOpen ? (

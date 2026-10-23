@@ -111,7 +111,7 @@
 }
 .fm-theme .ck-check[data-tone="warn"]:has(input:checked) {
   border-color: #8e2f2f;
-  background: #fbeaea;
+  background: var(--lt-fbeaea, #fbeaea);
 }
 .fm-theme .ck-check input {
   width: 22px;
@@ -232,9 +232,9 @@
 .fm-theme .rd-impacted {
   padding: 12px;
   border-radius: var(--fm-radius-md);
-  background: #fdf5e2;
+  background: var(--lt-fdf5e2, #fdf5e2);
   border: 1px solid #ecd29a;
-  color: #7a5110;
+  color: var(--lt-7a5110, #7a5110);
 }
 .fm-theme .rd-impacted strong {
   display: block;

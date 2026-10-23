@@ -47,7 +47,11 @@ vi.mock("@/lib/domain/orgConfig", () => ({
 vi.mock("@/lib/domain/mappers", () => ({
   VEHICLE_CATEGORY_DOMAIN_COLUMNS: "x",
   VEHICLE_DOMAIN_COLUMNS: "id, plate",
-  toDomainVehicle: (row: { id: string; plate: string }) => ({ id: row.id, plate: row.plate }),
+  toDomainVehicle: (row: { id: string; plate: string; current_location_id?: string | null }) => ({
+    id: row.id,
+    plate: row.plate,
+    currentLocationId: row.current_location_id ?? null,
+  }),
   toDomainCategory: (row: { name: string; passenger_capacity: number }) => ({
     name: row.name,
     passengerCapacity: row.passenger_capacity,
@@ -226,7 +230,76 @@ describe("planTrip gating of the OLD text-matching carpool path", () => {
       estimatedRangeKm: null,
       odometerKm: null,
       locationName: null,
+      locationId: null,
     });
+  });
+});
+
+describe("origin rule: vehicles are only offered when they are at the departure location", () => {
+  const cat = { name: "SUV", passenger_capacity: 5, energy_type: "ICE" };
+  const candidatesPassed = () => (h.planMobility.mock.calls[0]![0] as { vehicleCandidates: { vehicle: { id: string } }[] }).vehicleCandidates.map((c) => c.vehicle.id);
+  beforeEach(() => {
+    h.tables.vehicle_locations = [
+      { id: "L-fab", name: "Fábrica da GWM - ao lado do restaurante" },
+      { id: "L-sp", name: "SP Office - 3º subsolo" },
+    ];
+    h.tables.vehicles = [
+      { id: "v-fab1", plate: "FAB1A11", name: "A", current_location_id: "L-fab", category: cat },
+      { id: "v-fab2", plate: "FAB2A22", name: "B", current_location_id: "L-fab", category: cat },
+      { id: "v-none", plate: "NOL1A11", name: "C", current_location_id: null, category: cat },
+    ];
+  });
+
+  it("only the vehicles at the picked location reach the engine (the others and the unlocated ones do not)", async () => {
+    const r = await planTrip({ ...input, originLocationId: "L-fab" });
+    expect(candidatesPassed()).toEqual(["v-fab1", "v-fab2"]);
+    expect(r.originCheck).toMatchObject({ status: "ok", originLocationId: "L-fab", includeOthers: false, withoutLocation: 1 });
+  });
+
+  it("SP case: the picked location has NO vehicle => nothing is offered from there, says so and lists where vehicles are", async () => {
+    h.planMobility.mockReturnValue({ type: "none", reasons: ["no_candidates_available"] });
+    const r = await planTrip({ ...input, originLocationId: "L-sp" });
+    expect(candidatesPassed()).toEqual([]);
+    expect(r.type).toBe("none");
+    expect(r.reasons[0]).toBe("no_vehicles_at_origin");
+    expect(r.fleet).toBeUndefined();
+    expect(r.originCheck).toMatchObject({
+      status: "none_at_origin",
+      originLocationName: "SP Office - 3º subsolo",
+      others: [{ locationId: "L-fab", name: "Fábrica da GWM - ao lado do restaurante", count: 2 }],
+    });
+  });
+
+  it("explicit request to see other locations: the vehicles of other locations are offered, flagged includeOthers", async () => {
+    const r = await planTrip({ ...input, originLocationId: "L-sp", includeOtherLocations: true });
+    expect(candidatesPassed()).toEqual(["v-fab1", "v-fab2", "v-none"]);
+    expect(r.originCheck).toMatchObject({ status: "none_at_origin", includeOthers: true });
+  });
+
+  it("a typed origin that is not a registered location is unknown: no vehicle is offered", async () => {
+    h.planMobility.mockReturnValue({ type: "none", reasons: ["no_candidates_available"] });
+    const r = await planTrip({ ...input, origin: "São Paulo" });
+    expect(candidatesPassed()).toEqual([]);
+    expect(r.reasons[0]).toBe("origin_location_unknown");
+    expect(r.originCheck?.status).toBe("unknown");
+  });
+
+  it("the origin text that equals a location name is recognized without the id (chat / assistant)", async () => {
+    await planTrip({ ...input, origin: "fabrica da gwm - ao lado do restaurante" });
+    expect(candidatesPassed()).toEqual(["v-fab1", "v-fab2"]);
+  });
+
+  it("an id from another organization is never trusted", async () => {
+    h.planMobility.mockReturnValue({ type: "none", reasons: ["no_candidates_available"] });
+    const r = await planTrip({ ...input, originLocationId: "L-OUTRA-ORG" });
+    expect(candidatesPassed()).toEqual([]);
+    expect(r.originCheck?.status).toBe("unknown");
+  });
+
+  it("confirmTrip re-applies the same rule server-side (a vehicle elsewhere cannot be booked without the explicit flag)", async () => {
+    h.planMobility.mockReturnValue(vehiclePlan);
+    await confirmTrip({ ...input, originLocationId: "L-sp", choice: "vehicle", targetId: "v1" }).catch(() => undefined);
+    expect(candidatesPassed()).toEqual([]);
   });
 });
 

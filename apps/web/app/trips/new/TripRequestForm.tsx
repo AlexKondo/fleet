@@ -99,6 +99,7 @@ export function TripRequestForm({
   locale,
   carpoolMode,
   prefill,
+  pickupLocations = [],
 }: {
   dict: Dictionary;
   locale: Locale;
@@ -108,6 +109,8 @@ export function TripRequestForm({
   /** Phase C5: org carpool policy as seen by the server (page.tsx). `newEngine` hides the old
    * allow_carpool checkbox (the Yes/No host step is then the only carpool question). */
   carpoolMode: CarpoolGating;
+  /** Registered departure locations with the number of vehicles there (page.tsx). Empty => the org has none: no origin filter. */
+  pickupLocations?: { id: string; name: string; vehicles: number }[];
 }) {
   const t = dict.trips.request;
   const ct = dict.carpool.newTrip;
@@ -136,6 +139,23 @@ export function TripRequestForm({
   // (a defensive backstop against a stray remount losing what the user had typed, see writeDraft/readDraft) and the default
   // dates are applied right after hydration, so the markup can never differ between server and client.
   const [origin, setOrigin] = useState("");
+  const [originLocationId, setOriginLocationId] = useState("");
+  const [includeOthers, setIncludeOthers] = useState(false);
+  // "see vehicles at other locations" re-runs the same search with the explicit flag (hidden input is rendered first).
+  const formRef = useRef<HTMLFormElement>(null);
+  const [resubmit, setResubmit] = useState(false);
+  // React 19 resets a <form action> once the action settles; a controlled <select> can come back blank although the state still
+  // holds the choice. The value that is SENT lives in a hidden input (never reset) and the select is re-synced from the state.
+  const pickupRef = useRef<HTMLSelectElement>(null);
+  useEffect(() => {
+    const el = pickupRef.current;
+    if (el && el.value !== originLocationId) el.value = originLocationId;
+  });
+  useEffect(() => {
+    if (!resubmit) return;
+    setResubmit(false);
+    formRef.current?.requestSubmit();
+  }, [resubmit]);
   const [destination, setDestination] = useState("");
   const [depDate, setDepDate] = useState("");
   const [depTime, setDepTime] = useState("");
@@ -163,6 +183,13 @@ export function TripRequestForm({
     setRetDate(ret.date);
     setRetTime(ret.time);
     if (draft.origin !== undefined) setOrigin(draft.origin);
+    if (draft.originLocationId && pickupLocations.some((l) => l.id === draft.originLocationId)) setOriginLocationId(draft.originLocationId);
+    else if (draft.origin) {
+      // the origin text (assistant hand-off / old draft) may already be the name of a registered location
+      const wanted = draft.origin.trim().toLowerCase();
+      const hit = pickupLocations.find((l) => l.name.trim().toLowerCase() === wanted);
+      if (hit) setOriginLocationId(hit.id);
+    }
     if (draft.destination !== undefined) setDestination(draft.destination);
     if (draft.justification !== undefined) {
       const m = motivoFromJustification(draft.justification, motivoLabels);
@@ -255,6 +282,8 @@ export function TripRequestForm({
       requiresCargo: formData.get("requiresCargo") === "on",
       justification: String(formData.get("justification")),
       allowCarpool: formData.get("allowCarpool") === "on",
+      originLocationId: String(formData.get("originLocationId") ?? "") || null,
+      includeOtherLocations: formData.get("includeOtherLocations") === "on",
     });
     setConfirmError(null);
   }
@@ -459,7 +488,7 @@ export function TripRequestForm({
       </ol>
 
       <div className="rv-top">
-        <form action={planAction} onSubmit={handleFormSubmit} className="fm-card rv-form" data-testid="rv-form" data-ready={ready ? "true" : "false"}>
+        <form ref={formRef} action={planAction} onSubmit={handleFormSubmit} className="fm-card rv-form" data-testid="rv-form" data-ready={ready ? "true" : "false"}>
           <h2 className="fm-h2">{rv.detailsTitle}</h2>
           <div className="rv-grid">
             <div className="fm-field rv-s7">
@@ -477,6 +506,38 @@ export function TripRequestForm({
                 testId="rv-origin"
               />
             </div>
+            {pickupLocations.length > 0 ? (
+              <div className="fm-field rv-s7">
+                <label className="fm-label" htmlFor="rv-pickup-location">{rv.pickupLocationLabel}</label>
+                <input type="hidden" name="originLocationId" value={originLocationId} />
+                <select
+                  ref={pickupRef}
+                  id="rv-pickup-location"
+                  required
+                  value={originLocationId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setOriginLocationId(id);
+                    setIncludeOthers(false);
+                    // picking where the vehicle is also fills the origin when it is still empty
+                    const picked = pickupLocations.find((l) => l.id === id);
+                    if (picked && origin.trim() === "") setOrigin(picked.name);
+                  }}
+                  className="fm-input rv-select"
+                  aria-describedby="rv-pickup-location-hint"
+                  data-testid="rv-pickup-location"
+                >
+                  <option value="">{rv.pickupLocationPlaceholder}</option>
+                  {pickupLocations.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name} · {l.vehicles === 0 ? rv.pickupVehiclesNone : l.vehicles === 1 ? rv.pickupVehiclesOne : fillTemplate(rv.pickupVehiclesMany, { count: l.vehicles })}
+                    </option>
+                  ))}
+                </select>
+                <span id="rv-pickup-location-hint" className="rv-hint">{rv.pickupLocationHint}</span>
+                {includeOthers ? <input type="hidden" name="includeOtherLocations" value="on" /> : null}
+              </div>
+            ) : null}
             <div className="fm-field rv-s7">
               <label className="fm-label" htmlFor="rv-destination">{t.destinationLabel}</label>
               <PlaceAutocomplete
@@ -689,6 +750,15 @@ export function TripRequestForm({
             {reasonList(plan.reasons)}
           </section>
         ) : plan.type === "vehicle" && plan.vehicle ? (
+          <>
+          {plan.originCheck?.includeOthers && plan.originCheck.status !== "ok" ? (
+            <div className="fm-banner fm-banner-warning" role="status" data-testid="other-locations-warning" style={{ marginTop: 0 }}>
+              <p>{fillTemplate(rv.otherLocationsWarning, { location: plan.originCheck.originLocationName ?? t.originLabel })}</p>
+              <button type="button" className="fm-btn" disabled={isPlanning} onClick={() => { setIncludeOthers(false); setResubmit(true); }}>
+                {rv.backToOriginOnly}
+              </button>
+            </div>
+          ) : null}
           <VehicleOptions
             dict={dict}
             locale={locale}
@@ -699,6 +769,43 @@ export function TripRequestForm({
             busy={isConfirming}
             recommendedExtras={recommendedExtras}
           />
+          </>
+        ) : plan.originCheck && plan.originCheck.status !== "ok" ? (
+          <section className="fm-card rv-block" data-testid="no-vehicles-at-origin">
+            <p className="rv-error">
+              {plan.originCheck.status === "none_at_origin"
+                ? fillTemplate(rv.noVehiclesAtOriginTitle, { location: plan.originCheck.originLocationName ?? "" })
+                : rv.unknownOriginBody}
+            </p>
+            {plan.originCheck.status === "none_at_origin" ? <p className="rv-muted">{rv.noVehiclesAtOriginBody}</p> : null}
+            {plan.originCheck.others.length > 0 ? (
+              <>
+                <p className="rv-muted">{rv.otherLocationsHeading}</p>
+                <ul className="rv-reasons">
+                  {plan.originCheck.others.map((o) => (
+                    <li key={o.locationId}>
+                      <RvCheckIcon />
+                      <span>
+                        {o.name} · {o.count === 1 ? rv.pickupVehiclesOne : fillTemplate(rv.pickupVehiclesMany, { count: o.count })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  className="fm-btn"
+                  disabled={isPlanning}
+                  data-testid="show-other-locations"
+                  onClick={() => {
+                    setIncludeOthers(true);
+                    setResubmit(true);
+                  }}
+                >
+                  {rv.showOtherLocations}
+                </button>
+              </>
+            ) : null}
+          </section>
         ) : (
           <section className="fm-card rv-block">
             <p className="rv-error">{t.noOptions}</p>

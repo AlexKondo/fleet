@@ -13,7 +13,7 @@
   --fm-blue-100: #e8f1fd;
   --fm-bg: #f4f7fb;
   --fm-surface: #ffffff;
-  --fm-border: #dce4ee; /* card edges and dividers */
+  --fm-border: var(--lt-dce4ee, #dce4ee); /* card edges and dividers */
   --fm-border-strong: #7f8da1; /* edges of controls (inputs, segments, icon buttons): >= 3:1 on white */
   --fm-text: #19283b;
   --fm-text-muted: #627389;
@@ -306,7 +306,7 @@
   border-radius: var(--fm-radius-md);
 }
 .fm-input::placeholder {
-  color: #566579;
+  color: var(--lt-566579, #566579);
 }
 .fm-input:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--fm-focus) 35%, transparent);
@@ -457,9 +457,9 @@
   color: var(--fm-text);
 }
 .fm-chip-seats {
-  background: #e6f4ee;
-  border-color: #bfe0d0;
-  color: #1a6b4d;
+  background: var(--lt-e6f4ee, #e6f4ee);
+  border-color: var(--lt-bfe0d0, #bfe0d0);
+  color: var(--lt-1a6b4d, #1a6b4d);
 }
 .fm-offer-action {
   display: flex;
@@ -518,14 +518,14 @@
   padding: 14px 16px;
   border-radius: var(--fm-radius-md);
   border: 1px solid #ecd29a;
-  background: #fdf5e2;
-  color: #7a5110;
+  background: var(--lt-fdf5e2, #fdf5e2);
+  color: var(--lt-7a5110, #7a5110);
   font-weight: 500;
 }
 .fm-banner-danger {
-  border-color: #eab5b5;
-  background: #fbeaea;
-  color: #8e2f2f;
+  border-color: var(--lt-eab5b5, #eab5b5);
+  background: var(--lt-fbeaea, #fbeaea);
+  color: var(--lt-8e2f2f, #8e2f2f);
 }
 .fm-needs ul {
   margin: 10px 0 0;
@@ -547,7 +547,7 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #e6f4ee;
+  background: var(--lt-e6f4ee, #e6f4ee);
   color: var(--fm-success);
   display: flex;
   align-items: center;
@@ -563,7 +563,7 @@
 .fm-skeleton {
   height: 92px;
   border-radius: var(--fm-radius-lg);
-  background: linear-gradient(90deg, #e9eef5 25%, #f5f8fc 50%, #e9eef5 75%);
+  background: linear-gradient(90deg, var(--lt-e9eef5, #e9eef5) 25%, var(--lt-f5f8fc, #f5f8fc) 50%, var(--lt-e9eef5, #e9eef5) 75%);
   background-size: 200% 100%;
   animation: fm-shimmer 1.2s linear infinite;
 }
@@ -724,12 +724,12 @@
   font: inherit;
   font-size: 14px;
   color: var(--fm-text);
-  background: #eef2f8;
+  background: var(--lt-eef2f8, #eef2f8);
   border: 1px solid transparent;
   border-radius: var(--fm-radius-md);
 }
 .fm-search-input::placeholder {
-  color: #566579;
+  color: var(--lt-566579, #566579);
 }
 .fm-search-input:focus-visible {
   background: var(--fm-surface);
@@ -1191,3 +1191,326 @@
 .fm-sidebar .fm-assist-robot img {
   animation-name: fm-assist-float;
 }
+
+/* ---------- dark theme ----------
+ * Toggled by the topbar button (ThemeToggle sets data-theme on <html>; layout.tsx reads the cookie). Tokens change here; the
+ * hard-coded light surfaces/borders/dark texts of the other rules go through the generated --lt-* palette at the end of this file
+ * (light value = the original colour, dark value = derived). The sidebar keeps its navy.
+ */
+:root[data-theme="dark"] .fm-theme {
+  --fm-navy-900: #e7edf7; /* used as the heading / strong-text colour */
+  --fm-blue-600: #3d85ec;
+  --fm-blue-500: #5b9cf2;
+  --fm-blue-100: #1c3253;
+  --fm-bg: #0b1322;
+  --fm-surface: #142036;
+  --fm-border: #2a3c5e;
+  --fm-border-strong: #8da0bd;
+  --fm-text: #e7edf7;
+  --fm-text-muted: #a3b4cb;
+  --fm-success: #43c493;
+  --fm-warning: #e3a640;
+  --fm-danger: #f07b7b;
+  --fm-focus: #78b4ff;
+  --fm-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.45);
+
+  --color-ink-950: #0b1322;
+  --color-panel-900: #142036;
+  --color-panel-800: #1b2b47;
+  --color-line-800: var(--fm-border);
+  --color-line-700: #3a4f75;
+  --color-fog-400: var(--fm-text-muted);
+  --color-fog-600: var(--fm-text-muted);
+  --color-paper-50: var(--fm-text);
+  --color-gwm-accent: var(--fm-blue-600);
+
+  color-scheme: dark;
+}
+:root[data-theme="dark"] .fm-theme input,
+:root[data-theme="dark"] .fm-theme select,
+:root[data-theme="dark"] .fm-theme textarea {
+  color-scheme: dark;
+}
+
+/* >>> generated palette (darkify_css) >>> */
+.fm-theme {
+  --lt-00a465: #00a465;
+  --lt-00a469: #00a469;
+  --lt-00a669: #00a669;
+  --lt-063f86: #063f86;
+  --lt-07143b: #07143b;
+  --lt-0759db: #0759db;
+  --lt-078451: #078451;
+  --lt-079a68: #079a68;
+  --lt-08163d: #08163d;
+  --lt-087349: #087349;
+  --lt-087849: #087849;
+  --lt-0964d8: #0964d8;
+  --lt-09875e: #09875e;
+  --lt-0a7a86: #0a7a86;
+  --lt-0b1d4d: #0b1d4d;
+  --lt-0b5fcf: #0b5fcf;
+  --lt-101c50: #101c50;
+  --lt-11244f: #11244f;
+  --lt-11a979: #11a979;
+  --lt-142644: #142644;
+  --lt-14664a: #14664a;
+  --lt-152957: #152957;
+  --lt-174b94: #174b94;
+  --lt-176c39: #176c39;
+  --lt-183263: #183263;
+  --lt-183454: #183454;
+  --lt-183461: #183461;
+  --lt-19283b: #19283b;
+  --lt-1a6b4d: #1a6b4d;
+  --lt-1b3260: #1b3260;
+  --lt-1b57ab: #1b57ab;
+  --lt-1e5caf: #1e5caf;
+  --lt-213768: #213768;
+  --lt-263a6d: #263a6d;
+  --lt-3a4a5e: #3a4a5e;
+  --lt-3d5a8a: #3d5a8a;
+  --lt-405a80: #405a80;
+  --lt-405d7c: #405d7c;
+  --lt-415a83: #415a83;
+  --lt-496786: #496786;
+  --lt-496797: #496797;
+  --lt-4a5b72: #4a5b72;
+  --lt-4d5f74: #4d5f74;
+  --lt-4d648b: #4d648b;
+  --lt-52638b: #52638b;
+  --lt-556579: #556579;
+  --lt-566579: #566579;
+  --lt-5b2fa3: #5b2fa3;
+  --lt-79531a: #79531a;
+  --lt-7a5110: #7a5110;
+  --lt-8e2f2f: #8e2f2f;
+  --lt-a13a3a: #a13a3a;
+  --lt-a3262a: #a3262a;
+  --lt-aa7107: #aa7107;
+  --lt-b45a12: #b45a12;
+  --lt-b8c7e0: #b8c7e0;
+  --lt-bfe0d0: #bfe0d0;
+  --lt-c6d4e7: #c6d4e7;
+  --lt-c7d9f2: #c7d9f2;
+  --lt-c8dcf7: #c8dcf7;
+  --lt-c9dfff: #c9dfff;
+  --lt-d2e0f5: #d2e0f5;
+  --lt-d6e6fb: #d6e6fb;
+  --lt-d9efe5: #d9efe5;
+  --lt-dce4ee: #dce4ee;
+  --lt-dce6f5: #dce6f5;
+  --lt-dce7f5: #dce7f5;
+  --lt-dce8f5: #dce8f5;
+  --lt-dce8f9: #dce8f9;
+  --lt-dce8fa: #dce8fa;
+  --lt-dfe8f4: #dfe8f4;
+  --lt-dfe9f5: #dfe9f5;
+  --lt-dfebf8: #dfebf8;
+  --lt-dfebfa: #dfebfa;
+  --lt-e0eaf6: #e0eaf6;
+  --lt-e0f6f8: #e0f6f8;
+  --lt-e2ebf8: #e2ebf8;
+  --lt-e2edf8: #e2edf8;
+  --lt-e2f7ee: #e2f7ee;
+  --lt-e3f7ee: #e3f7ee;
+  --lt-e3f8ed: #e3f8ed;
+  --lt-e4edfa: #e4edfa;
+  --lt-e4efff: #e4efff;
+  --lt-e4f0ff: #e4f0ff;
+  --lt-e4f8ef: #e4f8ef;
+  --lt-e5edf7: #e5edf7;
+  --lt-e5edfa: #e5edfa;
+  --lt-e5f2fa: #e5f2fa;
+  --lt-e6eefb: #e6eefb;
+  --lt-e6f4ee: #e6f4ee;
+  --lt-e7edf8: #e7edf8;
+  --lt-e7f2ff: #e7f2ff;
+  --lt-e7f8ed: #e7f8ed;
+  --lt-e8f1fd: #e8f1fd;
+  --lt-e9eef5: #e9eef5;
+  --lt-e9f0f8: #e9f0f8;
+  --lt-e9f2ff: #e9f2ff;
+  --lt-eab5b5: #eab5b5;
+  --lt-eaf0f9: #eaf0f9;
+  --lt-eaf2ff: #eaf2ff;
+  --lt-edf2f9: #edf2f9;
+  --lt-edf2fa: #edf2fa;
+  --lt-edf2fb: #edf2fb;
+  --lt-edf3fa: #edf3fa;
+  --lt-edf4fc: #edf4fc;
+  --lt-edf5ff: #edf5ff;
+  --lt-eef2f7: #eef2f7;
+  --lt-eef2f8: #eef2f8;
+  --lt-eef3fb: #eef3fb;
+  --lt-eef5fc: #eef5fc;
+  --lt-eef8f3: #eef8f3;
+  --lt-efe6fb: #efe6fb;
+  --lt-efeafb: #efeafb;
+  --lt-eff4fa: #eff4fa;
+  --lt-f0f5fc: #f0f5fc;
+  --lt-f0f6ff: #f0f6ff;
+  --lt-f1f6ff: #f1f6ff;
+  --lt-f2f7fc: #f2f7fc;
+  --lt-f3f7fd: #f3f7fd;
+  --lt-f3f7ff: #f3f7ff;
+  --lt-f3f8ff: #f3f8ff;
+  --lt-f4b8c2: #f4b8c2;
+  --lt-f4f7fb: #f4f7fb;
+  --lt-f5f8fc: #f5f8fc;
+  --lt-f5f9ff: #f5f9ff;
+  --lt-f5faff: #f5faff;
+  --lt-f7faff: #f7faff;
+  --lt-f8fafd: #f8fafd;
+  --lt-fbeaea: #fbeaea;
+  --lt-fdeaea: #fdeaea;
+  --lt-fdf5e2: #fdf5e2;
+  --lt-ffe9ed: #ffe9ed;
+  --lt-fff0e9: #fff0e9;
+  --lt-fff1d4: #fff1d4;
+  --lt-fff1e0: #fff1e0;
+  --lt-fff4dc: #fff4dc;
+  --lt-fff4dd: #fff4dd;
+  --lt-fff4df: #fff4df;
+}
+:root[data-theme="dark"] .fm-theme {
+  --lt-00a465: #86e1be;
+  --lt-00a469: #86e1c0;
+  --lt-00a669: #86e1bf;
+  --lt-063f86: #90b5e3;
+  --lt-07143b: #aebdeb;
+  --lt-0759db: #6e98db;
+  --lt-078451: #90e3c1;
+  --lt-079a68: #88e1c3;
+  --lt-08163d: #acbdea;
+  --lt-087349: #97e5c6;
+  --lt-087849: #95e4c3;
+  --lt-0964d8: #6e9edb;
+  --lt-09875e: #8ee3c7;
+  --lt-0a7a86: #8edbe3;
+  --lt-0b1d4d: #a5b7e8;
+  --lt-0b5fcf: #719edb;
+  --lt-101c50: #a2afe8;
+  --lt-11244f: #a2b7e8;
+  --lt-11a979: #7edfc0;
+  --lt-142644: #a8bfe5;
+  --lt-14664a: #97e5ca;
+  --lt-152957: #9db3e6;
+  --lt-174b94: #84aae0;
+  --lt-176c39: #94e4b4;
+  --lt-183263: #97b2e5;
+  --lt-183454: #9fbfe4;
+  --lt-183461: #98b5e5;
+  --lt-19283b: #b1c5de;
+  --lt-1a6b4d: #93e4c6;
+  --lt-1b3260: #99b2e2;
+  --lt-1b57ab: #79a3dd;
+  --lt-1e5caf: #76a2dd;
+  --lt-213768: #97adde;
+  --lt-263a6d: #95a9da;
+  --lt-3a4a5e: #a5b5c8;
+  --lt-3d5a8a: #8aa3cb;
+  --lt-405a80: #91a7c8;
+  --lt-405d7c: #94adc8;
+  --lt-415a83: #8fa5c8;
+  --lt-496786: #8fa8c2;
+  --lt-496797: #859dc4;
+  --lt-4a5b72: #9cabbf;
+  --lt-4d5f74: #9cabbd;
+  --lt-4d648b: #8da0c0;
+  --lt-52638b: #8e9cbc;
+  --lt-556579: #9aa7b8;
+  --lt-566579: #9aa7b7;
+  --lt-5b2fa3: #9c78d8;
+  --lt-79531a: #e3c08d;
+  --lt-7a5110: #e3c391;
+  --lt-8e2f2f: #d68484;
+  --lt-a13a3a: #d07c7c;
+  --lt-a3262a: #dd787b;
+  --lt-aa7107: #e0bf81;
+  --lt-b45a12: #dda579;
+  --lt-b8c7e0: #42597f;
+  --lt-bfe0d0: #44785f;
+  --lt-c6d4e7: #3b5373;
+  --lt-c7d9f2: #384e6c;
+  --lt-c8dcf7: #364c69;
+  --lt-c9dfff: #334763;
+  --lt-d2e0f5: #344764;
+  --lt-d6e6fb: #1a293d;
+  --lt-d9efe5: #1e4131;
+  --lt-dce4ee: #36485f;
+  --lt-dce6f5: #30435e;
+  --lt-dce7f5: #30455e;
+  --lt-dce8f5: #30465e;
+  --lt-dce8f9: #2f425c;
+  --lt-dce8fa: #2f415b;
+  --lt-dfe8f4: #30435d;
+  --lt-dfe9f5: #30445c;
+  --lt-dfebf8: #2f445a;
+  --lt-dfebfa: #2e4159;
+  --lt-e0eaf6: #2f435b;
+  --lt-e0f6f8: #183638;
+  --lt-e2ebf8: #2e3f59;
+  --lt-e2edf8: #2e4359;
+  --lt-e2f7ee: #18382a;
+  --lt-e3f7ee: #173729;
+  --lt-e3f8ed: #173626;
+  --lt-e4edfa: #2c3e56;
+  --lt-e4efff: #152031;
+  --lt-e4f0ff: #152231;
+  --lt-e4f8ef: #173628;
+  --lt-e5edf7: #172536;
+  --lt-e5edfa: #2c3c56;
+  --lt-e5f2fa: #162834;
+  --lt-e6eefb: #2c3b55;
+  --lt-e6f4ee: #193529;
+  --lt-e7edf8: #2c3b56;
+  --lt-e7f2ff: #14212f;
+  --lt-e7f8ed: #163421;
+  --lt-e8f1fd: #142030;
+  --lt-e9eef5: #192332;
+  --lt-e9f0f8: #2c3f55;
+  --lt-e9f2ff: #141e2e;
+  --lt-eab5b5: #7c4040;
+  --lt-eaf0f9: #2b3b53;
+  --lt-eaf2ff: #131d2e;
+  --lt-edf2f9: #141f2f;
+  --lt-edf2fa: #2a3951;
+  --lt-edf2fb: #293750;
+  --lt-edf3fa: #14202f;
+  --lt-edf4fc: #13202e;
+  --lt-edf5ff: #121e2c;
+  --lt-eef2f7: #17212d;
+  --lt-eef2f8: #151f2e;
+  --lt-eef3fb: #131d2e;
+  --lt-eef5fc: #13202d;
+  --lt-eef8f3: #152e22;
+  --lt-efe6fb: #221533;
+  --lt-efeafb: #1c1430;
+  --lt-eff4fa: #131f2e;
+  --lt-f0f5fc: #121d2c;
+  --lt-f0f6ff: #121b2a;
+  --lt-f1f6ff: #111a29;
+  --lt-f2f7fc: #121e2a;
+  --lt-f3f7fd: #111b29;
+  --lt-f3f7ff: #111928;
+  --lt-f3f8ff: #111a28;
+  --lt-f4b8c2: #743c45;
+  --lt-f4f7fb: #121c2a;
+  --lt-f5f8fc: #111b28;
+  --lt-f5f9ff: #101927;
+  --lt-f5faff: #101b27;
+  --lt-f7faff: #101825;
+  --lt-f8fafd: #101926;
+  --lt-fbeaea: #301414;
+  --lt-fdeaea: #2f1414;
+  --lt-fdf5e2: #342b16;
+  --lt-ffe9ed: #2e1418;
+  --lt-fff0e9: #2e1c14;
+  --lt-fff1d4: #3b3019;
+  --lt-fff1e0: #342616;
+  --lt-fff4dc: #362d17;
+  --lt-fff4dd: #362c17;
+  --lt-fff4df: #342a16;
+}
+/* <<< generated palette <<< */

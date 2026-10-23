@@ -20,24 +20,24 @@
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
-  background: #eef2f7;
-  color: #3a4a5e;
+  background: var(--lt-eef2f7, #eef2f7);
+  color: var(--lt-3a4a5e, #3a4a5e);
 }
 .fm-theme .fm-pill[data-tone="ok"] {
-  background: #e6f4ee;
-  color: #14664a;
+  background: var(--lt-e6f4ee, #e6f4ee);
+  color: var(--lt-14664a, #14664a);
 }
 .fm-theme .fm-pill[data-tone="warn"] {
-  background: #fdf5e2;
-  color: #7a5110;
+  background: var(--lt-fdf5e2, #fdf5e2);
+  color: var(--lt-7a5110, #7a5110);
 }
 .fm-theme .fm-pill[data-tone="bad"] {
-  background: #fbeaea;
-  color: #8e2f2f;
+  background: var(--lt-fbeaea, #fbeaea);
+  color: var(--lt-8e2f2f, #8e2f2f);
 }
 .fm-theme .fm-pill[data-tone="info"] {
   background: var(--fm-blue-100);
-  color: #1b57ab;
+  color: var(--lt-1b57ab, #1b57ab);
 }
 .fm-theme .fm-link {
   color: var(--fm-blue-600);
@@ -53,11 +53,11 @@
 }
 .fm-theme .fm-btn-danger {
   background: var(--fm-surface);
-  color: #8e2f2f;
+  color: var(--lt-8e2f2f, #8e2f2f);
   border-color: #8e2f2f;
 }
 .fm-theme .fm-btn-danger:hover:not(:disabled) {
-  background: #fbeaea;
+  background: var(--lt-fbeaea, #fbeaea);
 }
 .fm-theme .fm-btn:disabled {
   opacity: 0.6;
