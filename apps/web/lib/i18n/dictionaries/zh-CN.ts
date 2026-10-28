@@ -1633,6 +1633,7 @@ const dict: Dictionary = {
     gateHistory: "门岗记录",
     keyCustody: "钥匙保管",
     budgetApprovals: "审批报价",
+    reservationApprovals: "审批预订",
     keyTracking: "钥匙跟踪",
     admin: "系统管理",
     myCarpools: "我的拼车",

@@ -1669,6 +1669,7 @@ const dict: Dictionary = {
     gateHistory: "Gatehouse History",
     keyCustody: "Key custody",
     budgetApprovals: "Approve quotes",
+    reservationApprovals: "Approve bookings",
     keyTracking: "Key tracking",
     admin: "Administration",
     myCarpools: "My Carpools",

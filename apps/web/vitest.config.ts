@@ -44,6 +44,7 @@ export default defineConfig({
       "app/gate/**/*.test.ts",
       "app/reservations/**/*.test.ts",
       "app/api/**/*.test.ts",
+      "app/aprovar/**/*.test.ts",
     ],
   },
   resolve: {

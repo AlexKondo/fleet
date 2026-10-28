@@ -11,13 +11,15 @@ export interface ApprovalRowProps {
   phone: string;
   consent: boolean;
   managedCount: number;
+  /** the person's account e-mail (shown when they are somebody's manager: where the e-mail request goes) */
+  email: string;
   managerOptions: { id: string; name: string }[];
   /** resolved texts (area `approvals`) */
   T: Record<string, string>;
   statusKey: "statusReady" | "statusNoManager" | "statusManagerNoPhone";
 }
 
-export function ApprovalRow({ person, managerId, phone, consent, managedCount, managerOptions, T, statusKey }: ApprovalRowProps) {
+export function ApprovalRow({ person, managerId, phone, consent, managedCount, email, managerOptions, T, statusKey }: ApprovalRowProps) {
   const [state, action, pending] = useActionState(saveApprovalChannel, initial);
   // Controlled fields: React 19 resets an uncontrolled <form action> once the action settles, which would wipe the typed number
   // after a validation error (e.g. consent not ticked yet).
@@ -31,6 +33,7 @@ export function ApprovalRow({ person, managerId, phone, consent, managedCount, m
       <td className="px-3 py-3" data-label={T.colPerson}>
         <p className="text-sm text-paper-50">{person.name}</p>
         {managedCount > 0 ? <p className="text-xs text-fog-400">{T.statusIsManager!.replace("{count}", String(managedCount))}</p> : null}
+        {managedCount > 0 && email ? <p className="text-xs text-fog-400" data-testid={`approval-email-${person.id}`}>{T.emailNote!.replace("{email}", email)}</p> : null}
       </td>
       <td className="px-3 py-3 text-sm text-fog-400" data-label={T.colRole}>{person.roleLabel}</td>
       <td className="px-3 py-3" data-label={T.colManager}>

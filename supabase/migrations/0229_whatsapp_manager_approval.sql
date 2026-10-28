@@ -1,11 +1,13 @@
--- 0229: approval of a vehicle reservation by the requester's DIRECT MANAGER through WhatsApp (via n8n).
+-- 0229: approval of a vehicle reservation by the requester's DIRECT MANAGER through WhatsApp (via n8n) and/or e-mail.
 -- Additive (expand): new tables and functions only; approve_reservation / cancel_reservation and every existing permission are untouched.
--- The in-app approval by fleet managers keeps working exactly as before; when it happens first, the WhatsApp request becomes 'superseded'.
+-- The in-app approval by fleet managers keeps working exactly as before; when it happens first, the pending channel requests become 'superseded'.
 --
--- Trust model: the manager's decision arrives ONLY through the service-role webhook (apps/web/app/api/whatsapp/approval, HMAC-signed by n8n).
--- Inside the database the decision is authorized by (1) a single-use random token (only its sha256 is stored), (2) the sender's phone
--- matching the phone registered for that approver, (3) the approver still being the requester's direct manager with an enabled account,
--- (4) the request not being expired / already decided, (5) the reservation still being pending approval.
+-- Trust model: the decision arrives ONLY through service-role server code (WhatsApp: the HMAC-signed webhook from n8n; e-mail: a
+-- server action on the public confirmation page). Inside the database the decision is authorized by (1) a single-use random token
+-- (only its sha256 is stored), (2) for WhatsApp, the sender's phone matching the phone registered for that approver, (3) the approver
+-- still being the requester's direct manager with an enabled account, (4) the request not being expired / already decided,
+-- (5) the reservation still being pending approval. A request belongs to ONE channel: a WhatsApp token is refused on the e-mail page and
+-- vice versa.
 
 -- ---------------------------------------------------------------------------
 -- Tables (RLS on, no policies, no grants: every access goes through the SECURITY DEFINER functions below)
@@ -35,10 +37,12 @@ create table public.fm_approval_requests (
   organization_id uuid not null references public.organizations(id) on delete cascade,
   reservation_id uuid not null references public.reservations(id) on delete cascade,
   approver_id uuid not null references public.profiles(id),
-  channel text not null default 'whatsapp' check (channel in ('whatsapp')),
+  channel text not null default 'whatsapp' check (channel in ('whatsapp', 'email')),
   token_hash text not null unique,
   status text not null default 'pending' check (status in ('pending','approved','rejected','expired','superseded','cancelled')),
-  phone_e164 text not null,
+  phone_e164 text,
+  email text,
+  check ((channel = 'whatsapp' and phone_e164 is not null) or (channel = 'email' and email is not null)),
   payload jsonb not null,
   delivery_state text not null default 'queued' check (delivery_state in ('queued','sent','failed')),
   delivery_attempts integer not null default 0,
@@ -49,7 +53,7 @@ create table public.fm_approval_requests (
   created_at timestamptz not null default now(),
   expires_at timestamptz not null
 );
-create unique index fm_approval_one_pending_idx on public.fm_approval_requests(reservation_id, approver_id) where status = 'pending';
+create unique index fm_approval_one_pending_idx on public.fm_approval_requests(reservation_id, approver_id, channel) where status = 'pending';
 create index fm_approval_requests_reservation_idx on public.fm_approval_requests(reservation_id);
 
 alter table public.fm_user_managers enable row level security;
@@ -144,7 +148,7 @@ $$;
 -- Internal: the approve / refuse effects, performed on behalf of the approver (mirrors approve_reservation / the pending branch of
 -- cancel_reservation, which both authorize through auth.uid() and the fleet-manager role and so cannot be called for a line manager).
 -- ---------------------------------------------------------------------------
-create function public.fm_channel_approve(p_reservation_id uuid, p_actor uuid) returns void
+create function public.fm_channel_approve(p_reservation_id uuid, p_actor uuid, p_channel text default 'whatsapp') returns void
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare v_org uuid; v_vehicle_id uuid; v_vehicle_status vehicle_status; v_requester uuid;
 begin
@@ -165,11 +169,11 @@ begin
   insert into notifications (organization_id, user_id, title, body, entity_type, entity_id)
     values (v_org, v_requester, 'Reserva aprovada', 'Sua reserva foi aprovada e o veículo está confirmado.', 'reservation', p_reservation_id);
   perform log_audit_event(v_org, p_actor, 'reservation_approved', 'reservation', p_reservation_id, null,
-    jsonb_build_object('status', 'confirmed', 'channel', 'whatsapp'));
+    jsonb_build_object('status', 'confirmed', 'channel', p_channel));
 end;
 $$;
 
-create function public.fm_channel_reject(p_reservation_id uuid, p_actor uuid) returns void
+create function public.fm_channel_reject(p_reservation_id uuid, p_actor uuid, p_channel text default 'whatsapp') returns void
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare v_org uuid; v_vehicle_id uuid; v_requester uuid;
 begin
@@ -178,25 +182,28 @@ begin
   if v_vehicle_id is null then raise exception 'NOT_FOUND'; end if;
   perform 1 from vehicles where id = v_vehicle_id for update;
   update reservations set status = 'cancelled', cancelled_by = p_actor, cancelled_at = now(),
-      cancellation_reason = 'Recusada pelo gestor (WhatsApp)'
+      cancellation_reason = case p_channel when 'email' then 'Recusada pelo gestor (e-mail)' when 'app' then 'Recusada pelo gestor direto' else 'Recusada pelo gestor (WhatsApp)' end
     where id = p_reservation_id and status = 'pending_approval';
   if not found then raise exception 'NOT_PENDING'; end if;
   insert into notifications (organization_id, user_id, title, body, entity_type, entity_id)
     values (v_org, v_requester, 'Reserva recusada', 'Seu gestor recusou esta reserva de veículo.', 'reservation', p_reservation_id);
   perform log_audit_event(v_org, p_actor, 'reservation_rejected', 'reservation', p_reservation_id, null,
-    jsonb_build_object('status', 'cancelled', 'channel', 'whatsapp'));
+    jsonb_build_object('status', 'cancelled', 'channel', p_channel));
 end;
 $$;
 
 -- ---------------------------------------------------------------------------
 -- Request lifecycle (service role only: called by the server, never by a browser)
 -- ---------------------------------------------------------------------------
--- Creates the request for a reservation that is pending approval and returns what the message needs, including the plain token
--- (shown once, only its hash is kept). p_rotate replaces a still-pending request (delivery retry) with a new token.
-create function public.fm_approval_prepare(p_reservation_id uuid, p_rotate boolean default false, p_ttl_hours integer default 24) returns jsonb
+-- Creates one request per requested channel for a reservation that is pending approval and returns what each message needs, including
+-- the plain token (shown once, only its hash is kept). Channels: 'whatsapp' needs the manager's registered number (with consent);
+-- 'email' uses the manager's account e-mail. p_rotate replaces a still-pending request of the same channel (delivery retry).
+create function public.fm_approval_prepare(p_reservation_id uuid, p_rotate boolean default false, p_ttl_hours integer default 24,
+                                           p_channels text[] default array['whatsapp', 'email']) returns jsonb
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare
-  r record; v_manager uuid; v_phone text; v_token text; v_id uuid; v_expires timestamptz; v_payload jsonb;
+  r record; v_manager uuid; v_phone text; v_email text; v_token text; v_id uuid; v_expires timestamptz; v_payload jsonb;
+  v_ch text; v_out jsonb := '[]'::jsonb; v_skipped_pending boolean := false;
 begin
   select res.id, res.organization_id, res.status, res.start_at, res.end_at, t.requester_id, t.origin, t.destination, t.justification,
          t.passenger_count, t.departure_at, t.expected_return_at, v.plate, v.name as vehicle_name, p.full_name as requester_name
@@ -215,25 +222,37 @@ begin
     where m.user_id = r.requester_id and mp.organization_id = r.organization_id and coalesce(a.enabled, true);
   if v_manager is null then return jsonb_build_object('ok', false, 'reason', 'no_manager'); end if;
   select c.phone_e164 into v_phone from fm_whatsapp_contacts c where c.user_id = v_manager and c.consent_confirmed;
-  if v_phone is null then return jsonb_build_object('ok', false, 'reason', 'no_contact'); end if;
+  select u.email into v_email from auth.users u where u.id = v_manager;
 
-  if exists (select 1 from fm_approval_requests where reservation_id = p_reservation_id and approver_id = v_manager and status = 'pending') then
-    if not p_rotate then return jsonb_build_object('ok', false, 'reason', 'already_pending'); end if;
-    update fm_approval_requests set status = 'cancelled' where reservation_id = p_reservation_id and approver_id = v_manager and status = 'pending';
-  end if;
-
-  v_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
   v_expires := least(now() + make_interval(hours => greatest(1, least(coalesce(p_ttl_hours, 24), 72))), r.end_at);
   v_payload := jsonb_build_object(
     'requester_name', r.requester_name, 'vehicle_name', r.vehicle_name, 'plate', r.plate,
     'departure_at', r.departure_at, 'return_at', r.expected_return_at,
     'origin', r.origin, 'destination', r.destination, 'purpose', r.justification, 'passengers', r.passenger_count);
-  insert into fm_approval_requests(organization_id, reservation_id, approver_id, token_hash, phone_e164, payload, expires_at)
-    values (r.organization_id, p_reservation_id, v_manager, encode(sha256(convert_to(v_token, 'UTF8')), 'hex'), v_phone, v_payload, v_expires)
-    returning id into v_id;
-  perform log_audit_event(r.organization_id, null, 'approval.requested', 'reservation', p_reservation_id, null,
-    jsonb_build_object('approver_id', v_manager, 'channel', 'whatsapp', 'request_id', v_id));
-  return jsonb_build_object('ok', true, 'request_id', v_id, 'token', v_token, 'phone_e164', v_phone, 'expires_at', v_expires, 'payload', v_payload);
+
+  foreach v_ch in array coalesce(p_channels, array[]::text[]) loop
+    if v_ch = 'whatsapp' and v_phone is null then continue; end if;
+    if v_ch = 'email' and (v_email is null or btrim(v_email) = '') then continue; end if;
+    if v_ch not in ('whatsapp', 'email') then continue; end if;
+    if exists (select 1 from fm_approval_requests where reservation_id = p_reservation_id and approver_id = v_manager and channel = v_ch and status = 'pending') then
+      if not p_rotate then v_skipped_pending := true; continue; end if;
+      update fm_approval_requests set status = 'cancelled' where reservation_id = p_reservation_id and approver_id = v_manager and channel = v_ch and status = 'pending';
+    end if;
+    v_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+    insert into fm_approval_requests(organization_id, reservation_id, approver_id, channel, token_hash, phone_e164, email, payload, expires_at)
+      values (r.organization_id, p_reservation_id, v_manager, v_ch, encode(sha256(convert_to(v_token, 'UTF8')), 'hex'),
+              case when v_ch = 'whatsapp' then v_phone end, case when v_ch = 'email' then v_email end, v_payload, v_expires)
+      returning id into v_id;
+    perform log_audit_event(r.organization_id, null, 'approval.requested', 'reservation', p_reservation_id, null,
+      jsonb_build_object('approver_id', v_manager, 'channel', v_ch, 'request_id', v_id));
+    v_out := v_out || jsonb_build_array(jsonb_build_object('channel', v_ch, 'request_id', v_id, 'token', v_token,
+      'phone_e164', case when v_ch = 'whatsapp' then v_phone end, 'email', case when v_ch = 'email' then v_email end, 'expires_at', v_expires));
+  end loop;
+
+  if jsonb_array_length(v_out) = 0 then
+    return jsonb_build_object('ok', false, 'reason', case when v_skipped_pending then 'already_pending' else 'no_contact' end);
+  end if;
+  return jsonb_build_object('ok', true, 'payload', v_payload, 'requests', v_out);
 end;
 $$;
 
@@ -247,17 +266,38 @@ language sql security definer set search_path = public, pg_temp as $$
    where id = p_request_id and status = 'pending';
 $$;
 
--- The manager's answer. Never raises for a business outcome: returns {status, reservation_id} so the webhook can answer n8n with a
--- text for the manager. Statuses: approved | rejected | already_decided | expired | invalid | phone_mismatch | not_authorized |
--- vehicle_unavailable | superseded.
-create function public.fm_approval_decide(p_token text, p_decision text, p_from_phone text, p_message_id text default null) returns jsonb
+-- Read-only look at a request for the e-mail confirmation page (no state change, so link scanners and prefetchers are harmless).
+-- Only e-mail requests are shown there.
+create function public.fm_approval_peek(p_token text) returns jsonb
+language plpgsql stable security definer set search_path = public, pg_temp as $$
+declare q fm_approval_requests%rowtype; v_res_status reservation_status; v_status text;
+begin
+  if p_token is null or length(p_token) < 32 then return jsonb_build_object('status', 'invalid'); end if;
+  select * into q from fm_approval_requests where token_hash = encode(sha256(convert_to(p_token, 'UTF8')), 'hex') and channel = 'email';
+  if not found then return jsonb_build_object('status', 'invalid'); end if;
+  select r.status into v_res_status from reservations r where r.id = q.reservation_id;
+  v_status := case
+    when q.status = 'pending' and q.expires_at <= now() then 'expired'
+    when q.status = 'pending' and v_res_status is distinct from 'pending_approval' then 'superseded'
+    else q.status end;
+  return jsonb_build_object('status', v_status, 'expires_at', q.expires_at, 'payload', q.payload);
+end;
+$$;
+
+-- The approver's answer. Never raises for a business outcome: returns {status, reservation_id} so the caller can answer with a text.
+-- Statuses: approved | rejected | already_decided | expired | invalid | phone_mismatch | not_authorized | vehicle_unavailable | superseded.
+-- p_channel is the channel the answer ARRIVED through; it must be the channel of the request. For WhatsApp the sender phone must match.
+create function public.fm_approval_decide(p_token text, p_decision text, p_from_phone text, p_message_id text default null,
+                                          p_channel text default 'whatsapp') returns jsonb
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   q fm_approval_requests%rowtype; v_res_status reservation_status; v_requester uuid; v_ok boolean; v_err text;
 begin
-  if p_token is null or length(p_token) < 32 or p_decision not in ('approve', 'reject') then return jsonb_build_object('status', 'invalid'); end if;
+  if p_token is null or length(p_token) < 32 or p_decision not in ('approve', 'reject') or p_channel not in ('whatsapp', 'email') then
+    return jsonb_build_object('status', 'invalid');
+  end if;
   select * into q from fm_approval_requests where token_hash = encode(sha256(convert_to(p_token, 'UTF8')), 'hex') for update;
-  if not found then return jsonb_build_object('status', 'invalid'); end if;
+  if not found or q.channel <> p_channel then return jsonb_build_object('status', 'invalid'); end if;
 
   -- the same button tapped twice (or the same webhook delivery repeated): same answer, no second effect
   if q.status in ('approved', 'rejected') then
@@ -270,7 +310,8 @@ begin
     return jsonb_build_object('status', 'expired', 'reservation_id', q.reservation_id);
   end if;
 
-  if fm_phone_digits_norm(p_from_phone) is distinct from fm_phone_digits_norm(q.phone_e164) or fm_phone_digits_norm(p_from_phone) = '' then
+  if q.channel = 'whatsapp' and
+     (fm_phone_digits_norm(p_from_phone) is distinct from fm_phone_digits_norm(q.phone_e164) or fm_phone_digits_norm(p_from_phone) = '') then
     perform log_audit_event(q.organization_id, null, 'approval.phone_mismatch', 'reservation', q.reservation_id, null,
       jsonb_build_object('request_id', q.id, 'from_suffix', right(fm_phone_digits_norm(p_from_phone), 4)));
     return jsonb_build_object('status', 'phone_mismatch', 'reservation_id', q.reservation_id);
@@ -283,22 +324,23 @@ begin
     return jsonb_build_object('status', 'superseded', 'reservation_id', q.reservation_id);
   end if;
 
-  -- still the direct manager of the requester, same registered number, account enabled
+  -- still the direct manager of the requester with an enabled account (and, for WhatsApp, the same registered number)
   if not exists (
     select 1 from fm_user_managers m
-      join fm_whatsapp_contacts c on c.user_id = m.manager_id and c.consent_confirmed
       left join fm_member_access a on a.user_id = m.manager_id
      where m.user_id = v_requester and m.manager_id = q.approver_id and coalesce(a.enabled, true)
-       and fm_phone_digits_norm(c.phone_e164) = fm_phone_digits_norm(q.phone_e164)
+       and (q.channel = 'email' or exists (
+             select 1 from fm_whatsapp_contacts c where c.user_id = m.manager_id and c.consent_confirmed
+               and fm_phone_digits_norm(c.phone_e164) = fm_phone_digits_norm(q.phone_e164)))
   ) then
     perform log_audit_event(q.organization_id, null, 'approval.not_authorized', 'reservation', q.reservation_id, null,
-      jsonb_build_object('request_id', q.id));
+      jsonb_build_object('request_id', q.id, 'channel', q.channel));
     return jsonb_build_object('status', 'not_authorized', 'reservation_id', q.reservation_id);
   end if;
 
   begin
-    if p_decision = 'approve' then perform fm_channel_approve(q.reservation_id, q.approver_id);
-    else perform fm_channel_reject(q.reservation_id, q.approver_id); end if;
+    if p_decision = 'approve' then perform fm_channel_approve(q.reservation_id, q.approver_id, q.channel);
+    else perform fm_channel_reject(q.reservation_id, q.approver_id, q.channel); end if;
     v_ok := true;
   exception when others then
     v_ok := false; v_err := sqlerrm;
@@ -321,6 +363,95 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------------
+-- Approval INSIDE the platform by the direct manager (the same authority as the channels: being the requester's direct manager).
+-- The in-app approval by fleet managers / administrators (approve_reservation) is untouched and keeps working.
+-- ---------------------------------------------------------------------------
+create function public.fm_has_direct_reports() returns boolean
+language sql stable security definer set search_path = public, pg_temp as $$
+  select current_organization_id() is not null and exists (
+    select 1 from fm_user_managers m where m.manager_id = auth.uid() and m.organization_id = current_organization_id())
+$$;
+
+-- Pending reservations of the people the caller manages (only the caller's own reports; nothing else of anybody's journeys).
+create function public.fm_manager_pending_approvals() returns jsonb
+language plpgsql stable security definer set search_path = public, pg_temp as $$
+declare v_org uuid := current_organization_id();
+begin
+  if auth.uid() is null or v_org is null then raise exception 'NOT_AUTHORIZED'; end if;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'reservation_id', r.id, 'requester_name', p.full_name, 'vehicle_name', v.name, 'plate', v.plate,
+      'departure_at', t.departure_at, 'return_at', t.expected_return_at, 'origin', t.origin, 'destination', t.destination,
+      'purpose', t.justification, 'passengers', t.passenger_count, 'created_at', r.created_at
+    ) order by t.departure_at)
+    from fm_user_managers m
+      join trip_requests t on t.requester_id = m.user_id
+      join reservations r on r.trip_request_id = t.id
+      join vehicles v on v.id = r.vehicle_id
+      join profiles p on p.id = m.user_id
+    where m.manager_id = auth.uid() and m.organization_id = v_org and r.organization_id = v_org
+      and r.status = 'pending_approval' and r.end_at > now()
+  ), '[]'::jsonb);
+end;
+$$;
+
+-- The direct manager's decision made in the app. Never raises for a business outcome: returns {status}.
+-- Statuses: approved | rejected | invalid | not_authorized | superseded | expired | vehicle_unavailable.
+create function public.fm_manager_decide_reservation(p_reservation_id uuid, p_decision text) returns jsonb
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare v_org uuid := current_organization_id(); v_requester uuid; v_status reservation_status; v_ok boolean; v_err text;
+begin
+  if auth.uid() is null or v_org is null or p_reservation_id is null or p_decision not in ('approve', 'reject') then
+    return jsonb_build_object('status', 'invalid');
+  end if;
+  select t.requester_id, r.status into v_requester, v_status
+    from reservations r join trip_requests t on t.id = r.trip_request_id
+    where r.id = p_reservation_id and r.organization_id = v_org;
+  if v_requester is null then return jsonb_build_object('status', 'invalid'); end if;
+  if not exists (select 1 from fm_user_managers m where m.user_id = v_requester and m.manager_id = auth.uid() and m.organization_id = v_org) then
+    return jsonb_build_object('status', 'not_authorized');
+  end if;
+  if v_status is distinct from 'pending_approval' then return jsonb_build_object('status', 'superseded'); end if;
+  begin
+    if p_decision = 'approve' then perform fm_channel_approve(p_reservation_id, auth.uid(), 'app');
+    else perform fm_channel_reject(p_reservation_id, auth.uid(), 'app'); end if;
+    v_ok := true;
+  exception when others then
+    v_ok := false; v_err := sqlerrm;
+  end;
+  if not v_ok then
+    return jsonb_build_object('status', case v_err when 'RESERVATION_EXPIRED' then 'expired' when 'VEHICLE_NOT_AVAILABLE' then 'vehicle_unavailable' else 'superseded' end);
+  end if;
+  -- the WhatsApp / e-mail requests of this reservation are no longer needed
+  update fm_approval_requests set status = 'superseded', decided_at = now() where reservation_id = p_reservation_id and status = 'pending';
+  return jsonb_build_object('status', case when p_decision = 'approve' then 'approved' else 'rejected' end);
+end;
+$$;
+
+-- In-app notification (bell) for the direct manager when a reservation of one of their people needs approval. Independent of the
+-- WhatsApp / e-mail channels (works with none configured); idempotent per reservation.
+create function public.fm_approval_notify_manager(p_reservation_id uuid) returns void
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare r record; v_manager uuid;
+begin
+  select res.id, res.organization_id, res.status, res.end_at, t.requester_id, t.destination, p.full_name as requester_name
+    into r
+    from reservations res join trip_requests t on t.id = res.trip_request_id join profiles p on p.id = t.requester_id
+    where res.id = p_reservation_id;
+  if r.id is null or r.status <> 'pending_approval' or r.end_at <= now() then return; end if;
+  select m.manager_id into v_manager from fm_user_managers m
+    join profiles mp on mp.id = m.manager_id left join fm_member_access a on a.user_id = m.manager_id
+    where m.user_id = r.requester_id and mp.organization_id = r.organization_id and coalesce(a.enabled, true);
+  if v_manager is null then return; end if;
+  if exists (select 1 from notifications where user_id = v_manager and entity_type = 'approval' and entity_id = p_reservation_id) then return; end if;
+  insert into notifications (organization_id, user_id, title, body, entity_type, entity_id)
+    values (r.organization_id, v_manager, 'Reserva aguardando sua aprovação',
+            left(r.requester_name || ' pediu um veículo para ' || r.destination || '. Abra "Aprovar reservas" para decidir.', 500),
+            'approval', p_reservation_id);
+end;
+$$;
+
 -- Housekeeping: pending requests past their expiry are closed (the decision function also checks the clock itself).
 create function public.fm_approval_expire_due() returns integer
 language sql security definer set search_path = public, pg_temp as $$
@@ -330,10 +461,13 @@ $$;
 
 -- Grants: administration functions are called by the signed-in administrator; everything else is service_role only.
 revoke all on function public.fm_phone_digits_norm(text) from public, anon, authenticated;
-revoke all on function public.fm_set_user_manager(uuid, uuid), public.fm_set_whatsapp_contact(uuid, text, boolean), public.fm_approval_channel_snapshot() from public, anon;
-grant execute on function public.fm_set_user_manager(uuid, uuid), public.fm_set_whatsapp_contact(uuid, text, boolean), public.fm_approval_channel_snapshot() to authenticated;
-revoke all on function public.fm_channel_approve(uuid, uuid), public.fm_channel_reject(uuid, uuid), public.fm_approval_prepare(uuid, boolean, integer),
-  public.fm_approval_mark_delivery(uuid, boolean, text), public.fm_approval_decide(text, text, text, text), public.fm_approval_expire_due()
-  from public, anon, authenticated;
-grant execute on function public.fm_approval_prepare(uuid, boolean, integer), public.fm_approval_mark_delivery(uuid, boolean, text),
-  public.fm_approval_decide(text, text, text, text), public.fm_approval_expire_due() to service_role;
+revoke all on function public.fm_set_user_manager(uuid, uuid), public.fm_set_whatsapp_contact(uuid, text, boolean), public.fm_approval_channel_snapshot(),
+  public.fm_has_direct_reports(), public.fm_manager_pending_approvals(), public.fm_manager_decide_reservation(uuid, text) from public, anon;
+grant execute on function public.fm_set_user_manager(uuid, uuid), public.fm_set_whatsapp_contact(uuid, text, boolean), public.fm_approval_channel_snapshot(),
+  public.fm_has_direct_reports(), public.fm_manager_pending_approvals(), public.fm_manager_decide_reservation(uuid, text) to authenticated;
+revoke all on function public.fm_channel_approve(uuid, uuid, text), public.fm_channel_reject(uuid, uuid, text), public.fm_approval_prepare(uuid, boolean, integer, text[]),
+  public.fm_approval_mark_delivery(uuid, boolean, text), public.fm_approval_peek(text), public.fm_approval_decide(text, text, text, text, text),
+  public.fm_approval_expire_due(), public.fm_approval_notify_manager(uuid) from public, anon, authenticated;
+grant execute on function public.fm_approval_prepare(uuid, boolean, integer, text[]), public.fm_approval_mark_delivery(uuid, boolean, text),
+  public.fm_approval_peek(text), public.fm_approval_decide(text, text, text, text, text), public.fm_approval_expire_due(),
+  public.fm_approval_notify_manager(uuid) to service_role;

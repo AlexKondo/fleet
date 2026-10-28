@@ -30,13 +30,18 @@ async function reservation(opts: { vehicleStatus?: string; endsInHours?: number 
   await db.query("insert into reservations(id,organization_id,vehicle_id,trip_request_id,status,start_at,end_at) values($1,$2,$3,$4,'pending_approval',now()+interval '2 hours',now()+make_interval(hours=>$5))", [res, org, vehicle, trip, opts.endsInHours ?? 8]);
   return { vehicle, res };
 }
-async function prepare(res: string, rotate = false) {
+type Req = { channel: string; token: string; request_id: string; phone_e164?: string; email?: string };
+type Prep = { ok: boolean; reason?: string; payload?: Record<string, unknown>; requests?: Req[]; token?: string; request_id?: string };
+/** `channels` defaults to WhatsApp only; the result exposes the WhatsApp request's token / request_id at the top level for brevity. */
+async function prepare(res: string, rotate = false, channels: string[] = ["whatsapp"]): Promise<Prep> {
   await as(null);
-  return (await q<{ r: { ok: boolean; reason?: string; token?: string; request_id?: string; payload?: Record<string, unknown> } }>("select fm_approval_prepare($1,$2) r", [res, rotate]))[0]!.r;
+  const r = (await q<{ r: Prep }>("select fm_approval_prepare($1,$2,24,$3::text[]) r", [res, rotate, channels]))[0]!.r;
+  const wa = r.requests?.find((x) => x.channel === "whatsapp") ?? r.requests?.[0];
+  return { ...r, token: wa?.token, request_id: wa?.request_id };
 }
-async function decide(token: string, decision: string, from = PHONE, messageId: string | null = null) {
+async function decide(token: string, decision: string, from = PHONE, messageId: string | null = null, channel = "whatsapp") {
   await as(null);
-  return (await q<{ r: { status: string; reservation_id?: string } }>("select fm_approval_decide($1,$2,$3,$4) r", [token, decision, from, messageId]))[0]!.r;
+  return (await q<{ r: { status: string; reservation_id?: string } }>("select fm_approval_decide($1,$2,$3,$4,$5) r", [token, decision, from, messageId, channel]))[0]!.r;
 }
 const status = async (res: string) => { await db.exec("reset role"); return (await q<{ status: string; approved_by: string | null }>("select status, approved_by from reservations where id=$1", [res]))[0]!; };
 
@@ -49,6 +54,7 @@ beforeAll(async () => {
     await db.query("insert into profiles(id,organization_id,full_name,role) values($1,$2,$3,$4)", [id, org, name, role]);
   }
   await db.query("insert into vehicle_categories(id,organization_id,name,passenger_capacity,supports_cargo,energy_type) values($1,$2,'SUV',5,false,'ICE')", [category, org]);
+  await db.query("update auth.users set email='gestor.carlos@example.invalid' where id=$1", [manager]);
 }, 30000);
 afterAll(async () => db?.close());
 
@@ -74,7 +80,8 @@ describe.sequential("administration of the approval channel", () => {
   });
   it("internal functions are not callable by a signed-in user", async () => {
     await as(manager);
-    await expect(db.query("select fm_approval_decide('x','approve','1',null)")).rejects.toThrow();
+    await expect(db.query("select fm_approval_decide('x','approve','1',null,'whatsapp')")).rejects.toThrow();
+    await expect(db.query("select fm_approval_peek('x')")).rejects.toThrow();
     await expect(db.query("select fm_approval_prepare($1)", [randomUUID()])).rejects.toThrow();
     await expect(db.query("select fm_channel_approve($1,$2)", [randomUUID(), manager])).rejects.toThrow();
     await expect(db.query("select count(*) from fm_approval_requests")).rejects.toThrow();
@@ -204,5 +211,160 @@ describe.sequential("the manager's answer", () => {
     await db.query("update fm_approval_requests set expires_at=now()-interval '1 second' where id=$1", [r.request_id]);
     await as(null);
     expect((await q<{ n: number }>("select fm_approval_expire_due() n"))[0]!.n).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe.sequential("e-mail channel", () => {
+  it("creates an e-mail request with the manager's account address and no phone, next to the WhatsApp one", async () => {
+    const { res } = await reservation();
+    const r = await prepare(res, false, ["whatsapp", "email"]);
+    expect(r.ok).toBe(true);
+    expect(r.requests!.map((x) => x.channel).sort()).toEqual(["email", "whatsapp"]);
+    const mail = r.requests!.find((x) => x.channel === "email")!;
+    expect(mail.email).toBe("gestor.carlos@example.invalid");
+    expect(mail.phone_e164).toBeNull();
+    expect(mail.token).not.toBe(r.requests!.find((x) => x.channel === "whatsapp")!.token);
+  });
+  it("e-mail works without a registered WhatsApp number", async () => {
+    const { res } = await reservation();
+    await as(admin);
+    await db.query("select fm_set_user_manager($1,$2)", [requester, other]);
+    await db.exec("reset role");
+    await db.query("update auth.users set email='outra.pessoa@example.invalid' where id=$1", [other]);
+    const both = await prepare(res, false, ["whatsapp", "email"]);
+    expect(both.requests!.map((x) => x.channel)).toEqual(["email"]);
+    await as(admin);
+    await db.query("select fm_set_user_manager($1,$2)", [requester, manager]);
+  });
+  it("peek shows the request without changing anything, only for e-mail requests", async () => {
+    const { res } = await reservation();
+    const r = await prepare(res, false, ["whatsapp", "email"]);
+    const mail = r.requests!.find((x) => x.channel === "email")!;
+    const wa = r.requests!.find((x) => x.channel === "whatsapp")!;
+    await as(null);
+    const peek = (await q<{ p: { status: string; payload: { destination: string } } }>("select fm_approval_peek($1) p", [mail.token]))[0]!.p;
+    expect(peek.status).toBe("pending");
+    expect(peek.payload.destination).toBe("Cliente Campinas");
+    expect((await q<{ p: { status: string } }>("select fm_approval_peek($1) p", [wa.token]))[0]!.p.status).toBe("invalid");
+    expect((await q<{ p: { status: string } }>("select fm_approval_peek($1) p", ["0".repeat(64)]))[0]!.p.status).toBe("invalid");
+    expect((await status(res)).status).toBe("pending_approval");
+  });
+  it("approving by e-mail needs no phone, confirms the reservation as the manager, audits the channel and supersedes the WhatsApp request", async () => {
+    const { res } = await reservation();
+    const r = await prepare(res, false, ["whatsapp", "email"]);
+    const mail = r.requests!.find((x) => x.channel === "email")!;
+    const wa = r.requests!.find((x) => x.channel === "whatsapp")!;
+    expect(await decide(mail.token, "approve", "", null, "email")).toEqual({ status: "approved", reservation_id: res });
+    expect(await status(res)).toEqual({ status: "confirmed", approved_by: manager });
+    await db.exec("reset role");
+    expect((await q<{ after: { channel?: string } }>("select after from audit_log where action='reservation_approved' and entity_id=$1", [res]))[0]!.after.channel).toBe("email");
+    expect((await q<{ status: string }>("select status from fm_approval_requests where id=$1", [wa.request_id]))[0]!.status).toBe("superseded");
+    expect((await decide(wa.token, "approve")).status).toBe("superseded");
+    expect((await decide(mail.token, "reject", "", null, "email")).status).toBe("already_decided");
+  });
+  it("a token only works on its own channel", async () => {
+    const { res } = await reservation();
+    const r = await prepare(res, false, ["whatsapp", "email"]);
+    const mail = r.requests!.find((x) => x.channel === "email")!;
+    const wa = r.requests!.find((x) => x.channel === "whatsapp")!;
+    expect((await decide(mail.token, "approve", PHONE, null, "whatsapp")).status).toBe("invalid");
+    expect((await decide(wa.token, "approve", "", null, "email")).status).toBe("invalid");
+    expect((await status(res)).status).toBe("pending_approval");
+  });
+  it("e-mail reject cancels with the e-mail reason; expired or no-longer-manager requests are refused", async () => {
+    const a = await reservation();
+    const ra = await prepare(a.res, false, ["email"]);
+    expect((await decide(ra.token!, "reject", "", null, "email")).status).toBe("rejected");
+    await db.exec("reset role");
+    expect((await q<{ cancellation_reason: string }>("select cancellation_reason from reservations where id=$1", [a.res]))[0]!.cancellation_reason).toBe("Recusada pelo gestor (e-mail)");
+    const b = await reservation();
+    const rb = await prepare(b.res, false, ["email"]);
+    await db.exec("reset role");
+    await db.query("update fm_approval_requests set expires_at=now()-interval '1 minute' where id=$1", [rb.request_id]);
+    expect((await decide(rb.token!, "approve", "", null, "email")).status).toBe("expired");
+    const c = await reservation();
+    const rc = await prepare(c.res, false, ["email"]);
+    await as(admin);
+    await db.query("select fm_set_user_manager($1,$2)", [requester, other]);
+    expect((await decide(rc.token!, "approve", "", null, "email")).status).toBe("not_authorized");
+    await as(admin);
+    await db.query("select fm_set_user_manager($1,$2)", [requester, manager]);
+  });
+});
+
+describe.sequential("approval inside the platform by the direct manager", () => {
+  it("only the direct manager sees the pending requests of their people, and the shell knows who has reports", async () => {
+    const { res } = await reservation();
+    await as(manager);
+    expect((await q<{ b: boolean }>("select fm_has_direct_reports() b"))[0]!.b).toBe(true);
+    const list = (await q<{ l: { reservation_id: string; requester_name: string; destination: string; purpose: string }[] }>("select fm_manager_pending_approvals() l"))[0]!.l;
+    const mine = list.find((x) => x.reservation_id === res)!;
+    expect(mine).toMatchObject({ requester_name: "Maria Solicitante", destination: "Cliente Campinas", purpose: "Visita ao cliente" });
+    await as(other);
+    expect((await q<{ b: boolean }>("select fm_has_direct_reports() b"))[0]!.b).toBe(false);
+    expect((await q<{ l: unknown[] }>("select fm_manager_pending_approvals() l"))[0]!.l).toEqual([]);
+    await as(requester);
+    expect((await q<{ l: unknown[] }>("select fm_manager_pending_approvals() l"))[0]!.l).toEqual([]);
+  });
+  it("approving in the app confirms the reservation as the manager, reserves the vehicle, audits channel 'app' and closes the channel requests", async () => {
+    const { res, vehicle } = await reservation();
+    const prep = await prepare(res, false, ["whatsapp", "email"]);
+    await as(manager);
+    expect((await q<{ r: { status: string } }>("select fm_manager_decide_reservation($1,'approve') r", [res]))[0]!.r.status).toBe("approved");
+    expect(await status(res)).toEqual({ status: "confirmed", approved_by: manager });
+    await db.exec("reset role");
+    expect((await q<{ status: string }>("select status from vehicles where id=$1", [vehicle]))[0]!.status).toBe("reserved");
+    expect((await q<{ after: { channel?: string } }>("select after from audit_log where action='reservation_approved' and entity_id=$1", [res]))[0]!.after.channel).toBe("app");
+    expect((await q("select 1 from notifications where user_id=$1 and entity_id=$2 and title='Reserva aprovada'", [requester, res])).length).toBe(1);
+    expect((await q<{ s: string }>("select string_agg(status, ',') s from fm_approval_requests where reservation_id=$1", [res]))[0]!.s).toBe("superseded,superseded");
+    expect((await decide(prep.token!, "approve")).status).toBe("superseded");
+    await as(manager);
+    expect((await q<{ r: { status: string } }>("select fm_manager_decide_reservation($1,'approve') r", [res]))[0]!.r.status).toBe("superseded");
+  });
+  it("rejecting in the app cancels the pending reservation with the app reason", async () => {
+    const { res } = await reservation();
+    await as(manager);
+    expect((await q<{ r: { status: string } }>("select fm_manager_decide_reservation($1,'reject') r", [res]))[0]!.r.status).toBe("rejected");
+    await db.exec("reset role");
+    expect((await q<{ status: string; cancellation_reason: string }>("select status, cancellation_reason from reservations where id=$1", [res]))[0]).toEqual({ status: "cancelled", cancellation_reason: "Recusada pelo gestor direto" });
+  });
+  it("is refused for anybody who is not the requester's direct manager (other employee, the requester, another organization's id)", async () => {
+    const { res } = await reservation();
+    for (const who of [other, requester]) {
+      await as(who);
+      expect((await q<{ r: { status: string } }>("select fm_manager_decide_reservation($1,'approve') r", [res]))[0]!.r.status).toBe("not_authorized");
+    }
+    await as(manager);
+    expect((await q<{ r: { status: string } }>("select fm_manager_decide_reservation($1,'approve') r", [randomUUID()]))[0]!.r.status).toBe("invalid");
+    expect((await q<{ r: { status: string } }>("select fm_manager_decide_reservation($1,'maybe') r", [res]))[0]!.r.status).toBe("invalid");
+    expect((await status(res)).status).toBe("pending_approval");
+  });
+  it("does not release a vehicle in maintenance, nor an expired reservation", async () => {
+    const m = await reservation({ vehicleStatus: "maintenance" });
+    await as(manager);
+    expect((await q<{ r: { status: string } }>("select fm_manager_decide_reservation($1,'approve') r", [m.res]))[0]!.r.status).toBe("vehicle_unavailable");
+    expect((await status(m.res)).status).toBe("pending_approval");
+  });
+  it("the bell notification is created once for the direct manager, and not for people without one", async () => {
+    const { res } = await reservation();
+    await as(null);
+    await db.query("select fm_approval_notify_manager($1)", [res]);
+    await db.query("select fm_approval_notify_manager($1)", [res]);
+    await db.exec("reset role");
+    const n = await q<{ title: string; entity_type: string }>("select title, entity_type from notifications where user_id=$1 and entity_id=$2", [manager, res]);
+    expect(n).toEqual([{ title: "Reserva aguardando sua aprovação", entity_type: "approval" }]);
+    await as(admin);
+    await db.query("select fm_set_user_manager($1,null)", [requester]);
+    const solo = await reservation();
+    await as(null);
+    await db.query("select fm_approval_notify_manager($1)", [solo.res]);
+    await db.exec("reset role");
+    expect((await q("select 1 from notifications where entity_id=$1 and entity_type='approval'", [solo.res])).length).toBe(0);
+    await as(admin);
+    await db.query("select fm_set_user_manager($1,$2)", [requester, manager]);
+  });
+  it("the new functions are not callable without a session and the notifier is service-only", async () => {
+    await as(manager);
+    await expect(db.query("select fm_approval_notify_manager($1)", [randomUUID()])).rejects.toThrow();
   });
 });

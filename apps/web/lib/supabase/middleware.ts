@@ -23,6 +23,9 @@ const PUBLIC_ROUTE_PREFIXES = [
   // n8n forwards the manager's WhatsApp answer (Aprovar / Recusar) with NO user session; the route verifies an HMAC signature itself
   // (N8N_APPROVAL_SECRET) and the decision is authorized inside the database (migration 0229). Fails closed without the secret.
   "/api/whatsapp/",
+  // The approval e-mail opens a confirmation page with NO session: the single-use token in the link authenticates the manager, opening it
+  // changes nothing, and the decision is a server action authorized inside the database (migration 0229).
+  "/aprovar/",
 ];
 
 const MANAGEMENT_ROLES = ["fleet_manager", "administrator", "maintenance_operator"];

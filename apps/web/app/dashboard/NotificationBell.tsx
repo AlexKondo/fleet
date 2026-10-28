@@ -147,6 +147,7 @@ const TITLE_NEW_RESERVATION_AWAITING_APPROVAL = "Nova reserva aguardando aprova√
  */
 function notificationHref(n: Pick<NotificationRow, "title" | "entity_type" | "entity_id">): string | null {
   if (n.entity_type === "reservation" && n.entity_id) return `/reservations/${n.entity_id}`;
+  if (n.entity_type === "approval") return "/approvals";
   if (n.title === TITLE_NEW_RESERVATION_AWAITING_APPROVAL) return "/dashboard";
   return null;
 }

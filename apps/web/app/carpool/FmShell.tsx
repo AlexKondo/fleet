@@ -75,8 +75,9 @@ export async function FmShell({
     chatInitialState,
     canKeyCustody,
     canBudgetApproval,
+    canReservationApproval,
   } = await loadShellContext(role);
-  const licenseGateActive=driverLicenseGateActive && !(nonDrivingWorkspace && (canKeyCustody||canBudgetApproval||isFleetManager||role==="maintenance_operator"));
+  const licenseGateActive=driverLicenseGateActive && !(nonDrivingWorkspace && (canKeyCustody||canBudgetApproval||canReservationApproval||isFleetManager||role==="maintenance_operator"));
 
   // "Hoje, dd/mm/aaaa" in Brasília time (the fleet's time zone, whatever the server runtime's zone is).
   const todayText = dict.chrome.todayPill.replace(
@@ -90,6 +91,7 @@ export async function FmShell({
     isAdministrator,
     canKeyCustody,
     canBudgetApproval,
+    canReservationApproval,
   });
   // The employee's Home (SCR-USR-001) lives at /dashboard; managers keep "Painel" there.
   if (role === "employee")
@@ -135,7 +137,7 @@ export async function FmShell({
   const personalKeys: NavKey[] = ["book", "myCarpools", "trips"];
   const managerOrder: NavKey[] = [
     "dashboard", "fleet", "carpool", "gate", "maintenance", "planning", "orders", "vehicleHistory", "energy",
-    "drivers", "team", "incidents", "gateExceptions", "gateHistory", "keyManagement", "budgetApprovals", "keys",
+    "drivers", "team", "incidents", "gateExceptions", "gateHistory", "keyManagement", "budgetApprovals", "reservationApprovals", "keys",
     "analytics", "admin", "settings",
   ];
   const rank = (k: NavKey, list: NavKey[]) => {

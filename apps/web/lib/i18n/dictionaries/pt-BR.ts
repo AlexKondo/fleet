@@ -1671,6 +1671,7 @@ const dict: Dictionary = {
     gateHistory: "Histórico da Portaria",
     keyCustody: "Custódia de chaves",
     budgetApprovals: "Aprovar orçamentos",
+    reservationApprovals: "Aprovar reservas",
     keyTracking: "Acompanhamento das chaves",
     admin: "Administração",
     myCarpools: "Minhas Caronas",

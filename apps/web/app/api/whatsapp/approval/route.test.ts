@@ -38,7 +38,7 @@ describe("POST /api/whatsapp/approval", () => {
   it("a signed approve tap reaches the database function with the token, the decision, the sender and the message id", async () => {
     const res = await call({ button_id: `approve:${TOKEN}`, from: "5511987654321", message_id: "wamid.1" });
     expect(res.status).toBe(200);
-    expect(h.rpc).toHaveBeenCalledWith("fm_approval_decide", { p_token: TOKEN, p_decision: "approve", p_from_phone: "5511987654321", p_message_id: "wamid.1" });
+    expect(h.rpc).toHaveBeenCalledWith("fm_approval_decide", { p_token: TOKEN, p_decision: "approve", p_from_phone: "5511987654321", p_message_id: "wamid.1", p_channel: "whatsapp" });
     const json = await res.json();
     expect(json).toMatchObject({ status: "approved", reservation_id: "res-1" });
     expect(json.reply_text).toContain("liberado");

@@ -74,3 +74,14 @@ Rollback: `supabase/migrations/rollback/0229_rollback.sql` (remove só o que a 0
 ## Limites conhecidos
 - Reenvio automático de pedidos que falharam na entrega não está ligado (a Vercel Hobby só permite rotina diária); o pedido continua pendente e o gestor pode aprovar no sistema. A função de reenvio existe (`fm_approval_prepare` com rotação de token).
 - O WhatsApp só permite iniciar conversa com mensagem livre dentro de 24 h do último contato do gestor; fora dessa janela é necessário um **modelo de mensagem aprovado** pela Meta. Isso é configuração do n8n/WhatsApp Business, não do sistema.
+
+## Atualização (28/10): três canais de aprovação
+O gestor direto pode decidir por **três caminhos**; o primeiro que for usado vale e os outros viram "já tratado":
+1. **WhatsApp** (n8n + Evolution Go): botões Aprovar / Recusar. Só para quem tem WhatsApp cadastrado (com confirmação de consentimento).
+2. **E-mail** (SMTP já existente, Brevo): sempre que o gestor tiver conta com e-mail. O botão "Analisar e decidir" abre `/aprovar/<código>`, uma página de **confirmação** sem login: abrir o link NÃO decide nada (protege contra antivírus/prefetch); a decisão só acontece ao tocar em Aprovar/Recusar (ação POST). O código é de uso único, expira em até 24 h e só vale para o canal e-mail.
+3. **Dentro da plataforma**: item **Aprovar reservas** no menu (aparece só para quem é gestor direto de alguém), com o pedido completo e os botões; o gestor também recebe uma notificação no sino. Funciona mesmo com nenhum canal externo configurado. A aprovação por gestor de frota/administrador (telas de sempre) continua igual.
+
+Interruptores: o e-mail pode ser desligado com `FM_APPROVAL_EMAIL=off` (Vercel); o WhatsApp só liga com `N8N_APPROVAL_WEBHOOK_URL` e `N8N_APPROVAL_SECRET`.
+
+### Estado do n8n no servidor (Oracle, 28/10)
+Workflow "FleetMind - Aprovacao de reservas pelo WhatsApp" **importado e ativo** (webhooks `fleet-approval-request` e `fleet-evolution-inbound`), credencial "Evolution Go (Geral)" criada, instância Evolution "Geral" com o webhook de mensagens apontando para o n8n (rede interna). O segredo de assinatura está só dentro do workflow do n8n.

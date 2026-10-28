@@ -1663,10 +1663,15 @@ export type Database = {
       fm_set_user_manager: { Args: { p_user_id: string; p_manager_id: string | null }; Returns: undefined };
       fm_set_whatsapp_contact: { Args: { p_user_id: string; p_phone: string | null; p_consent: boolean }; Returns: undefined };
       fm_approval_channel_snapshot: { Args: Record<PropertyKey, never>; Returns: Json };
-      fm_approval_prepare: { Args: { p_reservation_id: string; p_rotate?: boolean; p_ttl_hours?: number }; Returns: Json };
+      fm_approval_prepare: { Args: { p_reservation_id: string; p_rotate?: boolean; p_ttl_hours?: number; p_channels?: string[] }; Returns: Json };
+      fm_approval_peek: { Args: { p_token: string }; Returns: Json };
       fm_approval_mark_delivery: { Args: { p_request_id: string; p_ok: boolean; p_error?: string | null }; Returns: undefined };
-      fm_approval_decide: { Args: { p_token: string; p_decision: string; p_from_phone: string; p_message_id?: string | null }; Returns: Json };
+      fm_approval_decide: { Args: { p_token: string; p_decision: string; p_from_phone: string; p_message_id?: string | null; p_channel?: string }; Returns: Json };
       fm_approval_expire_due: { Args: Record<PropertyKey, never>; Returns: number };
+      fm_has_direct_reports: { Args: Record<PropertyKey, never>; Returns: boolean };
+      fm_manager_pending_approvals: { Args: Record<PropertyKey, never>; Returns: Json };
+      fm_manager_decide_reservation: { Args: { p_reservation_id: string; p_decision: string }; Returns: Json };
+      fm_approval_notify_manager: { Args: { p_reservation_id: string }; Returns: undefined };
       fm_member_access_snapshot: { Args: Record<PropertyKey, never>; Returns: Json };
       fm_member_access_command: { Args: { p_user_id: string; p_enabled: boolean; p_version: number; p_reason: string; p_request_id: string }; Returns: Json };
 

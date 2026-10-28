@@ -46,7 +46,8 @@ export type NavKey =
   | "myCarpools"
   | "keys"
   | "keyManagement"
-  | "budgetApprovals";
+  | "budgetApprovals"
+  | "reservationApprovals";
 
 export interface ShellNavItem {
   key: NavKey;
@@ -65,7 +66,8 @@ export function buildBaseNavItems(
     isAdministrator,
     canKeyCustody = false,
     canBudgetApproval = false,
-  }: { role: string; isFleetManager: boolean; isAdministrator: boolean; canKeyCustody?: boolean;canBudgetApproval?:boolean },
+    canReservationApproval = false,
+  }: { role: string; isFleetManager: boolean; isAdministrator: boolean; canKeyCustody?: boolean;canBudgetApproval?:boolean;canReservationApproval?:boolean },
 ): ShellNavItem[] {
   const isSecurity = role === "security";
   return [
@@ -183,6 +185,7 @@ export function buildBaseNavItems(
       key: "keys",href:"/account/keys",label:dict.navExtra.keyCustody,icon:GateIcon,visible:canKeyCustody,
     },
     {key:"budgetApprovals",href:"/account/maintenance-approvals",label:dict.navExtra.budgetApprovals,icon:TripsIcon,visible:canBudgetApproval||isFleetManager},
+    {key:"reservationApprovals",href:"/approvals",label:dict.navExtra.reservationApprovals,icon:TripsIcon,visible:canReservationApproval},
     {key:"keyManagement",href:"/fleet/keys",label:dict.navExtra.keyTracking,icon:GateIcon,visible:isFleetManager},
     {
       key: "admin",
@@ -219,12 +222,15 @@ export async function loadShellContext(role: string) {
   let avatarUrl: string | null = null;
   let canKeyCustody = false;
   let canBudgetApproval = false;
+  let canReservationApproval = false;
   if (currentUser) {
     try {
       const result=await supabase.rpc("fm_has_key_custody");
       canKeyCustody=!result.error && result.data===true;
     } catch { canKeyCustody=false; }
     try{const result=await supabase.rpc("fm_has_budget_approval_assignment");canBudgetApproval=!result.error&&result.data===true;}catch{canBudgetApproval=false;}
+    // direct manager of at least one person (migration 0229): shows "Aprovar reservas"; false (hidden) if the function does not exist yet
+    try{const result=await supabase.rpc("fm_has_direct_reports");canReservationApproval=!result.error&&result.data===true;}catch{canReservationApproval=false;}
     // License columns are not directly readable since 0063: get_my_license() answers for the caller only.
     // L6: middleware already read it for this request (one RPC per request, not two); only when it did not
     // (/account routes skip the gate, or the read failed there) does the shell read it itself.
@@ -270,5 +276,6 @@ export async function loadShellContext(role: string) {
     chatInitialState,
     canKeyCustody,
     canBudgetApproval,
+    canReservationApproval,
   };
 }

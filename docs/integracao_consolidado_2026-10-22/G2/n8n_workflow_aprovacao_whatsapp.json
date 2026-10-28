@@ -1,0 +1,671 @@
+{
+  "name": "FleetMind - Aprovacao de reservas pelo WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## FleetMind: aprovacao pelo WhatsApp (Evolution Go)\n**Fluxo A (em cima)**: o FleetMind envia o pedido (webhook assinado com HMAC) -> confere a assinatura -> envia ao gestor a mensagem com os botoes **Aprovar / Recusar** (instancia Geral do Evolution Go).\n**Fluxo B (embaixo)**: o Evolution Go avisa de cada mensagem recebida -> se for o toque num botao do pedido, assina e envia ao FleetMind -> devolve ao gestor o texto de resposta.\n\nO campo `secret` do no **Config** e o mesmo `N8N_APPROVAL_SECRET` do FleetMind. Nunca grave segredos em arquivos do repositorio.",
+        "height": 260,
+        "width": 640
+      },
+      "id": "n-note",
+      "name": "Leia primeiro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "secret",
+              "value": "COLE_AQUI_O_SEGREDO",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "evoBase",
+              "value": "http://evolution-go:8080",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "fleetApprovalUrl",
+              "value": "https://fleet-web-three.vercel.app/api/whatsapp/approval",
+              "type": "string"
+            },
+            {
+              "id": "c4",
+              "name": "ownNumber",
+              "value": "5511949426069",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n-config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fleet-approval-request",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "n-hook",
+      "name": "Pedido do FleetMind",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "fleet-approval-request"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "data",
+        "destinationKey": "raw",
+        "options": {}
+      },
+      "id": "n-raw",
+      "name": "Corpo bruto",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s1",
+              "name": "raw",
+              "value": "={{ $('Corpo bruto').item.json.raw }}",
+              "type": "string"
+            },
+            {
+              "id": "s2",
+              "name": "signed",
+              "value": "={{ $('Pedido do FleetMind').item.json.headers['x-fleet-timestamp'] + '.' + $('Corpo bruto').item.json.raw }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n-signed",
+      "name": "Texto assinado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $json.signed }}",
+        "dataPropertyName": "expected",
+        "secret": "={{ $('Config').first().json.secret }}",
+        "encoding": "hex"
+      },
+      "id": "n-hmac",
+      "name": "Calcular assinatura",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "v1",
+              "leftValue": "={{ 'sha256=' + $json.expected }}",
+              "rightValue": "={{ $('Pedido do FleetMind').item.json.headers['x-fleet-signature'] }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "v2",
+              "leftValue": "={{ Math.abs(Date.now() / 1000 - Number($('Pedido do FleetMind').item.json.headers['x-fleet-timestamp'])) <= 300 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "v3",
+              "leftValue": "={{ $('Config').first().json.secret }}",
+              "rightValue": "COLE_AQUI",
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n-if-valid",
+      "name": "Assinatura valida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.evoBase }}/send/button",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const r = JSON.parse($('Corpo bruto').item.json.raw); return JSON.stringify({ number: r.to.replace('+', ''), title: 'Pedido de uso de veículo', description: r.message.body.split('\\n').slice(2).join('\\n'), footer: 'FleetMind', buttons: r.message.buttons.map(b => ({ type: 'reply', displayText: b.title, id: b.id })) }); })() }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "n-send",
+      "name": "Enviar botoes ao gestor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        -100
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e1",
+              "leftValue": "={{ $json.error ? 'erro' : 'ok' }}",
+              "rightValue": "ok",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n-if-sent",
+      "name": "Enviado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "n-ok",
+      "name": "Responder 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1780,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "send_failed",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "id": "n-502",
+      "name": "Responder 502",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1780,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "unauthorized",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "n-401",
+      "name": "Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fleet-evolution-inbound",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "n-wa-in",
+      "name": "Mensagem recebida (Evolution)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        460
+      ],
+      "webhookId": "fleet-evolution-inbound"
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Procura, no evento do Evolution Go, o toque num botao do FleetMind (approve:<token> / reject:<token>), o telefone de quem tocou e o id da mensagem.\n// Generico de proposito: o formato exato do evento varia (botao simples, native flow, LID). Ignora mensagens enviadas pelo proprio numero.\nconst cfg = $('Config entrada').first().json;\nconst evt = $('Mensagem recebida (Evolution)').first().json;\nconst body = evt.body ?? evt;\nconst text = JSON.stringify(body);\nconst info = (body.data && (body.data.Info || body.data.info)) || body.Info || {};\nconst fromMe = info.IsFromMe === true || info.isFromMe === true;\nconst m = /(approve|reject):([0-9a-f]{32,128})/.exec(text);\nif (!m || fromMe) return [];\nconst phones = [...text.matchAll(/(\\d{10,15})@s\\.whatsapp\\.net/g)].map(x => x[1]).filter(p => p !== cfg.ownNumber);\nif (!phones.length) return [];\nconst messageId = String(info.ID || info.Id || info.id || '').slice(0, 200) || null;\nreturn [{ json: { button_id: m[0], from: phones[0], message_id: messageId } }];"
+      },
+      "id": "n-extract",
+      "name": "Extrair toque",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        330,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t1",
+              "name": "from",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "t2",
+              "name": "raw",
+              "value": "={{ JSON.stringify({ button_id: $json.button_id, from: $json.from, message_id: $json.message_id }) }}",
+              "type": "string"
+            },
+            {
+              "id": "t3",
+              "name": "ts",
+              "value": "={{ String(Math.floor(Date.now() / 1000)) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n-body",
+      "name": "Montar toque",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        550,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $json.ts + '.' + $json.raw }}",
+        "dataPropertyName": "sig",
+        "secret": "={{ $('Config entrada').first().json.secret }}",
+        "encoding": "hex"
+      },
+      "id": "n-sign",
+      "name": "Assinar toque",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        770,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config entrada').first().json.fleetApprovalUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-fleet-timestamp",
+              "value": "={{ $json.ts }}"
+            },
+            {
+              "name": "x-fleet-signature",
+              "value": "={{ 'sha256=' + $json.sig }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.raw }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n-post-fleet",
+      "name": "Enviar toque ao FleetMind",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        990,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config entrada').first().json.evoBase }}/send/text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Montar toque').item.json.from, text: $json.reply_text || 'Não foi possível processar esta resposta. Se precisar, aprove pelo sistema FleetMind.' }) }}",
+        "options": {}
+      },
+      "id": "n-reply",
+      "name": "Responder ao gestor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1210,
+        460
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "secret",
+              "value": "COLE_AQUI_O_SEGREDO",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "evoBase",
+              "value": "http://evolution-go:8080",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "fleetApprovalUrl",
+              "value": "https://fleet-web-three.vercel.app/api/whatsapp/approval",
+              "type": "string"
+            },
+            {
+              "id": "c4",
+              "name": "ownNumber",
+              "value": "5511949426069",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n-config-in",
+      "name": "Config entrada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        110,
+        460
+      ]
+    }
+  ],
+  "connections": {
+    "Pedido do FleetMind": {
+      "main": [
+        [
+          {
+            "node": "Corpo bruto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Texto assinado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Corpo bruto": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto assinado": {
+      "main": [
+        [
+          {
+            "node": "Calcular assinatura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular assinatura": {
+      "main": [
+        [
+          {
+            "node": "Assinatura valida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assinatura valida?": {
+      "main": [
+        [
+          {
+            "node": "Enviar botoes ao gestor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar botoes ao gestor": {
+      "main": [
+        [
+          {
+            "node": "Enviado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviado?": {
+      "main": [
+        [
+          {
+            "node": "Responder 200",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 502",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem recebida (Evolution)": {
+      "main": [
+        [
+          {
+            "node": "Config entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair toque": {
+      "main": [
+        [
+          {
+            "node": "Montar toque",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar toque": {
+      "main": [
+        [
+          {
+            "node": "Assinar toque",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assinar toque": {
+      "main": [
+        [
+          {
+            "node": "Enviar toque ao FleetMind",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar toque ao FleetMind": {
+      "main": [
+        [
+          {
+            "node": "Responder ao gestor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config entrada": {
+      "main": [
+        [
+          {
+            "node": "Extrair toque",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
     p_decision: parsed.decision,
     p_from_phone: from,
     p_message_id: messageId,
+    p_channel: "whatsapp",
   });
   if (error || !data || typeof data !== "object" || Array.isArray(data)) {
     console.error("whatsapp approval: decide failed", error?.message);

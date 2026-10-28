@@ -51,6 +51,7 @@ const ICONS_BY_KEY: Record<
   keys: GateIcon,
   keyManagement: GateIcon,
   budgetApprovals: FleetIcon,
+  reservationApprovals: TripsIcon,
 };
 
 interface NavItem {

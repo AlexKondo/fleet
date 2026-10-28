@@ -1607,6 +1607,7 @@ export type Dictionary = {
     gateHistory: string;
     keyCustody: string;
     budgetApprovals: string;
+    reservationApprovals: string;
     keyTracking: string;
     admin: string;
     myCarpools: string;

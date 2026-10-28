@@ -5,6 +5,7 @@ import { getDictionary } from "@/lib/i18n/getLocale";
 import { getAreaText } from "@/lib/i18n/areaText";
 import { approvalsTexts } from "@/lib/i18n/areas/approvals";
 import { approvalChannelConfigured } from "@/lib/approvals/dispatchApproval";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getRoleLabels } from "../users/ROLE_LABELS";
 import { FmShell } from "../../carpool/FmShell";
 import { ApprovalRow } from "./ApprovalRow";
@@ -42,6 +43,15 @@ export default async function ApprovalsSettingsPage() {
   const managedCount = new Map<string, number>();
   for (const row of byUser.values()) if (row.manager_id) managedCount.set(row.manager_id, (managedCount.get(row.manager_id) ?? 0) + 1);
   const hasPhone = (id: string) => Boolean(byUser.get(id)?.phone_e164 && byUser.get(id)?.consent);
+  // e-mail addresses live on auth.users (profiles has no e-mail column): only the managers' ones are needed, and only the service role reads them
+  const emailById = new Map<string, string>();
+  const admin = createSupabaseAdminClient();
+  await Promise.all(
+    [...managedCount.keys()].map(async (id) => {
+      const { data } = await admin.auth.admin.getUserById(id);
+      if (data.user?.email) emailById.set(id, data.user.email);
+    }),
+  );
 
   return (
     <FmShell
@@ -87,6 +97,7 @@ export default async function ApprovalsSettingsPage() {
                     phone={row?.phone_e164 ?? ""}
                     consent={row?.consent ?? false}
                     managedCount={managedCount.get(m.id) ?? 0}
+                    email={emailById.get(m.id) ?? ""}
                     managerOptions={members.map((x) => ({ id: x.id, name: x.name }))}
                     T={T}
                     statusKey={statusKey}
