@@ -35,6 +35,13 @@ describe("one side menu on every screen", () => {
     expect(ops).not.toMatch(/\.fm-workspace\s*\{[^}]*--fm-/);
     expect(ops).not.toMatch(/\.fm-workspace\s*\{[^}]*font-size/);
   });
+  it("the Command Center (Painel) no longer restyles the menu, the top bar, the request button or the assistant box", () => {
+    const cc = read("dashboard/command-center/command-center.css");
+    expect(cc).not.toMatch(/\.fm-command\s+\.fm-(sidebar|brand|nav|cta|assistant)/);
+    expect(cc).not.toMatch(/\.fm-command\s+\.fm-topbar\s*\{[^}]*(min-height|background|padding)/);
+    expect(cc).not.toMatch(/\.fm-theme\.fm-command\s*\{/);
+    expect(read("carpool/fm-theme.css")).not.toMatch(/\.fm-command\s+\.fm-sidebar/);
+  });
   it("the width comes from one variable (default 240) and the shell draws the saved width with a resize handle", () => {
     expect(read("carpool/fm-theme.css")).toMatch(/\.fm-sidebar\s*\{[^}]*width:\s*var\(--fm-sidebar-w,\s*240px\)/s);
     const shell = read("carpool/FmShell.tsx");

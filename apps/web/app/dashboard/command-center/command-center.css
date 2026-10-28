@@ -1,48 +1,16 @@
-.fm-theme.fm-command {
-  --fm-blue-600: #0068ff;
-  --fm-navy-950: #082139;
-  --fm-text: #08163d;
-  --fm-bg: #f3f8fe;
-  --fm-border: var(--lt-e0eaf6, #e0eaf6);
+/* The Command Center looks denser only INSIDE its page content. The menu, the top bar, the "Solicitar Viagem" button and the assistant box are the shell's own
+   and are identical on every screen, so nothing is set on the shell root or on the menu here. */
+.fm-command .fm-content {
   font-size: 13px;
+}
+:root:not([data-theme="dark"]) .fm-command .fm-content {
+  --fm-blue-600: #0068ff;
+  --fm-text: #08163d;
+  --fm-border: var(--lt-e0eaf6, #e0eaf6);
 }
 .fm-command .fm-content-wide {
   max-width: none;
   padding: 14px 16px 30px;
-}
-.fm-command .fm-sidebar {
-  width: 194px;
-  padding: 16px 10px;
-  background: linear-gradient(115deg, #0c2945, #071c30);
-}
-.fm-command .fm-brand {
-  padding: 0 8px 16px;
-}
-.fm-command .fm-brand-name {
-  font-size: 22px;
-  letter-spacing: -0.7px;
-}
-.fm-command .fm-nav a {
-  font-size: 13px;
-  min-height: 38px;
-  padding: 9px 11px;
-  border-radius: 5px;
-}
-.fm-command .fm-nav a[aria-current="page"] {
-  background: #104e87;
-  color: white;
-}
-.fm-command .fm-topbar {
-  min-height: 56px;
-  padding: 8px 16px;
-  background: var(--fm-surface, #fff);
-}
-.fm-command .fm-cta {
-  margin-bottom: 10px;
-  font-size: 12px;
-}
-.fm-command .fm-assistant {
-  font-size: 12px;
 }
 .fc h1 {
   font-size: 28px;
