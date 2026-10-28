@@ -10,6 +10,8 @@ import { fillTemplate } from "@/lib/carpool/errorText";
  */
 export interface PlaceVerificationDeps {
   resolve: (text: string) => Promise<ResolveOutcome>;
+  /** the different places the Places search offers for a name (the site's autocomplete options) */
+  candidates?: (text: string) => Promise<{ label: string }[]>;
   route: (origin: LatLng, destination: LatLng) => Promise<{ status: "ok"; distanceKm: number } | { status: string }>;
 }
 
@@ -17,6 +19,8 @@ export type PlaceVerification =
   /** `destinationLabel`: the destination as located on the map (shown back to the person and stored instead of a vague name) */
   | { status: "ok"; distanceKm?: number; destinationLabel?: string }
   | { status: "ask"; message: string }
+  /** a place NAME that fits several buildings: the person picks one, like in the site's autocomplete */
+  | { status: "choose"; text: string; candidates: { label: string }[] }
   | { status: "unverified" };
 
 const REASON_KEY = {
@@ -32,6 +36,7 @@ export async function verifyReservationPlaces(
   slots: Record<string, string>,
   deps: PlaceVerificationDeps,
   dict: Dictionary,
+  opts: { allowChoice?: boolean } = {},
 ): Promise<PlaceVerification> {
   const t = dict.carpool.newTrip;
   const fields = [
@@ -54,6 +59,16 @@ export async function verifyReservationPlaces(
   });
   if (lines.length > 0) {
     return { status: "ask", message: fillTemplate(dict.chat.replies.addressAsk, { details: lines.join("\n") }) };
+  }
+
+  const dest = outcomes[1] as { status: "resolved"; place: { viaPlacesSearch?: true } };
+  if (opts.allowChoice !== false && dest.place.viaPlacesSearch && deps.candidates) {
+    try {
+      const found = await deps.candidates(fields[1]!.text);
+      if (found.length >= 2) return { status: "choose", text: fields[1]!.text, candidates: found.slice(0, 3) };
+    } catch {
+      // without the options the first match is used
+    }
   }
 
   const [from, to] = outcomes as { status: "resolved"; place: { coordinates: LatLng; label?: string } }[];

@@ -48,3 +48,23 @@ describe("places are verified before any vehicle is suggested", () => {
     expect(r).toEqual({ status: "ok", destinationLabel: "x" });
   });
 });
+
+describe("a place name that fits several buildings is offered, like the site's autocomplete", () => {
+  const viaPlaces = (label: string): ResolveOutcome => ({ status: "resolved", place: { label, coordinates: { lat: -23.6, lng: -46 }, source: "geocoding_provider", viaPlacesSearch: true } });
+  const base = { resolve: async (t: string) => (t === "EZ Tower" ? viaPlaces("EZ TOWERS - Torre A - Av. Dr. Chucri Zaidan, 1649") : place(-23.1)), route: async () => ({ status: "ok", distanceKm: 20 }) as never };
+  const two = [{ label: "EZ TOWERS - Torre A - Av. Dr. Chucri Zaidan, 1649" }, { label: "Edifício EZ Towers - Bloco B - Rua Arquiteto Olavo Redig de Campos, 105" }];
+
+  it("two or more candidates: the person chooses", async () => {
+    const r = await verifyReservationPlaces({ origin: "fábrica da GWM", destination: "EZ Tower" }, { ...base, candidates: async () => two }, dictionaries["pt-BR"]);
+    expect(r).toEqual({ status: "choose", text: "EZ Tower", candidates: two });
+  });
+  it("a single candidate, no candidates service, or a choice already made: goes on with the place found", async () => {
+    expect((await verifyReservationPlaces({ origin: "x", destination: "EZ Tower" }, { ...base, candidates: async () => [two[0]!] }, dictionaries["pt-BR"])).status).toBe("ok");
+    expect((await verifyReservationPlaces({ origin: "x", destination: "EZ Tower" }, base, dictionaries["pt-BR"])).status).toBe("ok");
+    expect((await verifyReservationPlaces({ origin: "x", destination: "EZ Tower" }, { ...base, candidates: async () => two }, dictionaries["pt-BR"], { allowChoice: false })).status).toBe("ok");
+  });
+  it("an ordinary street address (geocoder) never triggers the choice", async () => {
+    const r = await verifyReservationPlaces({ origin: "x", destination: "Av. Paulista 1000" }, { ...base, candidates: async () => two }, dictionaries["pt-BR"]);
+    expect(r.status).toBe("ok");
+  });
+});

@@ -23,6 +23,8 @@ export interface ResolvedPlace {
   source: "corporate_mobility_point" | "geocoding_provider";
   corporateMobilityPointId?: string;
   providerPlaceRef?: string;
+  /** found by the Places search (a place NAME such as "EZ Tower"), not by the address geocoder: several buildings may share the name */
+  viaPlacesSearch?: true;
 }
 
 export type NeedsPrecisionReason =
@@ -66,6 +68,31 @@ export function resemblesQuery(query: string, displayName: string | undefined, f
   if (want.length === 0) return false;
   const have = tokens(`${displayName ?? ""} ${formattedAddress ?? ""}`);
   return want.every((w) => have.some((h) => h.startsWith(w)));
+}
+
+/** Up to `max` DIFFERENT precise places the Places search offers for what the person said (the options the site's autocomplete shows). */
+export async function searchPlaceCandidates(
+  text: string,
+  places: PlaceSearchProvider,
+  max = 3,
+): Promise<ResolvedPlace[]> {
+  const query = (typeof text === "string" ? text : "").trim().slice(0, MAX_LOCATION_TEXT_LENGTH);
+  if (!query) return [];
+  const found = await places.searchPlaces(query);
+  if (found.status !== "ok") return [];
+  const out: ResolvedPlace[] = [];
+  const seen = new Set<string>();
+  for (const r of found.results) {
+    if (classifyLocationPrecision({ types: r.types }) !== "precise" || !resemblesQuery(query, r.displayName, r.formattedAddress)) continue;
+    const label = r.formattedAddress ? `${r.displayName} - ${r.formattedAddress}` : r.displayName;
+    // the same building listed twice (an office, its condominium record) is one option
+    const key = tokens(r.formattedAddress ?? r.displayName).slice(0, 6).join(" ");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ label, coordinates: r.coordinates, source: "geocoding_provider", providerPlaceRef: r.providerPlaceRef, viaPlacesSearch: true });
+    if (out.length >= max) break;
+  }
+  return out;
 }
 
 export async function resolveLocationText(
@@ -113,6 +140,7 @@ export async function resolveLocationText(
               coordinates: hit.coordinates,
               source: "geocoding_provider",
               providerPlaceRef: hit.providerPlaceRef,
+              viaPlacesSearch: true,
             },
           };
         }
@@ -159,6 +187,7 @@ export async function resolveLocationText(
               coordinates: hit.coordinates,
               source: "geocoding_provider",
               providerPlaceRef: hit.providerPlaceRef,
+              viaPlacesSearch: true,
             },
           };
         }

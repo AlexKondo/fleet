@@ -107,6 +107,8 @@ const text = (t: string): Reply => ({ type: "text", text: clip(t) });
 export const CHAT_BUTTON = { confirm: "chat:confirm", cancel: "chat:cancel" } as const;
 /** A tap on a vehicle button carries "chat:veh:<vehicleId>" (re-validated against the pending options before it is used). */
 export const VEHICLE_BUTTON_PREFIX = "chat:veh:";
+/** A tap on a place option ("EZ Tower" fits several buildings) carries "chat:opt:<optionId>". */
+export const OPTION_BUTTON_PREFIX = "chat:opt:";
 /** WhatsApp shows at most 3 reply buttons per message. */
 const MAX_VEHICLE_BUTTONS = 3;
 
@@ -131,6 +133,10 @@ export function renderState(state: ChatState, appUrl: string): Reply[] {
 
   if (pending.options?.length) {
     body += `\n\n${pending.options.map((o, i) => `*${i + 1}.* ${o.label}`).join("\n")}\n\n${TEXTS.chooseNumber}`;
+    // the places that fit a name are offered as buttons (at most 3 fit in a WhatsApp message); carpool options stay a numbered list
+    if (pending.slots.placeChoices && pending.options.length <= MAX_VEHICLE_BUTTONS) {
+      return [{ type: "buttons", text: clip(body), buttons: pending.options.map((o, i) => ({ id: `${OPTION_BUTTON_PREFIX}${o.id}`, title: `${i + 1} · ${o.label.split(" - ")[0]}`.slice(0, 20) })) }];
+    }
     return [text(body)];
   }
   const card: Reply = { type: "buttons", text: clip(`${body}\n\n${TEXTS.confirmHint}`), buttons: [{ id: CHAT_BUTTON.confirm, title: TEXTS.confirm }, { id: CHAT_BUTTON.cancel, title: TEXTS.cancel }] };
@@ -279,7 +285,7 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
   if (msg.kind === "button") {
     const t = buttonToText(msg.buttonId);
     if (t) input = t;
-    else if (msg.buttonId?.startsWith(VEHICLE_BUTTON_PREFIX)) input = msg.buttonId; // handled below, against the pending options
+    else if (msg.buttonId?.startsWith(VEHICLE_BUTTON_PREFIX) || msg.buttonId?.startsWith(OPTION_BUTTON_PREFIX)) input = msg.buttonId; // handled below, against the pending options
     else handle = false;
   } else if (msg.kind === "text") {
     const m = TRIGGER.exec(input);
@@ -340,7 +346,13 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
         if (!veh) return [text(TEXTS.badOption)];
         form.set("phase", "select_vehicle");
         form.set("vehicleId", veh.vehicleId);
-      } else if (!pending && input.startsWith(VEHICLE_BUTTON_PREFIX)) {
+      } else if (pending && input.startsWith(OPTION_BUTTON_PREFIX)) {
+        const optionId = input.slice(OPTION_BUTTON_PREFIX.length);
+        const opt = pending.options?.find((o) => o.id === optionId);
+        if (!opt) return [text(TEXTS.badOption)];
+        form.set("phase", "select_option");
+        form.set("optionId", opt.id);
+      } else if (!pending && (input.startsWith(VEHICLE_BUTTON_PREFIX) || input.startsWith(OPTION_BUTTON_PREFIX))) {
         return [text(TEXTS.staleChoice)];
       } else if (pending && n !== null && (pending.options?.length || alternatives.length)) {
         if (pending.options?.length) {

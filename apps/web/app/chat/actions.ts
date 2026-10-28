@@ -16,6 +16,7 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { noVehicleReply } from "./noVehicle";
+import { randomUUID } from "node:crypto";
 import { verifyPlacesForChat } from "./verifyPlacesServer";
 import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { classifyError, failureReply, type AssistantReply } from "./replies";
@@ -377,6 +378,72 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     };
   }
 
+  // After the places are verified: carpool-first (when the org runs it) and then the vehicle card. Shared by a new request and by the choice of a place.
+  async function reservationStep(
+    slots: Record<string, string>,
+    llmSummary: string | null,
+  ): Promise<{ assistantContent: string; pendingAction?: ChatState["pendingAction"]; status: ChatState["status"]; link?: ChatMessage["link"]; noVehicleSlots?: Record<string, string> }> {
+    const first = carpoolCtx?.gating.carpoolFirst
+      ? await carpoolFirstForReservation(carpoolCtx, slots)
+      : ({ kind: "none" } as { kind: "none"; note?: string });
+    if (first.kind === "options") {
+      return {
+        assistantContent: first.summary,
+        pendingAction: { intent: "CREATE_RESERVATION", slots, summary: first.summary, options: first.options },
+        status: "needs_confirmation",
+      };
+    }
+    // Same recommendation engine the form uses (planTrip), before ever asking for confirmation, so the summary can name the actual vehicle and,
+    // when the organization's booking_mode allows it, list real alternatives by plate.
+    const built = await buildReservationCard(slots, llmSummary, first.note ?? "");
+    return {
+      assistantContent: built.assistantContent,
+      pendingAction: built.pendingAction,
+      status: built.status,
+      link: built.link,
+      // Whenever the reply links to the prefilled form, the same trip data is kept on the row.
+      noVehicleSlots: built.link ? slots : undefined,
+    };
+  }
+
+  // The person picked one of the places offered for a name ("EZ Tower"): the destination becomes that place and the reservation goes on.
+  async function choosePlace(pending: NonNullable<ChatState["pendingAction"]>, optionId: string): Promise<ChatState> {
+    let choices: { id: string; label: string }[] = [];
+    try {
+      choices = JSON.parse(pending.slots.placeChoices ?? "[]") as { id: string; label: string }[];
+    } catch {
+      choices = [];
+    }
+    const chosen = Array.isArray(choices) ? choices.find((c) => c && c.id === optionId && typeof c.label === "string") : undefined;
+    if (!chosen) return { status: "idle", conversationId, messages: prevState.messages };
+    const { placeChoices: _dropped, ...rest } = pending.slots;
+    void _dropped;
+    let slots: Record<string, string> = { ...rest, destination: chosen.label.slice(0, 200) };
+    const check = await verifyPlacesForChat(supabase, profile!.organization_id, slots, dictNow, { allowChoice: false });
+    let step: Awaited<ReturnType<typeof reservationStep>>;
+    if (check.status === "ask") {
+      step = { assistantContent: check.message, status: "idle", noVehicleSlots: slots };
+    } else {
+      if (check.status === "ok" && check.distanceKm && !(Number(slots.distanceKm) > 0)) slots = { ...slots, distanceKm: String(check.distanceKm) };
+      step = await reservationStep(slots, null);
+    }
+    await admin.from("chat_messages").insert({
+      conversation_id: conversationId,
+      role: "assistant",
+      content: step.assistantContent,
+      intent: step.pendingAction?.intent,
+      slots: step.pendingAction
+        ? packSlots(step.pendingAction.slots, step.pendingAction.options, step.pendingAction.vehicleOptions)
+        : packSlots(step.noVehicleSlots),
+    });
+    return {
+      status: step.status,
+      conversationId,
+      messages: [...prevState.messages, { role: "assistant", content: step.assistantContent, ...(step.link ? { link: step.link } : {}) }],
+      pendingAction: step.pendingAction,
+    };
+  }
+
   // Shared by the button click (phase=select_vehicle) and by a plain-text numeric reply
   // ("2", "opção 2") to a pending CREATE_RESERVATION confirmation — either way, re-runs the
   // exact same recommendation the initial message did (never trusts a client-echoed id
@@ -468,6 +535,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   // Shared by the button click (phase=select_option) and the bare-number reply: one numbered
   // carpool option (or "use a vehicle") was chosen.
   async function selectOption(pending: NonNullable<ChatState["pendingAction"]>, optionId: string): Promise<ChatState> {
+    if (pending.slots.placeChoices) return choosePlace(pending, optionId);
     if (!carpoolCtx) return { ...sessionExpired(), conversationId };
     const result = await prepareFromOption(
       carpoolCtx,
@@ -483,7 +551,9 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         role: "assistant",
         content: built.assistantContent,
         intent: built.pendingAction?.intent,
-        slots: built.pendingAction?.slots ?? (built.noVehicle ? packSlots(declinedSlots) : undefined),
+        slots: built.pendingAction
+          ? packSlots(built.pendingAction.slots, undefined, built.pendingAction.vehicleOptions)
+          : built.noVehicle ? packSlots(declinedSlots) : undefined,
       });
       return {
         status: built.status,
@@ -749,6 +819,13 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       if (placeCheck.status === "ask") {
         assistantContent = placeCheck.message;
         noVehicleSlots = slots; // what the person already said stays on the row
+      } else if (placeCheck.status === "choose") {
+        // like the site's autocomplete: the places that fit the name are offered and the person picks (button or number)
+        const options = placeCheck.candidates.map((c) => ({ id: randomUUID(), label: c.label.slice(0, 200) }));
+        const summary = fillTemplate(dictNow.chat.replies.placeChoose, { text: placeCheck.text });
+        assistantContent = summary;
+        pendingAction = { intent: interpretation.intent, slots: { ...slots, placeChoices: JSON.stringify(options) }, summary, options };
+        status = "needs_confirmation";
       } else {
         if (placeCheck.status === "ok") {
           // the card and the reservation carry the destination as located on the map (e.g. "EZ Tower" -> the building's address), so the person
@@ -756,27 +833,12 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
           if (placeCheck.destinationLabel) slots = { ...slots, destination: placeCheck.destinationLabel };
           if (placeCheck.distanceKm && !(Number(slots.distanceKm) > 0)) slots = { ...slots, distanceKm: String(placeCheck.distanceKm) };
         }
-        let carpoolNote = "";
-        const first = carpoolCtx?.gating.carpoolFirst
-          ? await carpoolFirstForReservation(carpoolCtx, slots)
-          : ({ kind: "none" } as { kind: "none"; note?: string });
-        if (first.kind === "options") {
-          assistantContent = first.summary;
-          pendingAction = { intent: interpretation.intent, slots, summary: first.summary, options: first.options };
-          status = "needs_confirmation";
-        } else {
-          carpoolNote = first.note ?? "";
-          // Same recommendation engine the form uses (planTrip), before ever asking for
-          // confirmation, so the summary can name the actual vehicle and, when the
-          // organization's booking_mode allows it, list real alternatives by plate.
-          const built = await buildReservationCard(slots, interpretation.summary, carpoolNote);
-          assistantContent = built.assistantContent;
-          pendingAction = built.pendingAction;
-          status = built.status;
-          assistantLink = built.link;
-          // Whenever the reply links to the prefilled form, the same trip data is kept on the row.
-          if (built.link) noVehicleSlots = slots;
-        }
+        const step = await reservationStep(slots, interpretation.summary);
+        assistantContent = step.assistantContent;
+        pendingAction = step.pendingAction;
+        status = step.status;
+        assistantLink = step.link;
+        if (step.noVehicleSlots) noVehicleSlots = step.noVehicleSlots;
       }
     } else {
       assistantContent = interpretation.summary;

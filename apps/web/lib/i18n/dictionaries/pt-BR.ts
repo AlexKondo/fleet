@@ -1315,6 +1315,7 @@ const dict: Dictionary = {
         startTrip: "Para retirar o veículo, abra a reserva e faça o checklist de retirada — ele pede fotos do veículo, por isso não é feito pelo assistente.",
         endTrip: "Para devolver o veículo, abra a reserva e faça o checklist de devolução — ele pede fotos do veículo, por isso não é feito pelo assistente.",
       },
+      placeChoose: "Encontrei mais de um local para “{text}”. Qual deles é o destino? Escolha pelo botão ou diga o número.",
       addressAsk: "Antes de escolher o veículo, preciso confirmar o endereço para calcular o trajeto e a autonomia necessária.\n{details}\nAssim que você me informar, eu escolho o veículo ideal para você.",
       originPick: "Não encontramos esse local de saída. De qual local o veículo deve sair? Locais com veículo disponível:\n{list}\nResponda com o nome do local.",
       assistantDisabled: "O assistente FleetMind foi desativado pelo administrador da sua empresa. Você continua podendo fazer tudo pelos menus — por exemplo, reservar em Reservar Veículo.",

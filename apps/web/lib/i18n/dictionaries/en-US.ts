@@ -1313,6 +1313,7 @@ const dict: Dictionary = {
         startTrip: "To pick up the vehicle, open the reservation and complete the pickup checklist — it asks for vehicle photos, so the assistant can't do it.",
         endTrip: "To return the vehicle, open the reservation and complete the return checklist — it asks for vehicle photos, so the assistant can't do it.",
       },
+      placeChoose: "I found more than one place for “{text}”. Which one is the destination? Pick a button or say the number.",
       addressAsk: "Before choosing a vehicle, I need to confirm the address to work out the route and the range needed.\n{details}\nAs soon as you tell me, I will pick the right vehicle for you.",
       originPick: "We could not find that departure location. Which location should the vehicle leave from? Locations with an available vehicle:\n{list}\nReply with the location name.",
       assistantDisabled: "The FleetMind assistant has been turned off by your company's administrator. You can still do everything from the menus — for example, book in Book a Vehicle.",

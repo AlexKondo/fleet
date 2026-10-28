@@ -486,3 +486,30 @@ describe("the request said before choosing the profile is not asked again", () =
     expect(texts(r)[0]).not.toContain(TEXTS.pickKeep);
   });
 });
+
+describe("choosing the place of a name that fits several buildings (WhatsApp)", () => {
+  const OPT = [{ id: "11111111-1111-4111-8111-111111111111", label: "EZ TOWERS - Torre A - Av. Dr. Chucri Zaidan, 1649" }, { id: "22222222-2222-4222-8222-222222222222", label: "Edifício EZ Towers - Bloco B - Rua Arquiteto Olavo Redig de Campos, 105" }];
+  const pendingPlaces = (): ChatState => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Encontrei mais de um local" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { placeChoices: JSON.stringify(OPT) }, summary: "Encontrei mais de um local", options: OPT } });
+
+  it("the options come as buttons with the full addresses listed in the text", () => {
+    const [r] = renderState(pendingPlaces(), "https://x.invalid");
+    expect(r).toMatchObject({ type: "buttons", buttons: [{ id: `chat:opt:${OPT[0]!.id}` }, { id: `chat:opt:${OPT[1]!.id}` }] });
+    expect((r as { text: string }).text).toContain("*2.* Edifício EZ Towers - Bloco B");
+    expect((r as { buttons: { title: string }[] }).buttons.every((b) => b.title.length <= 20)).toBe(true);
+  });
+  it("a tap selects that option; a tap on an option that is not offered is refused; with nothing pending it is answered as stale", async () => {
+    w.state = pendingPlaces();
+    await run(msg({ kind: "button", buttonId: `chat:opt:${OPT[1]!.id}`, text: undefined, messageId: "o1" }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "select_option", optionId: OPT[1]!.id });
+    calls.send.length = 0;
+    expect(texts(await run(msg({ kind: "button", buttonId: "chat:opt:nope", text: undefined, messageId: "o2" })))).toEqual([TEXTS.badOption]);
+    w.state = idle;
+    expect(texts(await run(msg({ kind: "button", buttonId: `chat:opt:${OPT[0]!.id}`, text: undefined, messageId: "o3" })))).toEqual([TEXTS.staleChoice]);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("the number (typed or spoken) picks the same option", async () => {
+    w.state = pendingPlaces();
+    await run(msg({ text: "2", messageId: "o4" }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "select_option", optionId: OPT[1]!.id });
+  });
+});

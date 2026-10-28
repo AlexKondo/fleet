@@ -1,6 +1,6 @@
 import "server-only";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
+import { resolveLocationText, searchPlaceCandidates } from "@/lib/carpool/resolveLocationText";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import { createGoogleRoutingProvider } from "@/lib/geospatial/googleRoutingProvider";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
@@ -13,6 +13,7 @@ export async function verifyPlacesForChat(
   organizationId: string,
   slots: Record<string, string>,
   dict: Dictionary,
+  opts: { allowChoice?: boolean } = {},
 ): Promise<PlaceVerification> {
   try {
     const geocoder = createGooglePlacesProvider(organizationId);
@@ -24,8 +25,10 @@ export async function verifyPlacesForChat(
       {
         resolve: (text) => resolveLocationText(text, { points, geocoder, places: geocoder }),
         route: (from, to) => routing.computeRoute(from, to),
+        candidates: (text) => searchPlaceCandidates(text, geocoder),
       },
       dict,
+      opts,
     );
   } catch {
     return { status: "unverified" };
