@@ -16,6 +16,7 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { noVehicleReply } from "./noVehicle";
+import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { classifyError, failureReply, type AssistantReply } from "./replies";
 import { fillTemplate } from "@/lib/carpool/errorText";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -656,9 +657,10 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     }
   }
   if (prevState.status === "needs_confirmation" && prevState.pendingAction?.vehicleOptions) {
-    const optionNumber = parseOptionNumber(message);
+    // the numbers are the OTHER vehicles (the offered one is not listed again), also inside a sentence: "reserve a opção 6 pra mim"
+    const options = vehicleAlternatives(prevState.pendingAction.vehicleOptions, prevState.pendingAction.slots.preferredVehicleId);
+    const optionNumber = parseOptionNumber(message) ?? parseChoice(message, options.length);
     if (optionNumber !== null) {
-      const options = prevState.pendingAction.vehicleOptions;
       const chosen = options[optionNumber - 1];
       if (chosen) {
         await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "user", content: message });

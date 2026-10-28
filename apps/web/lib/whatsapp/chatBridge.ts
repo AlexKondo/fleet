@@ -2,6 +2,9 @@ import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import type { ChatState } from "@/app/chat/actions";
 import type { ActingContext } from "@/lib/auth/actingUser";
 import type { TranscribeResult } from "./transcribe";
+import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
+
+export { parseChoice };
 
 /**
  * Reserving a vehicle by WhatsApp: turns an inbound message (text, voice note or button tap) from a member identified by their registered
@@ -52,6 +55,8 @@ export interface BridgeDeps {
 }
 
 const SESSION_MINUTES = 30;
+/** A conversation untouched for this long is not resumed by WhatsApp (it could carry old trip data from the web chat into a new request). */
+const CONVERSATION_FRESH_MINUTES = 15;
 const TRIGGER = /^\s*@?(?:fleetmind|fleet|frota)\b[\s,.:;!\-–—]*/i;
 const SWITCH = /^(?:trocar|mudar|alterar)\s+(?:de\s+)?(?:perfil|usu[aá]rio|pessoa)$/i;
 const ROLE_LABEL: Record<string, string> = { employee: "Colaborador", fleet_manager: "Gestor de Frota", administrator: "Administrador", security: "Segurança / Portaria", driver: "Motorista" };
@@ -73,6 +78,7 @@ export const TEXTS = {
   audioFailed: "Não consegui entender o áudio. Pode gravar de novo, ou escrever o pedido?",
   audioTooLong: "O áudio ficou longo demais. Pode gravar um pedido mais curto, ou escrever?",
   cancelled: "Tudo bem, cancelei. Se precisar, é só mandar um novo pedido.",
+  staleChoice: "Essa escolha já não está mais valendo. Me diga de novo o que você precisa, por exemplo: reservar um carro amanhã às 8h.",
   badOption: "Não entendi essa opção. Responda com o número de uma das opções acima.",
   chooseNumber: "Escolha uma opção respondendo com o número dela (por exemplo, *1*).",
   generic: "Não consegui processar agora. Tente de novo em instantes.",
@@ -84,36 +90,16 @@ export const TEXTS = {
   cancel: "Cancelar",
 } as const;
 
-const NUMBER_WORDS: Record<string, number> = {
-  um: 1, uma: 1, primeiro: 1, primeira: 1, dois: 2, duas: 2, segundo: 2, segunda: 2, tres: 3, terceiro: 3, terceira: 3, quatro: 4, quarto: 4,
-  cinco: 5, quinto: 5, seis: 6, sexto: 6, sete: 7, setimo: 7, oito: 8, oitavo: 8, nove: 9, nono: 9, dez: 10, decimo: 10,
-};
-const NUM = `(\\d{1,2}|${Object.keys(NUMBER_WORDS).join("|")})`;
-const CHOICE_NOUN = new RegExp(`\\b(?:opcao|numero|alternativa|item|veiculo|carro)\\s*(?:n[o.]?\\s*)?${NUM}\\b`);
-// "um/uma" only counts after "opção/número" ("quero um carro" is not a choice)
-const NUM_VERB = `(\\d{1,2}|${Object.keys(NUMBER_WORDS).filter((w) => w !== "um" && w !== "uma").join("|")})`;
-const CHOICE_VERB = new RegExp(`\\b(?:escolho|escolher|escolha|quero|prefiro|pode ser|vai de|fico com|ficar com|reserva|reserve|seleciono|selecionar)\\s+(?:o|a|esse|essa)?\\s*(?:numero\\s*)?${NUM_VERB}\\b`);
-
-/**
- * "reserve a opção 6 pra mim", "quero o número dois", "o terceiro": which numbered option the person means, spoken or written in a
- * sentence. Only phrases that point at an option count (a time such as "às 9h" or a date never does). Null when nothing clear, or out of range.
- */
-export function parseChoice(input: string, count: number): number | null {
-  const t = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[.!?,;:]+/g, " ").replace(/\s+/g, " ").trim();
-  if (t.length > 80 || /\d\s*(?:h|horas?|:|\/)/.test(t)) return null;
-  const m = CHOICE_NOUN.exec(t) ?? CHOICE_VERB.exec(t);
-  if (!m) return null;
-  const raw = m[1]!;
-  const n = /^\d+$/.test(raw) ? Number(raw) : NUMBER_WORDS[raw];
-  return n && n >= 1 && n <= count ? n : null;
-}
-
 const norm = (s: string) => s.trim().toLowerCase().replace(/[.!]+$/g, "").trim();
 const clip = (s: string) => (s.length > MAX_TEXT ? `${s.slice(0, MAX_TEXT - 1)}…` : s);
 const text = (t: string): Reply => ({ type: "text", text: clip(t) });
 
 /** Button ids this channel puts on its own messages (answered back by n8n). */
 export const CHAT_BUTTON = { confirm: "chat:confirm", cancel: "chat:cancel" } as const;
+/** A tap on a vehicle button carries "chat:veh:<vehicleId>" (re-validated against the pending options before it is used). */
+export const VEHICLE_BUTTON_PREFIX = "chat:veh:";
+/** WhatsApp shows at most 3 reply buttons per message. */
+const MAX_VEHICLE_BUTTONS = 3;
 
 function buttonToText(id: string | undefined): string | null {
   if (id === CHAT_BUTTON.confirm) return "sim";
@@ -138,10 +124,18 @@ export function renderState(state: ChatState, appUrl: string): Reply[] {
     body += `\n\n${pending.options.map((o, i) => `*${i + 1}.* ${o.label}`).join("\n")}\n\n${TEXTS.chooseNumber}`;
     return [text(body)];
   }
-  if (pending.vehicleOptions && pending.vehicleOptions.length > 1) {
-    body += `\n\nSe não quiser o veículo recomendado (o *1*), escolha outro pelo número, na lista abaixo:\n${pending.vehicleOptions.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n")}\n\nPara trocar, responda com o número (por exemplo, *2*), por texto ou áudio.`;
-  }
-  return [{ type: "buttons", text: clip(`${body}\n\n${TEXTS.confirmHint}`), buttons: [{ id: CHAT_BUTTON.confirm, title: TEXTS.confirm }, { id: CHAT_BUTTON.cancel, title: TEXTS.cancel }] }];
+  const card: Reply = { type: "buttons", text: clip(`${body}\n\n${TEXTS.confirmHint}`), buttons: [{ id: CHAT_BUTTON.confirm, title: TEXTS.confirm }, { id: CHAT_BUTTON.cancel, title: TEXTS.cancel }] };
+  const others = vehicleAlternatives(pending.vehicleOptions, pending.slots.preferredVehicleId);
+  if (others.length === 0) return [card];
+  // the offered vehicle is never listed again: only the others, as tappable buttons (the first three) and, for the rest, by number
+  const lines = others.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n");
+  const tail = others.length > MAX_VEHICLE_BUTTONS ? `\n\nPara os demais, responda com o número (por exemplo, *${MAX_VEHICLE_BUTTONS + 1}*), por texto ou áudio.` : "";
+  const pick: Reply = {
+    type: "buttons",
+    text: clip(`Se não quiser o veículo recomendado, escolha outro:\n${lines}${tail}`),
+    buttons: others.slice(0, MAX_VEHICLE_BUTTONS).map((v, i) => ({ id: `${VEHICLE_BUTTON_PREFIX}${v.vehicleId}`, title: `${i + 1} · ${v.vehicleName}`.slice(0, 20) })),
+  };
+  return [card, pick];
 }
 
 export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDeps): Promise<{ replies: Reply[] }> {
@@ -190,7 +184,9 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
   let handle = true;
   if (msg.kind === "button") {
     const t = buttonToText(msg.buttonId);
-    if (t) input = t; else handle = false;
+    if (t) input = t;
+    else if (msg.buttonId?.startsWith(VEHICLE_BUTTON_PREFIX)) input = msg.buttonId; // handled below, against the pending options
+    else handle = false;
   } else if (msg.kind === "text") {
     const m = TRIGGER.exec(input);
     if (m) input = input.slice(m[0].length).trim(); // "fleet ..." still works, it is just not needed
@@ -230,7 +226,7 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       let prev = loaded.state;
       const now = deps.now?.() ?? Date.now();
       // a confirmation left hanging for a long time must never be answered by an accidental "sim" later
-      if (prev.conversationId && loaded.updatedAt && now - new Date(loaded.updatedAt).getTime() > SESSION_MINUTES * 60_000) {
+      if (prev.conversationId && loaded.updatedAt && now - new Date(loaded.updatedAt).getTime() > CONVERSATION_FRESH_MINUTES * 60_000) {
         await deps.abandon(client, prev.conversationId);
         prev = { status: "idle", messages: [] };
       }
@@ -239,17 +235,27 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       form.set("conversationId", prev.conversationId ?? "");
       const t = norm(input);
       const pending = prev.status === "needs_confirmation" ? prev.pendingAction : undefined;
-      const optionCount = pending?.options?.length ?? pending?.vehicleOptions?.length ?? 0;
+      // the numbers the person sees: carpool options as listed, vehicles = the alternatives to the offered one
+      const alternatives = vehicleAlternatives(pending?.vehicleOptions, pending?.slots.preferredVehicleId);
+      const optionCount = pending?.options?.length ?? alternatives.length;
       const n = /^\d{1,2}$/.test(t) ? Number(t) : optionCount > 0 ? parseChoice(input, optionCount) : null;
 
-      if (pending && n !== null && (pending.options?.length || pending.vehicleOptions?.length)) {
+      if (pending && input.startsWith(VEHICLE_BUTTON_PREFIX)) {
+        const vehicleId = input.slice(VEHICLE_BUTTON_PREFIX.length);
+        const veh = pending.vehicleOptions?.find((v) => v.vehicleId === vehicleId);
+        if (!veh) return [text(TEXTS.badOption)];
+        form.set("phase", "select_vehicle");
+        form.set("vehicleId", veh.vehicleId);
+      } else if (!pending && input.startsWith(VEHICLE_BUTTON_PREFIX)) {
+        return [text(TEXTS.staleChoice)];
+      } else if (pending && n !== null && (pending.options?.length || alternatives.length)) {
         if (pending.options?.length) {
           const opt = pending.options[n - 1];
           if (!opt) return [text(TEXTS.badOption)];
           form.set("phase", "select_option");
           form.set("optionId", opt.id);
         } else {
-          const veh = pending.vehicleOptions![n - 1];
+          const veh = alternatives[n - 1];
           if (!veh) return [text(TEXTS.badOption)];
           form.set("phase", "select_vehicle");
           form.set("vehicleId", veh.vehicleId);

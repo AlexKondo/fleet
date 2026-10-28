@@ -153,9 +153,10 @@ describe("confirmation and choices", () => {
     expect(calls.send).toHaveLength(0);
   });
   it("a bare number picks a vehicle option (select_vehicle) or a carpool option (select_option)", async () => {
-    w.state = summary({ vehicleOptions: [{ vehicleId: "v1", plate: "AAA1A11", vehicleName: "Haval" }, { vehicleId: "v2", plate: "BBB2B22", vehicleName: "Ora" }] });
+    // the numbers count the OTHER vehicles: v1 is the one on offer, so "1" is v2 and "2" is v3
+    w.state = summary({ slots: { preferredVehicleId: "v1" }, vehicleOptions: [{ vehicleId: "v1", plate: "AAA1A11", vehicleName: "Haval" }, { vehicleId: "v2", plate: "BBB2B22", vehicleName: "Ora" }, { vehicleId: "v3", plate: "CCC3C33", vehicleName: "Pick-up" }] });
     await run(msg({ text: "2" }));
-    expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v2" });
+    expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v3" });
     calls.send.length = 0;
     w.state = summary({ options: [{ id: "o1", label: "Carona com Maria" }, { id: "vehicle", label: "Usar um veículo" }] });
     await run(msg({ text: "1", messageId: "n2" }));
@@ -172,7 +173,7 @@ describe("confirmation and choices", () => {
     await run(msg({ text: "na verdade às 9h" }));
     expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: "na verdade às 9h" });
   });
-  it("a confirmation left hanging for more than 30 minutes is dropped: a late SIM never confirms it", async () => {
+  it("a conversation left for more than 15 minutes is not resumed: a late SIM never confirms it, and old trip data never leaks into a new request: a late SIM never confirms it", async () => {
     w.state = summary();
     w.updatedAt = "2026-10-28T19:00:00Z";
     await run(msg({ text: "sim" }));
@@ -203,9 +204,13 @@ describe("rendering the assistant's answer for WhatsApp", () => {
   it("carpool options are a numbered list (no buttons); alternative vehicles are listed with their plates", () => {
     const opts = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Achei caronas:" }], pendingAction: { intent: "REQUEST_CARPOOL", slots: {}, summary: "x", options: [{ id: "a", label: "Maria, 08:00" }, { id: "vehicle", label: "Usar um veículo" }] } }, url);
     expect(opts).toEqual([{ type: "text", text: `Achei caronas:\n\n*1.* Maria, 08:00\n*2.* Usar um veículo\n\n${TEXTS.chooseNumber}` }]);
-    const veh = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Haval H6" }], pendingAction: { intent: "CREATE_RESERVATION", slots: {}, summary: "x", vehicleOptions: [{ vehicleId: "1", plate: "AAA1A11", vehicleName: "Haval" }, { vehicleId: "2", plate: "BBB2B22", vehicleName: "Ora" }] } }, url);
-    expect((veh[0] as { text: string }).text).toContain("*2.* Ora (BBB2B22)");
-    expect(veh[0]!.type).toBe("buttons");
+    const veh = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Haval H6" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { preferredVehicleId: "1" }, summary: "x", vehicleOptions: [{ vehicleId: "1", plate: "AAA1A11", vehicleName: "Haval" }, { vehicleId: "2", plate: "BBB2B22", vehicleName: "Ora" }] } }, url);
+    // first the card (Confirmar / Cancelar), then ONLY the other vehicles as buttons: the one on offer is not listed again
+    expect(veh).toHaveLength(2);
+    expect(veh[0]).toMatchObject({ type: "buttons", buttons: [{ id: CHAT_BUTTON.confirm }, { id: CHAT_BUTTON.cancel }] });
+    expect(veh[1]).toMatchObject({ type: "buttons", buttons: [{ id: "chat:veh:2" }] });
+    expect((veh[1] as { text: string }).text).toContain("*1.* Ora (BBB2B22)");
+    expect((veh[1] as { text: string }).text).not.toContain("Haval");
   });
   it("never exceeds the WhatsApp message size and never returns an empty reply", () => {
     const long = renderState({ status: "idle", messages: [{ role: "assistant", content: "x".repeat(9000) }] }, url);
@@ -273,16 +278,83 @@ describe("choosing an option inside a sentence (spoken or written)", () => {
   it("never mistakes a time, a date, a quantity or an out-of-range number for a choice", () => {
     for (const text of ["quero sair às 9h", "volto dia 5/12", "preciso de 4 vagas", "opção 9", "bom dia", "quero um carro amanhã"]) expect(parseChoice(text, 7), text).toBeNull();
   });
-  it("a vehicle chosen by voice (\"reserve a opção 6\") selects that vehicle", async () => {
-    w.state = { status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar" }], pendingAction: { intent: "CREATE_RESERVATION", slots: {}, summary: "Vou reservar", vehicleOptions: [1, 2, 3, 4, 5, 6, 7].map((i) => ({ vehicleId: `v${i}`, plate: `P${i}`, vehicleName: `Carro ${i}` })) } };
+  const seven = (preferred = "v1") => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { preferredVehicleId: preferred }, summary: "Vou reservar", vehicleOptions: [1, 2, 3, 4, 5, 6, 7].map((i) => ({ vehicleId: `v${i}`, plate: `P${i}`, vehicleName: `Carro ${i}`, locationName: i % 2 ? "Portaria P1" : "Carregador" })) } }) as ChatState;
+  it("a vehicle chosen by voice (\"reserve a opção 6\") selects the 6th of the OTHER vehicles", async () => {
+    w.state = seven();
     w.updatedAt = "2026-10-28T19:59:00Z";
     await run(msg({ text: "Reserve a opção 6 pra mim." }));
-    expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v6" });
+    expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v7" });
   });
-  it("the message tells the person how to swap the recommended vehicle", () => {
-    const state: ChatState = { status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar o Haval" }], pendingAction: { intent: "CREATE_RESERVATION", slots: {}, summary: "x", vehicleOptions: [{ vehicleId: "a", plate: "AAA1A11", vehicleName: "Haval", locationName: "Portaria P1" }, { vehicleId: "b", plate: "BBB2B22", vehicleName: "Ora" }] } };
-    const [r] = renderState(state, "https://x.invalid");
-    expect(r!.text).toContain("Se não quiser o veículo recomendado");
-    expect(r!.text).toContain("*1.* Haval (AAA1A11) — Portaria P1");
+  it("tapping a vehicle button selects that vehicle; a tap with nothing pending is answered, never sent to the assistant as a message", async () => {
+    w.state = seven();
+    await run(msg({ kind: "button", buttonId: "chat:veh:v4", text: undefined }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v4" });
+    calls.send.length = 0;
+    expect(texts(await run(msg({ kind: "button", buttonId: "chat:veh:zzz", text: undefined, messageId: "b2" })))).toEqual([TEXTS.badOption]);
+    w.state = idle;
+    expect(texts(await run(msg({ kind: "button", buttonId: "chat:veh:v4", text: undefined, messageId: "b3" })))).toEqual([TEXTS.staleChoice]);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("shows the offered vehicle once (in the card) and at most 3 vehicle buttons; the rest are chosen by number", () => {
+    const r = renderState(seven("v3"), "https://x.invalid");
+    expect(r).toHaveLength(2);
+    const pick = r[1] as { text: string; buttons: { id: string; title: string }[] };
+    expect(pick.buttons.map((b) => b.id)).toEqual(["chat:veh:v1", "chat:veh:v2", "chat:veh:v4"]);
+    expect(pick.buttons.every((b) => b.title.length <= 20)).toBe(true);
+    expect(pick.text).not.toContain("Carro 3");
+    expect(pick.text).toContain("*6.* Carro 7");
+    expect(pick.text).toContain("Para os demais, responda com o número");
+  });
+});
+
+describe("one number registered on several profiles", () => {
+  const CANDS = [
+    { user_id: "a1", organization_id: "o1", full_name: "Alexandre Kondo", role: "administrator", email: "a@example.invalid" },
+    { user_id: "a2", organization_id: "o1", full_name: "Alexandre Massahiro Kondo", role: "employee", email: "b@example.invalid" },
+  ];
+  beforeEach(() => { w.identify = { ok: false, reason: "ambiguous", phone_norm: "5511982593096", candidates: CANDS }; });
+
+  it("asks which profile to speak as, listing name and role, and remembers that it asked", async () => {
+    const r = await run(msg({ text: "oi, quero um carro" }));
+    expect(texts(r)[0]).toContain(TEXTS.pickIntro);
+    expect(texts(r)[0]).toContain("*1.* Alexandre Kondo — Administrador");
+    expect(texts(r)[0]).toContain("*2.* Alexandre Massahiro Kondo — Colaborador");
+    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: null }]);
+    expect(calls.send).toHaveLength(0);
+    expect(calls.mint).toBe(0);
+  });
+  it("the number answered after the question picks that profile, and the assistant is not run on the number itself", async () => {
+    w.pick = { picked_user_id: null, asked: true };
+    const r = await run(msg({ text: "2" }));
+    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: "a2" }]);
+    expect(texts(r)[0]).toContain("Alexandre Massahiro Kondo");
+    expect(calls.send).toHaveLength(0);
+  });
+  it("an out-of-range number is refused with the list again", async () => {
+    w.pick = { picked_user_id: null, asked: true };
+    expect(texts(await run(msg({ text: "7" })))[0]).toContain(TEXTS.pickBad);
+    expect(w.pickWrites).toEqual([]);
+  });
+  it("with a profile picked, the assistant runs as THAT profile", async () => {
+    w.pick = { picked_user_id: "a2", asked: true };
+    await run(msg({ text: "quero um carro amanhã" }));
+    expect(calls.actedAs).toEqual(["a2"]);
+    expect(calls.send[0]!.form.message).toBe("quero um carro amanhã");
+  });
+  it("'trocar perfil' asks again", async () => {
+    w.pick = { picked_user_id: "a2", asked: true };
+    const r = await run(msg({ text: "trocar perfil" }));
+    expect(texts(r)[0]).toContain(TEXTS.pickIntro);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("a picked profile that is no longer registered with the number is never used", async () => {
+    w.pick = { picked_user_id: "someone-else", asked: false };
+    const r = await run(msg({ text: "quero um carro" }));
+    expect(texts(r)[0]).toContain(TEXTS.pickIntro);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("the same webhook delivered twice asks only once", async () => {
+    w.registerNew = false;
+    expect((await run(msg({ text: "oi" }))).replies).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { sendChatMessage, type ChatState } from "./chat/actions";
 import type { Dictionary } from "../lib/i18n/dictionaries";
@@ -379,29 +380,27 @@ export function ChatPanel({
         {state.status === "needs_confirmation" && state.pendingAction ? (
           <div className="mt-3 flex flex-col gap-2 rounded-sm border border-gwm-accent/40 bg-gwm-accent/10 p-3">
             <p className="whitespace-pre-line text-sm text-gwm-accent break-user-text">{state.pendingAction.summary}</p>
-            {state.pendingAction.vehicleOptions ? (
-              <div className="flex flex-wrap gap-1.5">
-                {state.pendingAction.vehicleOptions.map((option, index) => {
-                  const isChosen = option.vehicleId === state.pendingAction!.slots.preferredVehicleId;
-                  return (
+            {(() => {
+              // only the OTHER vehicles: the offered one is already in the card above
+              const others = vehicleAlternatives(state.pendingAction.vehicleOptions, state.pendingAction.slots.preferredVehicleId);
+              if (others.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1.5" data-testid="chat-vehicle-alternatives">
+                  {others.map((option, index) => (
                     <button
                       key={option.vehicleId}
                       type="button"
                       onClick={() => handleSelectVehicle(option.vehicleId)}
-                      disabled={pending || isChosen}
-                      className={`rounded-sm border px-2.5 py-1 text-xs font-mono disabled:opacity-70 ${
-                        isChosen
-                          ? "border-gwm-accent bg-gwm-accent/20 text-gwm-accent"
-                          : "border-line-700 text-fog-400 hover:border-gwm-accent hover:text-gwm-accent"
-                      }`}
+                      disabled={pending}
+                      className="rounded-sm border border-line-700 px-2.5 py-1 text-xs font-mono text-fog-400 hover:border-gwm-accent hover:text-gwm-accent disabled:opacity-70"
                     >
                       {index + 1}. {option.vehicleName}
                       <span className="ml-1 font-sans text-[10px] opacity-70">({option.plate}{option.locationName ? ` · ${option.locationName}` : ""})</span>
                     </button>
-                  );
-                })}
-              </div>
-            ) : null}
+                  ))}
+                </div>
+              );
+            })()}
             {state.pendingAction.options ? (
               <div
                 role="group"
