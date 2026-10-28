@@ -30,6 +30,11 @@ describe("one side menu on every screen", () => {
     expect(ops).not.toMatch(/\.fm-workspace-operations\s+\.fm-(sidebar|nav|topbar|brand)/);
     expect(ops).not.toMatch(/\.fm-workspace-manager\s+\.fm-(sidebar|nav)/);
   });
+  it("the operations screens set nothing on the shell root: the menu colour and the assistant box are the shell's own", () => {
+    const ops = read("operations/operations.css");
+    expect(ops).not.toMatch(/\.fm-workspace\s*\{[^}]*--fm-/);
+    expect(ops).not.toMatch(/\.fm-workspace\s*\{[^}]*font-size/);
+  });
   it("the width comes from one variable (default 240) and the shell draws the saved width with a resize handle", () => {
     expect(read("carpool/fm-theme.css")).toMatch(/\.fm-sidebar\s*\{[^}]*width:\s*var\(--fm-sidebar-w,\s*240px\)/s);
     const shell = read("carpool/FmShell.tsx");

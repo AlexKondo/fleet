@@ -1,9 +1,7 @@
-.fm-workspace {
+/* Only the page CONTENT of the operations screens is denser. The menu, the top bar and the assistant box are the shell's own and look the same on every
+   screen, so no colour variable and no font size is set on the shell root here. */
+.fm-workspace .fm-content {
   font-size: 13px;
-  --fm-blue-600: #0868f9;
-  --fm-navy-950: #09233f;
-  --fm-bg: #f3f7fc;
-  --fm-text: #142644;
 }
 .fm-workspace .fm-content-wide {
   max-width: none;
