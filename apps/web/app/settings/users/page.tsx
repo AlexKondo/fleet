@@ -114,7 +114,7 @@ export default async function UsersPage() {
       headerActions={
         <>
           {/* where each person's WhatsApp and direct manager are registered (approval and WhatsApp use) */}
-          <Link href="/settings/approvals" className="fm-btn" data-testid="whatsapp-shortcut">{approvalsT.teamShortcut}</Link>
+          <Link href="/settings/approvals" className="rounded-sm border border-gwm-accent px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-gwm-accent transition-opacity hover:opacity-80" data-testid="whatsapp-shortcut">{approvalsT.teamShortcut}</Link>
           <InviteUserModal dict={dict} />
         </>
       }
