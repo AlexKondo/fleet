@@ -330,8 +330,10 @@ function parseTripFormInput(formData: FormData): TripFormInput {
     requiresCargo: formData.get("requiresCargo") === "on",
     justification: clampText(formData.get("justification"), MAX_JUSTIFICATION_TEXT),
     allowCarpool: formData.get("allowCarpool") === "on",
-    originLocationId: clampText(formData.get("originLocationId"), 64) || null,
+    originLocationId: null,
     includeOtherLocations: formData.get("includeOtherLocations") === "on",
+    // the origin is where the person leaves from; the vehicle's own place is automatic and shown on its card
+    originIsFreeText: true,
   };
 }
 

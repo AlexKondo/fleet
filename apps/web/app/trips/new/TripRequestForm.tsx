@@ -282,8 +282,9 @@ export function TripRequestForm({
       requiresCargo: formData.get("requiresCargo") === "on",
       justification: String(formData.get("justification")),
       allowCarpool: formData.get("allowCarpool") === "on",
-      originLocationId: String(formData.get("originLocationId") ?? "") || null,
+      originLocationId: null,
       includeOtherLocations: formData.get("includeOtherLocations") === "on",
+      originIsFreeText: true,
     });
     setConfirmError(null);
   }
@@ -506,38 +507,6 @@ export function TripRequestForm({
                 testId="rv-origin"
               />
             </div>
-            {pickupLocations.length > 0 ? (
-              <div className="fm-field rv-s7">
-                <label className="fm-label" htmlFor="rv-pickup-location">{rv.pickupLocationLabel}</label>
-                <input type="hidden" name="originLocationId" value={originLocationId} />
-                <select
-                  ref={pickupRef}
-                  id="rv-pickup-location"
-                  required
-                  value={originLocationId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setOriginLocationId(id);
-                    setIncludeOthers(false);
-                    // picking where the vehicle is also fills the origin when it is still empty
-                    const picked = pickupLocations.find((l) => l.id === id);
-                    if (picked && origin.trim() === "") setOrigin(picked.name);
-                  }}
-                  className="fm-input rv-select"
-                  aria-describedby="rv-pickup-location-hint"
-                  data-testid="rv-pickup-location"
-                >
-                  <option value="">{rv.pickupLocationPlaceholder}</option>
-                  {pickupLocations.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name} · {l.vehicles === 0 ? rv.pickupVehiclesNone : l.vehicles === 1 ? rv.pickupVehiclesOne : fillTemplate(rv.pickupVehiclesMany, { count: l.vehicles })}
-                    </option>
-                  ))}
-                </select>
-                <span id="rv-pickup-location-hint" className="rv-hint">{rv.pickupLocationHint}</span>
-                {includeOthers ? <input type="hidden" name="includeOtherLocations" value="on" /> : null}
-              </div>
-            ) : null}
             <div className="fm-field rv-s7">
               <label className="fm-label" htmlFor="rv-destination">{t.destinationLabel}</label>
               <PlaceAutocomplete
@@ -554,19 +523,20 @@ export function TripRequestForm({
               />
             </div>
 
-            <div className="fm-field rv-s4">
+            {/* date with date, time with time: the departure in the left column, the return in the right one */}
+            <div className="fm-field rv-s7">
               <label className="fm-label" htmlFor="rv-dep-date">{rv.departureDateLabel}</label>
               <input id="rv-dep-date" type="date" required value={depDate} onChange={(e) => setDepDate(e.target.value)} className="fm-input" data-testid="rv-dep-date" />
             </div>
-            <div className="fm-field rv-s3">
-              <label className="fm-label" htmlFor="rv-dep-time">{rv.departureTimeLabel}</label>
-              <input id="rv-dep-time" type="time" required value={depTime} onChange={(e) => setDepTime(e.target.value)} className="fm-input" data-testid="rv-dep-time" />
-            </div>
-            <div className="fm-field rv-s4">
+            <div className="fm-field rv-s7">
               <label className="fm-label" htmlFor="rv-ret-date">{rv.returnDateLabel}</label>
               <input id="rv-ret-date" type="date" required value={retDate} onChange={(e) => setRetDate(e.target.value)} className="fm-input" data-testid="rv-ret-date" />
             </div>
-            <div className="fm-field rv-s3">
+            <div className="fm-field rv-s7">
+              <label className="fm-label" htmlFor="rv-dep-time">{rv.departureTimeLabel}</label>
+              <input id="rv-dep-time" type="time" required value={depTime} onChange={(e) => setDepTime(e.target.value)} className="fm-input" data-testid="rv-dep-time" />
+            </div>
+            <div className="fm-field rv-s7">
               <label className="fm-label" htmlFor="rv-ret-time">{rv.returnTimeLabel}</label>
               <input id="rv-ret-time" type="time" required value={retTime} onChange={(e) => setRetTime(e.target.value)} className="fm-input" data-testid="rv-ret-time" />
             </div>
@@ -574,7 +544,7 @@ export function TripRequestForm({
             <input type="hidden" name="departureAt" value={departureAt} />
             <input type="hidden" name="expectedReturnAt" value={expectedReturnAt} />
 
-            <div className="fm-field rv-s7">
+            <div className="fm-field rv-s14">
               <label className="fm-label" htmlFor="rv-motivo">{rv.reasonLabel}</label>
               <select id="rv-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value as MotivoKey)} className="fm-input rv-select" data-testid="rv-motivo">
                 {MOTIVO_KEYS.map((k) => (
@@ -751,14 +721,6 @@ export function TripRequestForm({
           </section>
         ) : plan.type === "vehicle" && plan.vehicle ? (
           <>
-          {plan.originCheck?.includeOthers && plan.originCheck.status !== "ok" ? (
-            <div className="fm-banner fm-banner-warning" role="status" data-testid="other-locations-warning" style={{ marginTop: 0 }}>
-              <p>{fillTemplate(rv.otherLocationsWarning, { location: plan.originCheck.originLocationName ?? t.originLabel })}</p>
-              <button type="button" className="fm-btn" disabled={isPlanning} onClick={() => { setIncludeOthers(false); setResubmit(true); }}>
-                {rv.backToOriginOnly}
-              </button>
-            </div>
-          ) : null}
           <VehicleOptions
             dict={dict}
             locale={locale}

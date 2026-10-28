@@ -139,6 +139,24 @@
 .fm-theme .rv-grid > .rv-s4 {
   grid-column: span 9;
 }
+/* where the vehicle is (automatic, shown on its card) */
+.fm-theme .rv-vplace {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 8px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--fm-surface-2, rgba(8, 104, 249, 0.07));
+  font-size: 12.5px;
+}
+.fm-theme .rv-vplace span {
+  font-size: 11px;
+  color: var(--fm-muted, #5b7192);
+}
+.fm-theme .rv-vplace strong {
+  font-weight: 650;
+}
 .fm-theme .rv-grid > .rv-s3 {
   grid-column: span 5;
 }

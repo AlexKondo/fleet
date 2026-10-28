@@ -134,11 +134,16 @@ export function VehicleOptions({
                   <span className="rv-vchip">{fillTemplate(rv.seatsCount, { count: o.info.passengerCapacity })}</span>
                 ) : null}
               </div>
+              {o.info.locationName ? (
+                <p className="rv-vplace" data-testid="vehicle-place">
+                  <span>{rv.pickupLocationLabel}</span>
+                  <strong>{o.info.locationName}</strong>
+                </p>
+              ) : null}
               <ul className="rv-vfacts">
                 {facts(o).map((f) => (
                   <li key={f}>{f}</li>
                 ))}
-                {o.info.locationName ? <li>{o.info.locationName}</li> : null}
               </ul>
               {o.recommended ? <div className="rv-vextras">{recommendedExtras}</div> : null}
               <button

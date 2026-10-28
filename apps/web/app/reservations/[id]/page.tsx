@@ -63,7 +63,7 @@ export default async function ReservationDetailPage({
       .from("reservations")
       .select(
         `id, status, start_at, end_at, impacted_at, impacted_reason,
-       vehicle:vehicles(plate, name, status, category:vehicle_categories(name, passenger_capacity)),
+       vehicle:vehicles(plate, name, status, category:vehicle_categories(name, passenger_capacity), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)),
        trip_request:trip_requests(id, origin, destination, requester_id, justification, passenger_count, departure_at, requester:profiles(full_name))`,
       )
       .eq("id", id)
@@ -309,6 +309,11 @@ export default async function ReservationDetailPage({
                 {reservation.trip_request.requester?.full_name} · {formatDateTimeShort(reservation.start_at, locale)} →{" "}
                 {formatDateTimeShort(reservation.end_at, locale)}
               </p>
+              {reservation.vehicle?.current_location?.name ? (
+                <p className="rd-meta" data-testid="vehicle-place">
+                  {dict.trips.reservar.pickupLocationLabel}: <strong>{reservation.vehicle.current_location.name}</strong>
+                </p>
+              ) : null}
             </div>
             <div className="rd-pills">
               {/* the reservation status is the answer to "did this get cancelled?"; the vehicle status is the second badge */}
