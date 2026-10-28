@@ -3,15 +3,15 @@
  * (Motoristas, Energia, Chaves, Planejamento, Histórico da Portaria, Analytics, Administração...) are SECTIONS of an area and appear as tabs at the
  * top of the area's screens. Pure rules, used by the shell; no I/O.
  */
-export type SectionId = "team" | "fleet" | "trips" | "dashboard" | "settings";
+export type SectionId = "team" | "fleet" | "trips" | "dashboard" | "settings" | "gate";
 
 /** Menu keys that are no longer menu items: they are tabs of an area (or already have their own tabs: maintenance, gate). */
 export const TAB_ONLY_KEYS = [
   "planning", "orders", "vehicleHistory", // Manutenção: its own tabs
-  "gateExceptions", "gateHistory", // Portaria: its own tabs
+  "gateExceptions", "gateHistory", // Portaria tabs
   "energy", "incidents", "keyManagement", "drivers", "carpool", // Frota / Equipe / Viagens tabs
   "analytics", "admin", // Painel / Configurações tabs
-  "book", "myCarpools", // Viagens tabs
+  "book", "myCarpools", "find", // Viagens tabs
 ] as const;
 
 /** Which menu item is "current" for a screen that reports `active` (a tab-only key belongs to its area's item). */
@@ -21,14 +21,14 @@ export function menuKeyFor(active: string): string {
     case "planning": case "orders": case "vehicleHistory": return "maintenance";
     case "gateExceptions": case "gateHistory": return "gate";
     case "energy": case "incidents": case "keyManagement": case "carpool": return "fleet";
-    case "book": case "myCarpools": return "trips";
+    case "book": case "myCarpools": case "find": return "trips";
     case "analytics": return "dashboard";
     case "admin": return "settings";
     default: return active;
   }
 }
 
-/** The area whose tabs a screen shows (null: no tabs; maintenance and gate already have their own). */
+/** The area whose tabs a screen shows (null: no tabs; maintenance has its own). */
 export function sectionFor(active: string, isFleetManager: boolean): SectionId | null {
   // "carpool" is the rider's "Buscar carona" for a plain user and the managers' "Gestão de caronas" for a fleet manager
   if (active === "carpool") return isFleetManager ? "fleet" : "trips";
@@ -36,6 +36,7 @@ export function sectionFor(active: string, isFleetManager: boolean): SectionId |
     case "team": return isFleetManager ? "team" : null;
     case "fleet": return isFleetManager ? "fleet" : null;
     case "trips": return "trips";
+    case "gate": return "gate";
     case "dashboard": return isFleetManager ? "dashboard" : null;
     case "settings": return isFleetManager ? "settings" : null;
     default: return null;
@@ -71,6 +72,12 @@ export function sectionTabs(section: SectionId, f: { isAdministrator: boolean })
         { id: "mine", href: "/trips", visible: true },
         { id: "myCarpools", href: "/carpool/mine", visible: true },
         { id: "find", href: "/carpool", visible: true },
+      ];
+    case "gate":
+      return [
+        { id: "queue", href: "/gate", visible: true },
+        { id: "exceptions", href: "/gate/exceptions", visible: true },
+        { id: "history", href: "/gate/history", visible: true },
       ];
     case "dashboard":
       return [

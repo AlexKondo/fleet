@@ -91,8 +91,8 @@ const dict: Dictionary = {
   },
   nav: {
     dashboard: "Dashboard",
-    trips: "My Trips",
-    gate: "Movements",
+    trips: "Trips",
+    gate: "Gate",
     analytics: "Analytics",
     fleet: "Fleet",
     team: "Team",

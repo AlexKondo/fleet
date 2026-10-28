@@ -89,13 +89,6 @@ export default async function GateHistory({
           },
         ]}
       />
-      <nav className="ow-tabs" aria-label={T.navAria}>
-        <Link href="/gate">{T.tabQueue}</Link>
-        <Link href="/gate/exceptions">{T.tabExceptions}</Link>
-        <Link href="/gate/history" aria-current="page">
-          {T.tabHistory}
-        </Link>
-      </nav>
       <div className="ow-grid">
         <div className="ow-stack">
           <Panel title={T.historyPanel}>

@@ -28,7 +28,7 @@ export default async function CarpoolPage() {
   const role = profile?.role ?? "employee";
 
   return (
-    <FmShell
+    <FmShell active="find"
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={role}

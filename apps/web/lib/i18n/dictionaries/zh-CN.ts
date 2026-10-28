@@ -89,8 +89,8 @@ const dict: Dictionary = {
   },
   nav: {
     dashboard: "仪表盘",
-    trips: "我的行程",
-    gate: "车辆进出",
+    trips: "行程",
+    gate: "门岗",
     analytics: "数据分析",
     fleet: "车队",
     team: "团队",

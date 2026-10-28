@@ -125,15 +125,6 @@ export async function IncidentsWorkspace({
           },
         ]}
       />
-      {gate && (
-        <nav className="ow-tabs" aria-label={T.gateNavAria}>
-          <Link href="/gate">{T.tabQueue}</Link>
-          <Link href="/gate/exceptions" aria-current="page">
-            {T.tabExceptions}
-          </Link>
-          <Link href="/gate/history">{T.tabHistory}</Link>
-        </nav>
-      )}
       <div className="ow-grid">
         <div className="ow-stack">
           <Panel title={T.panelRegistered}>

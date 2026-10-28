@@ -39,6 +39,7 @@ const ICONS_BY_KEY: Record<
   book: TripsIcon,
   admin: SettingsIcon,
   myCarpools: FindRideIcon,
+  find: FindRideIcon,
   maintenance: FleetIcon,
   planning: DashboardIcon,
   orders: TripsIcon,

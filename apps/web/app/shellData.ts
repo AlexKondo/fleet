@@ -44,6 +44,7 @@ export type NavKey =
   | "gateHistory"
   | "admin"
   | "myCarpools"
+  | "find"
   | "keys"
   | "keyManagement"
   | "budgetApprovals"

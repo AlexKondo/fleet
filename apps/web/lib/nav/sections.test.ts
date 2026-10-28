@@ -8,7 +8,7 @@ describe("one menu item per area", () => {
     for (const k of ["planning", "orders", "vehicleHistory"]) expect(menuKeyFor(k)).toBe("maintenance");
     for (const k of ["gateExceptions", "gateHistory"]) expect(menuKeyFor(k)).toBe("gate");
     for (const k of ["energy", "incidents", "keyManagement", "carpool"]) expect(menuKeyFor(k)).toBe("fleet");
-    for (const k of ["book", "myCarpools"]) expect(menuKeyFor(k)).toBe("trips");
+    for (const k of ["book", "myCarpools", "find"]) expect(menuKeyFor(k)).toBe("trips");
     expect(menuKeyFor("analytics")).toBe("dashboard");
     expect(menuKeyFor("admin")).toBe("settings");
     expect(menuKeyFor("team")).toBe("team");
@@ -16,7 +16,7 @@ describe("one menu item per area", () => {
   it("tab-only keys never include an area's own item", () => {
     for (const area of ["dashboard", "fleet", "maintenance", "gate", "team", "trips", "settings"]) expect(TAB_ONLY_KEYS as readonly string[]).not.toContain(area);
   });
-  it("tabs belong to the right area; maintenance and gate keep their own tabs; a plain user has only Viagens", () => {
+  it("tabs belong to the right area; maintenance keeps its own tabs; a plain user has only Viagens", () => {
     expect(sectionFor("team", true)).toBe("team");
     expect(sectionFor("drivers", true)).toBe("team");
     expect(sectionFor("energy", true)).toBe("fleet");
@@ -24,7 +24,9 @@ describe("one menu item per area", () => {
     expect(sectionFor("carpool", false)).toBe("trips"); // Buscar carona
     expect(sectionFor("analytics", true)).toBe("dashboard");
     expect(sectionFor("admin", true)).toBe("settings");
-    for (const k of ["maintenance", "planning", "orders", "vehicleHistory", "gate", "gateHistory"]) expect(sectionFor(k, true), k).toBeNull();
+    for (const k of ["maintenance", "planning", "orders", "vehicleHistory"]) expect(sectionFor(k, true), k).toBeNull();
+    for (const k of ["gate", "gateExceptions", "gateHistory"]) expect(sectionFor(k, true), k).toBe("gate");
+    expect(sectionFor("find", true)).toBe("trips"); // the rider's Buscar carona, also for a manager
     for (const k of ["team", "fleet", "dashboard", "settings", "analytics"]) expect(sectionFor(k, false), k).toBeNull();
     expect(sectionFor("trips", false)).toBe("trips");
   });
@@ -38,7 +40,7 @@ describe("tabs", () => {
     expect(sectionTabs("team", { isAdministrator: true }).map((t) => t.id)).toEqual(["people", "drivers", "contact"]);
   });
   it("every tab has a label in every language", () => {
-    for (const section of ["team", "fleet", "trips", "dashboard", "settings"] as const) {
+    for (const section of ["team", "fleet", "trips", "dashboard", "settings", "gate"] as const) {
       for (const t of sectionTabs(section, { isAdministrator: true })) {
         for (const lang of ["pt-BR", "en-US", "es", "zh-CN"] as const) expect((sectionTabsTexts[lang] as Record<string, string>)[t.id], `${section}.${t.id}.${lang}`).toBeTruthy();
       }
