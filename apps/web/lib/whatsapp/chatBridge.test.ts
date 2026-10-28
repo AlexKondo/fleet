@@ -9,7 +9,7 @@ const CLIENT = { tag: "client" } as unknown as TypedSupabaseClient;
 const idle: ChatState = { status: "idle", messages: [] };
 const reply = (content: string, extra: Partial<ChatState> = {}): ChatState => ({ status: "idle", conversationId: "c1", messages: [{ role: "user", content: "x" }, { role: "assistant", content }], ...extra });
 
-interface World { identify: unknown; open: boolean; registerNew: boolean; state: ChatState; updatedAt: string | null; mint: TypedSupabaseClient | null; next: ChatState | Error; transcribe: unknown }
+interface World { pick: { picked_user_id: string | null; asked: boolean }; pickWrites: { phone: string; user: string | null }[]; identify: unknown; open: boolean; registerNew: boolean; state: ChatState; updatedAt: string | null; mint: TypedSupabaseClient | null; next: ChatState | Error; transcribe: unknown }
 let w: World;
 const calls = { send: [] as { prev: ChatState; form: Record<string, string> }[], abandon: [] as string[], register: [] as Record<string, unknown>[], actedAs: [] as (string | undefined)[], transcribe: [] as string[], mint: 0 };
 
@@ -18,6 +18,8 @@ function deps(over: Partial<BridgeDeps> = {}): BridgeDeps {
     rpc: async (name, args) => {
       if (name === "fm_whatsapp_identify") return { data: w.identify, error: null };
       if (name === "fm_whatsapp_session_open") return { data: w.open, error: null };
+      if (name === "fm_whatsapp_pick_state") return { data: w.pick, error: null };
+      if (name === "fm_whatsapp_pick_write") { w.pickWrites.push({ phone: String(args.p_phone_norm), user: (args.p_user as string | null) ?? null }); return { data: true, error: null }; }
       if (name === "fm_whatsapp_register_inbound") { calls.register.push(args); return { data: w.registerNew, error: null }; }
       return { data: null, error: { message: "unexpected" } };
     },
@@ -42,7 +44,7 @@ const run = (m: InboundMessage, d = deps()) => handleInboundWhatsApp(m, d);
 const texts = (r: { replies: { type: string; text: string }[] }) => r.replies.map((x) => x.text);
 
 beforeEach(() => {
-  w = { identify: USER, open: false, registerNew: true, state: idle, updatedAt: null, mint: CLIENT, next: reply("Para quando?"), transcribe: { ok: true, text: "fleet quero um carro amanhã" } };
+  w = { pick: { picked_user_id: null, asked: false }, pickWrites: [], identify: USER, open: false, registerNew: true, state: idle, updatedAt: null, mint: CLIENT, next: reply("Para quando?"), transcribe: { ok: true, text: "fleet quero um carro amanhã" } };
   calls.send.length = 0; calls.abandon.length = 0; calls.register.length = 0; calls.actedAs.length = 0; calls.transcribe.length = 0; calls.mint = 0;
 });
 
@@ -56,11 +58,11 @@ describe("who is answered", () => {
     expect(calls.send).toHaveLength(0);
     expect(calls.register).toHaveLength(0);
   });
-  it("a registered member writing without the trigger word and without an open session is ignored (and recorded as ignored)", async () => {
-    const r = await run(msg({ text: "bom dia, tudo bem? me liga depois" }));
-    expect(r.replies).toEqual([]);
-    expect(calls.register[0]).toMatchObject({ p_handled: false, p_user: "u1" });
-    expect(calls.send).toHaveLength(0);
+  it("the first message of a registered member can be anything: it is answered, with no trigger word and no open session", async () => {
+    const r = await run(msg({ text: "quero um carro amanhã às 8h" }));
+    expect(calls.register[0]).toMatchObject({ p_handled: true, p_user: "u1" });
+    expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: "quero um carro amanhã às 8h" });
+    expect(texts(r)).toEqual(["Para quando?"]);
   });
   it("the trigger word starts a session: it is removed from what the assistant reads", async () => {
     const r = await run(msg({ text: "Fleet, quero um carro amanhã às 8h" }));
@@ -100,9 +102,10 @@ describe("who is answered", () => {
 
 describe("voice notes", () => {
   const audio = { kind: "audio" as const, audioBase64: "QUJD", mimeType: "audio/ogg", text: undefined };
-  it("outside an open session a voice note is ignored and NOT sent for transcription (privacy)", async () => {
-    expect((await run(msg(audio))).replies).toEqual([]);
-    expect(calls.transcribe).toHaveLength(0);
+  it("a voice note as the very first message is transcribed and answered", async () => {
+    const r = await run(msg(audio));
+    expect(calls.transcribe).toEqual(["QUJD"]);
+    expect(texts(r)).toEqual(["🎙️ Entendi: “fleet quero um carro amanhã”", "Para quando?"]);
   });
   it("inside an open session it is transcribed, the transcription is shown and the assistant gets the text", async () => {
     w.open = true;
@@ -119,9 +122,7 @@ describe("voice notes", () => {
     }
     expect(calls.send).toHaveLength(0);
   });
-  it("other media (image, document) inside a session gets a polite note; outside, nothing", async () => {
-    expect((await run(msg({ kind: "other", text: undefined }))).replies).toEqual([]);
-    w.open = true;
+  it("other media (image, document) gets a polite note", async () => {
     expect(texts(await run(msg({ kind: "other", text: undefined })))).toEqual([TEXTS.onlyTextAudio]);
   });
 });
@@ -210,5 +211,57 @@ describe("rendering the assistant's answer for WhatsApp", () => {
     const long = renderState({ status: "idle", messages: [{ role: "assistant", content: "x".repeat(9000) }] }, url);
     expect((long[0] as { text: string }).text.length).toBeLessThanOrEqual(3800);
     expect(renderState({ status: "idle", messages: [] }, url)).toEqual([{ type: "text", text: TEXTS.generic }]);
+  });
+});
+
+describe("one number registered on several profiles", () => {
+  const CANDS = [
+    { user_id: "a1", organization_id: "o1", full_name: "Alexandre Kondo", role: "administrator", email: "a@example.invalid" },
+    { user_id: "a2", organization_id: "o1", full_name: "Alexandre Massahiro Kondo", role: "employee", email: "b@example.invalid" },
+  ];
+  beforeEach(() => { w.identify = { ok: false, reason: "ambiguous", phone_norm: "5511982593096", candidates: CANDS }; });
+
+  it("asks which profile to speak as, listing name and role, and remembers that it asked", async () => {
+    const r = await run(msg({ text: "oi, quero um carro" }));
+    expect(texts(r)[0]).toContain(TEXTS.pickIntro);
+    expect(texts(r)[0]).toContain("*1.* Alexandre Kondo — Administrador");
+    expect(texts(r)[0]).toContain("*2.* Alexandre Massahiro Kondo — Colaborador");
+    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: null }]);
+    expect(calls.send).toHaveLength(0);
+    expect(calls.mint).toBe(0);
+  });
+  it("the number answered after the question picks that profile, and the assistant is not run on the number itself", async () => {
+    w.pick = { picked_user_id: null, asked: true };
+    const r = await run(msg({ text: "2" }));
+    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: "a2" }]);
+    expect(texts(r)[0]).toContain("Alexandre Massahiro Kondo");
+    expect(calls.send).toHaveLength(0);
+  });
+  it("an out-of-range number is refused with the list again", async () => {
+    w.pick = { picked_user_id: null, asked: true };
+    expect(texts(await run(msg({ text: "7" })))[0]).toContain(TEXTS.pickBad);
+    expect(w.pickWrites).toEqual([]);
+  });
+  it("with a profile picked, the assistant runs as THAT profile", async () => {
+    w.pick = { picked_user_id: "a2", asked: true };
+    await run(msg({ text: "quero um carro amanhã" }));
+    expect(calls.actedAs).toEqual(["a2"]);
+    expect(calls.send[0]!.form.message).toBe("quero um carro amanhã");
+  });
+  it("'trocar perfil' asks again", async () => {
+    w.pick = { picked_user_id: "a2", asked: true };
+    const r = await run(msg({ text: "trocar perfil" }));
+    expect(texts(r)[0]).toContain(TEXTS.pickIntro);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("a picked profile that is no longer registered with the number is never used", async () => {
+    w.pick = { picked_user_id: "someone-else", asked: false };
+    const r = await run(msg({ text: "quero um carro" }));
+    expect(texts(r)[0]).toContain(TEXTS.pickIntro);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("the same webhook delivered twice asks only once", async () => {
+    w.registerNew = false;
+    expect((await run(msg({ text: "oi" }))).replies).toEqual([]);
   });
 });
