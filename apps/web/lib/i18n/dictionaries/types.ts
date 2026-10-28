@@ -1244,7 +1244,7 @@ export type Dictionary = {
       and: string;
       fleet: { intro: string; summary: string; empty: string; reservedOne: string; reservedOther: string; maintenanceOne: string; maintenanceOther: string; blockedOne: string; blockedOther: string; inUseOne: string; inUseOther: string; busyOne: string; busyOther: string; seatsOne: string; seatsOther: string; cargoOne: string; cargoOther: string; notReadyOne: string; notReadyOther: string; otherOne: string; otherOther: string; };
       success: { reservationCreated: string; carpoolJoined: string; cancelled: string; noActiveReservation: string; reservationInfo: string; messagePosted: string; returnTimeUpdated: string; vehicleAvailable: string; carpoolAvailable: string; };
-      card: { vehicle: string; chooseOption: string; };
+      card: { vehicle: string; vehicleAt: string; chooseOption: string; };
       notAutomated: { change: string; differentVehicle: string; startTrip: string; endTrip: string; };
       originPick: string;
       assistantDisabled: string;

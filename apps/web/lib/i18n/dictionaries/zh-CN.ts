@@ -1267,6 +1267,7 @@ const dict: Dictionary = {
         carpoolAvailable: "该时段有可用的拼车。让我帮您预订，我会把选项展示给您。",
       },
       card: {
+        vehicleAt: "车辆位于：{location}。",
         vehicle: "我将为您预订车辆 {name}（{plate}），前往 {destination}，出发 {departure}，返回 {return}。",
         chooseOption: " 请选择下面的一个选项，或告诉我它的编号。",
       },

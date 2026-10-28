@@ -66,6 +66,9 @@ export interface TripFormInput {
   originLocationId?: string | null;
   /** The requester explicitly asked to see vehicles from other locations too (shown with a warning). */
   includeOtherLocations?: boolean;
+  /** The origin is the traveller's own words (the assistant), not a pick from the registered departure locations: when it matches no
+   * location, vehicles of every location are offered and each card says where the vehicle is. */
+  originIsFreeText?: boolean;
 }
 
 /** Real facts shown on a vehicle card (nothing invented: fields the vehicle does not have are null). */
@@ -259,7 +262,7 @@ async function buildPlanInputs(input: TripFormInput) {
   let originCheck: OriginCheck = { status: "ok", includeOthers: false, others: [], withoutLocation: 0 };
   if (resolution.kind !== "no_locations") {
     const split = splitByOrigin(allCandidates, (c) => c.vehicle.currentLocationId, locations, originLocation?.id ?? null);
-    const includeOthers = input.includeOtherLocations === true;
+    const includeOthers = input.includeOtherLocations === true || (input.originIsFreeText === true && resolution.kind === "unknown");
     vehicleCandidates = includeOthers ? allCandidates : split.atOrigin;
     originCheck = {
       status: resolution.kind === "unknown" ? "unknown" : split.atOrigin.length > 0 ? "ok" : "none_at_origin",

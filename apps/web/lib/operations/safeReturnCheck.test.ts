@@ -177,6 +177,20 @@ it('S1-01: measurements require the audited RPC and decreases require a reason',
  await actor(driver);await expect(db.query('select fm_update_vehicle($1,$2::jsonb,null)',[v,JSON.stringify({odometer_km:200})])).rejects.toThrow('MANAGEMENT_SCOPE_DENIED');
  await actor(admin);await expect(db.query('select fm_update_vehicle($1,$2::jsonb,null)',[v,JSON.stringify({status:'available'})])).rejects.toThrow('INVALID_INPUT');
 });
+it('0231: editing the base location also moves a parked vehicle, never one that is out on a trip',async()=>{
+ const v=await vehicle('available');await asPostgres();
+ const [from,to]=[randomUUID(),randomUUID()];
+ await db.query("insert into vehicle_locations(id,organization_id,name) values($1,$3,'Local A'),($2,$3,'Local B')",[from,to,org]);
+ await db.query('update vehicles set home_location_id=$2,current_location_id=$2 where id=$1',[v,from]);
+ await actor(admin);await db.query('select fm_update_vehicle($1,$2::jsonb,null)',[v,JSON.stringify({home_location_id:to})]);
+ await asPostgres();
+ expect((await db.query<{h:string;c:string}>('select home_location_id h,current_location_id c from vehicles where id=$1',[v])).rows[0]).toEqual({h:to,c:to});
+ expect((await db.query("select id from audit_log where entity_id=$1 and action='vehicle.location_moved'",[v])).rows).toHaveLength(1);
+ await db.query("update vehicles set status='in_use' where id=$1",[v]);
+ await actor(admin);await db.query('select fm_update_vehicle($1,$2::jsonb,null)',[v,JSON.stringify({home_location_id:from})]);
+ await asPostgres();
+ expect((await db.query<{h:string;c:string}>('select home_location_id h,current_location_id c from vehicles where id=$1',[v])).rows[0]).toEqual({h:from,c:to});
+});
 it('approved automatic release is active by default for new organizations',async()=>{
  await asPostgres();const n=randomUUID();await db.query("insert into organizations(id,name) values($1,'Default policy')",[n]);await db.query('insert into organization_settings(organization_id) values($1)',[n]);
  expect((await db.query<{enabled:boolean}>('select auto_release_enabled enabled from organization_settings where organization_id=$1',[n])).rows[0]!.enabled).toBe(true);

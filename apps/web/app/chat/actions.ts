@@ -72,7 +72,7 @@ export interface ChatState {
 // (chat.replies.*); failures always carry what happened / why / alternatives / how to continue
 // (app/chat/replies.ts). Codes and database messages only ever reach the server log.
 
-type VehicleOption = { vehicleId: string; plate: string; vehicleName: string };
+type VehicleOption = { vehicleId: string; plate: string; vehicleName: string; locationName?: string | null };
 
 // The numbered list itself lives only in ChatPanel's clickable buttons now (still numbered
 // so the driver can also just say/type the number, e.g. "2") — repeating the same list as
@@ -88,13 +88,14 @@ function buildVehicleSummary(
 ): string {
   const card = dict.chat.replies.card;
   const optionsLine = options.length > 1 ? card.chooseOption : "";
+  const where = chosen.locationName ? ` ${fillTemplate(card.vehicleAt, { location: chosen.locationName })}` : "";
   return `${fillTemplate(card.vehicle, {
     name: chosen.vehicleName,
     plate: chosen.plate,
     destination,
     departure: formatDateTimeShort(input.departureAt, locale),
     return: formatDateTimeShort(input.expectedReturnAt, locale),
-  })}${optionsLine}${tail}`;
+  })}${where}${optionsLine}${tail}`;
 }
 
 // Matches a bare number ("2") or a short Portuguese phrasing ("opção 2", "opcao 2", "numero 2").
@@ -272,6 +273,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       departureAt: new Date(slots.departureAt ?? "").toISOString(),
       expectedReturnAt: new Date(slots.expectedReturnAt ?? "").toISOString(),
       origin: slots.origin ?? "",
+      originIsFreeText: true,
       destination: slots.destination ?? "",
       distanceKm: Number(slots.distanceKm ?? 0),
       passengerCount: Number(slots.passengerCount ?? 1),
@@ -309,12 +311,16 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       const namedPlate = slots.preferredVehiclePlate?.trim().toUpperCase();
       const namedMatch = namedPlate
         ? plan.vehicle.plate.toUpperCase() === namedPlate
-          ? { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName }
+          ? { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName, locationName: plan.vehicle.info.locationName }
           : plan.vehicle.alternatives.find((alt) => alt.plate.toUpperCase() === namedPlate)
         : undefined;
       const chosenVehicleId = namedMatch?.vehicleId ?? plan.vehicle.vehicleId;
       const chosenPlate = namedMatch?.plate ?? plan.vehicle.plate;
       const chosenVehicleName = namedMatch?.vehicleName ?? plan.vehicle.vehicleName;
+      const chosenLocation =
+        chosenVehicleId === plan.vehicle.vehicleId
+          ? plan.vehicle.info.locationName
+          : plan.vehicle.alternatives.find((a) => a.vehicleId === chosenVehicleId)?.info.locationName;
       const chosenMax =
         chosenVehicleId === plan.vehicle.vehicleId
           ? plan.vehicle.maxOfferableSeats
@@ -332,7 +338,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         (note ? `${note}\n` : "") +
         buildVehicleSummary(
           dictNow,
-          { vehicleId: chosenVehicleId, plate: chosenPlate, vehicleName: chosenVehicleName },
+          { vehicleId: chosenVehicleId, plate: chosenPlate, vehicleName: chosenVehicleName, locationName: chosenLocation },
           vehicleOptions,
           slots.destination ?? "",
           input,
@@ -378,6 +384,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       departureAt: new Date(pending.slots.departureAt ?? "").toISOString(),
       expectedReturnAt: new Date(pending.slots.expectedReturnAt ?? "").toISOString(),
       origin: pending.slots.origin ?? "",
+      originIsFreeText: true,
       destination: pending.slots.destination ?? "",
       distanceKm: Number(pending.slots.distanceKm ?? 0),
       passengerCount: Number(pending.slots.passengerCount ?? 1),
@@ -405,8 +412,8 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     }
 
     const options = [
-      { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName },
-      ...plan.vehicle.alternatives.map((a) => ({ vehicleId: a.vehicleId, plate: a.plate, vehicleName: a.vehicleName })),
+      { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName, locationName: plan.vehicle.info.locationName },
+      ...plan.vehicle.alternatives.map((a) => ({ vehicleId: a.vehicleId, plate: a.plate, vehicleName: a.vehicleName, locationName: a.info.locationName })),
     ];
     const chosen = options.find((o) => o.vehicleId === chosenVehicleId) ?? options[0]!;
 

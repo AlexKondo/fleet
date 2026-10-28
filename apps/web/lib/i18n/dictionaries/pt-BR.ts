@@ -1305,6 +1305,7 @@ const dict: Dictionary = {
         carpoolAvailable: "Há uma carona disponível para esse horário. Se quiser, me peça a reserva que eu mostro a opção.",
       },
       card: {
+        vehicleAt: "O veículo está em: {location}.",
         vehicle: "Vou reservar o veículo {name} ({plate}) para {destination}, saída {departure}, retorno {return}.",
         chooseOption: " Escolha uma das opções abaixo, ou diga o número dela.",
       },
