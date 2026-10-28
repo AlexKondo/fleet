@@ -8,6 +8,11 @@ const state = {
 };
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// `after` only exists inside a real request: the scheduled work is collected here and run by the test that cares about it
+const later: (() => Promise<void>)[] = [];
+vi.mock("next/server", async (orig) => ({ ...(await orig<typeof import("next/server")>()), after: (fn: () => Promise<void>) => { later.push(fn); } }));
+const notifyHost = vi.fn(async () => ({ status: "sent" }));
+vi.mock("@/lib/carpool/notifyHost", () => ({ notifyHostOfCarpool: (...a: unknown[]) => (notifyHost as unknown as (...x: unknown[]) => unknown)(...a) }));
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: async () => ({ rpc: state.rpc }),
 }));
@@ -170,5 +175,27 @@ describe("authentication + input validation on every action", () => {
     expect(state.rpc).toHaveBeenCalledWith("accept_carpool_ride_request", { p_request_id: REQ });
     expect((await rejectCarpoolRequest(REQ, "full")).status).toBe("success");
     expect(state.rpc).toHaveBeenCalledWith("reject_carpool_ride_request", { p_request_id: REQ, p_reason: "full" });
+  });
+});
+
+describe("the host is told when somebody takes a carpool", () => {
+  it("a created request schedules the WhatsApp notice for that request, after the answer", async () => {
+    later.length = 0;
+    notifyHost.mockClear();
+    state.user = { id: "user-1" };
+    state.search.mockResolvedValue({ status: "ok", matches: [{ offerId: OFFER, pickup: { lat: -23.55, lng: -46.63 }, dropoff: { lat: -23.56, lng: -46.64 }, additionalDistanceKm: 1, additionalTimeMin: 2 }] });
+    state.adminRpc.mockResolvedValue({ data: REQ, error: null });
+    const r = await requestCarpoolRide({ offerId: OFFER, clientRequestId: KEY, draft });
+    expect(r).toEqual({ status: "success", requestId: REQ });
+    expect(notifyHost).not.toHaveBeenCalled();
+    expect(later).toHaveLength(1);
+    await later[0]!();
+    expect(notifyHost).toHaveBeenCalledWith(REQ, expect.anything());
+  });
+  it("nothing is sent when the request was not created", async () => {
+    later.length = 0;
+    state.search.mockResolvedValue({ status: "ok", matches: [] });
+    await requestCarpoolRide({ offerId: OFFER, clientRequestId: KEY, draft });
+    expect(later).toHaveLength(0);
   });
 });

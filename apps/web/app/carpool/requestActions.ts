@@ -15,6 +15,8 @@
  */
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { notifyHostOfCarpool } from "@/lib/carpool/notifyHost";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -154,7 +156,10 @@ export async function requestCarpoolRide(input: {
   });
   if (error) return fail("create_carpool_ride_request_as_rider", error.message);
   refresh(input.reservationId);
-  return { status: "success", requestId: data as string };
+  const requestId = data as string;
+  // the host is told by WhatsApp (when they have a number registered); after the answer, and never able to fail the request
+  after(async () => { await notifyHostOfCarpool(requestId, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); });
+  return { status: "success", requestId };
 }
 
 export async function acceptCarpoolRequest(
