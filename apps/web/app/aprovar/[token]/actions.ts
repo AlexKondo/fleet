@@ -1,7 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { notifyRequesterOutcome } from "@/lib/approvals/notifyRequester";
 import { isResultStatus } from "@/lib/approvals/emailResult";
 
 const TOKEN = /^[0-9a-f]{32,128}$/;
@@ -19,6 +21,11 @@ export async function decideByEmail(token: string, decision: "approve" | "reject
       const { data, error } = await admin.rpc("fm_approval_decide", { p_token: token, p_decision: decision, p_from_phone: "", p_message_id: null, p_channel: "email" });
       if (!error && data && typeof data === "object" && !Array.isArray(data) && typeof (data as { status?: unknown }).status === "string") {
         status = (data as { status: string }).status;
+        const reservationId = (data as { reservation_id?: unknown }).reservation_id;
+        if ((status === "approved" || status === "rejected") && typeof reservationId === "string") {
+          const decided = status === "approved" ? "approve" : "reject";
+          after(async () => { await notifyRequesterOutcome(reservationId, decided, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); });
+        }
       } else if (error) {
         console.error("email approval: decide failed", error.message);
       }

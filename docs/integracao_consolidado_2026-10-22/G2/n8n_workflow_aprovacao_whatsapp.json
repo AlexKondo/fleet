@@ -750,6 +750,235 @@
           "name": "Evolution Go (Geral)"
         }
       }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fleet-notify",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "n-nt-hook",
+      "name": "Aviso do FleetMind",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "data",
+        "destinationKey": "raw",
+        "options": {}
+      },
+      "id": "n-nt-raw",
+      "name": "Corpo bruto aviso",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        220,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "secret",
+              "value": "COLE_AQUI_O_SEGREDO",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "evoBase",
+              "value": "http://evolution-go:8080",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n-nt-config",
+      "name": "Config aviso",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        330,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "raw",
+              "value": "={{ $('Corpo bruto aviso').item.json.raw }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "signed",
+              "value": "={{ $('Aviso do FleetMind').item.json.headers['x-fleet-timestamp'] + '.' + $('Corpo bruto aviso').item.json.raw }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n-nt-signed",
+      "name": "Texto assinado aviso",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $json.signed }}",
+        "dataPropertyName": "expected",
+        "secret": "={{ $('Config aviso').first().json.secret }}",
+        "encoding": "hex"
+      },
+      "id": "n-nt-hmac",
+      "name": "Calcular assinatura aviso",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        660,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "v1",
+              "leftValue": "={{ 'sha256=' + $json.expected }}",
+              "rightValue": "={{ $('Aviso do FleetMind').item.json.headers['x-fleet-signature'] }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "v2",
+              "leftValue": "={{ Math.abs(Date.now() / 1000 - Number($('Aviso do FleetMind').item.json.headers['x-fleet-timestamp'])) <= 300 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "v3",
+              "leftValue": "={{ $('Config aviso').first().json.secret }}",
+              "rightValue": "COLE_AQUI",
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n-nt-valid",
+      "name": "Aviso valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config aviso').first().json.evoBase }}/send/text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const r = JSON.parse($('Corpo bruto aviso').item.json.raw); return JSON.stringify({ number: String(r.to).replace('+', ''), text: String(r.text).slice(0, 3800) }); })() }}",
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n-nt-send",
+      "name": "Enviar aviso ao solicitante",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        1100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "n-nt-ok",
+      "name": "Avisar 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        1060
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "unauthorized",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "n-nt-401",
+      "name": "Avisar 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        1260
+      ]
     }
   ],
   "connections": {
@@ -1022,6 +1251,90 @@
         [
           {
             "node": "Enviar texto ao usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso do FleetMind": {
+      "main": [
+        [
+          {
+            "node": "Corpo bruto aviso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Corpo bruto aviso": {
+      "main": [
+        [
+          {
+            "node": "Config aviso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config aviso": {
+      "main": [
+        [
+          {
+            "node": "Texto assinado aviso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto assinado aviso": {
+      "main": [
+        [
+          {
+            "node": "Calcular assinatura aviso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular assinatura aviso": {
+      "main": [
+        [
+          {
+            "node": "Aviso valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso valido?": {
+      "main": [
+        [
+          {
+            "node": "Enviar aviso ao solicitante",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar aviso ao solicitante": {
+      "main": [
+        [
+          {
+            "node": "Avisar 200",
             "type": "main",
             "index": 0
           }

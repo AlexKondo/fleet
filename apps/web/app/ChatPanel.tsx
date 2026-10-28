@@ -396,7 +396,7 @@ export function ChatPanel({
                       }`}
                     >
                       {index + 1}. {option.vehicleName}
-                      <span className="ml-1 font-sans text-[10px] opacity-70">({option.plate})</span>
+                      <span className="ml-1 font-sans text-[10px] opacity-70">({option.plate}{option.locationName ? ` · ${option.locationName}` : ""})</span>
                     </button>
                   );
                 })}

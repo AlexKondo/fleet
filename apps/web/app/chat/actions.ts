@@ -54,7 +54,7 @@ export interface ChatState {
      * (already filtered by the org's booking_mode by planTrip itself), so ChatPanel can
      * render an actual button per option instead of requiring the driver to type a plate
      * they read out of the summary text. */
-    vehicleOptions?: { vehicleId: string; plate: string; vehicleName: string }[];
+    vehicleOptions?: { vehicleId: string; plate: string; vehicleName: string; locationName?: string | null }[];
     /** Generic numbered options (Phase C6): compatible carpool offers from FIND_CARPOOL or from
      * carpool-first in a chat reservation (plus the "use a vehicle" choice). Same UX as
      * vehicleOptions (numbered buttons + bare-number reply). The ids are only HINTS: every
@@ -327,11 +327,12 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
           : plan.vehicle.alternatives.find((a) => a.vehicleId === chosenVehicleId)?.maxOfferableSeats;
 
       const vehicleOptions = [
-        { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName },
+        { vehicleId: plan.vehicle.vehicleId, plate: plan.vehicle.plate, vehicleName: plan.vehicle.vehicleName, locationName: plan.vehicle.info.locationName },
         ...plan.vehicle.alternatives.map((a) => ({
           vehicleId: a.vehicleId,
           plate: a.plate,
           vehicleName: a.vehicleName,
+          locationName: a.info.locationName,
         })),
       ];
       const summary =
@@ -437,7 +438,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       role: "assistant",
       content: summary,
       intent: pending.intent,
-      slots: { ...pending.slots, preferredVehicleId: chosen.vehicleId },
+      slots: packSlots({ ...pending.slots, preferredVehicleId: chosen.vehicleId }, undefined, options.length > 1 ? options : undefined),
     });
 
     return {

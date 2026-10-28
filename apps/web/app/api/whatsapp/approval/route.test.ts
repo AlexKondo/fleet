@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { signBody } from "@/lib/approvals/whatsappApproval";
 
-const h = vi.hoisted(() => ({ rpc: vi.fn() }));
+const h = vi.hoisted(() => ({ rpc: vi.fn(), notice: vi.fn(), later: [] as (() => Promise<void>)[] }));
+// `after` only exists inside a real request: here the scheduled work is collected and run by the test
+vi.mock("next/server", async (orig) => ({ ...(await orig<typeof import("next/server")>()), after: (fn: () => Promise<void>) => { h.later.push(fn); } }));
+vi.mock("@/lib/approvals/notifyRequester", () => ({ notifyRequesterOutcome: (...a: unknown[]) => h.notice(...a) }));
 vi.mock("@/lib/supabase/admin", () => ({ createSupabaseAdminClient: () => ({ rpc: (...a: unknown[]) => h.rpc(...a) }) }));
 
 import { POST } from "./route";
@@ -19,6 +22,8 @@ const call = (body: unknown, opts: { secret?: string; ts?: string; sign?: boolea
 
 beforeEach(() => {
   process.env.N8N_APPROVAL_SECRET = SECRET;
+  h.later.length = 0;
+  h.notice.mockReset();
   h.rpc.mockReset().mockResolvedValue({ data: { status: "approved", reservation_id: "res-1" }, error: null });
 });
 
@@ -68,5 +73,26 @@ describe("POST /api/whatsapp/approval", () => {
     const res = await call({ button_id: `approve:${TOKEN}`, from: "5511987654321" });
     expect(res.status).toBe(502);
     expect(JSON.stringify(await res.json())).not.toContain("secret detail");
+  });
+});
+
+describe("the requester is told after the manager decides", () => {
+  it("an approved or refused decision schedules the WhatsApp notice for that reservation", async () => {
+    await call({ button_id: `approve:${TOKEN}`, from: "5511982593096", message_id: "m1" });
+    expect(h.later).toHaveLength(1);
+    await h.later[0]!();
+    expect(h.notice).toHaveBeenCalledWith("res-1", "approve", expect.anything());
+    h.later.length = 0;
+    h.rpc.mockResolvedValue({ data: { status: "rejected", reservation_id: "res-2" }, error: null });
+    await call({ button_id: `reject:${TOKEN}`, from: "5511982593096", message_id: "m2" });
+    await h.later[0]!();
+    expect(h.notice).toHaveBeenLastCalledWith("res-2", "reject", expect.anything());
+  });
+  it("nothing is sent when nothing was decided (already answered, expired, wrong sender)", async () => {
+    for (const status of ["already_decided", "expired", "phone_mismatch", "superseded"]) {
+      h.rpc.mockResolvedValue({ data: { status, reservation_id: "res-1" }, error: null });
+      await call({ button_id: `approve:${TOKEN}`, from: "5511982593096", message_id: `m-${status}` });
+    }
+    expect(h.later).toHaveLength(0);
   });
 });

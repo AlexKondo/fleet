@@ -20,6 +20,8 @@ export interface PersistedVehicleOption {
   vehicleId: string;
   plate: string;
   vehicleName: string;
+  /** where the vehicle is (shown next to the option); optional */
+  locationName?: string | null;
 }
 
 /**
@@ -86,7 +88,9 @@ export function parseVehicleOptions(raw: unknown): PersistedVehicleOption[] | un
       if (typeof vehicleId !== "string" || !isUuid(vehicleId)) return undefined;
       if (typeof plate !== "string" || !/^[A-Za-z0-9-]{1,12}$/.test(plate)) return undefined;
       if (typeof vehicleName !== "string" || vehicleName.length > 80 || /[<>]/.test(vehicleName)) return undefined;
-      out.push({ vehicleId, plate, vehicleName });
+      const locationName = (o as { locationName?: unknown })?.locationName;
+      const where = typeof locationName === "string" && locationName.length <= 80 && !/[<>]/.test(locationName) ? locationName : null;
+      out.push(where ? { vehicleId, plate, vehicleName, locationName: where } : { vehicleId, plate, vehicleName });
     }
     return out;
   } catch {

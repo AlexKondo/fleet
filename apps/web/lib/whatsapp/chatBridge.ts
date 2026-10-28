@@ -115,7 +115,7 @@ export function renderState(state: ChatState, appUrl: string): Reply[] {
     return [text(body)];
   }
   if (pending.vehicleOptions && pending.vehicleOptions.length > 1) {
-    body += `\n\nVeículos disponíveis:\n${pending.vehicleOptions.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})`).join("\n")}\nPara trocar, responda com o número.`;
+    body += `\n\nVeículos disponíveis:\n${pending.vehicleOptions.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n")}\nPara escolher outro, responda só com o número dele (por exemplo, *2*).`;
   }
   return [{ type: "buttons", text: clip(`${body}\n\n${TEXTS.confirmHint}`), buttons: [{ id: CHAT_BUTTON.confirm, title: TEXTS.confirm }, { id: CHAT_BUTTON.cancel, title: TEXTS.cancel }] }];
 }
