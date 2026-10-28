@@ -44,6 +44,7 @@ import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvide
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
 import { searchCompatibleCarpool } from "@/app/carpool/actions";
 import { enableCarpoolOffer } from "@/app/carpool/requestActions";
+import { scheduleApprovalRequest } from "@/lib/approvals/scheduleApproval";
 
 export interface TripFormInput {
   departureAt: string;
@@ -610,6 +611,8 @@ export async function confirmTrip(
       // a raw Postgres constraint-violation string.
       return { success: false, error: error.code === "23P01" ? "RESERVATION_CONFLICT" : error.message };
     }
+    // Direct manager's WhatsApp approval request (after the response; silent and disabled until the n8n channel is configured).
+    scheduleApprovalRequest(typeof createdReservationId === "string" ? createdReservationId : null);
 
     // Mirrors create_vehicle_reservation's own in-app notification
     // (0008_notifications.sql) — email every fleet manager/administrator that a

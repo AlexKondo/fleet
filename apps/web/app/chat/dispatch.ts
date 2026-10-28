@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { planTrip, type TripFormInput } from "@/app/trips/new/actions";
+import { scheduleApprovalRequest } from "@/lib/approvals/scheduleApproval";
 import { postReservationMessage } from "@/app/reservations/[id]/actions";
 import { getFleetManagerEmails } from "@/lib/email/recipients";
 import { renderEmail } from "@/lib/email/renderEmail";
@@ -158,6 +159,8 @@ export async function dispatchIntent(
           const code = error.code === "23P01" ? "RESERVATION_CONFLICT" : "create_reservation_failed";
           return failed(dict, "reservation", code, form, error.code, error.message);
         }
+        // Direct manager's WhatsApp approval request (after the response; silent and disabled until the n8n channel is configured).
+        scheduleApprovalRequest(typeof createdReservationId === "string" ? createdReservationId : null);
 
         // Same manager notification confirmTrip sends (apps/web/app/trips/new/actions.ts)
         // — a reservation created via chat still needs approval like any other, and the

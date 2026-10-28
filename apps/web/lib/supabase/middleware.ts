@@ -20,6 +20,9 @@ const PUBLIC_ROUTE_PREFIXES = [
   // this entry the session check below redirected every cron request to /login (307), so none of
   // the cron jobs (license reminders, chat cleanup, carpool expiry + reconcile sweep) ever ran.
   "/api/cron/",
+  // n8n forwards the manager's WhatsApp answer (Aprovar / Recusar) with NO user session; the route verifies an HMAC signature itself
+  // (N8N_APPROVAL_SECRET) and the decision is authorized inside the database (migration 0229). Fails closed without the secret.
+  "/api/whatsapp/",
 ];
 
 const MANAGEMENT_ROLES = ["fleet_manager", "administrator", "maintenance_operator"];

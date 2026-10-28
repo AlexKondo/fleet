@@ -114,6 +114,11 @@ export async function AdminWorkspace({
       T.linkUsersD,
     ],
     [
+      "/settings/approvals",
+      T.linkApprovals,
+      T.linkApprovalsD,
+    ],
+    [
       "/settings",
       T.linkPolicies,
       T.linkPoliciesD,

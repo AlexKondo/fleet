@@ -17,6 +17,7 @@ const h = vi.hoisted(() => ({
   adminRpc: vi.fn(),
   enable: vi.fn(),
   search: vi.fn(),
+  schedule: vi.fn(),
   geocode: vi.fn(),
   tables: {} as Record<string, unknown>,
   busy: [] as { vehicle_id: string; start_at: string; end_at: string; status: string }[],
@@ -63,6 +64,7 @@ vi.mock("@fleet/domain", async (orig) => {
 });
 vi.mock("@/app/carpool/actions", () => ({ searchCompatibleCarpool: (...a: unknown[]) => h.search(...a) }));
 vi.mock("@/app/carpool/requestActions", () => ({ enableCarpoolOffer: (...a: unknown[]) => h.enable(...a) }));
+vi.mock("@/lib/approvals/scheduleApproval", () => ({ scheduleApprovalRequest: (...a: unknown[]) => h.schedule(...a) }));
 vi.mock("@/lib/geospatial/googlePlacesProvider", () => ({
   createGooglePlacesProvider: () => ({
     geocode: (...a: unknown[]) => h.geocode(...a),
@@ -150,6 +152,7 @@ beforeEach(() => {
   h.adminRpc.mockReset().mockResolvedValue({ data: { released: 0 }, error: null });
   h.enable.mockReset().mockResolvedValue({ status: "success", offerId: "o1" });
   h.search.mockReset().mockResolvedValue({ status: "matches", matches: [] });
+  h.schedule.mockReset();
   h.geocode.mockReset();
   h.busy = [];
   h.tables = {
@@ -398,6 +401,15 @@ describe("confirmTrip: host offer step", () => {
     expect(h.rpc).toHaveBeenCalledWith("create_vehicle_reservation", expect.objectContaining({ p_allow_carpool: true }));
     expect(h.enable).toHaveBeenCalledWith("trip-new", 2, "res-1");
     expect(h.redirects).toEqual(["/trips"]);
+  });
+
+  it("asks for the direct manager's WhatsApp approval of the JUST-CREATED reservation, only when it was created", async () => {
+    await confirm({});
+    expect(h.schedule).toHaveBeenCalledWith("res-1");
+    h.schedule.mockReset();
+    h.rpc.mockResolvedValue({ data: null, error: { code: "23P01", message: "conflict" } });
+    await confirmTrip({ ...input, choice: "vehicle", targetId: "v1" } as never);
+    expect(h.schedule).not.toHaveBeenCalled();
   });
 
   it("no offerSeats (answered No) => nothing is published", async () => {
