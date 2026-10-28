@@ -9,7 +9,7 @@ const CLIENT = { tag: "client" } as unknown as TypedSupabaseClient;
 const idle: ChatState = { status: "idle", messages: [] };
 const reply = (content: string, extra: Partial<ChatState> = {}): ChatState => ({ status: "idle", conversationId: "c1", messages: [{ role: "user", content: "x" }, { role: "assistant", content }], ...extra });
 
-interface World { cpPending: unknown; cpResolve: unknown; pick: { picked_user_id: string | null; asked: boolean }; pickWrites: { phone: string; user: string | null }[]; identify: unknown; open: boolean; registerNew: boolean; state: ChatState; updatedAt: string | null; mint: TypedSupabaseClient | null; next: ChatState | Error; transcribe: unknown }
+interface World { cpPending: unknown; cpResolve: unknown; pick: { picked_user_id: string | null; asked: boolean; pending_text?: string | null }; pickWrites: { phone: string; user: string | null; pending?: string }[]; identify: unknown; open: boolean; registerNew: boolean; state: ChatState; updatedAt: string | null; mint: TypedSupabaseClient | null; next: ChatState | Error; transcribe: unknown }
 let w: World;
 const cp = { resolve: [] as Record<string, unknown>[], marks: [] as { status: string; reason: string | null }[], rpcCalls: [] as { name: string; args: Record<string, unknown> }[], rider: [] as { id: string; reason?: string }[], rpcError: false };
 const calls = { send: [] as { prev: ChatState; form: Record<string, string> }[], abandon: [] as string[], register: [] as Record<string, unknown>[], actedAs: [] as (string | undefined)[], transcribe: [] as string[], mint: 0 };
@@ -23,7 +23,7 @@ function deps(over: Partial<BridgeDeps> = {}): BridgeDeps {
       if (name === "fm_carpool_token_resolve") { cp.resolve.push(args); return { data: w.cpResolve, error: null }; }
       if (name === "fm_carpool_token_mark") { cp.marks.push({ status: String(args.p_status), reason: (args.p_reason as string | null) ?? null }); return { data: true, error: null }; }
       if (name === "fm_whatsapp_pick_state") return { data: w.pick, error: null };
-      if (name === "fm_whatsapp_pick_write") { w.pickWrites.push({ phone: String(args.p_phone_norm), user: (args.p_user as string | null) ?? null }); return { data: true, error: null }; }
+      if (name === "fm_whatsapp_pick_write") { w.pickWrites.push({ phone: String(args.p_phone_norm), user: (args.p_user as string | null) ?? null, ...(args.p_pending ? { pending: String(args.p_pending) } : {}) }); return { data: true, error: null }; }
       if (name === "fm_whatsapp_register_inbound") { calls.register.push(args); return { data: w.registerNew, error: null }; }
       return { data: null, error: { message: "unexpected" } };
     },
@@ -236,7 +236,7 @@ describe("one number registered on several profiles", () => {
     expect(texts(r)[0]).toContain(TEXTS.pickIntro);
     expect(texts(r)[0]).toContain("*1.* Alexandre Kondo — Administrador");
     expect(texts(r)[0]).toContain("*2.* Alexandre Massahiro Kondo — Colaborador");
-    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: null }]);
+    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: null, pending: "oi, quero um carro" }]);
     expect(calls.send).toHaveLength(0);
     expect(calls.mint).toBe(0);
   });
@@ -324,7 +324,7 @@ describe("one number registered on several profiles", () => {
     expect(texts(r)[0]).toContain(TEXTS.pickIntro);
     expect(texts(r)[0]).toContain("*1.* Alexandre Kondo — Administrador");
     expect(texts(r)[0]).toContain("*2.* Alexandre Massahiro Kondo — Colaborador");
-    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: null }]);
+    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: null, pending: "oi, quero um carro" }]);
     expect(calls.send).toHaveLength(0);
     expect(calls.mint).toBe(0);
   });
@@ -441,5 +441,48 @@ describe("the host answers a carpool request on WhatsApp", () => {
   it("a normal message from a number with no refusal waiting goes to the assistant as before", async () => {
     await run(msg({ text: "quero um carro amanhã" }));
     expect(calls.send).toHaveLength(1);
+  });
+});
+
+describe("the request said before choosing the profile is not asked again", () => {
+  const CANDS = [
+    { user_id: "a1", organization_id: "o1", full_name: "Alexandre Kondo", role: "administrator", email: "a@example.invalid" },
+    { user_id: "a2", organization_id: "o1", full_name: "Alexandre Massahiro Kondo", role: "employee", email: "b@example.invalid" },
+  ];
+  beforeEach(() => { w.identify = { ok: false, reason: "ambiguous", phone_norm: "5511982593096", candidates: CANDS }; });
+
+  it("a voice note as the first message is transcribed, kept, and the person is asked only which profile", async () => {
+    w.transcribe = { ok: true, text: "Quero reservar um carro amanhã às nove para a EZ Tower" };
+    const r = await run(msg({ kind: "audio", text: undefined, audioBase64: "QUJD", mimeType: "audio/ogg" }));
+    expect(texts(r)[0]).toBe("🎙️ Entendi: “Quero reservar um carro amanhã às nove para a EZ Tower”");
+    expect(texts(r)[1]).toContain(TEXTS.pickIntro);
+    expect(texts(r)[1]).toContain(TEXTS.pickKeep);
+    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: null, pending: "Quero reservar um carro amanhã às nove para a EZ Tower" }]);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("after the choice the assistant continues with the kept request, as the chosen profile", async () => {
+    w.pick = { picked_user_id: null, asked: true, pending_text: "Quero reservar um carro amanhã às nove para a EZ Tower" };
+    const r = await run(msg({ text: "2", messageId: "pick-1" }));
+    expect(w.pickWrites).toEqual([{ phone: "5511982593096", user: "a2" }]);
+    expect(calls.actedAs).toEqual(["a2"]);
+    expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: "Quero reservar um carro amanhã às nove para a EZ Tower" });
+    expect(texts(r)[0]).toContain("Continuando com o seu pedido: “Quero reservar um carro amanhã às nove para a EZ Tower”");
+    expect(texts(r)[1]).toBe("Para quando?");
+  });
+  it("a bare number, a greeting or nothing useful is not kept; the old short confirmation stays", async () => {
+    await run(msg({ text: "oi", messageId: "g1" }));
+    expect(w.pickWrites[0]).toEqual({ phone: "5511982593096", user: null });
+    w.pickWrites.length = 0;
+    w.pick = { picked_user_id: null, asked: true, pending_text: null };
+    const r = await run(msg({ text: "1", messageId: "g2" }));
+    expect(texts(r)[0]).toContain(TEXTS.pickRetry);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("a voice note that cannot be understood is not kept (the person will say it again after choosing)", async () => {
+    w.transcribe = { ok: false, reason: "failed" };
+    const r = await run(msg({ kind: "audio", text: undefined, audioBase64: "QUJD", messageId: "a-bad" }));
+    expect(texts(r)).toHaveLength(1);
+    expect(texts(r)[0]).toContain(TEXTS.pickIntro);
+    expect(texts(r)[0]).not.toContain(TEXTS.pickKeep);
   });
 });

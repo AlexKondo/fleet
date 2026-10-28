@@ -90,6 +90,7 @@ export const TEXTS = {
   confirmHint: "Toque em um botão ou responda *SIM* para confirmar ou *NÃO* para cancelar.",
   pickIntro: "Este número está cadastrado em mais de um perfil. Com qual deles você quer falar? Responda com o número:",
   pickRetry: "Depois de escolher, me diga o que você precisa.",
+  pickKeep: "Já guardei o seu pedido: assim que você escolher, eu continuo com ele.",
   pickBad: "Não entendi. Responda com o número do perfil.",
   confirm: "Confirmar",
   cancel: "Cancelar",
@@ -200,6 +201,8 @@ async function handleCarpoolReason(p: { request_id: string; host_id: string; hos
 
 export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDeps): Promise<{ replies: Reply[] }> {
   const none = { replies: [] as Reply[] };
+  // said before the person chose their profile: continued, never asked again
+  let resumedNotice: Reply[] = [];
   if (msg.kind === "button") {
     const tap = CARPOOL_TAP.exec(msg.buttonId ?? "");
     if (tap) return handleCarpoolTap(tap[1] === "yes" ? "accept" : "reject", tap[2]!, msg, deps);
@@ -219,7 +222,7 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
     const cands = who.candidates;
     const phone = who.phone_norm;
     const stateRes = await deps.rpc("fm_whatsapp_pick_state", { p_phone_norm: phone, p_minutes: SESSION_MINUTES });
-    const st = (stateRes.data ?? {}) as { picked_user_id?: string | null; asked?: boolean };
+    const st = (stateRes.data ?? {}) as { picked_user_id?: string | null; asked?: boolean; pending_text?: string | null };
     const typed = msg.kind === "text" ? norm(msg.text ?? "") : "";
     const wantsSwitch = SWITCH.test(typed);
     const picked = !wantsSwitch && st.picked_user_id ? cands.find((c) => c.user_id === st.picked_user_id) : undefined;
@@ -238,11 +241,33 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       if (!(await dedupe(true))) return none;
       if (choice) {
         const w = await deps.rpc("fm_whatsapp_pick_write", { p_phone_norm: phone, p_user: choice.user_id });
-        if (w.data === true) return { replies: [text(`Certo, você está falando como *${choice.full_name ?? ""}* (${ROLE_LABEL[choice.role ?? ""] ?? choice.role ?? ""}). ${TEXTS.pickRetry}`)] };
+        if (w.data === true) {
+          const who2 = `*${choice.full_name ?? ""}* (${ROLE_LABEL[choice.role ?? ""] ?? choice.role ?? ""})`;
+          const kept = (st.pending_text ?? "").trim();
+          if (!kept) return { replies: [text(`Certo, você está falando como ${who2}. ${TEXTS.pickRetry}`)] };
+          // the request said before choosing (text, or a voice note already transcribed) goes on as if it had just arrived
+          resumedNotice = [text(`Certo, você está falando como ${who2}. Continuando com o seu pedido: “${kept.length > 200 ? `${kept.slice(0, 199)}…` : kept}”`)];
+          who = { ok: true, user_id: choice.user_id, organization_id: choice.organization_id ?? undefined, email: choice.email };
+          msg = { ...msg, kind: "text", text: kept, audioBase64: undefined };
+        }
       }
-      if (st.asked && !wantsSwitch && n !== null) return { replies: [text(`${TEXTS.pickBad}\n\n${list()}`)] };
-      await deps.rpc("fm_whatsapp_pick_write", { p_phone_norm: phone, p_user: null });
-      return { replies: [text(`${TEXTS.pickIntro}\n\n${list()}`)] };
+      if (!who || who.ok !== true) {
+        if (st.asked && !wantsSwitch && n !== null) return { replies: [text(`${TEXTS.pickBad}\n\n${list()}`)] };
+        // keep what was said (a voice note is transcribed now) so it is not asked again after the choice
+        const prefix0: Reply[] = [];
+        let keep: string | null = null;
+        if (!wantsSwitch && (msg.kind === "text" || msg.kind === "audio")) {
+          let said = msg.kind === "text" ? (msg.text ?? "").trim() : "";
+          if (msg.kind === "audio") {
+            const tr = await deps.transcribe(msg.audioBase64 ?? "", msg.mimeType ?? "audio/ogg");
+            if (tr.ok) { said = tr.text.trim(); prefix0.push(text(`🎙️ Entendi: “${tr.text}”`)); }
+          }
+          said = said.replace(TRIGGER, "").trim();
+          if (said.length >= 3 && !/^\d{1,2}$/.test(said) && !GREETING.test(norm(said))) keep = said;
+        }
+        await deps.rpc("fm_whatsapp_pick_write", { p_phone_norm: phone, p_user: null, p_pending: keep });
+        return { replies: [...prefix0, text(`${TEXTS.pickIntro}\n\n${list()}${keep ? `\n\n${TEXTS.pickKeep}` : ""}`)] };
+      }
     }
     handledPick = true;
   }
@@ -269,7 +294,7 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
   if (!handle) return none;
 
   // 3) voice note -> text
-  const prefix: Reply[] = [];
+  const prefix: Reply[] = [...resumedNotice];
   if (msg.kind === "audio") {
     const tr = await deps.transcribe(msg.audioBase64 ?? "", msg.mimeType ?? "audio/ogg");
     if (!tr.ok) {

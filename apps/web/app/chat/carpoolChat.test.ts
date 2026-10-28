@@ -305,7 +305,7 @@ describe("FIND_CARPOOL (prepare): read-only, same clarification rule as New Trip
     const r = await prepareCarpoolIntent(ctxFor(RIDER), "FIND_CARPOOL", { ...slots, destination: "São Paulo" });
     expect(r.kind).toBe("reply");
     expect(r.kind === "reply" && r.message).toContain("São Paulo");
-    expect(r.kind === "reply" && r.message).toContain("apenas uma cidade");
+    expect(r.kind === "reply" && r.message).toContain("como uma cidade");
     expect(m.search).not.toHaveBeenCalled();
   });
 

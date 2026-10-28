@@ -16,6 +16,7 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { noVehicleReply } from "./noVehicle";
+import { verifyPlacesForChat } from "./verifyPlacesServer";
 import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { classifyError, failureReply, type AssistantReply } from "./replies";
 import { fillTemplate } from "@/lib/carpool/errorText";
@@ -741,27 +742,36 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       // Phase C6 carpool-first (parity with New Trip): when the org runs the Smart Carpool
       // engine with carpool-first, compatible offers are shown BEFORE the vehicle card, next to
       // a "use a vehicle" choice. Any other outcome falls through to the normal vehicle card.
-      const slots = interpretation.slots;
-      let carpoolNote = "";
-      const first = carpoolCtx?.gating.carpoolFirst
-        ? await carpoolFirstForReservation(carpoolCtx, slots)
-        : ({ kind: "none" } as { kind: "none"; note?: string });
-      if (first.kind === "options") {
-        assistantContent = first.summary;
-        pendingAction = { intent: interpretation.intent, slots, summary: first.summary, options: first.options };
-        status = "needs_confirmation";
+      let slots = interpretation.slots;
+      // A vehicle is recommended for the real route (autonomy): the origin and the destination must be located on the map first. If one is not
+      // understood, the assistant asks for it (politely) and neither suggests a vehicle nor reserves anything.
+      const placeCheck = await verifyPlacesForChat(supabase, profile.organization_id, slots, dictNow);
+      if (placeCheck.status === "ask") {
+        assistantContent = placeCheck.message;
+        noVehicleSlots = slots; // what the person already said stays on the row
       } else {
-        carpoolNote = first.note ?? "";
-        // Same recommendation engine the form uses (planTrip), before ever asking for
-        // confirmation, so the summary can name the actual vehicle and, when the
-        // organization's booking_mode allows it, list real alternatives by plate.
-        const built = await buildReservationCard(slots, interpretation.summary, carpoolNote);
-        assistantContent = built.assistantContent;
-        pendingAction = built.pendingAction;
-        status = built.status;
-        assistantLink = built.link;
-        // Whenever the reply links to the prefilled form, the same trip data is kept on the row.
-        if (built.link) noVehicleSlots = slots;
+        if (placeCheck.status === "ok" && placeCheck.distanceKm && !(Number(slots.distanceKm) > 0)) slots = { ...slots, distanceKm: String(placeCheck.distanceKm) };
+        let carpoolNote = "";
+        const first = carpoolCtx?.gating.carpoolFirst
+          ? await carpoolFirstForReservation(carpoolCtx, slots)
+          : ({ kind: "none" } as { kind: "none"; note?: string });
+        if (first.kind === "options") {
+          assistantContent = first.summary;
+          pendingAction = { intent: interpretation.intent, slots, summary: first.summary, options: first.options };
+          status = "needs_confirmation";
+        } else {
+          carpoolNote = first.note ?? "";
+          // Same recommendation engine the form uses (planTrip), before ever asking for
+          // confirmation, so the summary can name the actual vehicle and, when the
+          // organization's booking_mode allows it, list real alternatives by plate.
+          const built = await buildReservationCard(slots, interpretation.summary, carpoolNote);
+          assistantContent = built.assistantContent;
+          pendingAction = built.pendingAction;
+          status = built.status;
+          assistantLink = built.link;
+          // Whenever the reply links to the prefilled form, the same trip data is kept on the row.
+          if (built.link) noVehicleSlots = slots;
+        }
       }
     } else {
       assistantContent = interpretation.summary;
