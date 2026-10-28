@@ -124,6 +124,7 @@ const dict: Dictionary = {
     licenseGateNotice: "Antes de continuar, envie uma foto (ou PDF) da sua CNH. Você não terá acesso ao resto do sistema até fazer esse upload.",
     todayPill: "Hoje, {date}",
     organizationLabel: "Organização",
+    resizeMenu: "Ajustar a largura do menu (arraste; clique duplo volta ao padrão)",
     brandTagline: "Intelligent Fleet & Mobility",
     assistantTitle: "Falar com o FleetMind",
     assistantMic: "Falar com o assistente (microfone)",

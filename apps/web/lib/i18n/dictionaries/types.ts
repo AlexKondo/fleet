@@ -168,6 +168,7 @@ export type Dictionary = {
     licenseGateNotice: string;
     todayPill: string;
     organizationLabel: string;
+    resizeMenu: string;
     brandTagline: string;
     assistantTitle: string;
     assistantMic: string;

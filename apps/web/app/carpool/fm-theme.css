@@ -70,7 +70,7 @@
 .fm-sidebar {
   display: none;
   flex-direction: column;
-  width: 240px;
+  width: var(--fm-sidebar-w, 240px);
   flex-shrink: 0;
   background: var(--fm-navy-950);
   color: #fff;
@@ -1514,3 +1514,39 @@
   --lt-fff4df: #342a16;
 }
 /* <<< generated palette <<< */
+
+/* ---------- side menu: one layout, user-adjustable width (SidebarResizer) ---------- */
+.fm-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 30;
+  touch-action: none;
+}
+.fm-sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 1px;
+  background: transparent;
+  transition: background 0.15s, width 0.15s;
+}
+.fm-sidebar-resizer:hover::after,
+.fm-sidebar-resizer:focus-visible::after,
+body.fm-resizing .fm-sidebar-resizer::after {
+  width: 3px;
+  left: 2px;
+  background: var(--fm-blue-600, #0868f9);
+}
+body.fm-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+.fm-sidebar .fm-brand-org {
+  max-width: 100%;
+}

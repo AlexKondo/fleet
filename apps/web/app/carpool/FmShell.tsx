@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { SidebarResizer } from "./SidebarResizer";
+import { parseSidebarWidth, sidebarCookieName } from "@/lib/ui/sidebarWidth";
 import { signOut } from "../dashboard/actions";
 import { InactivityLogout } from "../InactivityLogout";
 import { SessionBackupSync } from "../SessionBackupSync";
@@ -66,6 +69,7 @@ export async function FmShell({
   children: React.ReactNode;
 }) {
   const {
+    userId,
     locale,
     dict,
     roleLabels,
@@ -78,6 +82,14 @@ export async function FmShell({
     canReservationApproval,
   } = await loadShellContext(role);
   const licenseGateActive=driverLicenseGateActive && !(nonDrivingWorkspace && (canKeyCustody||canBudgetApproval||canReservationApproval||isFleetManager||role==="maintenance_operator"));
+
+  // the width this person chose for the side menu (cookie named after the user): the page is drawn at it from the first paint
+  let sidebarWidth = parseSidebarWidth(undefined);
+  try {
+    sidebarWidth = parseSidebarWidth((await cookies()).get(sidebarCookieName(userId))?.value);
+  } catch {
+    // no request scope (a render outside a request): the default width
+  }
 
   // "Hoje, dd/mm/aaaa" in Brasília time (the fleet's time zone, whatever the server runtime's zone is).
   const todayText = dict.chrome.todayPill.replace(
@@ -205,7 +217,8 @@ export async function FmShell({
         </div>
       )}
       {licenseGateActive ? null : (
-        <aside className="fm-sidebar">
+        <aside className="fm-sidebar" style={{ "--fm-sidebar-w": `${sidebarWidth}px` } as React.CSSProperties}>
+          <SidebarResizer userId={userId} initialWidth={sidebarWidth} label={dict.chrome.resizeMenu} />
           <div className="fm-brand">
             <p className="fm-brand-name">FleetMind</p>
             <p className="fm-brand-org">{dict.chrome.brandTagline}</p>

@@ -21,6 +21,7 @@ export default defineConfig({
     environment: "node",
     include: [
       "lib/geospatial/**/*.test.ts",
+      "lib/ui/**/*.test.ts",
       "app/carpool/**/*.test.ts",
       "app/fleet/**/*.test.ts",
       "lib/carpool/**/*.test.ts",

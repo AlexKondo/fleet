@@ -122,6 +122,7 @@ const dict: Dictionary = {
     licenseGateNotice: "请先上传您的驾驶证照片（或 PDF）。在此之前您将无法使用系统的其他功能。",
     todayPill: "今天，{date}",
     organizationLabel: "组织",
+    resizeMenu: "调整菜单宽度（拖动；双击恢复默认）",
     brandTagline: "Intelligent Fleet & Mobility",
     assistantTitle: "与 FleetMind 对话",
     assistantMic: "与助手对话（麦克风）",

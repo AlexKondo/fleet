@@ -267,6 +267,7 @@ export async function loadShellContext(role: string) {
     : { status: "idle", messages: [] };
 
   return {
+    userId: currentUser?.id ?? null,
     locale,
     dict,
     roleLabels,

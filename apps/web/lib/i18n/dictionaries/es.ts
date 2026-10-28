@@ -124,6 +124,7 @@ const dict: Dictionary = {
     licenseGateNotice: "Antes de continuar, sube una foto (o PDF) de tu licencia de conducir. No tendrás acceso al resto del sistema hasta hacerlo.",
     todayPill: "Hoy, {date}",
     organizationLabel: "Organización",
+    resizeMenu: "Ajustar el ancho del menú (arrastra; doble clic restablece)",
     brandTagline: "Intelligent Fleet & Mobility",
     assistantTitle: "Hablar con FleetMind",
     assistantMic: "Hablar con el asistente (micrófono)",

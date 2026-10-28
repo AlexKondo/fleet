@@ -124,6 +124,7 @@ const dict: Dictionary = {
     licenseGateNotice: "Before continuing, upload a photo (or PDF) of your driver's license. You won't have access to the rest of the system until you do.",
     todayPill: "Today, {date}",
     organizationLabel: "Organization",
+    resizeMenu: "Resize the menu (drag; double-click resets)",
     brandTagline: "Intelligent Fleet & Mobility",
     assistantTitle: "Talk to FleetMind",
     assistantMic: "Talk to the assistant (microphone)",
