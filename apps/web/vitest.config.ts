@@ -36,6 +36,7 @@ export default defineConfig({
       "lib/documents/**/*.test.ts",
       "lib/equipment/**/*.test.ts",
       "lib/approvals/**/*.test.ts",
+      "lib/whatsapp/**/*.test.ts",
       "lib/supabase/**/*.test.ts",
       "app/account/**/*.test.ts",
       "app/dashboard/**/*.test.ts",

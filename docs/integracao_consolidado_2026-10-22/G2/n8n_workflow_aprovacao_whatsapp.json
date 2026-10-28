@@ -479,6 +479,12 @@
               "name": "ownNumber",
               "value": "5511949426069",
               "type": "string"
+            },
+            {
+              "id": "c5",
+              "name": "fleetChatUrl",
+              "value": "https://fleet-web-three.vercel.app/api/whatsapp/chat",
+              "type": "string"
             }
           ]
         },
@@ -492,6 +498,258 @@
         110,
         460
       ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Mensagens que NAO sao toque de aprovacao: texto, audio ou botao do assistente.\n// Ignora: mensagens do proprio numero, grupos, e os toques de aprovacao (seguem pelo outro caminho).\nconst evt = $('Mensagem recebida (Evolution)').first().json;\nconst body = evt.body ?? evt;\nconst data = body.data || {};\nconst info = data.Info || data.info || {};\nconst msg = data.Message || data.message || {};\nif (info.IsFromMe === true || info.isFromMe === true) return [];\nif (info.IsGroup === true || /@g\\.us/.test(JSON.stringify(info.Chat || ''))) return [];\nif (/(approve|reject):[0-9a-f]{32,128}/.test(JSON.stringify(body))) return [];\nconst own = $('Config entrada').first().json.ownNumber;\n// quem escreveu: o JID de telefone (nao o LID); o numero do proprio FleetMind nunca e o remetente\nconst jids = JSON.stringify(info).match(/\\d{10,15}(?=@s\\.whatsapp\\.net)/g) || [];\nconst from = jids.filter(x => x !== own)[0];\nif (!from) return [];\nconst messageId = String(info.ID || info.Id || info.id || '').slice(0, 200) || null;\nconst text = msg.conversation || (msg.extendedTextMessage && msg.extendedTextMessage.text) || '';\nconst btn = (msg.buttonsResponseMessage && msg.buttonsResponseMessage.selectedButtonID) || (msg.templateButtonReplyMessage && msg.templateButtonReplyMessage.selectedID) || '';\nconst audio = msg.audioMessage;\nlet kind = 'other';\nif (btn) kind = 'button'; else if (audio) kind = 'audio'; else if (text) kind = 'text';\nreturn [{ json: { from, message_id: messageId, kind, text, button_id: btn, mime_type: audio ? (audio.mimetype || 'audio/ogg') : '', media: audio ? msg : null } }];"
+      },
+      "id": "n-classify",
+      "name": "Classificar mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        330,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "x1",
+              "leftValue": "={{ $json.kind }}",
+              "rightValue": "audio",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n-isaudio",
+      "name": "E audio?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        550,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config entrada').first().json.evoBase }}/message/downloadmedia",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: $json.media }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n-dl",
+      "name": "Baixar audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        770,
+        700
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Monta o JSON que o FleetMind espera (a assinatura e calculada no no seguinte).\nconst meta = $('Classificar mensagem').first().json;\nconst out = { from: meta.from, message_id: meta.message_id, kind: meta.kind };\nif (meta.kind === 'text') out.text = meta.text;\nif (meta.kind === 'button') out.button_id = meta.button_id;\nif (meta.kind === 'audio') {\n  // a resposta do download traz o audio em base64; procura a maior string para nao depender do formato exato\n  let best = '';\n  const walk = (v) => { if (typeof v === 'string') { if (v.length > best.length) best = v; } else if (v && typeof v === 'object') Object.values(v).forEach(walk); };\n  walk($input.first().json);\n  if (best.length < 200) { out.kind = 'other'; } else { out.audio_base64 = best.replace(/^data:[^,]*,/, ''); out.mime_type = meta.mime_type; }\n}\nreturn [{ json: { raw: JSON.stringify(out), ts: String(Math.floor(Date.now() / 1000)), from: meta.from } }];"
+      },
+      "id": "n-build",
+      "name": "Montar pedido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        990,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $json.ts + '.' + $json.raw }}",
+        "dataPropertyName": "sig",
+        "secret": "={{ $('Config entrada').first().json.secret }}",
+        "encoding": "hex"
+      },
+      "id": "n-sign2",
+      "name": "Assinar pedido",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1210,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config entrada').first().json.fleetChatUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-fleet-timestamp",
+              "value": "={{ $json.ts }}"
+            },
+            {
+              "name": "x-fleet-signature",
+              "value": "={{ 'sha256=' + $json.sig }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.raw }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n-chat",
+      "name": "Enviar ao assistente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1430,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Uma saida por mensagem a enviar ao usuario, na ordem.\nconst meta = $('Classificar mensagem').first().json;\nconst r = $input.first().json;\nconst body = r.replies ? r : (r.body || {});\nconst replies = Array.isArray(body.replies) ? body.replies : [];\nreturn replies.map(x => ({ json: { number: meta.from, type: x.type, text: String(x.text || ''), buttons: x.buttons || [] } }));"
+      },
+      "id": "n-split",
+      "name": "Separar respostas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1650,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "x1",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "buttons",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n-isbtn",
+      "name": "E botoes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1870,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config entrada').first().json.evoBase }}/send/button",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.number, title: 'FleetMind', description: $json.text, footer: 'FleetMind', buttons: $json.buttons.map(b => ({ type: 'reply', displayText: b.title, id: b.id })) }) }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "n-sendbtn",
+      "name": "Enviar botoes ao usuario",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2090,
+        700
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config entrada').first().json.evoBase }}/send/text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.number, text: $json.text }) }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "n-sendtxt",
+      "name": "Enviar texto ao usuario",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2090,
+        860
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      }
     }
   ],
   "connections": {
@@ -657,6 +915,113 @@
         [
           {
             "node": "Extrair toque",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Classificar mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classificar mensagem": {
+      "main": [
+        [
+          {
+            "node": "E audio?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E audio?": {
+      "main": [
+        [
+          {
+            "node": "Baixar audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Montar pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar audio": {
+      "main": [
+        [
+          {
+            "node": "Montar pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar pedido": {
+      "main": [
+        [
+          {
+            "node": "Assinar pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assinar pedido": {
+      "main": [
+        [
+          {
+            "node": "Enviar ao assistente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar ao assistente": {
+      "main": [
+        [
+          {
+            "node": "Separar respostas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar respostas": {
+      "main": [
+        [
+          {
+            "node": "E botoes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E botoes?": {
+      "main": [
+        [
+          {
+            "node": "Enviar botoes ao usuario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar texto ao usuario",
             "type": "main",
             "index": 0
           }

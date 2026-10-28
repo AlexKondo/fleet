@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { VERIFIED_USER_EMAIL_HEADER, VERIFIED_USER_ID_HEADER } from "./headers";
 import { accountEnabled } from "./accountAccess";
+import { getActingContext } from "./actingUser";
 
 export interface CurrentUser {
   id: string;
@@ -26,6 +27,9 @@ export interface CurrentUser {
  */
 export const getCurrentUser = cache(
   async (supabase: TypedSupabaseClient): Promise<CurrentUser | null> => {
+    // WhatsApp channel: the member identified by their phone (lib/auth/actingUser.ts); never set for a browser request
+    const acting = getActingContext();
+    if (acting) return acting.user;
     const headerList = await headers();
     const id = headerList.get(VERIFIED_USER_ID_HEADER);
     if (id) {

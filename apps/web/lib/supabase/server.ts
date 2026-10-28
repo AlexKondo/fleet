@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database, TypedSupabaseClient } from "@fleet/supabase-client";
 import { getSupabasePublicEnv } from "./env";
+import { getActingContext } from "@/lib/auth/actingUser";
 
 /**
  * Server-side Supabase client for use in Server Components / Route Handlers. Reads the
@@ -9,6 +10,9 @@ import { getSupabasePublicEnv } from "./env";
  * as the signed-in user, never with elevated privileges.
  */
 export async function createSupabaseServerClient(): Promise<TypedSupabaseClient> {
+  // WhatsApp channel: inside runAsUser() the client already carries the identified member's own token (lib/auth/actingUser.ts)
+  const acting = getActingContext();
+  if (acting) return acting.client;
   const cookieStore = await cookies();
   const { url, anonKey } = getSupabasePublicEnv();
 
