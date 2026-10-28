@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GeocodingOutcome, GeocodingProvider } from "@fleet/domain";
-import { resolveLocationText, type MobilityPointForResolution } from "./resolveLocationText";
+import { resemblesQuery, resolveLocationText, type MobilityPointForResolution } from "./resolveLocationText";
 
 const points: MobilityPointForResolution[] = [
   {
@@ -140,9 +140,37 @@ describe("C5 audit fix: wording per case + POI recovery via ONE Places search", 
     const { out } = await run("Hospital X, São Paulo", geo("São Paulo, Brazil", ["locality"]), { status: "unavailable", reason: "circuit_open" });
     expect(out).toEqual({ status: "needs_precision", reason: "city_level" });
   });
-  it("gibberish (ZERO_RESULTS) -> not_found without a Places call", async () => {
+  it("gibberish (ZERO_RESULTS) -> the Places search finds nothing either -> not_found, never a guess", async () => {
     const { out, searchPlaces } = await run("zzqxk wvbn", { status: "unavailable", reason: "geocode_status_ZERO_RESULTS" });
     expect(out).toEqual({ status: "needs_precision", reason: "not_found" });
+    expect(searchPlaces).toHaveBeenCalledTimes(1);
+  });
+  it("a place name the geocoder does not know (\"EZ Tower\") is found by the Places search, like the site's autocomplete", async () => {
+    const found = { status: "ok" as const, results: [{ displayName: "EZ Towers", formattedAddress: "R. Arquiteto Olavo Redig de Campos, 105 - Santo Amaro", coordinates: { lat: -23.62, lng: -46.7 }, providerPlaceRef: "ez1", types: ["establishment", "point_of_interest"] }] };
+    const { out, searchPlaces } = await run("EZ Tower", { status: "unavailable", reason: "geocode_status_ZERO_RESULTS" }, found);
+    expect(out).toMatchObject({ status: "resolved", place: { label: "EZ Towers - R. Arquiteto Olavo Redig de Campos, 105 - Santo Amaro", providerPlaceRef: "ez1" } });
+    expect(searchPlaces).toHaveBeenCalledTimes(1);
+  });
+  it("a Places result that does not contain what the person said is never taken (the search answers something even for nonsense)", async () => {
+    const shop = { status: "ok" as const, results: [{ displayName: "ZapJá!", formattedAddress: "R. Dr. Alceu de Campos Rodrigues, 46 - Vila Nova Conceição, São Paulo - SP", coordinates: { lat: -23.58, lng: -46.67 }, providerPlaceRef: "z1", types: ["establishment", "point_of_interest"] }] };
+    const { out } = await run("zzqxk wvbn", { status: "unavailable", reason: "geocode_status_ZERO_RESULTS" }, shop);
+    expect(out).toEqual({ status: "needs_precision", reason: "not_found" });
+  });
+  it("resemblesQuery: every word said must start a word of the result (accents and case ignored)", () => {
+    expect(resemblesQuery("EZ Tower", "EZ TOWERS - Torre A", "Av. Dr. Chucri Zaidan, 1649")).toBe(true);
+    expect(resemblesQuery("ez tower torre a", "EZ TOWERS - Torre A", undefined)).toBe(true);
+    expect(resemblesQuery("estação luz", "Estação da Luz", "São Paulo")).toBe(true);
+    expect(resemblesQuery("estação luz", "Estação Pinheiros", "São Paulo")).toBe(false);
+    expect(resemblesQuery("zzqxk wvbn", "ZapJá!", "R. Dr. Alceu")).toBe(false);
+    expect(resemblesQuery("", "x", "y")).toBe(false);
+  });
+  it("a Places result that is only an area (a city, a neighborhood) is not accepted as the place", async () => {
+    const area = { status: "ok" as const, results: [{ displayName: "São Paulo", formattedAddress: "São Paulo - SP", coordinates: { lat: -23.5, lng: -46.6 }, providerPlaceRef: "sp", types: ["locality", "political"] }] };
+    const { out } = await run("zzqxk", { status: "unavailable", reason: "geocode_status_ZERO_RESULTS" }, area);
+    expect(out).toEqual({ status: "needs_precision", reason: "not_found" });
+  });
+  it("a bare postal code never triggers a Places search", async () => {
+    const { searchPlaces } = await run("01310-100", { status: "unavailable", reason: "geocode_status_ZERO_RESULTS" });
     expect(searchPlaces).not.toHaveBeenCalled();
   });
 });

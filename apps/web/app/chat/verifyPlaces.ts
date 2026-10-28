@@ -14,7 +14,8 @@ export interface PlaceVerificationDeps {
 }
 
 export type PlaceVerification =
-  | { status: "ok"; distanceKm?: number }
+  /** `destinationLabel`: the destination as located on the map (shown back to the person and stored instead of a vague name) */
+  | { status: "ok"; distanceKm?: number; destinationLabel?: string }
   | { status: "ask"; message: string }
   | { status: "unverified" };
 
@@ -55,12 +56,13 @@ export async function verifyReservationPlaces(
     return { status: "ask", message: fillTemplate(dict.chat.replies.addressAsk, { details: lines.join("\n") }) };
   }
 
-  const [from, to] = outcomes as { status: "resolved"; place: { coordinates: LatLng } }[];
+  const [from, to] = outcomes as { status: "resolved"; place: { coordinates: LatLng; label?: string } }[];
+  const destinationLabel = to!.place.label?.trim() ? to!.place.label.trim().slice(0, 200) : undefined;
   try {
     const route = await deps.route(from!.place.coordinates, to!.place.coordinates);
-    if (route.status === "ok") return { status: "ok", distanceKm: Math.max(1, Math.round((route as { distanceKm: number }).distanceKm)) };
+    if (route.status === "ok") return { status: "ok", distanceKm: Math.max(1, Math.round((route as { distanceKm: number }).distanceKm)), destinationLabel };
   } catch {
     // the route is a refinement: the places are concrete, the vehicle can still be recommended
   }
-  return { status: "ok" };
+  return { status: "ok", destinationLabel };
 }

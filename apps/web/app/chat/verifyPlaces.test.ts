@@ -13,7 +13,7 @@ const slots = { origin: "fábrica da GWM", destination: "EZ Tower, Torre A" };
 describe("places are verified before any vehicle is suggested", () => {
   it("both located: ok, with the route distance (rounded) for the autonomy", async () => {
     const r = await verifyReservationPlaces(slots, deps({ "fábrica da GWM": place(-23.1), "EZ Tower, Torre A": place(-23.6) }), dictionaries["pt-BR"]);
-    expect(r).toEqual({ status: "ok", distanceKm: 87 });
+    expect(r).toEqual({ status: "ok", distanceKm: 87, destinationLabel: "x" });
   });
   it("a destination that is not found: asks politely, names it, and never says 'adivinhar'", async () => {
     const r = await verifyReservationPlaces(slots, deps({ "fábrica da GWM": place(-23.1) }), dictionaries["pt-BR"]);
@@ -45,6 +45,6 @@ describe("places are verified before any vehicle is suggested", () => {
   });
   it("places located but the route fails: still ok, just without a distance", async () => {
     const r = await verifyReservationPlaces(slots, deps({ "fábrica da GWM": place(-23.1), "EZ Tower, Torre A": place(-23.6) }, async () => ({ status: "unavailable" })), dictionaries["pt-BR"]);
-    expect(r).toEqual({ status: "ok" });
+    expect(r).toEqual({ status: "ok", destinationLabel: "x" });
   });
 });

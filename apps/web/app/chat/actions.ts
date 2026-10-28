@@ -750,7 +750,12 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         assistantContent = placeCheck.message;
         noVehicleSlots = slots; // what the person already said stays on the row
       } else {
-        if (placeCheck.status === "ok" && placeCheck.distanceKm && !(Number(slots.distanceKm) > 0)) slots = { ...slots, distanceKm: String(placeCheck.distanceKm) };
+        if (placeCheck.status === "ok") {
+          // the card and the reservation carry the destination as located on the map (e.g. "EZ Tower" -> the building's address), so the person
+          // sees what was understood and can correct it
+          if (placeCheck.destinationLabel) slots = { ...slots, destination: placeCheck.destinationLabel };
+          if (placeCheck.distanceKm && !(Number(slots.distanceKm) > 0)) slots = { ...slots, distanceKm: String(placeCheck.distanceKm) };
+        }
         let carpoolNote = "";
         const first = carpoolCtx?.gating.carpoolFirst
           ? await carpoolFirstForReservation(carpoolCtx, slots)

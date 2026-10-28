@@ -54,6 +54,20 @@ export const MAX_LOCATION_TEXT_LENGTH = 200;
  * to an outage / quota / key problem (our problem -> `unavailable`, banner, vehicle flow). */
 const NOT_FOUND_REASONS = ["geocode_status_ZERO_RESULTS", "geocode_status_INVALID_REQUEST"];
 
+const tokens = (v: string) =>
+  v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length >= 2);
+
+/**
+ * The Places search always tries to answer something, even for nonsense ("zzqxk" -> some shop). A result is only taken when everything the person
+ * said appears in its name or address ("EZ Tower" -> "EZ TOWERS - Torre A"): each word of the query must start a word of the result.
+ */
+export function resemblesQuery(query: string, displayName: string | undefined, formattedAddress: string | undefined): boolean {
+  const want = tokens(query);
+  if (want.length === 0) return false;
+  const have = tokens(`${displayName ?? ""} ${formattedAddress ?? ""}`);
+  return want.every((w) => have.some((h) => h.startsWith(w)));
+}
+
 export async function resolveLocationText(
   rawText: string,
   deps: {
@@ -84,9 +98,27 @@ export async function resolveLocationText(
   // 2. Geocoder (already Cost Guard-gated by the adapter).
   const outcome = await deps.geocoder.geocode(text);
   if (outcome.status === "unavailable") {
-    return NOT_FOUND_REASONS.includes(outcome.reason)
-      ? { status: "needs_precision", reason: "not_found" }
-      : { status: "unavailable", reason: outcome.reason };
+    if (!NOT_FOUND_REASONS.includes(outcome.reason)) return { status: "unavailable", reason: outcome.reason };
+    // "EZ Tower" is a place name, not an address: the geocoder finds nothing, but the Places search (the one behind the site's autocomplete) does.
+    // Only a precise result is used; a search that yields just an area, or nothing, is never turned into a guess.
+    if (deps.places && !/^\d{5}-?\d{3}$/.test(text)) {
+      const found = await deps.places.searchPlaces(text);
+      if (found.status === "ok") {
+        const hit = found.results.find((r) => classifyLocationPrecision({ types: r.types }) === "precise" && resemblesQuery(text, r.displayName, r.formattedAddress));
+        if (hit) {
+          return {
+            status: "resolved",
+            place: {
+              label: hit.formattedAddress ? `${hit.displayName} - ${hit.formattedAddress}` : hit.displayName,
+              coordinates: hit.coordinates,
+              source: "geocoding_provider",
+              providerPlaceRef: hit.providerPlaceRef,
+            },
+          };
+        }
+      }
+    }
+    return { status: "needs_precision", reason: "not_found" };
   }
 
   const precision = classifyLocationPrecision({
