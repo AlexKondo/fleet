@@ -6,6 +6,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { FmShell } from "../../carpool/FmShell";
 import { FmAlertIcon, FmCheckIcon, FmUsersIcon } from "../../fmIcons";
 import { InviteUserModal } from "./InviteUserModal";
+import Link from "next/link";
+import { getAreaText } from "@/lib/i18n/areaText";
+import { approvalsTexts } from "@/lib/i18n/areas/approvals";
 import { UserRow } from "./UserRow";
 import { UserTable } from "./UserTable";
 import { getRoleLabels } from "./ROLE_LABELS";
@@ -27,6 +30,7 @@ export default async function UsersPage() {
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
   const locale = await getLocale();
+  const approvalsT = await getAreaText(approvalsTexts);
 
   const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
@@ -107,7 +111,13 @@ export default async function UsersPage() {
       subtitle={o.subtitle}
       legacy
       wide
-      headerActions={<InviteUserModal dict={dict} />}
+      headerActions={
+        <>
+          {/* where each person's WhatsApp and direct manager are registered (approval and WhatsApp use) */}
+          <Link href="/settings/approvals" className="fm-btn" data-testid="whatsapp-shortcut">{approvalsT.teamShortcut}</Link>
+          <InviteUserModal dict={dict} />
+        </>
+      }
     >
 
       {profilesError ? (

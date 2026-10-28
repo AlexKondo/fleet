@@ -7,7 +7,7 @@ type K =
   | "noManager" | "whatsappPlaceholder" | "whatsappHint" | "consentLabel" | "save" | "saving" | "saved"
   | "statusReady" | "statusNoManager" | "statusManagerNoPhone" | "statusIsManager"
   | "errNotAuthorized" | "errInvalidPhone" | "errConsent" | "errInvalidManager" | "errNotFound" | "errUnknown"
-  | "managerOf" | "empty" | "emailNote";
+  | "managerOf" | "empty" | "emailNote" | "teamShortcut";
 
 export const approvalsTexts: AreaTexts<K> = {
   "pt-BR": {
@@ -33,6 +33,7 @@ export const approvalsTexts: AreaTexts<K> = {
     errNotFound: "Pessoa não encontrada.",
     errUnknown: "Não foi possível salvar agora. Tente novamente.",
     managerOf: "gestor de", empty: "Nenhuma pessoa cadastrada.",
+    teamShortcut: "WhatsApp e aprovações",
     emailNote: "E-mail para pedidos: {email}",
   },
   "en-US": {
@@ -58,6 +59,7 @@ export const approvalsTexts: AreaTexts<K> = {
     errNotFound: "Person not found.",
     errUnknown: "Could not save right now. Please try again.",
     managerOf: "manager of", empty: "No people registered.",
+    teamShortcut: "WhatsApp and approvals",
     emailNote: "E-mail for requests: {email}",
   },
   es: {
@@ -83,6 +85,7 @@ export const approvalsTexts: AreaTexts<K> = {
     errNotFound: "Persona no encontrada.",
     errUnknown: "No se pudo guardar ahora. Inténtalo de nuevo.",
     managerOf: "gestor de", empty: "Ninguna persona registrada.",
+    teamShortcut: "WhatsApp y aprobaciones",
     emailNote: "Correo para solicitudes: {email}",
   },
   "zh-CN": {
@@ -108,6 +111,7 @@ export const approvalsTexts: AreaTexts<K> = {
     errNotFound: "未找到该人员。",
     errUnknown: "暂时无法保存，请重试。",
     managerOf: "的主管", empty: "暂无人员。",
+    teamShortcut: "WhatsApp 与审批",
     emailNote: "接收申请的电子邮件：{email}",
   },
 };
