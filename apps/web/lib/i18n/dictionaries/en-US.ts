@@ -1312,6 +1312,7 @@ const dict: Dictionary = {
         startTrip: "To pick up the vehicle, open the reservation and complete the pickup checklist — it asks for vehicle photos, so the assistant can't do it.",
         endTrip: "To return the vehicle, open the reservation and complete the return checklist — it asks for vehicle photos, so the assistant can't do it.",
       },
+      originPick: "We could not find that departure location. Which location should the vehicle leave from? Locations with an available vehicle:\n{list}\nReply with the location name.",
       assistantDisabled: "The FleetMind assistant has been turned off by your company's administrator. You can still do everything from the menus — for example, book in Book a Vehicle.",
       policyUnavailable: "I couldn't confirm right now whether the assistant is enabled for you — it wasn't anything you did. Try again in a moment or use the menus as usual.",
       notUnderstood: "I didn't quite get what you need. Could you say it another way? For example: \"book a car tomorrow at 8am to Campinas\".",

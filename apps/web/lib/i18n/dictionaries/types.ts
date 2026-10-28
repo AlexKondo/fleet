@@ -1246,6 +1246,7 @@ export type Dictionary = {
       success: { reservationCreated: string; carpoolJoined: string; cancelled: string; noActiveReservation: string; reservationInfo: string; messagePosted: string; returnTimeUpdated: string; vehicleAvailable: string; carpoolAvailable: string; };
       card: { vehicle: string; chooseOption: string; };
       notAutomated: { change: string; differentVehicle: string; startTrip: string; endTrip: string; };
+      originPick: string;
       assistantDisabled: string;
       policyUnavailable: string;
       notUnderstood: string;

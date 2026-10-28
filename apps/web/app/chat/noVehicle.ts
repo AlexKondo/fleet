@@ -34,7 +34,13 @@ export function noVehicleReply(
   reasons: readonly string[] | undefined,
   fleet?: FleetSummary,
   action: "reservation" | "availability" = "reservation",
+  /** Locations that have an eligible vehicle, offered when the origin is not a registered location. */
+  originOptions?: readonly { name: string; count: number }[],
 ): NoVehicleReply {
+  if (originOptions?.length && reasons?.includes("origin_location_unknown")) {
+    const list = originOptions.map((o) => `• ${o.name} (${o.count})`).join("\n");
+    return composeFailure(dict, action, dict.chat.replies.originPick.replace("{list}", list), { mode: "form", slots }) as NoVehicleReply;
+  }
   // Real cause from the fleet counts; without them, the engine's own (translated) reason.
   const why = fleet
     ? fleetExplanation(dict, fleet, action === "reservation")

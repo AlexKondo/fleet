@@ -1314,6 +1314,7 @@ const dict: Dictionary = {
         startTrip: "Para retirar o veículo, abra a reserva e faça o checklist de retirada — ele pede fotos do veículo, por isso não é feito pelo assistente.",
         endTrip: "Para devolver o veículo, abra a reserva e faça o checklist de devolução — ele pede fotos do veículo, por isso não é feito pelo assistente.",
       },
+      originPick: "Não encontramos esse local de saída. De qual local o veículo deve sair? Locais com veículo disponível:\n{list}\nResponda com o nome do local.",
       assistantDisabled: "O assistente FleetMind foi desativado pelo administrador da sua empresa. Você continua podendo fazer tudo pelos menus — por exemplo, reservar em Reservar Veículo.",
       policyUnavailable: "Não consegui confirmar agora se o assistente está liberado para você — não foi nada que você fez. Tente de novo em instantes ou use os menus normalmente.",
       notUnderstood: "Não entendi bem o que você precisa. Pode me dizer de outro jeito? Por exemplo: \"reservar um carro amanhã às 8h para Campinas\".",

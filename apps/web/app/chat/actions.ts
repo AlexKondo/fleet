@@ -293,7 +293,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       // FIX-VENCIDAS/Assistente: no vehicle for this window is a legitimate answer (not an error):
       // the REAL cause (counts per reason) + alternatives + prefilled form link; the trip data and
       // the carpool intention are preserved in the link and in the persisted chat row.
-      const reply = noVehicleReply(dictNow, slots, plan.reasons, plan.fleet);
+      const reply = noVehicleReply(dictNow, slots, plan.reasons, plan.fleet, "reservation", plan.originCheck?.others);
       return {
         assistantContent: (note ? `${note}\n` : "") + reply.content,
         status: "idle",
@@ -354,7 +354,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     if (llmSummary === null) {
       // No LLM summary to fall back on (the user picked "use a vehicle" after the carpool
       // options) and no vehicle card can be built: same explanation as "no vehicle".
-      const reply = noVehicleReply(dictNow, slots, plan.reasons, plan.fleet);
+      const reply = noVehicleReply(dictNow, slots, plan.reasons, plan.fleet, "reservation", plan.originCheck?.others);
       return { assistantContent: reply.content, status: "idle", link: reply.link, noVehicle: true };
     }
     // Carpool (legacy engine), or no eligible vehicle at all — nothing to pick between, so the
@@ -389,7 +389,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
 
     if (plan.type === "none" && !plan.error) {
       // Everything got booked up between rounds: explanation + alternatives, data preserved.
-      return noVehicleState(pending.slots, noVehicleReply(dictNow, pending.slots, plan.reasons, plan.fleet), prevState.messages);
+      return noVehicleState(pending.slots, noVehicleReply(dictNow, pending.slots, plan.reasons, plan.fleet, "reservation", plan.originCheck?.others), prevState.messages);
     }
     if (plan.type !== "vehicle" || !plan.vehicle) {
       // Planning failed (or only a legacy carpool is left): plain reply, trip data in the form link.
