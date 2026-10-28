@@ -185,7 +185,7 @@ describe("/reservations/[id] renders the FleetMind shell for every role", () => 
     expect(html).toContain('class="fm-sidebar"');
     expect(html).toContain('class="fm-topbar"');
     expect(html).toContain('data-testid="reservation-detail-fm"');
-    expect(html).toContain('aria-current="page" href="/trips"'); // "Minhas viagens" stays the active nav item
+    expect(html).toMatch(/aria-current="page"[^>]*href="\/trips"/); // "Viagens" stays the active nav item (its tabs are shown at the top)
     expect(html).not.toContain("md:w-60");
     expect(html).not.toContain("bg-panel-900/40");
     // back link + vehicle header + the shared blocks

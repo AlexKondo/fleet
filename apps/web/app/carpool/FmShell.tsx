@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { SidebarResizer } from "./SidebarResizer";
+import { SectionTabs } from "../SectionTabs";
+import { getAreaText } from "@/lib/i18n/areaText";
+import { sectionTabsTexts } from "@/lib/i18n/areas/sectionTabs";
+import { menuKeyFor, sectionFor, sectionTabs, TAB_ONLY_KEYS } from "@/lib/nav/sections";
 import { parseSidebarWidth, sidebarCookieName } from "@/lib/ui/sidebarWidth";
 import { signOut } from "../dashboard/actions";
 import { InactivityLogout } from "../InactivityLogout";
@@ -166,9 +170,18 @@ export async function FmShell({
           .sort((a, b) => rank(a.key, personalKeys) - rank(b.key, personalKeys)),
       ]
     : unordered;
+  // one menu item per AREA: what used to be separate items (Motoristas, Energia, Chaves, Planejamento, Histórico da Portaria, Analytics...) are tabs
+  const menuItems = items.filter((i) => !(TAB_ONLY_KEYS as readonly string[]).includes(i.key));
   const firstPersonalKey = isFleetManager
-    ? items.find((i) => personalKeys.includes(i.key))?.key
+    ? menuItems.find((i) => personalKeys.includes(i.key))?.key
     : undefined;
+  const currentMenuKey = menuKeyFor(active);
+  // the tabs of the area this screen belongs to (maintenance and gate already have their own)
+  const section = sectionFor(active, isFleetManager);
+  const sectionT = section ? await getAreaText(sectionTabsTexts) : null;
+  const tabs = section && sectionT
+    ? sectionTabs(section, { isAdministrator }).map((t) => ({ href: t.href, label: (sectionT as Record<string, string>)[t.id] ?? t.id }))
+    : [];
   // the bottom bar only fits the main destinations; the hamburger menu (MobileNav) lists everything
   // (employees: home + rider destinations; operations roles: their own working screens)
   const isOps = role !== "employee";
@@ -183,7 +196,7 @@ export async function FmShell({
     <Link
       key={key}
       href={href}
-      aria-current={key === (active === "drivers" ? "team" : active) ? "page" : undefined}
+      aria-current={key === currentMenuKey ? "page" : undefined}
       data-nav-group={key === firstPersonalKey ? "personal-start" : undefined}
     >
       <Icon className="" />
@@ -227,7 +240,7 @@ export async function FmShell({
             {dict.chrome.requestTrip}
           </Link>
           <nav className="fm-nav" aria-label={dict.carpool.buscar.navMain}>
-            {items.map(link)}
+            {menuItems.map(link)}
           </nav>
           <AssistantPanel dict={dict} />
         </aside>
@@ -245,8 +258,8 @@ export async function FmShell({
             <div className="fm-mobilenav">
               <MobileNav
                 compact
-                items={items.map(({ key, href, label }) => ({ key, href, label }))}
-                active={active}
+                items={menuItems.map(({ key, href, label }) => ({ key, href, label }))}
+                active={currentMenuKey as NavKey}
                 orgName={orgName}
                 userName={userName}
                 role={role}
@@ -349,6 +362,7 @@ export async function FmShell({
               ) : null}
             </div>
           ) : null}
+          {tabs.length > 1 && sectionT && !licenseGateActive ? <SectionTabs tabs={tabs} ariaLabel={sectionT.aria} /> : null}
           {legacy ? <div className="fm-legacy">{children}</div> : children}
         </main>
       </div>

@@ -107,43 +107,6 @@ export async function AdminWorkspace({
             .includes(params.q.toLowerCase())),
     )
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  const links = [
-    [
-      "/settings/users",
-      T.linkUsers,
-      T.linkUsersD,
-    ],
-    [
-      "/settings/approvals",
-      T.linkApprovals,
-      T.linkApprovalsD,
-    ],
-    [
-      "/settings",
-      T.linkPolicies,
-      T.linkPoliciesD,
-    ],
-    [
-      "/admin/integrations",
-      T.linkIntegrations,
-      T.linkIntegrationsD,
-    ],
-    [
-      "/admin/audit",
-      T.linkAudit,
-      T.linkAuditD,
-    ],
-    [
-      "/admin/ai",
-      T.linkAi,
-      T.linkAiD,
-    ],
-    [
-      "/settings/mobility-points",
-      T.linkMobility,
-      T.linkMobilityD,
-    ],
-  ];
   const google = Boolean(process.env.GOOGLE_MAPS_API_KEY),
     smtp = Boolean(
       process.env.BREVO_SMTP_HOST &&
@@ -165,23 +128,6 @@ export async function AdminWorkspace({
       error={params.error}
       success={params.success}
     >
-      <nav className="ow-tabs" aria-label={T.navAria}>
-        {[
-          ["overview", "/admin", T.tabOverview],
-          ["integrations", "/admin/integrations", T.tabIntegrations],
-          ["audit", "/admin/audit", T.tabAudit],
-          ["ai", "/admin/ai", T.tabAi],
-          ["units", "/admin/units", T.tabUnits],
-        ].map(([k, url, label]) => (
-          <Link
-            href={url!}
-            key={k}
-            aria-current={view === k ? "page" : undefined}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
       {!state && (
         <p role="alert" className="ow-banner ow-error">
           {T.govUnavailable}
@@ -211,16 +157,6 @@ export async function AdminWorkspace({
       />
       {view === "overview" ? (
         <>
-          <Panel title={T.modulesPanel}>
-            <nav className="ow-links" aria-label={T.modulesAria}>
-              {links.map(([url, label, detail]) => (
-                <Link href={url!} key={url}>
-                  {label}
-                  <small>{detail}</small>
-                </Link>
-              ))}
-            </nav>
-          </Panel>
           <div className="ow-grid-equal">
             <Panel title={T.recentPanel}>
               {!audit ? (

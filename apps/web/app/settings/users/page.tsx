@@ -8,7 +8,6 @@ import { FmAlertIcon, FmCheckIcon, FmUsersIcon } from "../../fmIcons";
 import { InviteUserModal } from "./InviteUserModal";
 import Link from "next/link";
 import { getAreaText } from "@/lib/i18n/areaText";
-import { TeamTabs } from "../TeamTabs";
 import { UserRow } from "./UserRow";
 import { UserTable } from "./UserTable";
 import { getRoleLabels } from "./ROLE_LABELS";
@@ -114,7 +113,6 @@ export default async function UsersPage() {
         <InviteUserModal dict={dict} />
       }
     >
-      <TeamTabs active="people" isAdministrator />
 
       {profilesError ? (
         <div
