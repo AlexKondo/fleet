@@ -980,6 +980,73 @@
         1100,
         1260
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b1",
+              "leftValue": "={{ (JSON.parse($('Corpo bruto aviso').item.json.raw).buttons || []).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n-nt-hasbtn",
+      "name": "Aviso com botoes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config aviso').first().json.evoBase }}/send/button",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const r = JSON.parse($('Corpo bruto aviso').item.json.raw); return JSON.stringify({ number: String(r.to).replace('+', ''), title: String(r.title || 'FleetMind').slice(0, 60), description: String(r.text).slice(0, 1000), footer: 'FleetMind', buttons: r.buttons.slice(0, 3).map(b => ({ type: 'reply', displayText: String(b.title).slice(0, 20), id: b.id })) }); })() }}",
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n-nt-sendbtn",
+      "name": "Enviar aviso com botoes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        940
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      }
     }
   ],
   "connections": {
@@ -1317,7 +1384,7 @@
       "main": [
         [
           {
-            "node": "Enviar aviso ao solicitante",
+            "node": "Aviso com botoes?",
             "type": "main",
             "index": 0
           }
@@ -1332,6 +1399,35 @@
       ]
     },
     "Enviar aviso ao solicitante": {
+      "main": [
+        [
+          {
+            "node": "Avisar 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso com botoes?": {
+      "main": [
+        [
+          {
+            "node": "Enviar aviso com botoes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar aviso ao solicitante",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar aviso com botoes": {
       "main": [
         [
           {

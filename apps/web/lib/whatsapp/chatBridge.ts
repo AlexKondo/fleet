@@ -52,6 +52,8 @@ export interface BridgeDeps {
   transcribe: (audioBase64: string, mimeType: string) => Promise<TranscribeResult>;
   appUrl: string;
   now?: () => number;
+  /** tells the carpool rider what the host answered (WhatsApp, best effort, never throws) */
+  notifyRider?: (requestId: string, justification?: string) => Promise<void>;
 }
 
 const SESSION_MINUTES = 30;
@@ -72,6 +74,9 @@ export const TEXTS = {
     "• _Tem carona para Campinas amanhã?_\n" +
     "• _Cancelar minha reserva_\n\n" +
     "É só continuar a conversa por aqui. Para trocar de perfil (se o seu número tem mais de um), escreva *trocar perfil*.",
+  cpGone: "Este pedido de carona já foi respondido ou não está mais disponível.",
+  cpFailed: "Não consegui registrar sua resposta agora (talvez não haja mais lugar no veículo). Abra o FleetMind em Minhas Caronas para responder.",
+  cpReasonAgain: "Não consegui entender o motivo. Escreva em uma mensagem curta, ou grave outro áudio.",
   couldNotEnter: "Não consegui acessar a sua conta agora. Tente de novo em instantes.",
   onlyTextAudio: "Só consigo ler texto e áudio. Pode escrever ou gravar o pedido?",
   audioOff: "Ainda não consigo ouvir áudios por aqui. Escreva o pedido por texto, por favor.",
@@ -89,6 +94,9 @@ export const TEXTS = {
   confirm: "Confirmar",
   cancel: "Cancelar",
 } as const;
+
+const CARPOOL_TAP = /^cp:(yes|no):([0-9a-f]{32,128})$/;
+const MAX_REASON = 300;
 
 const norm = (s: string) => s.trim().toLowerCase().replace(/[.!]+$/g, "").trim();
 const clip = (s: string) => (s.length > MAX_TEXT ? `${s.slice(0, MAX_TEXT - 1)}…` : s);
@@ -138,8 +146,69 @@ export function renderState(state: ChatState, appUrl: string): Reply[] {
   return [card, pick];
 }
 
+type Resolved = { ok?: boolean; reason?: string; request_id?: string; host_id?: string; host_email?: string; rider_name?: string };
+
+/** The host tapped Aceitar / Recusar on a carpool request. The token binds the tap to that request, that host and the host's registered number. */
+async function handleCarpoolTap(decision: "accept" | "reject", token: string, msg: InboundMessage, deps: BridgeDeps): Promise<{ replies: Reply[] }> {
+  const none = { replies: [] as Reply[] };
+  const res = await deps.rpc("fm_carpool_token_resolve", { p_token: token, p_from_phone: msg.from });
+  const r = res.data as Resolved | null;
+  if (res.error || !r) return none;
+  if (r.ok !== true || !r.request_id || !r.host_id || !r.host_email) {
+    // a tap from somebody else's number is never answered; an old or already answered request is explained
+    return r?.reason === "phone_mismatch" || r?.reason === "invalid" ? none : { replies: [text(TEXTS.cpGone)] };
+  }
+  const reg = await deps.rpc("fm_whatsapp_register_inbound", { p_message_id: msg.messageId, p_user: r.host_id, p_org: null, p_kind: "button", p_handled: true });
+  if (reg.error || reg.data === false) return none;
+  const rider = r.rider_name ?? "o passageiro";
+  if (decision === "reject") {
+    await deps.rpc("fm_carpool_token_mark", { p_request_id: r.request_id, p_status: "awaiting_reason", p_reason: null });
+    return { replies: [text(`Entendido. Para eu avisar *${rider}*, me diga em uma mensagem (texto ou áudio) o motivo de não poder levar.`)] };
+  }
+  const client = await deps.mintClient(r.host_email, r.host_id);
+  if (!client) return { replies: [text(TEXTS.couldNotEnter)] };
+  const done = await client.rpc("accept_carpool_ride_request", { p_request_id: r.request_id });
+  if (done.error) return { replies: [text(TEXTS.cpFailed)] };
+  await deps.rpc("fm_carpool_token_mark", { p_request_id: r.request_id, p_status: "done", p_reason: null });
+  await deps.notifyRider?.(r.request_id).catch(() => undefined);
+  return { replies: [text(`✅ Pronto! Você aceitou a carona de *${rider}*. Avisei ${rider}.`)] };
+}
+
+/** After Recusar: the next message of the host's number (text or voice) is the justification that goes to the rider. */
+async function handleCarpoolReason(p: { request_id: string; host_id: string; host_email: string; rider_name?: string }, msg: InboundMessage, deps: BridgeDeps): Promise<{ replies: Reply[] }> {
+  const none = { replies: [] as Reply[] };
+  const reg = await deps.rpc("fm_whatsapp_register_inbound", { p_message_id: msg.messageId, p_user: p.host_id, p_org: null, p_kind: msg.kind, p_handled: true });
+  if (reg.error || reg.data === false) return none;
+  let reason = (msg.text ?? "").trim();
+  const prefix: Reply[] = [];
+  if (msg.kind === "audio") {
+    const tr = await deps.transcribe(msg.audioBase64 ?? "", msg.mimeType ?? "audio/ogg");
+    if (!tr.ok) return { replies: [text(TEXTS.cpReasonAgain)] };
+    reason = tr.text.trim();
+    prefix.push(text(`🎙️ Entendi: “${tr.text}”`));
+  }
+  reason = reason.replace(/\s+/g, " ").slice(0, MAX_REASON);
+  if (reason.length < 2) return { replies: [text(TEXTS.cpReasonAgain)] };
+  const client = await deps.mintClient(p.host_email, p.host_id);
+  if (!client) return { replies: [...prefix, text(TEXTS.couldNotEnter)] };
+  const done = await client.rpc("reject_carpool_ride_request", { p_request_id: p.request_id, p_reason: reason });
+  if (done.error) return { replies: [...prefix, text(TEXTS.cpFailed)] };
+  await deps.rpc("fm_carpool_token_mark", { p_request_id: p.request_id, p_status: "done", p_reason: reason });
+  await deps.notifyRider?.(p.request_id, reason).catch(() => undefined);
+  return { replies: [...prefix, text(`Pronto, avisei *${p.rider_name ?? "o passageiro"}* com o seu motivo.`)] };
+}
+
 export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDeps): Promise<{ replies: Reply[] }> {
   const none = { replies: [] as Reply[] };
+  if (msg.kind === "button") {
+    const tap = CARPOOL_TAP.exec(msg.buttonId ?? "");
+    if (tap) return handleCarpoolTap(tap[1] === "yes" ? "accept" : "reject", tap[2]!, msg, deps);
+  }
+  if (msg.kind === "text" || msg.kind === "audio") {
+    const pr = await deps.rpc("fm_carpool_pending_reason", { p_phone: msg.from });
+    const pending = pr.data as { ok?: boolean; request_id?: string; host_id?: string; host_email?: string; rider_name?: string } | null;
+    if (!pr.error && pending?.ok === true && pending.request_id && pending.host_id && pending.host_email) return handleCarpoolReason({ request_id: pending.request_id, host_id: pending.host_id, host_email: pending.host_email, rider_name: pending.rider_name }, msg, deps);
+  }
   const idRes = await deps.rpc("fm_whatsapp_identify", { p_phone: msg.from });
   let who = idRes.data as { ok?: boolean; reason?: string; user_id?: string; organization_id?: string; email?: string; phone_norm?: string; candidates?: Candidate[] } | null;
   // unknown / unconsented numbers: no answer at all

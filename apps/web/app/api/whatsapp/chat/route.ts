@@ -6,6 +6,7 @@ import { transcribeAudio } from "@/lib/whatsapp/transcribe";
 import { runAsUser } from "@/lib/auth/actingUser";
 import { mintUserClient } from "@/lib/auth/mintUserClient";
 import { getAppUrl } from "@/lib/getAppUrl";
+import { notifyRiderOfDecision } from "@/lib/carpool/notifyRider";
 import { loadLatestChatState } from "@/app/chat/queries";
 import { sendChatMessage } from "@/app/chat/actions";
 
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
     send: sendChatMessage,
     transcribe: (audio, mime) => transcribeAudio(audio, mime),
     appUrl: getAppUrl(),
+    notifyRider: async (requestId, justification) => { await notifyRiderOfDecision(requestId, justification, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); },
   };
 
   try {

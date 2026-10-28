@@ -9,8 +9,9 @@ const CLIENT = { tag: "client" } as unknown as TypedSupabaseClient;
 const idle: ChatState = { status: "idle", messages: [] };
 const reply = (content: string, extra: Partial<ChatState> = {}): ChatState => ({ status: "idle", conversationId: "c1", messages: [{ role: "user", content: "x" }, { role: "assistant", content }], ...extra });
 
-interface World { pick: { picked_user_id: string | null; asked: boolean }; pickWrites: { phone: string; user: string | null }[]; identify: unknown; open: boolean; registerNew: boolean; state: ChatState; updatedAt: string | null; mint: TypedSupabaseClient | null; next: ChatState | Error; transcribe: unknown }
+interface World { cpPending: unknown; cpResolve: unknown; pick: { picked_user_id: string | null; asked: boolean }; pickWrites: { phone: string; user: string | null }[]; identify: unknown; open: boolean; registerNew: boolean; state: ChatState; updatedAt: string | null; mint: TypedSupabaseClient | null; next: ChatState | Error; transcribe: unknown }
 let w: World;
+const cp = { resolve: [] as Record<string, unknown>[], marks: [] as { status: string; reason: string | null }[], rpcCalls: [] as { name: string; args: Record<string, unknown> }[], rider: [] as { id: string; reason?: string }[], rpcError: false };
 const calls = { send: [] as { prev: ChatState; form: Record<string, string> }[], abandon: [] as string[], register: [] as Record<string, unknown>[], actedAs: [] as (string | undefined)[], transcribe: [] as string[], mint: 0 };
 
 function deps(over: Partial<BridgeDeps> = {}): BridgeDeps {
@@ -18,6 +19,9 @@ function deps(over: Partial<BridgeDeps> = {}): BridgeDeps {
     rpc: async (name, args) => {
       if (name === "fm_whatsapp_identify") return { data: w.identify, error: null };
       if (name === "fm_whatsapp_session_open") return { data: w.open, error: null };
+      if (name === "fm_carpool_pending_reason") return { data: w.cpPending, error: null };
+      if (name === "fm_carpool_token_resolve") { cp.resolve.push(args); return { data: w.cpResolve, error: null }; }
+      if (name === "fm_carpool_token_mark") { cp.marks.push({ status: String(args.p_status), reason: (args.p_reason as string | null) ?? null }); return { data: true, error: null }; }
       if (name === "fm_whatsapp_pick_state") return { data: w.pick, error: null };
       if (name === "fm_whatsapp_pick_write") { w.pickWrites.push({ phone: String(args.p_phone_norm), user: (args.p_user as string | null) ?? null }); return { data: true, error: null }; }
       if (name === "fm_whatsapp_register_inbound") { calls.register.push(args); return { data: w.registerNew, error: null }; }
@@ -44,7 +48,8 @@ const run = (m: InboundMessage, d = deps()) => handleInboundWhatsApp(m, d);
 const texts = (r: { replies: { type: string; text: string }[] }) => r.replies.map((x) => x.text);
 
 beforeEach(() => {
-  w = { pick: { picked_user_id: null, asked: false }, pickWrites: [], identify: USER, open: false, registerNew: true, state: idle, updatedAt: null, mint: CLIENT, next: reply("Para quando?"), transcribe: { ok: true, text: "fleet quero um carro amanhã" } };
+  w = { cpPending: { ok: false }, cpResolve: { ok: false, reason: "invalid" }, pick: { picked_user_id: null, asked: false }, pickWrites: [], identify: USER, open: false, registerNew: true, state: idle, updatedAt: null, mint: CLIENT, next: reply("Para quando?"), transcribe: { ok: true, text: "fleet quero um carro amanhã" } };
+  cp.resolve.length = 0; cp.marks.length = 0; cp.rpcCalls.length = 0; cp.rider.length = 0; cp.rpcError = false;
   calls.send.length = 0; calls.abandon.length = 0; calls.register.length = 0; calls.actedAs.length = 0; calls.transcribe.length = 0; calls.mint = 0;
 });
 
@@ -356,5 +361,85 @@ describe("one number registered on several profiles", () => {
   it("the same webhook delivered twice asks only once", async () => {
     w.registerNew = false;
     expect((await run(msg({ text: "oi" }))).replies).toEqual([]);
+  });
+});
+
+describe("the host answers a carpool request on WhatsApp", () => {
+  const TOKEN = "b".repeat(64);
+  const RESOLVED = { ok: true, request_id: "req-1", host_id: "h1", host_email: "host@example.invalid", rider_name: "Maria Silva" };
+  const hostClient = () => ({ rpc: async (name: string, args: Record<string, unknown>) => { cp.rpcCalls.push({ name, args }); return { data: null, error: cp.rpcError ? { message: "x" } : null }; } }) as unknown as TypedSupabaseClient;
+  const hostDeps = () => deps({ mintClient: async () => hostClient(), notifyRider: async (id, reason) => { cp.rider.push({ id, reason }); } });
+  const tap = (kind: "yes" | "no", over: Partial<InboundMessage> = {}) => msg({ kind: "button", buttonId: `cp:${kind}:${TOKEN}`, text: undefined, from: "5511982593096", messageId: `t-${kind}`, ...over });
+
+  it("Aceitar: accepts as the host through the normal rule, closes the token, tells the rider and answers the host", async () => {
+    w.cpResolve = RESOLVED;
+    const r = await run(tap("yes"), hostDeps());
+    expect(cp.resolve[0]).toMatchObject({ p_token: TOKEN, p_from_phone: "5511982593096" });
+    expect(cp.rpcCalls).toEqual([{ name: "accept_carpool_ride_request", args: { p_request_id: "req-1" } }]);
+    expect(cp.marks).toEqual([{ status: "done", reason: null }]);
+    expect(cp.rider).toEqual([{ id: "req-1", reason: undefined }]);
+    expect(texts(r)[0]).toContain("aceitou a carona de *Maria Silva*");
+    expect(calls.send).toHaveLength(0);
+  });
+  it("Recusar: nothing is rejected yet; the host is asked for the justification", async () => {
+    w.cpResolve = RESOLVED;
+    const r = await run(tap("no"), hostDeps());
+    expect(cp.rpcCalls).toHaveLength(0);
+    expect(cp.marks).toEqual([{ status: "awaiting_reason", reason: null }]);
+    expect(texts(r)[0]).toContain("me diga em uma mensagem (texto ou áudio) o motivo");
+    expect(cp.rider).toHaveLength(0);
+  });
+  it("the next text of that number is the justification: rejects with it, tells the rider with it", async () => {
+    w.cpPending = { ok: true, request_id: "req-1", host_id: "h1", host_email: "host@example.invalid", rider_name: "Maria Silva" };
+    const r = await run(msg({ from: "5511982593096", text: "Vou   sair mais cedo\ne o carro já estará cheio", messageId: "r1" }), hostDeps());
+    expect(cp.rpcCalls).toEqual([{ name: "reject_carpool_ride_request", args: { p_request_id: "req-1", p_reason: "Vou sair mais cedo e o carro já estará cheio" } }]);
+    expect(cp.marks).toEqual([{ status: "done", reason: "Vou sair mais cedo e o carro já estará cheio" }]);
+    expect(cp.rider).toEqual([{ id: "req-1", reason: "Vou sair mais cedo e o carro já estará cheio" }]);
+    expect(texts(r)[0]).toContain("avisei *Maria Silva* com o seu motivo");
+    expect(calls.send).toHaveLength(0); // it never reaches the reservation assistant
+  });
+  it("the justification can be a voice note: it is transcribed and shown", async () => {
+    w.cpPending = { ok: true, request_id: "req-1", host_id: "h1", host_email: "host@example.invalid", rider_name: "Maria Silva" };
+    w.transcribe = { ok: true, text: "Estou sem espaço no carro" };
+    const r = await run(msg({ kind: "audio", text: undefined, audioBase64: "QUJD", mimeType: "audio/ogg", from: "5511982593096", messageId: "r2" }), hostDeps());
+    expect(cp.rpcCalls[0]).toMatchObject({ name: "reject_carpool_ride_request", args: { p_reason: "Estou sem espaço no carro" } });
+    expect(texts(r)[0]).toContain("Entendi: “Estou sem espaço no carro”");
+  });
+  it("an audio that cannot be understood keeps the question open", async () => {
+    w.cpPending = { ok: true, request_id: "req-1", host_id: "h1", host_email: "host@example.invalid", rider_name: "Maria Silva" };
+    w.transcribe = { ok: false, reason: "failed" };
+    const r = await run(msg({ kind: "audio", text: undefined, audioBase64: "QUJD", from: "5511982593096", messageId: "r3" }), hostDeps());
+    expect(texts(r)).toEqual([TEXTS.cpReasonAgain]);
+    expect(cp.rpcCalls).toHaveLength(0);
+    expect(cp.marks).toHaveLength(0);
+  });
+  it("a tap from another number, an unknown token or an answered request does nothing / is explained, and never acts", async () => {
+    for (const reason of ["phone_mismatch", "invalid"]) {
+      w.cpResolve = { ok: false, reason };
+      expect((await run(tap("yes", { messageId: `m-${reason}` }), hostDeps())).replies).toEqual([]);
+    }
+    for (const reason of ["already_done", "expired", "not_pending"]) {
+      w.cpResolve = { ok: false, reason };
+      expect(texts(await run(tap("yes", { messageId: `m-${reason}` }), hostDeps()))).toEqual([TEXTS.cpGone]);
+    }
+    expect(cp.rpcCalls).toHaveLength(0);
+    expect(cp.marks).toHaveLength(0);
+  });
+  it("the same tap delivered twice acts once", async () => {
+    w.cpResolve = RESOLVED;
+    w.registerNew = false;
+    expect((await run(tap("yes"), hostDeps())).replies).toEqual([]);
+    expect(cp.rpcCalls).toHaveLength(0);
+  });
+  it("when the database refuses (no seat left), the host is told and nobody is notified", async () => {
+    w.cpResolve = RESOLVED;
+    cp.rpcError = true;
+    expect(texts(await run(tap("yes"), hostDeps()))).toEqual([TEXTS.cpFailed]);
+    expect(cp.marks).toHaveLength(0);
+    expect(cp.rider).toHaveLength(0);
+  });
+  it("a normal message from a number with no refusal waiting goes to the assistant as before", async () => {
+    await run(msg({ text: "quero um carro amanhã" }));
+    expect(calls.send).toHaveLength(1);
   });
 });

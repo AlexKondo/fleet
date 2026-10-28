@@ -17,6 +17,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { notifyHostOfCarpool } from "@/lib/carpool/notifyHost";
+import { notifyRiderOfDecision } from "@/lib/carpool/notifyRider";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -171,6 +172,8 @@ export async function acceptCarpoolRequest(
   if (!ctx) return UNAUTHENTICATED;
   const { error } = await ctx.supabase.rpc("accept_carpool_ride_request", { p_request_id: requestId });
   if (error) return fail("accept_carpool_ride_request", error.message);
+  // the rider is told by WhatsApp what the host answered (also when the host answers in the app)
+  after(async () => { const admin = createSupabaseAdminClient(); await notifyRiderOfDecision(requestId, undefined, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); });
   refresh(reservationId);
   return { status: "success" };
 }
@@ -188,6 +191,7 @@ export async function rejectCarpoolRequest(
     p_reason: (reason ?? "").slice(0, 500),
   });
   if (error) return fail("reject_carpool_ride_request", error.message);
+  after(async () => { const admin = createSupabaseAdminClient(); await notifyRiderOfDecision(requestId, reason, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); });
   refresh(reservationId);
   return { status: "success" };
 }
