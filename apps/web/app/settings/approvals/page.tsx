@@ -98,7 +98,7 @@ export default async function ApprovalsSettingsPage() {
                     consent={row?.consent ?? false}
                     managedCount={managedCount.get(m.id) ?? 0}
                     email={emailById.get(m.id) ?? ""}
-                    managerOptions={members.map((x) => ({ id: x.id, name: x.name }))}
+                    managerOptions={members.map((x) => ({ id: x.id, name: `${x.name} — ${roleLabels[x.role] ?? x.role}` }))}
                     T={T}
                     statusKey={statusKey}
                   />

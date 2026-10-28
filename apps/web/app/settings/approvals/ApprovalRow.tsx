@@ -37,7 +37,7 @@ export function ApprovalRow({ person, managerId, phone, consent, managedCount, e
       </td>
       <td className="px-3 py-3 text-sm text-fog-400" data-label={T.colRole}>{person.roleLabel}</td>
       <td className="px-3 py-3" data-label={T.colManager}>
-        <select form={formId} name="managerId" value={manager} onChange={(e) => setManager(e.target.value)} className="fm-input" aria-label={`${T.colManager}: ${person.name}`}>
+        <select form={formId} name="managerId" value={manager} onChange={(e) => setManager(e.target.value)} className="fm-input min-w-[18rem]" aria-label={`${T.colManager}: ${person.name}`}>
           <option value="">{T.noManager}</option>
           {managerOptions.filter((o) => o.id !== person.id).map((o) => (
             <option key={o.id} value={o.id}>{o.name}</option>
