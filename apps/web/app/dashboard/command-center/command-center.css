@@ -81,7 +81,7 @@
 }
 .fc-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 282px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
@@ -598,7 +598,7 @@
 }
 @media (max-width: 1400px) {
   .fc-layout {
-    grid-template-columns: minmax(0, 1fr) 250px;
+    grid-template-columns: minmax(0, 1fr);
   }
   .fc-heading {
     align-items: flex-start;

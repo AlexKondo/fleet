@@ -163,7 +163,9 @@ describe("command center page access and rendering", () => {
     });
     const html = await render();
     expect(html).toContain("Algumas fontes não responderam");
-    expect(html).toContain("Alertas indisponíveis");
+    // the side panel (insights, alerts, quick actions) was removed: nothing of it is rendered
+    expect(html).not.toContain("FleetMind Intelligence");
+    expect(html).not.toContain("Ações rápidas");
     expect(html).not.toContain("Não há tarefas operacionais abertas");
   });
 });

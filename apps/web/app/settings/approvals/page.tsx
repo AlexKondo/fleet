@@ -9,6 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getRoleLabels } from "../users/ROLE_LABELS";
 import { FmShell } from "../../carpool/FmShell";
 import { ApprovalRow } from "./ApprovalRow";
+import { TeamTabs } from "../TeamTabs";
 
 interface SnapshotRow {
   user_id: string;
@@ -55,7 +56,7 @@ export default async function ApprovalsSettingsPage() {
 
   return (
     <FmShell
-      active="settings"
+      active="team"
       orgName={profile.organization?.name ?? "—"}
       userName={profile.full_name ?? user.email ?? "—"}
       role={profile.role}
@@ -66,6 +67,7 @@ export default async function ApprovalsSettingsPage() {
       legacy
       wide
     >
+      <TeamTabs active="contact" isAdministrator />
       <div role="status" className={"fm-banner"} style={{ marginTop: 0, marginBottom: 12 }} data-testid="channel-state">
         {approvalChannelConfigured() ? T.channelOn : T.channelOff}
       </div>

@@ -113,10 +113,10 @@ export function buildBaseNavItems(
     },
     {
       key: "team",
-      href: "/settings/users",
+      href: isAdministrator ? "/settings/users" : "/fleet/drivers",
       label: dict.nav.team,
       icon: TeamIcon,
-      visible: isAdministrator,
+      visible: isFleetManager,
     },
     {
       key: "maintenance",
@@ -151,13 +151,6 @@ export function buildBaseNavItems(
       href: "/fleet/energy",
       label: dict.navExtra.energy,
       icon: AnalyticsIcon,
-      visible: isFleetManager,
-    },
-    {
-      key: "drivers",
-      href: "/fleet/drivers",
-      label: dict.navExtra.drivers,
-      icon: TeamIcon,
       visible: isFleetManager,
     },
     {

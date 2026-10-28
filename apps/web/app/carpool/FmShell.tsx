@@ -183,7 +183,7 @@ export async function FmShell({
     <Link
       key={key}
       href={href}
-      aria-current={key === active ? "page" : undefined}
+      aria-current={key === (active === "drivers" ? "team" : active) ? "page" : undefined}
       data-nav-group={key === firstPersonalKey ? "personal-start" : undefined}
     >
       <Icon className="" />

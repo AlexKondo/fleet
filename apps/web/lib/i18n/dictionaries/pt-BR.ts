@@ -1650,7 +1650,7 @@ const dict: Dictionary = {
       subtitle: "Busca, correspondência, ofertas, pedidos e viagens compartilhadas da organização.",
     },
     users: {
-      title: "Usuários, Perfis e Permissões",
+      title: "Equipe",
       subtitle: "Convide pessoas, defina o perfil de cada uma e controle a autorização de motorista e a CNH.",
       summaryLabel: "Resumo de usuários",
       kpiTotal: "Usuários",

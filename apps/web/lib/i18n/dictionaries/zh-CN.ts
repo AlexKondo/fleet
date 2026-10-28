@@ -1612,7 +1612,7 @@ const dict: Dictionary = {
       subtitle: "组织的搜索、匹配、供给、请求和共乘行程。",
     },
     users: {
-      title: "用户、角色与权限",
+      title: "团队",
       subtitle: "邀请成员、设置角色,并管理驾驶员授权和驾照。",
       summaryLabel: "用户概览",
       kpiTotal: "用户",

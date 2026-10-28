@@ -1648,7 +1648,7 @@ const dict: Dictionary = {
       subtitle: "Búsqueda, coincidencia, ofertas, solicitudes y viajes compartidos de la organización.",
     },
     users: {
-      title: "Usuarios, Perfiles y Permisos",
+      title: "Equipo",
       subtitle: "Invite personas, defina el perfil de cada una y controle la autorización de conductor y la licencia.",
       summaryLabel: "Resumen de usuarios",
       kpiTotal: "Usuarios",

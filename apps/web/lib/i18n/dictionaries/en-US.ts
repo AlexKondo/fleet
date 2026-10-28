@@ -1648,7 +1648,7 @@ const dict: Dictionary = {
       subtitle: "Search, matching, offers, requests and shared trips of the organization.",
     },
     users: {
-      title: "Users, Roles and Permissions",
+      title: "Team",
       subtitle: "Invite people, set each person's role and manage driver authorization and license.",
       summaryLabel: "Users summary",
       kpiTotal: "Users",

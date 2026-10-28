@@ -1539,3 +1539,28 @@ body.fm-resizing {
 .fm-sidebar .fm-brand-org {
   max-width: 100%;
 }
+
+/* ---------- Equipe: sections of one place (TeamTabs) ---------- */
+.fm-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 14px;
+  border-bottom: 1px solid var(--fm-border, #e0eaf6);
+}
+.fm-tab {
+  padding: 9px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fm-muted, #5b7192);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  text-decoration: none;
+}
+.fm-tab:hover {
+  color: var(--fm-text, #142644);
+}
+.fm-tab[aria-current="page"] {
+  color: var(--fm-blue-600, #2369c8);
+  border-bottom-color: var(--fm-blue-600, #2369c8);
+}

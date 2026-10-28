@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TeamTabs } from "@/app/settings/TeamTabs";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
 import { pageAll } from "@/lib/carpool/kpi/loadKpis";
 import { getAreaText } from "@/lib/i18n/areaText";
@@ -79,6 +80,7 @@ export default async function Drivers({
       active="drivers"
       managerView
     >
+      <TeamTabs active="drivers" isAdministrator={data.profile.role === "administrator"} />
       {!licenseAvailable && (
         <p role="alert" className="ow-banner ow-error">
           {T.licenseLookupFailed}
