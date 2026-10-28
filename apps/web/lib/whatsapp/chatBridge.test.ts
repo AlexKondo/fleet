@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import type { ChatState } from "@/app/chat/actions";
 import { runAsUser, getActingContext } from "@/lib/auth/actingUser";
-import { CHAT_BUTTON, handleInboundWhatsApp, renderState, TEXTS, type BridgeDeps, type InboundMessage } from "./chatBridge";
+import { CHAT_BUTTON, handleInboundWhatsApp, parseChoice, renderState, TEXTS, type BridgeDeps, type InboundMessage } from "./chatBridge";
 
 const USER = { ok: true, user_id: "u1", organization_id: "o1", email: "ana@example.invalid", full_name: "Ana" };
 const CLIENT = { tag: "client" } as unknown as TypedSupabaseClient;
@@ -263,5 +263,26 @@ describe("one number registered on several profiles", () => {
   it("the same webhook delivered twice asks only once", async () => {
     w.registerNew = false;
     expect((await run(msg({ text: "oi" }))).replies).toEqual([]);
+  });
+});
+
+describe("choosing an option inside a sentence (spoken or written)", () => {
+  it("understands the phrases people actually say", () => {
+    for (const [text, n] of [["Reserve a opção 6 pra mim.", 6], ["quero o número dois", 2], ["pode ser o terceiro", 3], ["escolho a 4", 4], ["opção 1", 1], ["fico com o veículo 5", 5]] as const) expect(parseChoice(text, 7), text).toBe(n);
+  });
+  it("never mistakes a time, a date, a quantity or an out-of-range number for a choice", () => {
+    for (const text of ["quero sair às 9h", "volto dia 5/12", "preciso de 4 vagas", "opção 9", "bom dia", "quero um carro amanhã"]) expect(parseChoice(text, 7), text).toBeNull();
+  });
+  it("a vehicle chosen by voice (\"reserve a opção 6\") selects that vehicle", async () => {
+    w.state = { status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar" }], pendingAction: { intent: "CREATE_RESERVATION", slots: {}, summary: "Vou reservar", vehicleOptions: [1, 2, 3, 4, 5, 6, 7].map((i) => ({ vehicleId: `v${i}`, plate: `P${i}`, vehicleName: `Carro ${i}` })) } };
+    w.updatedAt = "2026-10-28T19:59:00Z";
+    await run(msg({ text: "Reserve a opção 6 pra mim." }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v6" });
+  });
+  it("the message tells the person how to swap the recommended vehicle", () => {
+    const state: ChatState = { status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar o Haval" }], pendingAction: { intent: "CREATE_RESERVATION", slots: {}, summary: "x", vehicleOptions: [{ vehicleId: "a", plate: "AAA1A11", vehicleName: "Haval", locationName: "Portaria P1" }, { vehicleId: "b", plate: "BBB2B22", vehicleName: "Ora" }] } };
+    const [r] = renderState(state, "https://x.invalid");
+    expect(r!.text).toContain("Se não quiser o veículo recomendado");
+    expect(r!.text).toContain("*1.* Haval (AAA1A11) — Portaria P1");
   });
 });

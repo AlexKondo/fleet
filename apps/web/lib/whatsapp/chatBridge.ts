@@ -84,6 +84,30 @@ export const TEXTS = {
   cancel: "Cancelar",
 } as const;
 
+const NUMBER_WORDS: Record<string, number> = {
+  um: 1, uma: 1, primeiro: 1, primeira: 1, dois: 2, duas: 2, segundo: 2, segunda: 2, tres: 3, terceiro: 3, terceira: 3, quatro: 4, quarto: 4,
+  cinco: 5, quinto: 5, seis: 6, sexto: 6, sete: 7, setimo: 7, oito: 8, oitavo: 8, nove: 9, nono: 9, dez: 10, decimo: 10,
+};
+const NUM = `(\\d{1,2}|${Object.keys(NUMBER_WORDS).join("|")})`;
+const CHOICE_NOUN = new RegExp(`\\b(?:opcao|numero|alternativa|item|veiculo|carro)\\s*(?:n[o.]?\\s*)?${NUM}\\b`);
+// "um/uma" only counts after "opção/número" ("quero um carro" is not a choice)
+const NUM_VERB = `(\\d{1,2}|${Object.keys(NUMBER_WORDS).filter((w) => w !== "um" && w !== "uma").join("|")})`;
+const CHOICE_VERB = new RegExp(`\\b(?:escolho|escolher|escolha|quero|prefiro|pode ser|vai de|fico com|ficar com|reserva|reserve|seleciono|selecionar)\\s+(?:o|a|esse|essa)?\\s*(?:numero\\s*)?${NUM_VERB}\\b`);
+
+/**
+ * "reserve a opção 6 pra mim", "quero o número dois", "o terceiro": which numbered option the person means, spoken or written in a
+ * sentence. Only phrases that point at an option count (a time such as "às 9h" or a date never does). Null when nothing clear, or out of range.
+ */
+export function parseChoice(input: string, count: number): number | null {
+  const t = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[.!?,;:]+/g, " ").replace(/\s+/g, " ").trim();
+  if (t.length > 80 || /\d\s*(?:h|horas?|:|\/)/.test(t)) return null;
+  const m = CHOICE_NOUN.exec(t) ?? CHOICE_VERB.exec(t);
+  if (!m) return null;
+  const raw = m[1]!;
+  const n = /^\d+$/.test(raw) ? Number(raw) : NUMBER_WORDS[raw];
+  return n && n >= 1 && n <= count ? n : null;
+}
+
 const norm = (s: string) => s.trim().toLowerCase().replace(/[.!]+$/g, "").trim();
 const clip = (s: string) => (s.length > MAX_TEXT ? `${s.slice(0, MAX_TEXT - 1)}…` : s);
 const text = (t: string): Reply => ({ type: "text", text: clip(t) });
@@ -115,7 +139,7 @@ export function renderState(state: ChatState, appUrl: string): Reply[] {
     return [text(body)];
   }
   if (pending.vehicleOptions && pending.vehicleOptions.length > 1) {
-    body += `\n\nVeículos disponíveis:\n${pending.vehicleOptions.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n")}\nPara escolher outro, responda só com o número dele (por exemplo, *2*).`;
+    body += `\n\nSe não quiser o veículo recomendado (o *1*), escolha outro pelo número, na lista abaixo:\n${pending.vehicleOptions.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n")}\n\nPara trocar, responda com o número (por exemplo, *2*), por texto ou áudio.`;
   }
   return [{ type: "buttons", text: clip(`${body}\n\n${TEXTS.confirmHint}`), buttons: [{ id: CHAT_BUTTON.confirm, title: TEXTS.confirm }, { id: CHAT_BUTTON.cancel, title: TEXTS.cancel }] }];
 }
@@ -214,8 +238,9 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       const form = new FormData();
       form.set("conversationId", prev.conversationId ?? "");
       const t = norm(input);
-      const n = /^\d{1,2}$/.test(t) ? Number(t) : null;
       const pending = prev.status === "needs_confirmation" ? prev.pendingAction : undefined;
+      const optionCount = pending?.options?.length ?? pending?.vehicleOptions?.length ?? 0;
+      const n = /^\d{1,2}$/.test(t) ? Number(t) : optionCount > 0 ? parseChoice(input, optionCount) : null;
 
       if (pending && n !== null && (pending.options?.length || pending.vehicleOptions?.length)) {
         if (pending.options?.length) {
