@@ -351,6 +351,8 @@ export async function FmShell({
           tabIndex={-1}
           className={wide ? "fm-content fm-content-wide" : "fm-content"}
         >
+          {/* the area's tabs are always the first thing on the page, above the title (same place on every screen) */}
+          {tabs.length > 1 && sectionT && !licenseGateActive ? <SectionTabs tabs={tabs} ariaLabel={sectionT.aria} /> : null}
           {title ? (
             <div className="fm-ops-head">
               <div className="fm-ops-head-text">
@@ -362,7 +364,6 @@ export async function FmShell({
               ) : null}
             </div>
           ) : null}
-          {tabs.length > 1 && sectionT && !licenseGateActive ? <SectionTabs tabs={tabs} ariaLabel={sectionT.aria} /> : null}
           {legacy ? <div className="fm-legacy">{children}</div> : children}
         </main>
       </div>
