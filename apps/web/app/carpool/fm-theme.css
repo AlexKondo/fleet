@@ -1589,3 +1589,24 @@ body .fm-content-wide.fm-content-wide {
     padding-right: 28px;
   }
 }
+
+/* ---------- one page title / subtitle on every screen ----------
+   The thinnest of the styles in use (the shell's own): 28px, weight 700, normal letter spacing; subtitle 15px regular. Screens that had their
+   own heavier title (weight 750/800, tight letter spacing, 27-29px) are brought to it. The id raises specificity above per-screen rules. */
+html body main#fleetmind-main h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.15;
+}
+html body main#fleetmind-main h1 + p,
+html body main#fleetmind-main .fm-subtitle {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  html body main#fleetmind-main h1 {
+    font-size: 24px;
+  }
+}
