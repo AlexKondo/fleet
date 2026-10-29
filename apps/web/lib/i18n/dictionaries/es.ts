@@ -350,7 +350,7 @@ const dict: Dictionary = {
     licensePendingAria: "Falta subir la licencia de conducir",
     licensePendingTitle: "Falta subir la licencia de conducir",
     licensePendingBody: "Toca para subir la foto de tu licencia y quedar autorizado para retirar vehículos.",
-    markAllRead: "Marcar todas como leídas",
+    markAllRead: "Marcar todo como leído",
     loadError: "No fue posible cargar las notificaciones ahora.",
     empty: "No hay notificaciones por aquí.",
     relative: {

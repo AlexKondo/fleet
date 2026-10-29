@@ -351,7 +351,7 @@ const dict: Dictionary = {
     licensePendingAria: "Falta de upload da CNH",
     licensePendingTitle: "Falta de upload da CNH",
     licensePendingBody: "Toque para enviar a foto da sua CNH e liberar a retirada de veículos.",
-    markAllRead: "Marcar todas como lidas",
+    markAllRead: "Marcar todos como lido",
     loadError: "Não foi possível carregar as notificações agora.",
     empty: "Nenhuma notificação por aqui.",
     relative: {

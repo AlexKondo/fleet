@@ -368,17 +368,17 @@ export function NotificationBell({
             align === "left" ? "left-0" : "right-0"
           }`}
         >
-          <div className="flex items-center justify-between border-b border-line-800 px-4 py-2.5">
+          <div className="flex flex-col gap-2 border-b border-line-800 px-4 py-2.5">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-fog-400">{t.label}</h3>
-            {unreadCount > 0 ? (
-              <button
-                type="button"
-                onClick={handleMarkAll}
-                className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-teal"
-              >
-                {t.markAllRead}
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={handleMarkAll}
+              disabled={unreadCount === 0}
+              data-testid="notif-mark-all"
+              className="w-full rounded-md border border-line-800 px-3 py-1.5 text-sm font-medium text-paper-50 hover:border-signal-teal hover:text-signal-teal disabled:cursor-default disabled:opacity-50 disabled:hover:border-line-800 disabled:hover:text-paper-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-teal"
+            >
+              {t.markAllRead}
+            </button>
           </div>
 
           <div className="max-h-80 overflow-y-auto">
