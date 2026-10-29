@@ -14,7 +14,7 @@ const initialState: MobilityPointActionState = { status: "idle" };
 
 /** Minimal CRUD screen (list / create / edit / deactivate) for Corporate Mobility Points —
  * deliberately no map picker or place-search autocomplete wiring in this phase (that's the
- * matching engine's job, Phase C3+); latitude/longitude are entered directly. */
+ * matching engine's job, Phase C3+); the coordinates come from the address (geocoded when saving). */
 export function MobilityPointsSection({
   dict,
   points,
@@ -52,22 +52,6 @@ export function MobilityPointsSection({
                   defaultValue={point.addressLabel}
                   required
                   className="w-56 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 outline-none"
-                />
-                <input
-                  name="latitude"
-                  type="number"
-                  step="any"
-                  defaultValue={point.latitude}
-                  required
-                  className="w-28 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 outline-none"
-                />
-                <input
-                  name="longitude"
-                  type="number"
-                  step="any"
-                  defaultValue={point.longitude}
-                  required
-                  className="w-28 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 outline-none"
                 />
                 <input
                   name="category"
@@ -152,26 +136,6 @@ export function MobilityPointsSection({
             name="addressLabel"
             required
             className="w-60 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.latitudeLabel}</span>
-          <input
-            name="latitude"
-            type="number"
-            step="any"
-            required
-            className="w-28 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.longitudeLabel}</span>
-          <input
-            name="longitude"
-            type="number"
-            step="any"
-            required
-            className="w-28 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none"
           />
         </label>
         <label className="flex flex-col gap-1.5">

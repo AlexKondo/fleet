@@ -4,6 +4,9 @@ import { loadChecklistState } from "@/lib/operations/checklistState";
 import { canShowOperationExceptionForm, loadNotDepartedException } from "@/lib/operations/operationExceptionUi";
 import { exceptionText } from "@/lib/operations/exceptionText";
 import { OfficeCustodyNotice } from "./OfficeCustodyNotice";
+import { ShareAddress } from "./ShareAddress";
+import { areaText } from "@/lib/i18n/areaText";
+import { shareAddressTexts } from "@/lib/i18n/areas/shareAddress";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -369,6 +372,11 @@ export default async function ReservationDetailPage({
             </div>
           ) : null}
         </header>
+
+        {/* once the manager confirmed the reservation, the destination can be taken to Maps / Waze / WhatsApp */}
+        {reservation.status === "confirmed" && reservation.trip_request.destination ? (
+          <ShareAddress address={reservation.trip_request.destination} T={areaText(shareAddressTexts, locale)} />
+        ) : null}
 
         {routeMap}
 

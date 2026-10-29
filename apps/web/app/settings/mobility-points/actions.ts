@@ -8,6 +8,7 @@ import {
   deactivateCorporateMobilityPoint,
   updateCorporateMobilityPoint,
 } from "@/lib/geospatial/corporateMobilityPoints";
+import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 
 export interface MobilityPointActionState {
   status: "idle" | "success" | "error";
@@ -31,6 +32,17 @@ async function requireFleetManager() {
   return { ok: true as const, supabase, organizationId: profile.organization_id };
 }
 
+const ADDRESS_NOT_FOUND = "Não encontrei esse endereço no mapa. Escreva o endereço completo (rua, número, cidade).";
+
+/** Nobody types coordinates: they come from the address (the same Google geocoder, Cost Guard-metered, the trip form uses). */
+async function coordinatesFor(organizationId: string, address: string): Promise<{ latitude: number; longitude: number } | null> {
+  if (!address) return null;
+  const out = await createGooglePlacesProvider(organizationId, { geocodeKind: "map_geocode" }).geocode(address);
+  if (out.status !== "ok") return null;
+  const { lat, lng } = out.location.coordinates;
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { latitude: lat, longitude: lng } : null;
+}
+
 export async function createMobilityPoint(
   _prevState: MobilityPointActionState,
   formData: FormData,
@@ -40,8 +52,9 @@ export async function createMobilityPoint(
 
   const name = String(formData.get("name") ?? "").trim();
   const addressLabel = String(formData.get("addressLabel") ?? "").trim();
-  const latitude = Number(formData.get("latitude"));
-  const longitude = Number(formData.get("longitude"));
+  const where = await coordinatesFor(auth.organizationId, addressLabel);
+  if (!where) return { status: "error", error: ADDRESS_NOT_FOUND };
+  const { latitude, longitude } = where;
   const category = String(formData.get("category") ?? "").trim() || null;
   const aliasesRaw = String(formData.get("aliases") ?? "").trim();
   const aliases = aliasesRaw ? aliasesRaw.split(",").map((a) => a.trim()).filter(Boolean) : [];
@@ -76,8 +89,9 @@ export async function updateMobilityPoint(
 
   const name = String(formData.get("name") ?? "").trim();
   const addressLabel = String(formData.get("addressLabel") ?? "").trim();
-  const latitude = Number(formData.get("latitude"));
-  const longitude = Number(formData.get("longitude"));
+  const where = await coordinatesFor(auth.organizationId, addressLabel);
+  if (!where) return { status: "error", error: ADDRESS_NOT_FOUND };
+  const { latitude, longitude } = where;
   const category = String(formData.get("category") ?? "").trim() || null;
 
   const result = await updateCorporateMobilityPoint(auth.supabase, {
