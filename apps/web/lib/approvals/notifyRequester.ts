@@ -47,7 +47,7 @@ export function noticeUrl(env: NoticeEnv): string | null {
 }
 
 /** The message the requester reads. */
-export function buildRequesterMessage(decision: "approve" | "reject", n: Notice): string {
+export function buildRequesterMessage(decision: "approve" | "reject", n: Notice, reason?: string): string {
   const vehicleName = cleanUserText(n.vehicle_name, 60);
   const plate = cleanUserText(n.plate, 12);
   const vehicle = [vehicleName, plate && !vehicleName.toUpperCase().includes(plate.toUpperCase()) ? `(${plate})` : ""].filter(Boolean).join(" ");
@@ -62,11 +62,13 @@ export function buildRequesterMessage(decision: "approve" | "reject", n: Notice)
   if (n.departure_at) lines.push(`Saída: ${formatWhen(n.departure_at)}`);
   if (n.return_at) lines.push(`Retorno: ${formatWhen(n.return_at)}`);
   if (n.destination) lines.push(`Destino: ${cleanUserText(n.destination)}`);
+  const why = cleanUserText(reason, 200);
+  if (decision === "reject" && why) lines.push(`Motivo: ${why}`);
   if (decision === "reject") lines.push("Se precisar, faça um novo pedido ou fale com o seu gestor.");
   return lines.join("\n");
 }
 
-export async function notifyRequesterOutcome(reservationId: string, decision: "approve" | "reject", deps: NoticeDeps): Promise<NoticeResult> {
+export async function notifyRequesterOutcome(reservationId: string, decision: "approve" | "reject", deps: NoticeDeps, reason?: string): Promise<NoticeResult> {
   const env = deps.env ?? currentNoticeEnv();
   const url = noticeUrl(env);
   if (!url || !env.secret) return { status: "skipped", reason: "not_configured" };
@@ -75,7 +77,7 @@ export async function notifyRequesterOutcome(reservationId: string, decision: "a
     if (res.error) return { status: "failed", error: "notice_error" };
     const n = res.data as Notice | null;
     if (!n || n.ok !== true || !n.phone_e164) return { status: "skipped", reason: n?.reason ?? "no_notice" };
-    const body = JSON.stringify({ type: "requester_notice", reservation_id: reservationId, to: n.phone_e164, text: buildRequesterMessage(decision, n) });
+    const body = JSON.stringify({ type: "requester_notice", reservation_id: reservationId, to: n.phone_e164, text: buildRequesterMessage(decision, n, reason) });
     const timestamp = String(Math.floor((deps.now?.() ?? Date.now()) / 1000));
     const out = await (deps.fetch ?? fetch)(url, {
       method: "POST",

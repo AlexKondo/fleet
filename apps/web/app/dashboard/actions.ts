@@ -3,6 +3,9 @@
 import { knownFleetActionError } from "@/lib/dashboard/fleetActionError";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { notifyRequesterOutcome } from "@/lib/approvals/notifyRequester";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -95,10 +98,19 @@ async function notifyRequesterByEmail(
   await sendEmail({ to: email, subject: heading, html, text });
 }
 
+/** The fleet manager's decision also reaches the requester on WhatsApp (best effort, only when they registered a number with consent). */
+function notifyRequesterByWhatsApp(reservationId: string, decision: "approve" | "reject", reason?: string): void {
+  after(async () => {
+    const admin = createSupabaseAdminClient();
+    await notifyRequesterOutcome(reservationId, decision, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }, reason);
+  });
+}
+
 export async function approveReservation(reservationId: string): Promise<void> {
   await runFleetAction((supabase) =>
     supabase.rpc("approve_reservation", { p_reservation_id: reservationId }),
   );
+  notifyRequesterByWhatsApp(reservationId, "approve");
   const supabase = await createSupabaseServerClient();
   await notifyRequesterByEmail(supabase, reservationId, (destination) => ({
     heading: "Reserva aprovada",
@@ -205,6 +217,7 @@ export async function cancelReservation(
   await runFleetAction((supabase) =>
     supabase.rpc("cancel_reservation", { p_reservation_id: reservationId, p_reason: reason }),
   );
+  notifyRequesterByWhatsApp(reservationId, "reject", reason);
   const supabase = await createSupabaseServerClient();
   await notifyRequesterByEmail(supabase, reservationId, (destination) => ({
     heading: "Reserva cancelada",
