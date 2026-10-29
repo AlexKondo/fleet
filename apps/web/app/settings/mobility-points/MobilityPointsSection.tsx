@@ -46,6 +46,10 @@ export function MobilityPointsSection({
     }
   }, [createState]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // the edit form closes only once the save went through (closing it on the click itself removed the form before it was sent)
+  useEffect(() => {
+    if (updateState.status === "success") setEditingId(null);
+  }, [updateState]);
 
   return (
     <div>
@@ -84,7 +88,6 @@ export function MobilityPointsSection({
                   type="submit"
                   disabled={updating}
                   className="rounded-sm border border-gwm-accent px-2 py-1.5 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10 disabled:opacity-50"
-                  onClick={() => setEditingId(null)}
                 >
                   {dict.common.save}
                 </button>
