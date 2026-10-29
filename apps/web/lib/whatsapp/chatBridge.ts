@@ -162,17 +162,19 @@ export function renderState(state: ChatState, appUrl: string, lastOnly = false):
   return [card, pick];
 }
 
-/** The vehicle proposal goes with the route map (the same picture as the screen), sent before the card. Best effort: no map, no problem. */
-async function withRouteMap(state: ChatState, rendered: Reply[], deps: BridgeDeps): Promise<Reply[]> {
-  const pending = state.status === "needs_confirmation" ? state.pendingAction : undefined;
-  if (!deps.routeMap || !pending || pending.options?.length) return rendered;
-  const origin = pending.slots.origin?.trim();
-  const destination = pending.slots.destination?.trim();
+/**
+ * The route map (the same picture as the screen) goes right AFTER the reservation is confirmed, not with the proposal: the person
+ * confirms, then gets the map of the trip. Best effort: no map, no problem. `before` is the proposal that was just confirmed.
+ */
+async function withRouteMap(before: ChatState["pendingAction"], phase: string | null, state: ChatState, rendered: Reply[], deps: BridgeDeps): Promise<Reply[]> {
+  if (!deps.routeMap || phase !== "confirm" || before?.intent !== "CREATE_RESERVATION" || state.status !== "idle") return rendered;
+  const origin = before.slots.origin?.trim();
+  const destination = before.slots.destination?.trim();
   if (!origin || !destination) return rendered;
   try {
     const map = await deps.routeMap(origin, destination);
     if (!map?.imageBase64) return rendered;
-    return [{ type: "image", text: clip(map.caption).slice(0, 900), imageBase64: map.imageBase64 }, ...rendered];
+    return [...rendered, { type: "image", text: clip(map.caption).slice(0, 900), imageBase64: map.imageBase64 }];
   } catch {
     return rendered;
   }
@@ -403,7 +405,7 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       }
       const state = await deps.send(prev, form);
       const rendered = renderState(state, deps.appUrl, form.get("phase") === "select_vehicle" || form.get("phase") === "select_option");
-      return await withRouteMap(state, rendered, deps);
+      return await withRouteMap(pending, String(form.get("phase") ?? ""), state, rendered, deps);
     });
     return { replies: [...prefix, ...replies] };
   } catch {

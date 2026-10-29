@@ -673,7 +673,13 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.type === 'image' ? { number: $json.number, type: 'image', caption: $json.text, filename: 'mapa.png', url: $json.image } : $json.type === 'buttons' ? { number: $json.number, title: 'FleetMind', description: $json.text, footer: 'FleetMind', buttons: $json.buttons.map(b => ({ type: 'reply', displayText: b.title, id: b.id })) } : { number: $json.number, text: $json.text }) }}",
         "options": {
-          "timeout": 30000
+          "timeout": 30000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          }
         }
       },
       "id": "n-sendtxt",
