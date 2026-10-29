@@ -122,12 +122,17 @@ function buttonToText(id: string | undefined): string | null {
   return null;
 }
 
-/** The assistant's new messages since the user's last one, as WhatsApp replies. */
-export function renderState(state: ChatState, appUrl: string): Reply[] {
+/**
+ * The assistant's new messages since the user's last one, as WhatsApp replies.
+ * `lastOnly`: a tap on a vehicle / place button is not stored as a user message, so "since the user's last one" would stack the
+ * earlier proposals (the Ora, then the HEV...) into the new card: only the assistant's newest message is shown.
+ */
+export function renderState(state: ChatState, appUrl: string, lastOnly = false): Reply[] {
   const msgs = state.messages;
   let lastUser = -1;
   msgs.forEach((m, i) => { if (m.role === "user") lastUser = i; });
   let fresh = msgs.slice(lastUser + 1).filter((m) => m.role === "assistant");
+  if (lastOnly) fresh = fresh.slice(-1);
   if (fresh.length === 0) fresh = msgs.filter((m) => m.role === "assistant").slice(-1);
   const parts = fresh.map((m) => (m.link ? `${m.content}\n${m.link.label}: ${appUrl.replace(/\/+$/, "")}${m.link.href}` : m.content));
   let body = parts.join("\n\n").trim();
@@ -397,7 +402,7 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
         form.set("message", input);
       }
       const state = await deps.send(prev, form);
-      const rendered = renderState(state, deps.appUrl);
+      const rendered = renderState(state, deps.appUrl, form.get("phase") === "select_vehicle" || form.get("phase") === "select_option");
       return await withRouteMap(state, rendered, deps);
     });
     return { replies: [...prefix, ...replies] };

@@ -542,3 +542,28 @@ describe("route map picture", () => {
     expect(routeMap).not.toHaveBeenCalled();
   });
 });
+
+describe("choosing a vehicle shows only the new proposal", () => {
+  const stacked = (): ChatState => ({
+    status: "needs_confirmation", conversationId: "c1",
+    messages: [
+      { role: "user", content: "quero um carro" },
+      { role: "assistant", content: "Vou reservar o veículo Ora 03" },
+      { role: "assistant", content: "Vou reservar o veículo Haval H6 PHEV35" },
+    ],
+    pendingAction: { intent: "CREATE_RESERVATION", slots: { preferredVehicleId: "v3" }, summary: "x", vehicleOptions: [{ vehicleId: "v1", plate: "A", vehicleName: "Ora" }, { vehicleId: "v3", plate: "C", vehicleName: "PHEV35" }] },
+  }) as ChatState;
+  it("a tap on a vehicle button: the card has only the newest proposal", async () => {
+    w.state = { ...stacked(), messages: [{ role: "user", content: "quero um carro" }, { role: "assistant", content: "Vou reservar o veículo Ora 03" }] } as ChatState;
+    w.next = stacked();
+    const r = await run(msg({ kind: "button", text: undefined, buttonId: "chat:veh:v3" }));
+    const card = r.replies.find((x) => x.type === "buttons")!;
+    expect(card.text).toContain("PHEV35");
+    expect(card.text).not.toContain("Ora 03");
+  });
+  it("a plain message still shows every new assistant message", () => {
+    const body = renderState(stacked(), "https://x.invalid")[0]!;
+    expect(body.text).toContain("Ora 03");
+    expect(body.text).toContain("PHEV35");
+  });
+});
