@@ -513,3 +513,32 @@ describe("choosing the place of a name that fits several buildings (WhatsApp)", 
     expect(calls.send[0]!.form).toMatchObject({ phase: "select_option", optionId: OPT[1]!.id });
   });
 });
+
+describe("route map picture", () => {
+  const proposal = (slots: Record<string, unknown>, extra: Record<string, unknown> = {}) => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar" }], pendingAction: { intent: "CREATE_RESERVATION", slots, summary: "Vou reservar", ...extra } }) as ChatState;
+  const map = { imageBase64: "AAAA", caption: "Rota: A → B\n10 km · 20 min" };
+
+  it("the vehicle proposal is sent with the map first, then the card", async () => {
+    w.next = proposal({ origin: "Av. Paulista 1000", destination: "Aeroporto de Guarulhos" });
+    const seen: string[][] = [];
+    const r = await run(msg(), deps({ routeMap: async (o, d) => { seen.push([o, d]); return map; } }));
+    expect(seen).toEqual([["Av. Paulista 1000", "Aeroporto de Guarulhos"]]);
+    expect(r.replies.map((x) => x.type)).toEqual(["image", "buttons"]);
+    expect(r.replies[0]).toMatchObject({ type: "image", imageBase64: "AAAA", text: "Rota: A → B\n10 km · 20 min" });
+  });
+  it("no map when it is unavailable or throws: the card still goes", async () => {
+    w.next = proposal({ origin: "A", destination: "B" });
+    for (const routeMap of [async () => null, async () => { throw new Error("boom"); }]) {
+      const r = await run(msg(), deps({ routeMap }));
+      expect(r.replies.map((x) => x.type)).toEqual(["buttons"]);
+    }
+  });
+  it("no map without both places, nor on a plain answer", async () => {
+    const routeMap = vi.fn(async () => map);
+    w.next = proposal({ origin: "A" });
+    expect((await run(msg(), deps({ routeMap }))).replies.map((x) => x.type)).toEqual(["buttons"]);
+    w.next = reply("Para quando?");
+    expect((await run(msg(), deps({ routeMap }))).replies.map((x) => x.type)).toEqual(["text"]);
+    expect(routeMap).not.toHaveBeenCalled();
+  });
+});

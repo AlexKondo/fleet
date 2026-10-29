@@ -9,6 +9,7 @@ import { getAppUrl } from "@/lib/getAppUrl";
 import { notifyRiderOfDecision } from "@/lib/carpool/notifyRider";
 import { loadLatestChatState } from "@/app/chat/queries";
 import { sendChatMessage } from "@/app/chat/actions";
+import { getTripRouteMap } from "@/app/carpool/routeMapActions";
 
 export const dynamic = "force-dynamic";
 // the assistant (language model + route/vehicle search) and a voice-note transcription can take a while
@@ -22,7 +23,7 @@ const MAX_BODY = 4_400_000; // Vercel's request limit is 4.5 MB: a voice note ar
  * /settings/approvals; unknown numbers get an empty answer. See lib/whatsapp/chatBridge.ts.
  *
  * Body: { from, message_id, kind: "text"|"audio"|"button"|"other", text?, button_id?, audio_base64?, mime_type? }
- * Answer: { replies: [{ type: "text", text } | { type: "buttons", text, buttons: [{ id, title }] }] } - n8n sends them in order.
+ * Answer: { replies: [{ type: "text", text } | { type: "buttons", text, buttons: [{ id, title }] } | { type: "image", text, imageBase64 }] } - n8n sends them in order.
  */
 export async function POST(request: NextRequest) {
   const secret = process.env.N8N_APPROVAL_SECRET;
@@ -75,6 +76,13 @@ export async function POST(request: NextRequest) {
     send: sendChatMessage,
     transcribe: (audio, mime) => transcribeAudio(audio, mime),
     appUrl: getAppUrl(),
+    routeMap: async (origin, destination) => {
+      const r = await getTripRouteMap({ originText: origin, destinationText: destination });
+      if (r.status !== "ok") return null;
+      const lines = [`Rota: ${r.originLabel} → ${r.destinationLabel}`, `${r.distanceKm.toLocaleString("pt-BR")} km · ${r.durationMin} min`];
+      if (r.approximate) lines.push("(aproximado: um dos endereços é só uma região)");
+      return { imageBase64: r.imageDataUrl.replace(/^data:image\/png;base64,/, ""), caption: lines.join("\n") };
+    },
     notifyRider: async (requestId, justification) => { await notifyRiderOfDecision(requestId, justification, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); },
   };
 

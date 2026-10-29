@@ -652,7 +652,7 @@
     {
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Uma saida por mensagem a enviar ao usuario, na ordem.\nconst meta = $('Classificar mensagem').first().json;\nconst r = $input.first().json;\nconst body = r.replies ? r : (r.body || {});\nconst replies = Array.isArray(body.replies) ? body.replies : [];\nreturn replies.map(x => ({ json: { number: meta.from, type: x.type, text: String(x.text || ''), buttons: x.buttons || [] } }));"
+        "jsCode": "// Uma saida por mensagem a enviar ao usuario, na ordem (texto, botoes ou imagem).\nconst meta = $('Classificar mensagem').first().json;\nconst r = $input.first().json;\nconst body = r.replies ? r : (r.body || {});\nconst replies = Array.isArray(body.replies) ? body.replies : [];\nreturn replies.map(x => ({ json: { number: meta.from, type: x.type, text: String(x.text || ''), buttons: x.buttons || [], image: x.imageBase64 || '' } }));"
       },
       "id": "n-split",
       "name": "Separar respostas",
@@ -665,79 +665,19 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "x1",
-              "leftValue": "={{ $json.type }}",
-              "rightValue": "buttons",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "n-isbtn",
-      "name": "E botoes?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1870,
-        760
-      ]
-    },
-    {
-      "parameters": {
         "method": "POST",
-        "url": "={{ $('Config entrada').first().json.evoBase }}/send/button",
+        "url": "={{ $('Config entrada').first().json.evoBase }}/{{ $json.type === 'image' ? 'send/media' : $json.type === 'buttons' ? 'send/button' : 'send/text' }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $json.number, title: 'FleetMind', description: $json.text, footer: 'FleetMind', buttons: $json.buttons.map(b => ({ type: 'reply', displayText: b.title, id: b.id })) }) }}",
+        "jsonBody": "={{ JSON.stringify($json.type === 'image' ? { number: $json.number, type: 'image', caption: $json.text, filename: 'mapa.png', url: $json.image } : $json.type === 'buttons' ? { number: $json.number, title: 'FleetMind', description: $json.text, footer: 'FleetMind', buttons: $json.buttons.map(b => ({ type: 'reply', displayText: b.title, id: b.id })) } : { number: $json.number, text: $json.text }) }}",
         "options": {
-          "timeout": 20000
-        }
-      },
-      "id": "n-sendbtn",
-      "name": "Enviar botoes ao usuario",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2090,
-        700
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "evoGoGeral01",
-          "name": "Evolution Go (Geral)"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Config entrada').first().json.evoBase }}/send/text",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $json.number, text: $json.text }) }}",
-        "options": {
-          "timeout": 20000
+          "timeout": 30000
         }
       },
       "id": "n-sendtxt",
-      "name": "Enviar texto ao usuario",
+      "name": "Enviar mensagem ao usuario",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -1300,25 +1240,7 @@
       "main": [
         [
           {
-            "node": "E botoes?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "E botoes?": {
-      "main": [
-        [
-          {
-            "node": "Enviar botoes ao usuario",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Enviar texto ao usuario",
+            "node": "Enviar mensagem ao usuario",
             "type": "main",
             "index": 0
           }

@@ -35,7 +35,9 @@ export interface InboundMessage {
 
 export type Reply =
   | { type: "text"; text: string }
-  | { type: "buttons"; text: string; buttons: { id: string; title: string }[] };
+  | { type: "buttons"; text: string; buttons: { id: string; title: string }[] }
+  /** The route map picture (PNG, base64 without the data: prefix) with a caption; n8n sends it with Evolution's /send/media. */
+  | { type: "image"; text: string; imageBase64: string };
 
 type Rpc = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
 
@@ -54,6 +56,8 @@ export interface BridgeDeps {
   now?: () => number;
   /** tells the carpool rider what the host answered (WhatsApp, best effort, never throws) */
   notifyRider?: (requestId: string, justification?: string) => Promise<void>;
+  /** the same route map the screen shows (runs as the member); null when it is not available - the card is then sent without it */
+  routeMap?: (origin: string, destination: string) => Promise<{ imageBase64: string; caption: string } | null>;
 }
 
 const SESSION_MINUTES = 30;
@@ -151,6 +155,22 @@ export function renderState(state: ChatState, appUrl: string): Reply[] {
     buttons: others.slice(0, MAX_VEHICLE_BUTTONS).map((v, i) => ({ id: `${VEHICLE_BUTTON_PREFIX}${v.vehicleId}`, title: `${i + 1} · ${v.vehicleName}`.slice(0, 20) })),
   };
   return [card, pick];
+}
+
+/** The vehicle proposal goes with the route map (the same picture as the screen), sent before the card. Best effort: no map, no problem. */
+async function withRouteMap(state: ChatState, rendered: Reply[], deps: BridgeDeps): Promise<Reply[]> {
+  const pending = state.status === "needs_confirmation" ? state.pendingAction : undefined;
+  if (!deps.routeMap || !pending || pending.options?.length) return rendered;
+  const origin = pending.slots.origin?.trim();
+  const destination = pending.slots.destination?.trim();
+  if (!origin || !destination) return rendered;
+  try {
+    const map = await deps.routeMap(origin, destination);
+    if (!map?.imageBase64) return rendered;
+    return [{ type: "image", text: clip(map.caption).slice(0, 900), imageBase64: map.imageBase64 }, ...rendered];
+  } catch {
+    return rendered;
+  }
 }
 
 type Resolved = { ok?: boolean; reason?: string; request_id?: string; host_id?: string; host_email?: string; rider_name?: string };
@@ -377,7 +397,8 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
         form.set("message", input);
       }
       const state = await deps.send(prev, form);
-      return renderState(state, deps.appUrl);
+      const rendered = renderState(state, deps.appUrl);
+      return await withRouteMap(state, rendered, deps);
     });
     return { replies: [...prefix, ...replies] };
   } catch {
