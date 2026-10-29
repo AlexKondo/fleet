@@ -335,22 +335,6 @@ export default async function FleetCommandCenterPage({
                 className="fc-location"
                 href="/fleet"
               >
-                <div className="fc-map-state">
-                  <svg
-                    className="fc-pin-svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 21s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12Z" />
-                    <circle cx="12" cy="9" r="2.5" />
-                  </svg>
-                  <strong>{t.mapUnavailable}</strong>
-                  <p>{t.mapNoSource}</p>
-                  <span className="fc-pill">{t.locationRegistered}</span>
-                </div>
                 <div className="fc-location-list">
                   {vehicles === null || data.locations === null ? (
                     <Empty>{t.locationsError}</Empty>

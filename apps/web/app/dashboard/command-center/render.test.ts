@@ -130,7 +130,7 @@ describe("command center page access and rendering", () => {
   it("renders the actual shell and command center with explicit unavailable metrics", async () => {
     const html = await render();
     expect(html).toContain("Fleet Command Center 360°");
-    expect(html).toContain("Mapa indisponível");
+    expect(html).not.toContain("Mapa indisponível");
     expect(html).toContain("Fonte de cálculo pendente");
     expect(html).toContain("TEST001");
     expect(html).not.toContain("R$ 3.450");
