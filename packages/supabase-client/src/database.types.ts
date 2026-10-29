@@ -447,6 +447,7 @@ export type Database = {
           license_reminder_6mo_sent_at: string | null
           organization_id: string
           role: Database["public"]["Enums"]["user_role"]
+          work_location_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -464,6 +465,7 @@ export type Database = {
           license_reminder_6mo_sent_at?: string | null
           organization_id: string
           role?: Database["public"]["Enums"]["user_role"]
+          work_location_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -481,6 +483,7 @@ export type Database = {
           license_reminder_6mo_sent_at?: string | null
           organization_id?: string
           role?: Database["public"]["Enums"]["user_role"]
+          work_location_id?: string | null
         }
         Relationships: [
           {

@@ -7,6 +7,7 @@ import {
   reactivateUser,
   updateDriverAuthorization,
   updateUserRole,
+  updateWorkLocation,
   type UserActionState,
 } from "./actions";
 import { getRoleOptions } from "./ROLE_LABELS";
@@ -38,11 +39,14 @@ export function UserRow({
   dict,
   locale,
   licensesAvailable = true,
+  workLocations = [],
 }: {
   dict: Dictionary;
   locale: Locale;
   /** false when list_member_licenses() failed: license/authorization controls are rendered disabled and carry NO fields. */
   licensesAvailable?: boolean;
+  /** active corporate mobility points a member can be assigned to as their workplace */
+  workLocations?: { id: string; name: string }[];
   member: {
     id: string;
     full_name: string;
@@ -51,6 +55,7 @@ export function UserRow({
     enabled?: boolean | null;
     accessVersion?: number;
     accessRequestId?: string;
+    work_location_id?: string | null;
     driver_authorized: boolean;
     drivers_license_number: string | null;
     drivers_license_category: string | null;
@@ -62,6 +67,9 @@ export function UserRow({
 }) {
   const [roleState, roleAction] = useActionState(updateUserRole, initialState);
   const [removeState, removeAction, removePending] = useActionState(member.enabled === false ? reactivateUser : removeUser, initialState);
+  const [workState, workAction] = useActionState(updateWorkLocation, initialState);
+  const workFormRef = useRef<HTMLFormElement>(null);
+  const workSaved = useAutoSavedNotice(workState.status);
   const [driverState, driverAction] = useActionState(updateDriverAuthorization, initialState);
   const [licenseState, licenseAction] = useActionState(updateDriverAuthorization, initialState);
   const [resetState, resetAction, resetPending] = useActionState(resetMemberLicense, initialState);
@@ -103,6 +111,29 @@ export function UserRow({
             ))}
           </select>
         </form>
+        <form ref={workFormRef} action={workAction} className="mt-2">
+          <input type="hidden" name="userId" value={member.id} />
+          <label className="flex flex-col gap-1 text-[11px] font-medium text-fog-400">
+            {t.workLocationLabel}
+            <select
+              name="workLocationId"
+              defaultValue={member.work_location_id ?? ""}
+              onChange={() => workFormRef.current?.requestSubmit()}
+              data-testid="work-location-select"
+              className="w-40 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
+            >
+              <option value="">{t.workLocationNone}</option>
+              {workLocations.map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+          </label>
+        </form>
+        {workState.status === "error" ? (
+          <p role="alert" className="mt-1 text-xs text-signal-red">{errorLabel(dict, workState.error)}</p>
+        ) : workSaved ? (
+          <p className="mt-1 text-xs text-signal-teal">{t.autoSaved}</p>
+        ) : null}
         {roleState.status === "error" ? (
           <p role="alert" className="mt-1 text-xs text-signal-red">
             {errorLabel(dict, roleState.error)}

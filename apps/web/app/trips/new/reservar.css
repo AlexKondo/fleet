@@ -774,3 +774,19 @@
     max-width: 640px;
   }
 }
+
+/* "Quer sair de outra localidade?" / back to the workplace */
+.fm-theme .rv-linkbtn {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fm-primary, #0868f9);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.fm-theme .rv-linkbtn:hover {
+  text-decoration: underline;
+}

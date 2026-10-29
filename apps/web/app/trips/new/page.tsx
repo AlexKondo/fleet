@@ -7,6 +7,7 @@ import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import { deriveCarpoolGating } from "@/lib/carpool/carpoolFirst";
 import { parseTripPrefill } from "@/lib/trips/tripPrefill";
+import { loadWorkLocation } from "@/lib/geospatial/workLocation";
 
 export default async function NewTripPage({
   searchParams,
@@ -37,6 +38,7 @@ export default async function NewTripPage({
     profile ? await loadLatestPolicy(supabase, profile.organization_id) : { ok: false },
   );
 
+  const workLocation = await loadWorkLocation(supabase, user.id);
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
 
   // Registered departure locations (vehicle_locations) with how many vehicles are there right now: the requester picks
@@ -62,7 +64,7 @@ export default async function NewTripPage({
     >
       <h1 className="fm-title">{dict.trips.reservar.title}</h1>
       <p className="fm-subtitle">{dict.trips.reservar.subtitle}</p>
-      <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} prefill={prefill} pickupLocations={pickupLocations} />
+      <TripRequestForm dict={dict} locale={locale} carpoolMode={carpoolMode} prefill={prefill} pickupLocations={pickupLocations} workLocation={workLocation} />
     </FmShell>
   );
 }

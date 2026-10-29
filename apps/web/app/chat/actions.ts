@@ -21,6 +21,7 @@ import { verifyPlacesForChat } from "./verifyPlacesServer";
 import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { classifyError, failureReply, type AssistantReply } from "./replies";
 import { fillTemplate } from "@/lib/carpool/errorText";
+import { loadWorkLocation } from "@/lib/geospatial/workLocation";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
   carpoolFirstForReservation,
@@ -813,6 +814,11 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       // engine with carpool-first, compatible offers are shown BEFORE the vehicle card, next to
       // a "use a vehicle" choice. Any other outcome falls through to the normal vehicle card.
       let slots = interpretation.slots;
+      // "Seu local de trabalho" is the default origin: the person is only asked where they are going (a spoken origin always wins)
+      if (!slots.origin?.trim()) {
+        const work = await loadWorkLocation(supabase, user.id);
+        if (work) slots = { ...slots, origin: work.name };
+      }
       // A vehicle is recommended for the real route (autonomy): the origin and the destination must be located on the map first. If one is not
       // understood, the assistant asks for it (politely) and neither suggests a vehicle nor reserves anything.
       const placeCheck = await verifyPlacesForChat(supabase, profile.organization_id, slots, dictNow);

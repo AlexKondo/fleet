@@ -45,7 +45,7 @@ export default async function UsersPage() {
   // served to fleet_manager/administrator only by the role-checked list_member_licenses() definer
   // function (merged here by id).
   const [profileResult, { data: licenseRows, error: licensesError }, { data: sourceRows }, accessResult] = await Promise.all([
-    pageAll("team profiles", (a,b)=>supabase.from("profiles").select("id, full_name, role").eq("organization_id", profile.organization_id).order("id").range(a,b)).then(data=>({data,error:false})).catch(()=>({data:null,error:true})),
+    pageAll("team profiles", (a,b)=>supabase.from("profiles").select("id, full_name, role, work_location_id").eq("organization_id", profile.organization_id).order("id").range(a,b)).then(data=>({data,error:false})).catch(()=>({data:null,error:true})),
     supabase.rpc("list_member_licenses"),
     // migration 0074: how each expiration got there. Fail-soft: on an error every member shows "Origem nao registrada"
     // (the page and the license fields are never affected).
@@ -89,6 +89,9 @@ export default async function UsersPage() {
       return { ...p, email: data.user?.email ?? "—" };
     }),
   );
+
+  const { data: pointRows } = await supabase.from("corporate_mobility_points").select("id, name").eq("organization_id", profile.organization_id).eq("is_active", true).order("name");
+  const workLocations = (pointRows ?? []).map((p) => ({ id: p.id, name: p.name }));
 
   const o = dict.ops.users;
   const roleLabels = getRoleLabels(dict);
@@ -192,6 +195,7 @@ export default async function UsersPage() {
                   email: m.email,
                   role: m.role,
                   enabled: m.enabled,
+                  work_location_id: m.work_location_id,
                   accessVersion: m.accessVersion,
                   accessRequestId: m.accessRequestId,
                   driver_authorized: m.driver_authorized,
@@ -202,6 +206,7 @@ export default async function UsersPage() {
                 }}
                 isSelf={m.id === user.id}
                 licensesAvailable={licensesAvailable}
+                workLocations={workLocations}
                 dict={dict}
               />
             ),

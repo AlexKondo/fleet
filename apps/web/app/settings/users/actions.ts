@@ -185,6 +185,44 @@ export async function updateUserRole(
   return { status: "success" };
 }
 
+/** "Local de trabalho" of a member (a corporate mobility point of the same organization, or none): the default origin of their trips. */
+export async function updateWorkLocation(
+  _prevState: UserActionState,
+  formData: FormData,
+): Promise<UserActionState> {
+  const { organizationId, actingUserId } = await requireAdministrator();
+  if (!organizationId) return { status: "error", error: "not_authorized" };
+
+  const dict = await getDictionary();
+  const userId = String(formData.get("userId") ?? "");
+  const raw = String(formData.get("workLocationId") ?? "");
+  if (!userId) return { status: "error", error: dict.errors.users.userInvalid };
+  const admin = createSupabaseAdminClient();
+
+  const { data: target } = await admin.from("profiles").select("organization_id").eq("id", userId).maybeSingle();
+  if (!target || target.organization_id !== organizationId) return { status: "error", error: dict.errors.users.userNotFound };
+
+  let workLocationId: string | null = null;
+  if (raw) {
+    const { data: point } = await admin.from("corporate_mobility_points").select("id").eq("id", raw).eq("organization_id", organizationId).eq("is_active", true).maybeSingle();
+    if (!point) return { status: "error", error: dict.errors.users.driverAuthorizationSaveFailed };
+    workLocationId = point.id;
+  }
+  const { error } = await admin.from("profiles").update({ work_location_id: workLocationId }).eq("id", userId);
+  if (error) return { status: "error", error: dict.errors.users.driverAuthorizationSaveFailed };
+
+  await admin.rpc("log_audit_event", {
+    p_organization_id: organizationId,
+    p_actor_id: actingUserId as string,
+    p_action: "work_location_changed",
+    p_entity_type: "profile",
+    p_entity_id: userId,
+    p_after: { work_location_id: workLocationId },
+  });
+  revalidatePath("/settings/users");
+  return { status: "success" };
+}
+
 /**
  * BR-004/GT-011: driver authorization + CNH validity, enforced server-side at checkout by
  * record_pickup (0014_driver_authorization.sql) — this is the admin surface that sets the

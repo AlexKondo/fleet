@@ -697,6 +697,9 @@ export type Dictionary = {
       distanceAuto: string;
       mapEmpty: string;
       pickupLocationLabel: string;
+      leavingFrom: string;
+      otherOriginButton: string;
+      backToWorkLocation: string;
       pickupLocationPlaceholder: string;
       pickupLocationHint: string;
       pickupVehiclesNone: string;
@@ -992,6 +995,8 @@ export type Dictionary = {
       reactivate: string;
       reactivateConfirm: string;
       accountActive: string;
+      workLocationLabel: string;
+      workLocationNone: string;
       accountInactive: string;
       accessUnavailable: string;
       reasonLabel: string;

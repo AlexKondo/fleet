@@ -100,6 +100,7 @@ export function TripRequestForm({
   carpoolMode,
   prefill,
   pickupLocations = [],
+  workLocation = null,
 }: {
   dict: Dictionary;
   locale: Locale;
@@ -109,6 +110,8 @@ export function TripRequestForm({
   /** Phase C5: org carpool policy as seen by the server (page.tsx). `newEngine` hides the old
    * allow_carpool checkbox (the Yes/No host step is then the only carpool question). */
   carpoolMode: CarpoolGating;
+  /** "Seu local de trabalho" (profile): the default origin, with a button to leave from somewhere else. */
+  workLocation?: { id: string; name: string; addressLabel: string } | null;
   /** Registered departure locations with the number of vehicles there (page.tsx). Empty => the org has none: no origin filter. */
   pickupLocations?: { id: string; name: string; vehicles: number }[];
 }) {
@@ -140,6 +143,8 @@ export function TripRequestForm({
   // dates are applied right after hydration, so the markup can never differ between server and client.
   const [origin, setOrigin] = useState("");
   const [originLocationId, setOriginLocationId] = useState("");
+  // with a work location the origin is known: the field only shows once the person says they leave from somewhere else
+  const [otherOrigin, setOtherOrigin] = useState(false);
   const [includeOthers, setIncludeOthers] = useState(false);
   // "see vehicles at other locations" re-runs the same search with the explicit flag (hidden input is rendered first).
   const formRef = useRef<HTMLFormElement>(null);
@@ -182,7 +187,10 @@ export function TripRequestForm({
     setDepTime(dep.time);
     setRetDate(ret.date);
     setRetTime(ret.time);
-    if (draft.origin !== undefined) setOrigin(draft.origin);
+    if (draft.origin !== undefined) {
+      setOrigin(draft.origin);
+      if (workLocation && draft.origin.trim() && draft.origin.trim() !== workLocation.addressLabel) setOtherOrigin(true);
+    } else if (workLocation) setOrigin(workLocation.addressLabel);
     if (draft.originLocationId && pickupLocations.some((l) => l.id === draft.originLocationId)) setOriginLocationId(draft.originLocationId);
     else if (draft.origin) {
       // the origin text (assistant hand-off / old draft) may already be the name of a registered location
@@ -494,18 +502,38 @@ export function TripRequestForm({
           <div className="rv-grid">
             <div className="fm-field rv-s7">
               <label className="fm-label" htmlFor="rv-origin">{t.originLabel}</label>
-              <PlaceAutocomplete
-                id="rv-origin"
-                name="origin"
-                value={origin}
-                onChange={setOrigin}
-                dict={dict}
-                required
-                placeholder={dict.carpool.buscar.originPlaceholder}
-                icon={<PinIcon />}
-                clearLabel={`${dict.carpool.buscar.clearField}: ${t.originLabel}`}
-                testId="rv-origin"
-              />
+              {workLocation && !otherOrigin ? (
+                <div data-testid="rv-origin-work">
+                  <input type="hidden" name="origin" value={workLocation.addressLabel} />
+                  <p className="fm-input" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <PinIcon />
+                    <span><strong>{rv.leavingFrom}</strong> {workLocation.name}</span>
+                  </p>
+                  <button type="button" className="rv-linkbtn" data-testid="rv-origin-other" onClick={() => { setOtherOrigin(true); setOrigin(""); }}>
+                    {rv.otherOriginButton}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <PlaceAutocomplete
+                    id="rv-origin"
+                    name="origin"
+                    value={origin}
+                    onChange={setOrigin}
+                    dict={dict}
+                    required
+                    placeholder={dict.carpool.buscar.originPlaceholder}
+                    icon={<PinIcon />}
+                    clearLabel={`${dict.carpool.buscar.clearField}: ${t.originLabel}`}
+                    testId="rv-origin"
+                  />
+                  {workLocation ? (
+                    <button type="button" className="rv-linkbtn" data-testid="rv-origin-back" onClick={() => { setOtherOrigin(false); setOrigin(workLocation.addressLabel); }}>
+                      {rv.backToWorkLocation}
+                    </button>
+                  ) : null}
+                </>
+              )}
             </div>
             <div className="fm-field rv-s7">
               <label className="fm-label" htmlFor="rv-destination">{t.destinationLabel}</label>
