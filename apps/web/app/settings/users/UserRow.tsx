@@ -69,6 +69,8 @@ export function UserRow({
   const [removeState, removeAction, removePending] = useActionState(member.enabled === false ? reactivateUser : removeUser, initialState);
   const [workState, workAction] = useActionState(updateWorkLocation, initialState);
   const workFormRef = useRef<HTMLFormElement>(null);
+  // controlled: React 19 resets an uncontrolled <form action> select to its first default once the action settles (the choice looked lost)
+  const [workLocationId, setWorkLocationId] = useState(member.work_location_id ?? "");
   const workSaved = useAutoSavedNotice(workState.status);
   const [driverState, driverAction] = useActionState(updateDriverAuthorization, initialState);
   const [licenseState, licenseAction] = useActionState(updateDriverAuthorization, initialState);
@@ -117,8 +119,12 @@ export function UserRow({
             {t.workLocationLabel}
             <select
               name="workLocationId"
-              defaultValue={member.work_location_id ?? ""}
-              onChange={() => workFormRef.current?.requestSubmit()}
+              value={workLocationId}
+              onChange={(e) => {
+                setWorkLocationId(e.target.value);
+                // submit after the state is applied, so the form carries the new value
+                setTimeout(() => workFormRef.current?.requestSubmit(), 0);
+              }}
               data-testid="work-location-select"
               className="w-40 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
             >
