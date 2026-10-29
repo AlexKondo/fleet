@@ -43,7 +43,7 @@ function readApiKey(): string | undefined {
 
 async function rawGeocode(address: string, apiKey: string): Promise<GeocodingOutcome> {
   try {
-    const url = `${GEOCODE_URL}?address=${encodeURIComponent(foldAccents(address))}&key=${apiKey}`;
+    const url = `${GEOCODE_URL}?address=${encodeURIComponent(foldAccents(address))}&region=br&key=${apiKey}`;
     const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
 
     if (!response.ok) {
