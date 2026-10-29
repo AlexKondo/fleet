@@ -1349,6 +1349,8 @@ const dict: Dictionary = {
     aliasesPlaceholder: "以逗号分隔",
     addButton: "添加地点",
     deactivateAction: "停用",
+    deleteAction: "删除",
+    deleteConfirm: "永久删除此地点？此操作无法撤销。",
   },
   carpool: {
     newTrip: {

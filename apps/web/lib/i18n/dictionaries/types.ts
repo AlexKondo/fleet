@@ -1319,6 +1319,8 @@ export type Dictionary = {
     aliasesPlaceholder: string;
     addButton: string;
     deactivateAction: string;
+    deleteAction: string;
+    deleteConfirm: string;
   };
   carpool: {
     newTrip: {

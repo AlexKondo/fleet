@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import {
   createCorporateMobilityPoint,
   deactivateCorporateMobilityPoint,
+  deleteCorporateMobilityPoint,
   updateCorporateMobilityPoint,
 } from "@/lib/geospatial/corporateMobilityPoints";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
@@ -43,6 +44,11 @@ async function coordinatesFor(organizationId: string, address: string): Promise<
   return Number.isFinite(lat) && Number.isFinite(lng) ? { latitude: lat, longitude: lng } : null;
 }
 
+/** "a, b, c" -> ["a","b","c"] (blank pieces dropped). */
+function parseAliases(raw: FormDataEntryValue | null): string[] {
+  return String(raw ?? "").split(",").map((a) => a.trim()).filter(Boolean);
+}
+
 export async function createMobilityPoint(
   _prevState: MobilityPointActionState,
   formData: FormData,
@@ -56,8 +62,7 @@ export async function createMobilityPoint(
   if (!where) return { status: "error", error: ADDRESS_NOT_FOUND };
   const { latitude, longitude } = where;
   const category = String(formData.get("category") ?? "").trim() || null;
-  const aliasesRaw = String(formData.get("aliases") ?? "").trim();
-  const aliases = aliasesRaw ? aliasesRaw.split(",").map((a) => a.trim()).filter(Boolean) : [];
+  const aliases = parseAliases(formData.get("aliases"));
 
   const result = await createCorporateMobilityPoint(auth.supabase, {
     organizationId: auth.organizationId,
@@ -93,6 +98,7 @@ export async function updateMobilityPoint(
   if (!where) return { status: "error", error: ADDRESS_NOT_FOUND };
   const { latitude, longitude } = where;
   const category = String(formData.get("category") ?? "").trim() || null;
+  const aliases = parseAliases(formData.get("aliases"));
 
   const result = await updateCorporateMobilityPoint(auth.supabase, {
     id,
@@ -101,6 +107,7 @@ export async function updateMobilityPoint(
     latitude,
     longitude,
     category,
+    aliases,
   });
 
   if (result.status === "error") {
@@ -116,5 +123,13 @@ export async function deactivateMobilityPoint(id: string): Promise<void> {
   if (!auth.ok) return;
 
   await deactivateCorporateMobilityPoint(auth.supabase, id);
+  revalidatePath("/settings/mobility-points");
+}
+
+export async function deleteMobilityPoint(id: string): Promise<void> {
+  const auth = await requireFleetManager();
+  if (!auth.ok) return;
+
+  await deleteCorporateMobilityPoint(auth.supabase, id);
   revalidatePath("/settings/mobility-points");
 }

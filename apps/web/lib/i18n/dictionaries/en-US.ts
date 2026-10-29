@@ -1385,6 +1385,8 @@ const dict: Dictionary = {
     aliasesPlaceholder: "comma-separated",
     addButton: "Add point",
     deactivateAction: "Deactivate",
+    deleteAction: "Delete",
+    deleteConfirm: "Delete this point permanently? This cannot be undone.",
   },
   carpool: {
     newTrip: {

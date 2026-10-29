@@ -177,3 +177,13 @@ export async function deactivateCorporateMobilityPoint(
   if (error) return { status: "error", message: error.message };
   return { status: "ok", data: true };
 }
+
+/** Removes the point for good (the matching engine simply stops knowing the place; past carpool rows keep their own copy of the address). */
+export async function deleteCorporateMobilityPoint(
+  supabase: SupabaseClient<Database>,
+  id: string,
+): Promise<CmpServiceResult<true>> {
+  const { error } = await supabase.from("corporate_mobility_points").delete().eq("id", id);
+  if (error) return { status: "error", message: error.message };
+  return { status: "ok", data: true };
+}

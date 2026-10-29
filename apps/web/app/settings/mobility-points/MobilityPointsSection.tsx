@@ -5,6 +5,7 @@ import { PlaceAutocomplete } from "../../carpool/PlaceAutocomplete";
 import {
   createMobilityPoint,
   deactivateMobilityPoint,
+  deleteMobilityPoint,
   updateMobilityPoint,
   type MobilityPointActionState,
 } from "./actions";
@@ -72,6 +73,13 @@ export function MobilityPointsSection({
                   placeholder={t.categoryPlaceholder}
                   className="w-32 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 outline-none"
                 />
+                <input
+                  name="aliases"
+                  defaultValue={point.aliases.join(", ")}
+                  placeholder={t.aliasesPlaceholder}
+                  aria-label={t.aliasesLabel}
+                  className="w-52 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 outline-none"
+                />
                 <button
                   type="submit"
                   disabled={updating}
@@ -97,6 +105,11 @@ export function MobilityPointsSection({
               <div>
                 <span className={point.isActive ? "" : "text-fog-600 line-through"}>{point.name}</span>
                 <span className="ml-2 text-xs text-fog-400">{point.addressLabel}</span>
+                {point.aliases.length > 0 ? (
+                  <span className="ml-2 text-xs text-fog-400" data-testid="mp-aliases">
+                    · {t.aliasesLabel}: {point.aliases.join(", ")}
+                  </span>
+                ) : null}
                 {!point.isActive ? (
                   <span className="ml-2 text-xs uppercase tracking-widest text-fog-600">{t.inactiveLabel}</span>
                 ) : null}
@@ -119,6 +132,16 @@ export function MobilityPointsSection({
                     </button>
                   </form>
                 ) : null}
+                <form
+                  action={deleteMobilityPoint.bind(null, point.id)}
+                  onSubmit={(e) => {
+                    if (!window.confirm(t.deleteConfirm)) e.preventDefault();
+                  }}
+                >
+                  <button type="submit" className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red">
+                    {t.deleteAction}
+                  </button>
+                </form>
               </div>
             </li>
           ),
