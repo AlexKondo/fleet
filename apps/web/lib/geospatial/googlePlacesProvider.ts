@@ -9,6 +9,7 @@ import type {
   ResolvedLocation,
 } from "@fleet/domain";
 import { withCostGuard } from "./costGuard";
+import { foldAccents } from "./foldAccents";
 
 /**
  * Phase C2 — Google Maps Platform adapter for geocoding + place search.
@@ -42,7 +43,7 @@ function readApiKey(): string | undefined {
 
 async function rawGeocode(address: string, apiKey: string): Promise<GeocodingOutcome> {
   try {
-    const url = `${GEOCODE_URL}?address=${encodeURIComponent(address)}&key=${apiKey}`;
+    const url = `${GEOCODE_URL}?address=${encodeURIComponent(foldAccents(address))}&key=${apiKey}`;
     const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
 
     if (!response.ok) {
@@ -103,7 +104,7 @@ async function rawSearchPlaces(query: string, apiKey: string): Promise<PlaceSear
         "X-Goog-Api-Key": apiKey,
         "X-Goog-FieldMask": PLACES_FIELD_MASK,
       },
-      body: JSON.stringify({ textQuery: query }),
+      body: JSON.stringify({ textQuery: foldAccents(query) }),
       signal: AbortSignal.timeout(8000),
     });
 

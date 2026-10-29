@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { PlaceAutocomplete } from "../../carpool/PlaceAutocomplete";
 import {
   createMobilityPoint,
   deactivateMobilityPoint,
@@ -11,6 +12,15 @@ import type { Dictionary } from "../../../lib/i18n/dictionaries";
 import type { CorporateMobilityPoint } from "@/lib/geospatial/corporateMobilityPoints";
 
 const initialState: MobilityPointActionState = { status: "idle" };
+
+const EDIT_INPUT = "w-56 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 outline-none";
+const NEW_INPUT = "w-60 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none";
+
+/** The address field: the same Google suggestions the reservation form shows (the coordinates are found from the chosen address when saving). */
+function AddressField({ id, initial, dict, className }: { id: string; initial: string; dict: Dictionary; className: string }) {
+  const [value, setValue] = useState(initial);
+  return <PlaceAutocomplete id={id} name="addressLabel" value={value} onChange={setValue} dict={dict} required className={className} maxLength={300} />;
+}
 
 /** Minimal CRUD screen (list / create / edit / deactivate) for Corporate Mobility Points —
  * deliberately no map picker or place-search autocomplete wiring in this phase (that's the
@@ -26,6 +36,14 @@ export function MobilityPointsSection({
   const [createState, createAction, creating] = useActionState(createMobilityPoint, initialState);
   const [updateState, updateAction, updating] = useActionState(updateMobilityPoint, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  // the form (and the address field) is emptied only when the point was really saved, so a wrong address is not lost
+  const [addressKey, setAddressKey] = useState(0);
+  useEffect(() => {
+    if (createState.status === "success") {
+      formRef.current?.reset();
+      setAddressKey((k) => k + 1);
+    }
+  }, [createState]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   return (
@@ -47,12 +65,7 @@ export function MobilityPointsSection({
                   required
                   className="w-40 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 outline-none"
                 />
-                <input
-                  name="addressLabel"
-                  defaultValue={point.addressLabel}
-                  required
-                  className="w-56 rounded-sm border border-line-800 bg-panel-900 px-2 py-1.5 text-xs text-paper-50 outline-none"
-                />
+                <AddressField id={`mp-address-${point.id}`} initial={point.addressLabel} dict={dict} className={EDIT_INPUT} />
                 <input
                   name="category"
                   defaultValue={point.category ?? ""}
@@ -116,10 +129,7 @@ export function MobilityPointsSection({
       <h2 className="mb-2 text-sm font-semibold uppercase tracking-widest text-paper-50">{t.addHeading}</h2>
       <form
         ref={formRef}
-        action={async (formData) => {
-          await createAction(formData);
-          formRef.current?.reset();
-        }}
+        action={createAction}
         className="flex flex-wrap items-end gap-3"
       >
         <label className="flex flex-col gap-1.5">
@@ -132,11 +142,7 @@ export function MobilityPointsSection({
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.addressLabel}</span>
-          <input
-            name="addressLabel"
-            required
-            className="w-60 rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none"
-          />
+          <AddressField key={addressKey} id="mp-address-new" initial="" dict={dict} className={NEW_INPUT} />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{t.categoryLabel}</span>

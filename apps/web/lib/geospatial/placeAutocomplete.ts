@@ -2,6 +2,7 @@ import "server-only";
 import { withCostGuard } from "./costGuard";
 import { providerErrorReason } from "./redact";
 import type { CorporateMobilityPoint } from "./corporateMobilityPoints";
+import { foldAccents } from "./foldAccents";
 
 /**
  * Address autocomplete: Google Places API (New) "Autocomplete" (POST places.googleapis.com/v1/places:autocomplete,
@@ -152,7 +153,7 @@ async function rawAutocomplete(
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey },
       body: JSON.stringify({
-        input,
+        input: foldAccents(input),
         languageCode: language,
         regionCode: "br",
         ...(sessionToken ? { sessionToken } : {}),
