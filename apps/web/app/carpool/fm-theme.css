@@ -1541,6 +1541,13 @@ body.fm-resizing {
 }
 
 /* ---------- Equipe: sections of one place (TeamTabs) ---------- */
+.fm-tabsbar {
+  padding: 8px 28px 0;
+  background: var(--fm-surface, transparent);
+}
+.fm-tabsbar .fm-tabs {
+  margin: 0;
+}
 .fm-tabs {
   display: flex;
   flex-wrap: wrap;

@@ -346,13 +346,17 @@ export async function FmShell({
             {canKeyCustody ? <Link href="/account/keys" className="fm-btn fm-btn-ghost">{dict.navExtra.openKeyCustody}</Link> : null}{canBudgetApproval ? <Link href="/account/maintenance-approvals" className="fm-btn fm-btn-ghost">{dict.navExtra.openBudgetApprovals}</Link> : null}
           </p>
         ) : null}
+        {/* the area's tabs: always the first thing under the top bar, outside the page's own padding, so they sit in the same place on every screen */}
+        {tabs.length > 1 && sectionT && !licenseGateActive ? (
+          <div className="fm-tabsbar">
+            <SectionTabs tabs={tabs} ariaLabel={sectionT.aria} />
+          </div>
+        ) : null}
         <main
           id="fleetmind-main"
           tabIndex={-1}
           className={wide ? "fm-content fm-content-wide" : "fm-content"}
         >
-          {/* the area's tabs are always the first thing on the page, above the title (same place on every screen) */}
-          {tabs.length > 1 && sectionT && !licenseGateActive ? <SectionTabs tabs={tabs} ariaLabel={sectionT.aria} /> : null}
           {title ? (
             <div className="fm-ops-head">
               <div className="fm-ops-head-text">
