@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { notifyRequesterOutcome } from "@/lib/approvals/notifyRequester";
+import { directManagerName, notifyRequesterOutcome } from "@/lib/approvals/notifyRequester";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { isResultStatus } from "@/lib/approvals/emailResult";
 
@@ -27,7 +27,7 @@ export async function decideInApp(reservationId: string, decision: "approve" | "
       status = (data as { status: string }).status;
       if (status === "approved" || status === "rejected") {
         const decided = status === "approved" ? "approve" : "reject";
-        after(async () => { const admin = createSupabaseAdminClient(); await notifyRequesterOutcome(reservationId, decided, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); });
+        after(async () => { const admin = createSupabaseAdminClient(); await notifyRequesterOutcome(reservationId, decided, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }, { by: await directManagerName(admin, reservationId) }); });
       }
     } else if (error) {
       console.error("in-app approval: decide failed", error.message);

@@ -47,16 +47,25 @@ export function noticeUrl(env: NoticeEnv): string | null {
 }
 
 /** The message the requester reads. */
-export function buildRequesterMessage(decision: "approve" | "reject", n: Notice, reason?: string): string {
+export interface NoticeExtra {
+  /** why it was refused (shown on a refusal) */
+  reason?: string;
+  /** who decided: the person is named in the message */
+  by?: string | null;
+}
+
+export function buildRequesterMessage(decision: "approve" | "reject", n: Notice, extra: NoticeExtra = {}): string {
+  const reason = extra.reason;
+  const by = cleanUserText(extra.by, 80);
   const vehicleName = cleanUserText(n.vehicle_name, 60);
   const plate = cleanUserText(n.plate, 12);
   const vehicle = [vehicleName, plate && !vehicleName.toUpperCase().includes(plate.toUpperCase()) ? `(${plate})` : ""].filter(Boolean).join(" ");
   const lines: string[] = [];
   if (decision === "approve") {
-    lines.push("✅ *Sua reserva foi aprovada!* O veículo está confirmado para você.");
+    lines.push(by ? `✅ *Sua reserva foi aprovada por ${by}!* O veículo está confirmado para você.` : "✅ *Sua reserva foi aprovada!* O veículo está confirmado para você.");
     if (vehicle) lines.push(`Veículo: ${vehicle}`);
   } else {
-    lines.push("❌ *Sua reserva foi recusada pelo seu gestor.*");
+    lines.push(by ? `❌ *Sua reserva foi recusada por ${by}.*` : "❌ *Sua reserva foi recusada pelo seu gestor.*");
     if (vehicle) lines.push(`Veículo pedido: ${vehicle}`);
   }
   if (n.departure_at) lines.push(`Saída: ${formatWhen(n.departure_at)}`);
@@ -68,7 +77,7 @@ export function buildRequesterMessage(decision: "approve" | "reject", n: Notice,
   return lines.join("\n");
 }
 
-export async function notifyRequesterOutcome(reservationId: string, decision: "approve" | "reject", deps: NoticeDeps, reason?: string): Promise<NoticeResult> {
+export async function notifyRequesterOutcome(reservationId: string, decision: "approve" | "reject", deps: NoticeDeps, extra: NoticeExtra = {}): Promise<NoticeResult> {
   const env = deps.env ?? currentNoticeEnv();
   const url = noticeUrl(env);
   if (!url || !env.secret) return { status: "skipped", reason: "not_configured" };
@@ -77,7 +86,7 @@ export async function notifyRequesterOutcome(reservationId: string, decision: "a
     if (res.error) return { status: "failed", error: "notice_error" };
     const n = res.data as Notice | null;
     if (!n || n.ok !== true || !n.phone_e164) return { status: "skipped", reason: n?.reason ?? "no_notice" };
-    const body = JSON.stringify({ type: "requester_notice", reservation_id: reservationId, to: n.phone_e164, text: buildRequesterMessage(decision, n, reason) });
+    const body = JSON.stringify({ type: "requester_notice", reservation_id: reservationId, to: n.phone_e164, text: buildRequesterMessage(decision, n, extra) });
     const timestamp = String(Math.floor((deps.now?.() ?? Date.now()) / 1000));
     const out = await (deps.fetch ?? fetch)(url, {
       method: "POST",
@@ -88,5 +97,22 @@ export async function notifyRequesterOutcome(reservationId: string, decision: "a
     return out.ok ? { status: "sent" } : { status: "failed", error: `http_${out.status}` };
   } catch (e) {
     return { status: "failed", error: e instanceof Error ? e.name : "network_error" };
+  }
+}
+
+/** The name of the requester's direct manager (who decides on the e-mail / WhatsApp link), for the cases where the decision came through a token. */
+export async function directManagerName(
+  admin: { from: (t: string) => any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  reservationId: string,
+): Promise<string | null> {
+  try {
+    const { data: res } = await admin.from("reservations").select("trip_request:trip_requests(requester_id)").eq("id", reservationId).maybeSingle();
+    const requesterId = res?.trip_request?.requester_id;
+    if (!requesterId) return null;
+    const { data: link } = await admin.from("fm_user_managers").select("manager:profiles!fm_user_managers_manager_id_fkey(full_name)").eq("user_id", requesterId).maybeSingle();
+    const name = link?.manager?.full_name;
+    return typeof name === "string" && name.trim() ? name.trim() : null;
+  } catch {
+    return null;
   }
 }

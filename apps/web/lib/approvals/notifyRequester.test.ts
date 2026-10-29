@@ -54,3 +54,15 @@ describe("notifyRequesterOutcome", () => {
     expect(await notifyRequesterOutcome("r1", "approve", deps(NOTICE, { fetch: (async () => { throw new Error("down"); }) as unknown as typeof fetch }))).toMatchObject({ status: "failed" });
   });
 });
+
+describe("who decided", () => {
+  it("names the person in the approval and in the refusal (with the reason)", () => {
+    expect(buildRequesterMessage("approve", {}, { by: "Ana Souza" })).toContain("aprovada por Ana Souza");
+    const refused = buildRequesterMessage("reject", {}, { by: "Ana Souza", reason: "Sem veículo livre" });
+    expect(refused).toContain("recusada por Ana Souza");
+    expect(refused).toContain("Motivo: Sem veículo livre");
+  });
+  it("keeps the generic wording when the name is unknown", () => {
+    expect(buildRequesterMessage("reject", {})).toContain("recusada pelo seu gestor");
+  });
+});

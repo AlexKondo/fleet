@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { after } from "next/server";
-import { notifyRequesterOutcome } from "@/lib/approvals/notifyRequester";
+import { directManagerName, notifyRequesterOutcome } from "@/lib/approvals/notifyRequester";
 import { parseButtonId, replyForStatus, SIGNATURE_HEADER, TIMESTAMP_HEADER, verifySignature } from "@/lib/approvals/whatsappApproval";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   if ((status === "approved" || status === "rejected") && result.reservation_id) {
     const reservationId = result.reservation_id;
     // the requester is told by WhatsApp too; after the answer to n8n, so it never delays the manager's confirmation
-    after(async () => { await notifyRequesterOutcome(reservationId, status === "approved" ? "approve" : "reject", { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); });
+    after(async () => { await notifyRequesterOutcome(reservationId, status === "approved" ? "approve" : "reject", { rpc: (n, a) => admin.rpc(n as never, a as never) as never }, { by: await directManagerName(admin, reservationId) }); });
   }
   return NextResponse.json(
     { status, reply_text: replyForStatus(status), reservation_id: result.reservation_id ?? null },

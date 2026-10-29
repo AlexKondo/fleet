@@ -99,10 +99,14 @@ async function notifyRequesterByEmail(
 }
 
 /** The fleet manager's decision also reaches the requester on WhatsApp (best effort, only when they registered a number with consent). */
-function notifyRequesterByWhatsApp(reservationId: string, decision: "approve" | "reject", reason?: string): void {
+async function notifyRequesterByWhatsApp(reservationId: string, decision: "approve" | "reject", reason?: string): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const user = await getCurrentUser(supabase);
+  const { data: me } = user ? await supabase.from("profiles").select("full_name").eq("id", user.id).single() : { data: null };
+  const by = me?.full_name ?? null;
   after(async () => {
     const admin = createSupabaseAdminClient();
-    await notifyRequesterOutcome(reservationId, decision, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }, reason);
+    await notifyRequesterOutcome(reservationId, decision, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }, { reason, by });
   });
 }
 
@@ -110,7 +114,7 @@ export async function approveReservation(reservationId: string): Promise<void> {
   await runFleetAction((supabase) =>
     supabase.rpc("approve_reservation", { p_reservation_id: reservationId }),
   );
-  notifyRequesterByWhatsApp(reservationId, "approve");
+  await notifyRequesterByWhatsApp(reservationId, "approve");
   const supabase = await createSupabaseServerClient();
   await notifyRequesterByEmail(supabase, reservationId, (destination) => ({
     heading: "Reserva aprovada",
@@ -217,7 +221,7 @@ export async function cancelReservation(
   await runFleetAction((supabase) =>
     supabase.rpc("cancel_reservation", { p_reservation_id: reservationId, p_reason: reason }),
   );
-  notifyRequesterByWhatsApp(reservationId, "reject", reason);
+  await notifyRequesterByWhatsApp(reservationId, "reject", reason);
   const supabase = await createSupabaseServerClient();
   await notifyRequesterByEmail(supabase, reservationId, (destination) => ({
     heading: "Reserva cancelada",

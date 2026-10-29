@@ -5,7 +5,7 @@ import { signBody } from "@/lib/approvals/whatsappApproval";
 const h = vi.hoisted(() => ({ rpc: vi.fn(), notice: vi.fn(), later: [] as (() => Promise<void>)[] }));
 // `after` only exists inside a real request: here the scheduled work is collected and run by the test
 vi.mock("next/server", async (orig) => ({ ...(await orig<typeof import("next/server")>()), after: (fn: () => Promise<void>) => { h.later.push(fn); } }));
-vi.mock("@/lib/approvals/notifyRequester", () => ({ notifyRequesterOutcome: (...a: unknown[]) => h.notice(...a) }));
+vi.mock("@/lib/approvals/notifyRequester", () => ({ notifyRequesterOutcome: (...a: unknown[]) => h.notice(...a), directManagerName: async () => "Gestor Teste" }));
 vi.mock("@/lib/supabase/admin", () => ({ createSupabaseAdminClient: () => ({ rpc: (...a: unknown[]) => h.rpc(...a) }) }));
 
 import { POST } from "./route";
@@ -81,12 +81,12 @@ describe("the requester is told after the manager decides", () => {
     await call({ button_id: `approve:${TOKEN}`, from: "5511982593096", message_id: "m1" });
     expect(h.later).toHaveLength(1);
     await h.later[0]!();
-    expect(h.notice).toHaveBeenCalledWith("res-1", "approve", expect.anything());
+    expect(h.notice).toHaveBeenCalledWith("res-1", "approve", expect.anything(), { by: "Gestor Teste" });
     h.later.length = 0;
     h.rpc.mockResolvedValue({ data: { status: "rejected", reservation_id: "res-2" }, error: null });
     await call({ button_id: `reject:${TOKEN}`, from: "5511982593096", message_id: "m2" });
     await h.later[0]!();
-    expect(h.notice).toHaveBeenLastCalledWith("res-2", "reject", expect.anything());
+    expect(h.notice).toHaveBeenLastCalledWith("res-2", "reject", expect.anything(), { by: "Gestor Teste" });
   });
   it("nothing is sent when nothing was decided (already answered, expired, wrong sender)", async () => {
     for (const status of ["already_decided", "expired", "phone_mismatch", "superseded"]) {
