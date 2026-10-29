@@ -13,7 +13,7 @@ export default async function RootPage() {
   if (!user) redirect("/dashboard");
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role === "fleet_manager" || profile?.role === "administrator") redirect("/dashboard");
+  if (profile?.role === "fleet_manager" || profile?.role === "administrator") redirect("/dashboard/command-center");
   if (profile?.role === "security") redirect("/gate");
   if (profile?.role === "employee") redirect("/dashboard");
   redirect("/trips");
