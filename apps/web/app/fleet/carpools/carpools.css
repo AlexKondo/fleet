@@ -22,3 +22,4 @@
 .cm-status{white-space:nowrap}
 .cm-card{overflow:hidden}
 @media(max-width:760px){.cm-header-actions{width:100%}.cm-header-actions>*{flex:1;text-align:center;min-height:44px;display:inline-flex;align-items:center;justify-content:center}.cm-button,.cm-reject{min-height:44px}.cm-filters{gap:10px}.cm-filters label{flex:1 1 100%}.cm select{max-width:none;min-height:44px}.cm input{min-height:44px}.cm-filters>a{width:100%;justify-content:center}.cm-offer{padding:14px 12px}.cm-passenger .cm-decisions{width:100%}.cm-passenger .cm-decisions>*{flex:1}.cm-passenger input{width:100%}.cm-tabs a{display:inline-flex;align-items:center;min-height:44px}.cm-metrics article{min-height:92px}}
+.cm-detail>[data-offer-detail]:not([hidden]){display:flex;flex-direction:column;gap:12px;min-width:0}
