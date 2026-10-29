@@ -1575,16 +1575,16 @@ body.fm-resizing {
 /* ---------- one page margin on every screen ----------
    The content starts at the same left edge as the section tabs (16px on a phone, 28px on a desktop), whatever the screen's own wrapper
    (workspace, command center, carpool...) used to set. Specificity is raised on purpose so those per-screen rules cannot move it. */
-html body .fm-content,
-html body .fm-content-wide {
+body .fm-content.fm-content,
+body .fm-content-wide.fm-content-wide {
   max-width: none;
   margin: 0;
   padding-left: 16px;
   padding-right: 16px;
 }
 @media (min-width: 900px) {
-  html body .fm-content,
-  html body .fm-content-wide {
+  body .fm-content.fm-content,
+  body .fm-content-wide.fm-content-wide {
     padding-left: 28px;
     padding-right: 28px;
   }
