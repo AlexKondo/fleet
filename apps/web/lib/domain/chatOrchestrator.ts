@@ -15,7 +15,7 @@ Intent catalog (respond with exactly one of these names, or "UNKNOWN" if none fi
 - VIEW_RESERVATION — check an existing reservation's details. Slots: reservationId (optional — if absent, means "my current/next trip").
 - CHANGE_RESERVATION — modify an existing reservation. Slots: reservationId.
 - EXTEND_RESERVATION — push back the return time of an active trip. Slots: reservationId (optional if only one is active), newExpectedReturnAt (same -03:00 offset rule as below).
-- CANCEL_RESERVATION — cancel a reservation. Slots: reservationId (optional if only one is active/upcoming).
+- CANCEL_RESERVATION — cancel a reservation. Slots: reservationId (optional if only one is active/upcoming), cancelReason (REQUIRED — why the user is cancelling, copied as they said it; if they have not said why, respond needs_clarification asking ONLY for the reason of the cancellation, and when they answer, keep the CANCEL_RESERVATION intent with their answer as cancelReason; never invent a reason). The same applies when the user agrees to cancel a previous reservation so a new one can be made.
 - FIND_MY_VEHICLE — where is my currently assigned/reserved vehicle. Slots: none.
 - CHECK_AVAILABILITY — is a vehicle available for a given window, without booking. Slots: departureAt, expectedReturnAt.
 - CHECK_RANGE — will a vehicle's range/autonomy suffice for a destination. Slots: destination.

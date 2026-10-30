@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizePlaceText, resolveOriginLocation, splitByOrigin } from "./originLocation";
+import { isWorkLocationOrigin, normalizePlaceText, resolveOriginLocation, splitByOrigin } from "./originLocation";
 
 const fabrica = { id: "L1", name: "Fábrica da GWM - ao lado do restaurante" };
 const spOffice = { id: "L2", name: "SP Office - 3º subsolo" };
@@ -51,5 +51,18 @@ describe("splitByOrigin", () => {
 describe("normalizePlaceText", () => {
   it("strips accents, punctuation and case", () => {
     expect(normalizePlaceText("SP Office - 3º Subsolo")).toBe("sp office 3 subsolo");
+  });
+});
+
+describe("isWorkLocationOrigin", () => {
+  const work = { name: "São Paulo Office", addressLabel: "EZ TOWERS - Torre A - Av. Dr. Chucri Zaidan" };
+  it("recognizes the work location by name or by address, ignoring accents and case", () => {
+    expect(isWorkLocationOrigin("sao paulo office", work)).toBe(true);
+    expect(isWorkLocationOrigin("EZ Towers - Torre A - Av. Dr. Chucri Zaidan", work)).toBe(true);
+  });
+  it("does not treat another place, a short text or a missing work location as the work location", () => {
+    expect(isWorkLocationOrigin("Iracemápolis", work)).toBe(false);
+    expect(isWorkLocationOrigin("ab", work)).toBe(false);
+    expect(isWorkLocationOrigin("São Paulo Office", null)).toBe(false);
   });
 });

@@ -347,7 +347,24 @@ export default async function ReservationDetailPage({
                 </Link>
               ) : null}
               {canCancel ? (
-                <form action={cancelMyReservation.bind(null, id)}>
+                <form action={cancelMyReservation.bind(null, id)} className="rd-cancel" data-testid="cancel-reservation-form">
+                  {/* the fleet manager is told about the cancellation, so the reason is asked before anything is cancelled */}
+                  <label className="fm-label" htmlFor="cancel-reason">{dict.trips.list.cancelReasonLabel}</label>
+                  <textarea
+                    id="cancel-reason"
+                    name="reason"
+                    required
+                    minLength={3}
+                    maxLength={300}
+                    rows={2}
+                    className="fm-input"
+                    placeholder={dict.trips.list.cancelReasonPlaceholder}
+                    data-testid="cancel-reason"
+                  />
+                  <p className="rv-hint">{dict.trips.list.cancelManagerNote}</p>
+                  {query?.cancelError === "reason_required" ? (
+                    <p role="alert" className="fm-banner fm-banner-danger">{dict.trips.list.cancelReasonRequired}</p>
+                  ) : null}
                   <ConfirmSubmitButton confirmMessage={dict.trips.list.confirmCancel} className="fm-btn fm-btn-danger">
                     {dict.common.cancel}
                   </ConfirmSubmitButton>

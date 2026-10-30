@@ -13,6 +13,8 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
 import { getAppUrl } from "@/lib/getAppUrl";
 import { isCarpoolIntent, type IntentName } from "@fleet/domain";
 import { findActiveReservations, resolveReservationId } from "./queries";
+import { findOwnOverlappingReservations } from "@/lib/trips/ownOverlap";
+import { cleanCancelReason, notifyManagersOfCancellation } from "@/lib/trips/notifyManagersCancellation";
 import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
 import { executeCarpoolIntent, loadChatCarpoolCtx, publishOfferForNewReservation } from "./carpoolChat";
 import { dictionaries, type Dictionary } from "@/lib/i18n/dictionaries";
@@ -140,6 +142,16 @@ export async function dispatchIntent(
             : plan.vehicle.alternatives.find((alt) => alt.vehicleId === chosenVehicleId)?.plate ??
               plan.vehicle.plate;
 
+        // One person cannot drive two vehicles at once: an own reservation in the same period blocks the booking. The chat does not
+        // cancel it on its own; it names it and the person asks to cancel it (CANCEL_RESERVATION asks for the reason).
+        const overlaps = await findOwnOverlappingReservations(supabase, user.id, input.departureAt, input.expectedReturnAt);
+        if (overlaps.length > 0) {
+          const o = overlaps[0]!;
+          const reservation = `${o.vehicleName || o.vehiclePlate}${o.vehiclePlate && o.vehicleName !== o.vehiclePlate ? ` (${o.vehiclePlate})` : ""}, ${o.origin} → ${o.destination}, ${formatDateTime(o.startAt, locale)} – ${formatDateTime(o.endAt, locale)}`;
+          const content = fillTemplate(dict.chat.replies.reservationOverlap, { reservation });
+          return { success: false, message: "user_reservation_overlap", reply: { content } };
+        }
+
         const { data: createdReservationId, error } = await supabase.rpc("create_vehicle_reservation", {
           p_departure_at: input.departureAt,
           p_expected_return_at: input.expectedReturnAt,
@@ -221,8 +233,20 @@ export async function dispatchIntent(
       const active = await findActiveReservations(supabase, user.id);
       const reservationId = resolveReservationId(slots.reservationId, active);
       if (!reservationId) return failed(dict, "cancel", "reservation_not_found", { mode: "chat" });
-      const { error } = await supabase.rpc("cancel_reservation", { p_reservation_id: reservationId });
+      // The manager is told about every cancellation with its reason, so it is asked first (chat/actions.ts); backstop here.
+      const cancelReason = cleanCancelReason(slots.cancelReason);
+      if (!cancelReason) return failed(dict, "cancel", "missing_cancel_reason", { mode: "chat" });
+      const { error } = await supabase.rpc("cancel_reservation", { p_reservation_id: reservationId, p_reason: cancelReason });
       if (error) return failed(dict, "cancel", "cancel_failed", { mode: "chat" }, error.code, error.message);
+      const { data: cancellerProfile } = await supabase.from("profiles").select("organization_id").eq("id", user.id).single();
+      if (cancellerProfile) {
+        await notifyManagersOfCancellation(supabase, {
+          organizationId: cancellerProfile.organization_id,
+          requesterId: user.id,
+          reservationId,
+          reason: cancelReason,
+        });
+      }
       revalidatePath("/trips");
       revalidatePath("/dashboard");
       return ok(r.success.cancelled);

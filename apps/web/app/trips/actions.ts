@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/currentUser";
+import { cleanCancelReason, notifyManagersOfCancellation } from "@/lib/trips/notifyManagersCancellation";
 
 /**
  * Self-service cancellation of the caller's own upcoming trip
@@ -12,10 +14,17 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
  * reason — this is a plain `<form action={...}>` bound with the reservation id, with no
  * state slot to carry a typed error back to.
  */
-export async function cancelMyReservation(reservationId: string): Promise<void> {
+export async function cancelMyReservation(reservationId: string, formData?: FormData): Promise<void> {
+  // The manager is told about every cancellation, so the reason is asked BEFORE anything happens (the form field is required;
+  // this is the server-side backstop for a request that skipped it).
+  const reason = cleanCancelReason(formData?.get("reason"));
+  if (!reason) redirect(`/reservations/${reservationId}?cancelError=reason_required`);
+
   const supabase = await createSupabaseServerClient();
+  const user = await getCurrentUser(supabase);
   const { error } = await supabase.rpc("cancel_reservation", {
     p_reservation_id: reservationId,
+    p_reason: reason,
   });
   revalidatePath("/trips");
   // Also called from the reservation detail page itself (no redirect on success there), so
@@ -26,6 +35,18 @@ export async function cancelMyReservation(reservationId: string): Promise<void> 
     if (error.message.includes("CANCEL_BLOCKED_OPERATION_STARTED"))
       redirect("/trips?tripActionError=cancel_blocked_operation_started");
     redirect("/trips?tripActionError=1");
+  }
+
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user.id).single();
+    if (profile) {
+      await notifyManagersOfCancellation(supabase, {
+        organizationId: profile.organization_id,
+        requesterId: user.id,
+        reservationId,
+        reason,
+      });
+    }
   }
 }
 

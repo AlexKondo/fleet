@@ -38,6 +38,18 @@ export function normalizePlaceText(text: string): string {
     .trim();
 }
 
+/**
+ * The origin text IS the person's registered work location ("Seu local de trabalho", a corporate mobility point: its name or its
+ * address, which is what the form and the assistant send as the default origin). Mobility points are not vehicle locations, so
+ * such an origin never matches a vehicle location by name; it must NOT be treated as free text ("offer every vehicle").
+ */
+export function isWorkLocationOrigin(originText: string, work: { name: string; addressLabel: string } | null | undefined): boolean {
+  if (!work) return false;
+  const text = normalizePlaceText(originText);
+  if (text.length < 3) return false;
+  return text === normalizePlaceText(work.name) || text === normalizePlaceText(work.addressLabel);
+}
+
 export type OriginResolution =
   | { kind: "location"; location: OriginLocation }
   /** the org has no registered locations: there is nothing to compare, the search stays unfiltered */

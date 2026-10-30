@@ -21,6 +21,7 @@ import { verifyPlacesForChat } from "./verifyPlacesServer";
 import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { classifyError, failureReply, type AssistantReply } from "./replies";
 import { fillTemplate } from "@/lib/carpool/errorText";
+import { cleanCancelReason } from "@/lib/trips/notifyManagersCancellation";
 import { loadWorkLocation } from "@/lib/geospatial/workLocation";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
@@ -846,6 +847,9 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         assistantLink = step.link;
         if (step.noVehicleSlots) noVehicleSlots = step.noVehicleSlots;
       }
+    } else if (interpretation.intent === "CANCEL_RESERVATION" && !cleanCancelReason(interpretation.slots.cancelReason)) {
+      // The fleet manager is told about every cancellation WITH its reason: no confirmation card until the person says why.
+      assistantContent = dictNow.chat.replies.cancelAskReason;
     } else {
       assistantContent = interpretation.summary;
       pendingAction = { intent: interpretation.intent, slots: interpretation.slots, summary: interpretation.summary };

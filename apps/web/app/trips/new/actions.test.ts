@@ -292,6 +292,42 @@ describe("origin rule: vehicles are only offered when they are at the departure 
     expect(candidatesPassed()).toEqual(["v-fab1", "v-fab2"]);
   });
 
+  describe("the person leaves from their own work location (a mobility point, not a vehicle location)", () => {
+    beforeEach(() => {
+      h.tables.profiles = { organization_id: "org-1", work_location_id: "P-sp" };
+      h.tables.corporate_mobility_points = { id: "P-sp", name: "São Paulo Office", address_label: "EZ TOWERS - Torre A", is_active: true };
+      h.planMobility.mockReturnValue({ type: "none", reasons: ["no_candidates_available"] });
+    });
+
+    it("no vehicle is registered there: nothing is offered, it says so and lists where vehicles are (never 'every location')", async () => {
+      const r = await planTrip({ ...input, origin: "São Paulo Office", originIsFreeText: true });
+      expect(candidatesPassed()).toEqual([]);
+      expect(r.reasons[0]).toBe("no_vehicles_at_origin");
+      expect(r.originCheck).toMatchObject({
+        status: "none_at_origin",
+        originLocationName: "São Paulo Office",
+        includeOthers: false,
+        others: [{ locationId: "L-fab", count: 2 }],
+      });
+    });
+
+    it("the address the form sends as the default origin is recognized too", async () => {
+      const r = await planTrip({ ...input, origin: "EZ TOWERS - Torre A", originIsFreeText: true });
+      expect(candidatesPassed()).toEqual([]);
+      expect(r.originCheck?.status).toBe("none_at_origin");
+    });
+
+    it("explicit request to see other locations still works", async () => {
+      await planTrip({ ...input, origin: "São Paulo Office", originIsFreeText: true, includeOtherLocations: true });
+      expect(candidatesPassed()).toEqual(["v-fab1", "v-fab2", "v-none"]);
+    });
+
+    it("a different typed origin keeps the old free-text behaviour (vehicles of every location, each card says where it is)", async () => {
+      await planTrip({ ...input, origin: "Aeroporto de Viracopos", originIsFreeText: true });
+      expect(candidatesPassed()).toEqual(["v-fab1", "v-fab2", "v-none"]);
+    });
+  });
+
   it("an id from another organization is never trusted", async () => {
     h.planMobility.mockReturnValue({ type: "none", reasons: ["no_candidates_available"] });
     const r = await planTrip({ ...input, originLocationId: "L-OUTRA-ORG" });

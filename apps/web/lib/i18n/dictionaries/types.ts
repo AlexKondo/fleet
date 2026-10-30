@@ -589,6 +589,10 @@ export type Dictionary = {
       startPickup: string;
       registerReturn: string;
       confirmCancel: string;
+      cancelReasonLabel: string;
+      cancelReasonPlaceholder: string;
+      cancelReasonRequired: string;
+      cancelManagerNote: string;
       impactedByDelay: string;
       carpoolsTitle: string;
       awaitingDriverAcceptance: string;
@@ -635,6 +639,20 @@ export type Dictionary = {
       reservationConflict: string;
       planChanged: string;
       confirmError: string;
+      overlapTitle: string;
+      overlapBody: string;
+      overlapStatusPending: string;
+      overlapStatusConfirmed: string;
+      overlapQuestion: string;
+      overlapKeep: string;
+      overlapCancelPrevious: string;
+      overlapReasonLabel: string;
+      overlapReasonPlaceholder: string;
+      overlapReasonRequired: string;
+      overlapManagerNote: string;
+      overlapConfirmCancel: string;
+      overlapBack: string;
+      overlapCancelling: string;
     };
     /** Minhas Reservas e Viagens (SCR-USR-004). */
     minhas: {
@@ -1255,9 +1273,15 @@ export type Dictionary = {
       placeChoose: string;
       addressAsk: string;
       originPick: string;
+      /** {origin} = where the person leaves from (their work location), {list} = locations that DO have a vehicle. */
+      originNone: string;
       assistantDisabled: string;
       policyUnavailable: string;
       notUnderstood: string;
+      /** Asked before any cancellation is confirmed: the fleet manager is told, with this reason. */
+      cancelAskReason: string;
+      /** {reservation} = the person's existing reservation in the requested period. */
+      reservationOverlap: string;
     };
     thinking: string;
     carpool: {

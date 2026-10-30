@@ -340,7 +340,7 @@ describe.each(LOCALES)("Assistente — linguagem simples [%s]", (locale) => {
 
   it("cancel refused: permission denied / trip already started", async () => {
     setup(fleet(["available"]));
-    interpretAs("CANCEL_RESERVATION", { reservationId: "res-1" });
+    interpretAs("CANCEL_RESERVATION", { reservationId: "res-1", cancelReason: "Mudança de planos" });
     const card = await say();
     m.rpcError.cancel_reservation = { code: "42501", message: "permission denied for function cancel_reservation" };
     expectFailure(await confirm(card), dict, "cancel", { kind: "permissionDenied" }, "chat");

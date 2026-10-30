@@ -54,7 +54,8 @@ const INTENT_CATALOG: Record<IntentName, IntentDefinition> = {
     requiresConfirmation: "yes",
     requiredSlots: ["reservationId", "newExpectedReturnAt"],
   },
-  CANCEL_RESERVATION: { requiresConfirmation: "yes", requiredSlots: ["reservationId"] },
+  // cancelReason: the fleet manager is told about every cancellation WITH the reason, so it is always asked first.
+  CANCEL_RESERVATION: { requiresConfirmation: "yes", requiredSlots: ["reservationId", "cancelReason"] },
   FIND_MY_VEHICLE: { requiresConfirmation: "no", requiredSlots: [] },
   CHECK_AVAILABILITY: {
     requiresConfirmation: "no",

@@ -39,12 +39,15 @@ import {
 import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
 import { loadOfferCardRows } from "@/lib/carpool/offerCardRows";
 import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
-import { resolveOriginLocation, splitByOrigin, type OriginCheck } from "@/lib/trips/originLocation";
+import { isWorkLocationOrigin, resolveOriginLocation, splitByOrigin, type OriginCheck } from "@/lib/trips/originLocation";
+import { loadWorkLocation } from "@/lib/geospatial/workLocation";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
 import { searchCompatibleCarpool } from "@/app/carpool/actions";
 import { enableCarpoolOffer } from "@/app/carpool/requestActions";
 import { scheduleApprovalRequest } from "@/lib/approvals/scheduleApproval";
+import { findOwnOverlappingReservations, type OverlappingReservation } from "@/lib/trips/ownOverlap";
+import { cleanCancelReason, notifyManagersOfCancellation } from "@/lib/trips/notifyManagersCancellation";
 
 export interface TripFormInput {
   departureAt: string;
@@ -261,13 +264,18 @@ async function buildPlanInputs(input: TripFormInput) {
   let vehicleCandidates = allCandidates;
   let originCheck: OriginCheck = { status: "ok", includeOthers: false, others: [], withoutLocation: 0 };
   if (resolution.kind !== "no_locations") {
+    // Leaving from the person's own work location (a mobility point, not a vehicle location): no vehicle is registered there, so the
+    // answer is "no vehicle at your location" (other locations only on request), never "here is everything from every location".
+    const work = resolution.kind === "unknown" ? await loadWorkLocation(supabase, user.id) : null;
+    const fromWorkLocation = isWorkLocationOrigin(input.origin, work);
     const split = splitByOrigin(allCandidates, (c) => c.vehicle.currentLocationId, locations, originLocation?.id ?? null);
-    const includeOthers = input.includeOtherLocations === true || (input.originIsFreeText === true && resolution.kind === "unknown");
+    const includeOthers =
+      input.includeOtherLocations === true || (input.originIsFreeText === true && resolution.kind === "unknown" && !fromWorkLocation);
     vehicleCandidates = includeOthers ? allCandidates : split.atOrigin;
     originCheck = {
-      status: resolution.kind === "unknown" ? "unknown" : split.atOrigin.length > 0 ? "ok" : "none_at_origin",
+      status: fromWorkLocation ? "none_at_origin" : resolution.kind === "unknown" ? "unknown" : split.atOrigin.length > 0 ? "ok" : "none_at_origin",
       originLocationId: originLocation?.id,
-      originLocationName: originLocation?.name,
+      originLocationName: originLocation?.name ?? (fromWorkLocation ? work!.name : undefined),
       includeOthers,
       others: split.atOrigin.length > 0 ? [] : split.others,
       withoutLocation: split.withoutLocation,
@@ -526,8 +534,12 @@ export async function confirmTrip(
      * org policy has the new carpool engine enabled; re-validated against the chosen vehicle's
      * capacity here and again by enable_carpool_offer. */
     offerSeats?: number;
+    /** The requester's own earlier reservations they agreed to cancel so this one can be made (same ids confirmTrip returned in
+     * `overlaps`), and the reason they typed for cancelling them. Both are required to cancel anything: the manager is told why. */
+    replaceReservationIds?: string[];
+    cancelReason?: string;
   },
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; overlaps?: OverlappingReservation[] }> {
   const built = await buildPlanInputs(input);
   if ("error" in built) {
     return { success: false, error: built.error };
@@ -596,6 +608,37 @@ export async function confirmTrip(
         plan.vehicle.rankedEligible.some((r) => r.vehicleId === input.targetId)));
 
   if (isAcceptableVehicleTarget) {
+    // One person cannot drive two vehicles at once: an own pending/confirmed reservation overlapping this window blocks the
+    // booking until the requester explicitly chooses to cancel it (and says why: the fleet manager is told).
+    const overlaps = await findOwnOverlappingReservations(supabase, built.user.id, input.departureAt, input.expectedReturnAt);
+    if (overlaps.length > 0) {
+      const agreed = new Set(input.replaceReservationIds ?? []);
+      const reason = cleanCancelReason(input.cancelReason);
+      if (!reason || !overlaps.every((o) => agreed.has(o.reservationId))) {
+        return { success: false, error: "USER_RESERVATION_OVERLAP", overlaps };
+      }
+      for (const previous of overlaps) {
+        const { error: cancelError } = await supabase.rpc("cancel_reservation", {
+          p_reservation_id: previous.reservationId,
+          p_reason: reason,
+        });
+        if (cancelError) {
+          console.error("confirmTrip: cancelling the overlapping reservation failed:", cancelError.message);
+          return {
+            success: false,
+            error: cancelError.message.includes("CANCEL_BLOCKED_OPERATION_STARTED") ? "CANCEL_BLOCKED_OPERATION_STARTED" : "CANCEL_PREVIOUS_FAILED",
+            overlaps,
+          };
+        }
+        await notifyManagersOfCancellation(supabase, {
+          organizationId: built.profile.organization_id,
+          requesterId: built.user.id,
+          reservationId: previous.reservationId,
+          reason,
+        });
+      }
+    }
+
     const { data: createdReservationId, error } = await supabase.rpc("create_vehicle_reservation", {
       p_departure_at: input.departureAt,
       p_expected_return_at: input.expectedReturnAt,

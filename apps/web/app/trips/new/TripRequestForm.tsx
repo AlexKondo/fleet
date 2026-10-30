@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { confirmTrip, planTripAction, type PlanTripResult, type TripFormInput } from "./actions";
+import type { OverlappingReservation } from "@/lib/trips/ownOverlap";
 import { formatDateTime } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
@@ -135,6 +136,11 @@ export function TripRequestForm({
   const [formInput, setFormInput] = useState<TripFormInput | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [isConfirming, startConfirming] = useTransition();
+  // The requester's own reservation(s) that collide with this trip's period (confirmTrip answers USER_RESERVATION_OVERLAP):
+  // shown with a question; cancelling them needs a typed reason, because the fleet manager is told.
+  const [overlap, setOverlap] = useState<{ targetId: string; items: OverlappingReservation[] } | null>(null);
+  const [overlapAsking, setOverlapAsking] = useState(false);
+  const [overlapReason, setOverlapReason] = useState("");
   // Every field is CONTROLLED: React 19 resets an uncontrolled <form action> to its defaults once the action settles, which
   // would wipe the trip after each search. Controlled state survives it (and the carpool "adjust the field and search again"
   // prompt keeps the rider's values).
@@ -251,6 +257,7 @@ export function TripRequestForm({
     setTrackedPlan(plan);
     setOffer(prefillOffer);
     setEnergyFilter("all");
+    setOverlap(null);
   }
   const carpoolFirst = plan && !plan.error ? plan.carpoolFirst : undefined;
   const hostStepEnabled = Boolean(plan?.carpoolGating?.hostStep);
@@ -297,7 +304,7 @@ export function TripRequestForm({
     setConfirmError(null);
   }
 
-  function handleConfirm(targetId?: string) {
+  function handleConfirm(targetId?: string, cancelPrevious?: { ids: string[]; reason: string }) {
     if (!formInput || !plan) return;
     const resolvedTargetId = targetId ?? (plan.type === "vehicle" ? plan.vehicle?.vehicleId : undefined);
     if (!resolvedTargetId || plan.type === "none") return;
@@ -308,11 +315,19 @@ export function TripRequestForm({
         choice: plan.type as "carpool" | "vehicle",
         targetId: resolvedTargetId,
         offerSeats: plan.type === "vehicle" ? offerSeatsFor(resolvedTargetId) : undefined,
+        replaceReservationIds: cancelPrevious?.ids,
+        cancelReason: cancelPrevious?.reason,
       });
       // On success confirmTrip redirects server-side, so this line is rarely reached —
       // best-effort only, the 5-minute TTL in readDraft is the real backstop.
       if (result.success) {
         clearDraft();
+      } else if (result.error === "USER_RESERVATION_OVERLAP" && result.overlaps?.length) {
+        // the requester already has a reservation in this period: show it and ask whether to cancel it
+        setConfirmError(null);
+        setOverlap({ targetId: resolvedTargetId, items: result.overlaps });
+        setOverlapReason("");
+        setOverlapAsking(false);
       } else {
         setConfirmError(result.error ?? "unknown_error");
       }
@@ -802,6 +817,76 @@ export function TripRequestForm({
             {reasonList(plan.reasons)}
           </section>
         )}
+
+        {overlap ? (
+          <section className="fm-card rv-block" role="alertdialog" aria-labelledby="rv-overlap-title" data-testid="rv-overlap">
+            <h3 id="rv-overlap-title" className="fm-h2">{t.overlapTitle}</h3>
+            <p className="rv-muted">{t.overlapBody}</p>
+            <ul className="rv-reasons">
+              {overlap.items.map((o) => (
+                <li key={o.reservationId} data-testid="rv-overlap-item">
+                  <RvCheckIcon />
+                  <span>
+                    <strong>{o.vehicleName || o.vehiclePlate}</strong>
+                    {o.vehicleName && o.vehiclePlate && o.vehicleName !== o.vehiclePlate ? ` (${o.vehiclePlate})` : ""} · {o.origin} → {o.destination} ·{" "}
+                    {formatDateTime(o.startAt, locale)} – {formatDateTime(o.endAt, locale)} (
+                    {o.status === "confirmed" ? t.overlapStatusConfirmed : t.overlapStatusPending})
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p><strong>{t.overlapQuestion}</strong></p>
+            {overlapAsking ? (
+              <div className="fm-field">
+                <label className="fm-label" htmlFor="rv-overlap-reason">{t.overlapReasonLabel}</label>
+                <textarea
+                  id="rv-overlap-reason"
+                  className="fm-input"
+                  rows={2}
+                  maxLength={300}
+                  value={overlapReason}
+                  onChange={(e) => setOverlapReason(e.target.value)}
+                  placeholder={t.overlapReasonPlaceholder}
+                  data-testid="rv-overlap-reason"
+                />
+                <p className="rv-hint">{t.overlapManagerNote}</p>
+                {overlapReason.trim().length < 3 ? (
+                  <p role="alert" className="rv-error" data-testid="rv-overlap-reason-required">{t.overlapReasonRequired}</p>
+                ) : null}
+                <div className="rv-seg-row">
+                  <button
+                    type="button"
+                    className="fm-btn fm-btn-danger"
+                    disabled={isConfirming || overlapReason.trim().length < 3}
+                    data-testid="rv-overlap-confirm"
+                    onClick={() => handleConfirm(overlap.targetId, { ids: overlap.items.map((o) => o.reservationId), reason: overlapReason.trim() })}
+                  >
+                    {isConfirming ? t.overlapCancelling : t.overlapConfirmCancel}
+                  </button>
+                  <button type="button" className="fm-btn" disabled={isConfirming} onClick={() => setOverlapAsking(false)}>
+                    {t.overlapBack}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rv-seg-row">
+                <button type="button" className="fm-btn" data-testid="rv-overlap-keep" onClick={() => setOverlap(null)}>
+                  {t.overlapKeep}
+                </button>
+                <button
+                  type="button"
+                  className="fm-btn fm-btn-danger"
+                  data-testid="rv-overlap-cancel-previous"
+                  onClick={() => {
+                    setOverlapAsking(true);
+                  }}
+                >
+                  {t.overlapCancelPrevious}
+                </button>
+              </div>
+            )}
+          </section>
+        ) : null}
 
         {confirmError ? (
           <p role="alert" className="fm-banner fm-banner-danger" style={{ marginTop: 0 }}>
