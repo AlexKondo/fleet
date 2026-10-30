@@ -41,13 +41,13 @@ export function noVehicleReply(
     const list = originOptions.map((o) => `• ${o.name} (${o.count})`).join("\n");
     return composeFailure(dict, action, dict.chat.replies.originPick.replace("{list}", list), { mode: "form", slots }) as NoVehicleReply;
   }
-  // The person leaves from their own location and no vehicle is there: say so (never offer another location's vehicle as if it were
-  // theirs) and list where a vehicle is, so they can choose to leave from there.
+  // The person leaves from their own location and no vehicle is there: say only that (never offer another location's vehicle as if it
+  // were theirs): no list of other locations, no alternatives, no form link. Just who to ask.
   if (reasons?.includes("no_vehicles_at_origin")) {
-    const list = originOptions?.length ? originOptions.map((o) => `• ${o.name} (${o.count})`).join("\n") : "";
     const origin = (slots.origin ?? "").trim();
-    if (list && origin) {
-      return composeFailure(dict, action, dict.chat.replies.originNone.replace("{origin}", origin).replace("{list}", list), { mode: "form", slots }) as NoVehicleReply;
+    if (origin) {
+      // no link on purpose (the consumers accept a reply without one)
+      return { content: dict.chat.replies.originNone.replace("{origin}", origin) } as NoVehicleReply;
     }
   }
   // Real cause from the fleet counts; without them, the engine's own (translated) reason.

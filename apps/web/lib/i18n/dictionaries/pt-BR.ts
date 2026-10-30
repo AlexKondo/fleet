@@ -1341,7 +1341,7 @@ const dict: Dictionary = {
       },
       placeChoose: "Encontrei mais de um local para “{text}”. Qual deles é o destino? Escolha pelo botão ou diga o número.",
       addressAsk: "Antes de escolher o veículo, preciso confirmar o endereço para calcular o trajeto e a autonomia necessária.\n{details}\nAssim que você me informar, eu escolho o veículo ideal para você.",
-      originNone: "Não há veículo disponível em {origin} para esse horário. Locais com veículo disponível:\n{list}\nSe quiser sair de um deles, responda com o nome do local.",
+      originNone: "Não há veículo cadastrado ou disponível em {origin} para esse horário. Peça para o administrador da frota cadastrar um veículo.",
       originPick: "Não encontramos esse local de saída. De qual local o veículo deve sair? Locais com veículo disponível:\n{list}\nResponda com o nome do local.",
       assistantDisabled: "O assistente FleetMind foi desativado pelo administrador da sua empresa. Você continua podendo fazer tudo pelos menus — por exemplo, reservar em Reservar Veículo.",
       policyUnavailable: "Não consegui confirmar agora se o assistente está liberado para você — não foi nada que você fez. Tente de novo em instantes ou use os menus normalmente.",

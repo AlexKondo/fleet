@@ -28,12 +28,16 @@ describe("no vehicle because the origin is not a registered location", () => {
 describe("no vehicle at the person's own work location", () => {
   const work = { ...slots, origin: "São Paulo Office" };
   for (const locale of ["pt-BR", "en-US", "es", "zh-CN"] as const) {
-    it(`${locale}: names the work location and lists where a vehicle is`, () => {
+    it(`${locale}: says only that there is no vehicle there (no list of other locations, no form link)`, () => {
       const reply = noVehicleReply(dictionaries[locale], work, ["no_vehicles_at_origin", "no_candidates_available"], undefined, "reservation", places);
       expect(reply.content).toContain("São Paulo Office");
-      expect(reply.content).toContain("• Portaria P1 (2)");
+      expect(reply.content).not.toContain("Portaria P1");
       expect(reply.content).not.toContain("{origin}");
-      expect(reply.content).not.toContain("{list}");
+      expect(reply.link).toBeUndefined();
     });
   }
+  it("pt-BR: the exact short message", () => {
+    const reply = noVehicleReply(dictionaries["pt-BR"], work, ["no_vehicles_at_origin"], undefined, "reservation", places);
+    expect(reply.content).toBe("Não há veículo cadastrado ou disponível em São Paulo Office para esse horário. Peça para o administrador da frota cadastrar um veículo.");
+  });
 });

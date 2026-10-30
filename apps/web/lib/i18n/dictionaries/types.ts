@@ -1273,7 +1273,7 @@ export type Dictionary = {
       placeChoose: string;
       addressAsk: string;
       originPick: string;
-      /** {origin} = where the person leaves from (their work location), {list} = locations that DO have a vehicle. */
+      /** {origin} = where the person leaves from (their work location). Shown ALONE: no list, no form link. */
       originNone: string;
       assistantDisabled: string;
       policyUnavailable: string;

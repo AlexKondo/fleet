@@ -1339,7 +1339,7 @@ const dict: Dictionary = {
       },
       placeChoose: "I found more than one place for “{text}”. Which one is the destination? Pick a button or say the number.",
       addressAsk: "Before choosing a vehicle, I need to confirm the address to work out the route and the range needed.\n{details}\nAs soon as you tell me, I will pick the right vehicle for you.",
-      originNone: "There is no vehicle available at {origin} for that time. Locations with an available vehicle:\n{list}\nIf you want to leave from one of them, reply with the location name.",
+      originNone: "There is no vehicle registered or available at {origin} for that time. Ask the fleet administrator to register a vehicle.",
       originPick: "We could not find that departure location. Which location should the vehicle leave from? Locations with an available vehicle:\n{list}\nReply with the location name.",
       assistantDisabled: "The FleetMind assistant has been turned off by your company's administrator. You can still do everything from the menus — for example, book in Book a Vehicle.",
       policyUnavailable: "I couldn't confirm right now whether the assistant is enabled for you — it wasn't anything you did. Try again in a moment or use the menus as usual.",

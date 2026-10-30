@@ -1303,7 +1303,7 @@ const dict: Dictionary = {
       },
       placeChoose: "“{text}”有多个匹配地点。哪一个是目的地？请点按钮或说出编号。",
       addressAsk: "在选择车辆之前，我需要先确认地址，以便计算路线和所需续航。\n{details}\n您告知后，我会为您选择合适的车辆。",
-      originNone: "{origin} 在该时间没有可用车辆。有可用车辆的地点：\n{list}\n如需从其中一个地点出发，请回复地点名称。",
+      originNone: "{origin} 在该时间没有已登记或可用的车辆。请让车队管理员登记一辆车。",
       originPick: "找不到该出发地点。车辆应从哪个地点出发？有可用车辆的地点：\n{list}\n请回复地点名称。",
       assistantDisabled: "贵公司的管理员已关闭 FleetMind 助手。您仍可以通过菜单完成所有操作——例如在“预订车辆”中预订。",
       policyUnavailable: "我暂时无法确认助手是否已为您开放——这不是您的操作造成的。请稍后再试，或照常使用菜单。",
