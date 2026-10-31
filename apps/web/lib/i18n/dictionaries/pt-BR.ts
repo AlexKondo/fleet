@@ -1340,6 +1340,7 @@ const dict: Dictionary = {
         endTrip: "Para devolver o veículo, abra a reserva e faça o checklist de devolução — ele pede fotos do veículo, por isso não é feito pelo assistente.",
       },
       placeChoose: "Encontrei mais de um local para “{text}”. Qual deles é o destino? Escolha pelo botão ou diga o número.",
+      noVehicleAtWorkUnit: "Antes de tudo: não há nenhum veículo cadastrado na sua unidade ({unit}), então não consigo reservar um carro saindo daí. Você pode pedir carona a um colega que vai no mesmo sentido, ou escolher sair de outra unidade que tenha veículos. Quer que eu mostre as unidades com veículo?",
       addressAsk: "Antes de escolher o veículo, preciso confirmar o endereço para calcular o trajeto e a autonomia necessária.\n{details}\nAssim que você me informar, eu escolho o veículo ideal para você.",
       originNone: "Não há veículo cadastrado ou disponível em {origin} para esse horário. Peça para o administrador da frota cadastrar um veículo.",
       originPick: "Não encontramos esse local de saída. De qual local o veículo deve sair? Locais com veículo disponível:\n{list}\nResponda com o nome do local.",

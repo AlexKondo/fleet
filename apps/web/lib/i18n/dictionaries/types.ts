@@ -1271,6 +1271,7 @@ export type Dictionary = {
       card: { vehicle: string; vehicleAt: string; chooseOption: string; };
       notAutomated: { change: string; differentVehicle: string; startTrip: string; endTrip: string; };
       placeChoose: string;
+      noVehicleAtWorkUnit: string;
       addressAsk: string;
       originPick: string;
       /** {origin} = where the person leaves from (their work location). Shown ALONE: no list, no form link. */

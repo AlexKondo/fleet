@@ -23,6 +23,7 @@ import { classifyError, failureReply, type AssistantReply } from "./replies";
 import { fillTemplate } from "@/lib/carpool/errorText";
 import { cleanCancelReason } from "@/lib/trips/notifyManagersCancellation";
 import { loadWorkLocation } from "@/lib/geospatial/workLocation";
+import { RESERVATION_WORDS, workUnitHasNoVehicles } from "@/lib/geospatial/workUnitFleet";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
   carpoolFirstForReservation,
@@ -822,8 +823,14 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       }
       // A vehicle is recommended for the real route (autonomy): the origin and the destination must be located on the map first. If one is not
       // understood, the assistant asks for it (politely) and neither suggests a vehicle nor reserves anything.
-      const placeCheck = await verifyPlacesForChat(supabase, profile.organization_id, slots, dictNow);
-      if (placeCheck.status === "ask") {
+      const placeCheck = (await workUnitHasNoVehicles(supabase, slots.origin ?? ""))
+        ? ({ status: "no_vehicle_at_unit" } as const)
+        : await verifyPlacesForChat(supabase, profile.organization_id, slots, dictNow);
+      if (placeCheck.status === "no_vehicle_at_unit") {
+        // the first thing the person hears: their unit has no vehicle (before any question about destination, date or time)
+        assistantContent = fillTemplate(dictNow.chat.replies.noVehicleAtWorkUnit, { unit: slots.origin ?? "" });
+        noVehicleSlots = slots;
+      } else if (placeCheck.status === "ask") {
         assistantContent = placeCheck.message;
         noVehicleSlots = slots; // what the person already said stays on the row
       } else if (placeCheck.status === "choose") {
@@ -857,6 +864,13 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     }
   } else if (interpretation.status === "needs_clarification") {
     assistantContent = interpretation.question;
+    // a vehicle request from a unit with no vehicle: say so BEFORE asking for destination, date or time
+    if (!prevState.pendingAction && RESERVATION_WORDS.test(message)) {
+      const work = await loadWorkLocation(supabase, user.id);
+      if (work && (await workUnitHasNoVehicles(supabase, work.name))) {
+        assistantContent = fillTemplate(dictNow.chat.replies.noVehicleAtWorkUnit, { unit: work.name });
+      }
+    }
   } else if (interpretation.status === "low_confidence" || interpretation.status === "unknown_intent") {
     assistantContent = dictNow.chat.replies.notUnderstood;
   } else {
