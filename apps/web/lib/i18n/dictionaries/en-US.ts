@@ -1338,7 +1338,7 @@ const dict: Dictionary = {
         endTrip: "To return the vehicle, open the reservation and complete the return checklist — it asks for vehicle photos, so the assistant can't do it.",
       },
       placeChoose: "I found more than one place for “{text}”. Which one is the destination? Pick a button or say the number.",
-      noVehicleAtWorkUnit: "First of all: there is no vehicle registered at your unit ({unit}), so I cannot book a car leaving from there. You can ask a colleague going the same way for a ride, or choose to leave from another unit that has vehicles. Want me to show the units with vehicles?",
+      noVehicleAtWorkUnit: "There is no vehicle registered at your unit ({unit}). Ask the fleet administrator to register a vehicle.",
       addressAsk: "Before choosing a vehicle, I need to confirm the address to work out the route and the range needed.\n{details}\nAs soon as you tell me, I will pick the right vehicle for you.",
       originNone: "There is no vehicle registered or available at {origin} for that time. Ask the fleet administrator to register a vehicle.",
       originPick: "We could not find that departure location. Which location should the vehicle leave from? Locations with an available vehicle:\n{list}\nReply with the location name.",
