@@ -19,8 +19,12 @@ describe("workUnitHasNoVehicles", () => {
   it("is false when the unit has vehicles", async () => {
     expect(await workUnitHasNoVehicles(fake(locs, 3), "Iracemápolis")).toBe(false);
   });
-  it("is false when the unit is not a registered location or the read fails", async () => {
-    expect(await workUnitHasNoVehicles(fake(locs, 0), "Lugar nenhum")).toBe(false);
+  it("is true when the unit matches no vehicle location (nothing can be offered there)", async () => {
+    expect(await workUnitHasNoVehicles(fake(locs, 5), "Lugar nenhum")).toBe(true);
+  });
+  it("is false when the org has no vehicle locations, the name is empty or the read fails", async () => {
+    expect(await workUnitHasNoVehicles(fake([], 0), "Iracemápolis")).toBe(false);
+    expect(await workUnitHasNoVehicles(fake(locs, 0), "")).toBe(false);
     expect(await workUnitHasNoVehicles(fake(locs, null, { message: "x" }), "Iracemápolis")).toBe(false);
   });
 });
