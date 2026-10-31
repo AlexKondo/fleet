@@ -561,6 +561,8 @@ export type Dictionary = {
     locations: {
       newLabel: string;
       placeholder: string;
+      mobilityPointLabel: string;
+      mobilityPointNone: string;
       deleteConfirm: string;
     };
     detail: {

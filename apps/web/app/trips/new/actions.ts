@@ -39,7 +39,7 @@ import {
 import { resolveLocationText } from "@/lib/carpool/resolveLocationText";
 import { loadOfferCardRows } from "@/lib/carpool/offerCardRows";
 import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trips/textLimits";
-import { isWorkLocationOrigin, resolveOriginLocation, splitByOrigin, type OriginCheck } from "@/lib/trips/originLocation";
+import { isWorkLocationOrigin, resolveMobilityPoint, resolveOriginLocation, splitByOrigin, type OriginCheck } from "@/lib/trips/originLocation";
 import { loadWorkLocation } from "@/lib/geospatial/workLocation";
 import { createGooglePlacesProvider } from "@/lib/geospatial/googlePlacesProvider";
 import { listCorporateMobilityPoints } from "@/lib/geospatial/corporateMobilityPoints";
@@ -224,7 +224,9 @@ async function buildPlanInputs(input: TripFormInput) {
   // show a driver-friendly name instead of a bare plate. Looked up separately rather than
   // widening the domain Vehicle type just for this.
   // Location names for the vehicle cards (best effort: a failed read just leaves the location out).
-  const { data: locationRows } = await supabase.from("vehicle_locations").select("id, name");
+  const { data: locationRows } = await supabase.from("vehicle_locations").select("id, name, mobility_point_id");
+  const { data: pointRows } = await supabase.from("corporate_mobility_points").select("id, name, aliases, address_label").eq("is_active", true);
+  const mobilityPoints = (Array.isArray(pointRows) ? pointRows : []).map((p) => ({ id: p.id, name: p.name, aliases: p.aliases ?? [], addressLabel: p.address_label }));
   const locationNameById = new Map<string, string>((locationRows ?? []).map((l) => [l.id, l.name]));
 
   const vehicleNameByPlate = new Map((vehicleRows ?? []).map((row) => [row.plate, row.name]));
@@ -261,6 +263,9 @@ async function buildPlanInputs(input: TripFormInput) {
     originText: input.origin,
   });
   const originLocation = resolution.kind === "location" ? resolution.location : null;
+  // The origin may name a UNIT (a mobility point such as the plant): its vehicles are the ones parked in any of its sub-locations.
+  const originPoint = resolution.kind === "unknown" ? resolveMobilityPoint(mobilityPoints, input.origin) : null;
+  const unitLocationIds = new Set(originPoint ? (locationRows ?? []).filter((l) => l.mobility_point_id === originPoint.id).map((l) => l.id) : []);
   let vehicleCandidates = allCandidates;
   let originCheck: OriginCheck = { status: "ok", includeOthers: false, others: [], withoutLocation: 0 };
   if (resolution.kind !== "no_locations") {
@@ -268,14 +273,21 @@ async function buildPlanInputs(input: TripFormInput) {
     // answer is "no vehicle at your location" (other locations only on request), never "here is everything from every location".
     const work = resolution.kind === "unknown" ? await loadWorkLocation(supabase, user.id) : null;
     const fromWorkLocation = isWorkLocationOrigin(input.origin, work);
-    const split = splitByOrigin(allCandidates, (c) => c.vehicle.currentLocationId, locations, originLocation?.id ?? null);
+    const inUnit = unitLocationIds.size > 0;
+    const inUnitVehicle = (c: (typeof allCandidates)[number]) => !!c.vehicle.currentLocationId && unitLocationIds.has(c.vehicle.currentLocationId);
+    const split = inUnit
+      ? { ...splitByOrigin(allCandidates.filter((c) => !inUnitVehicle(c)), (c) => c.vehicle.currentLocationId, locations, null), atOrigin: allCandidates.filter(inUnitVehicle) }
+      : splitByOrigin(allCandidates, (c) => c.vehicle.currentLocationId, locations, originLocation?.id ?? null);
+    const atOrigin = split.atOrigin;
     const includeOthers =
-      input.includeOtherLocations === true || (input.originIsFreeText === true && resolution.kind === "unknown" && !fromWorkLocation);
-    vehicleCandidates = includeOthers ? allCandidates : split.atOrigin;
+      input.includeOtherLocations === true || (input.originIsFreeText === true && resolution.kind === "unknown" && !fromWorkLocation && !originPoint);
+    vehicleCandidates = includeOthers ? allCandidates : atOrigin;
     originCheck = {
-      status: fromWorkLocation ? "none_at_origin" : resolution.kind === "unknown" ? "unknown" : split.atOrigin.length > 0 ? "ok" : "none_at_origin",
+      status: inUnit
+        ? atOrigin.length > 0 ? "ok" : "none_at_origin"
+        : fromWorkLocation ? "none_at_origin" : resolution.kind === "unknown" ? "unknown" : atOrigin.length > 0 ? "ok" : "none_at_origin",
       originLocationId: originLocation?.id,
-      originLocationName: originLocation?.name ?? (fromWorkLocation ? work!.name : undefined),
+      originLocationName: originLocation?.name ?? (inUnit ? originPoint!.name : fromWorkLocation ? work!.name : undefined),
       includeOthers,
       others: split.atOrigin.length > 0 ? [] : split.others,
       withoutLocation: split.withoutLocation,

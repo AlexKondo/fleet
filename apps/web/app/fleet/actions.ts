@@ -53,6 +53,18 @@ async function requireFleetManager() {
   return { supabase, organizationId: isFleetManager ? (profile?.organization_id ?? null) : null };
 }
 
+/** The unit (corporate mobility point) a vehicle location sits in: empty = none; a point of another organization is refused. */
+async function readMobilityPointId(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  organizationId: string,
+  formData: FormData,
+): Promise<string | null | "invalid"> {
+  const raw = String(formData.get("mobilityPointId") ?? "").trim();
+  if (!raw) return null;
+  const { data } = await supabase.from("corporate_mobility_points").select("id").eq("id", raw).eq("organization_id", organizationId).maybeSingle();
+  return data ? raw : "invalid";
+}
+
 export async function createLocation(
   _prevState: FleetActionState,
   formData: FormData,
@@ -63,10 +75,12 @@ export async function createLocation(
   const dict = await getDictionary();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { status: "error", error: dict.errors.fleet.locationNameRequired };
+  const mobilityPointId = await readMobilityPointId(supabase, organizationId, formData);
+  if (mobilityPointId === "invalid") return { status: "error", error: "not_authorized" };
 
   const { error } = await supabase
     .from("vehicle_locations")
-    .insert({ organization_id: organizationId, name });
+    .insert({ organization_id: organizationId, name, mobility_point_id: mobilityPointId });
   if (error) return { status: "error", error: error.message };
 
   revalidatePath("/fleet");
@@ -84,10 +98,12 @@ export async function updateLocation(
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   if (!id || !name) return { status: "error", error: dict.errors.fleet.locationNameRequired };
+  const mobilityPointId = await readMobilityPointId(supabase, organizationId, formData);
+  if (mobilityPointId === "invalid") return { status: "error", error: "not_authorized" };
 
   const { error } = await supabase
     .from("vehicle_locations")
-    .update({ name })
+    .update({ name, mobility_point_id: mobilityPointId })
     .eq("id", id)
     .eq("organization_id", organizationId);
   if (error) return { status: "error", error: error.message };

@@ -6,7 +6,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 /** See AddVehicleSection.tsx for why this is its own client component, not a shared
  * render-prop toggle. */
-export function AddLocationSection({ dict }: { dict: Dictionary }) {
+export function AddLocationSection({ dict, mobilityPoints }: { dict: Dictionary; mobilityPoints: { id: string; name: string }[] }) {
   const [open, setOpen] = useState(false);
 
   if (!open) {
@@ -35,7 +35,7 @@ export function AddLocationSection({ dict }: { dict: Dictionary }) {
           {dict.common.close}
         </button>
       </div>
-      <LocationForm dict={dict} onSaved={() => setOpen(false)} />
+      <LocationForm dict={dict} mobilityPoints={mobilityPoints} onSaved={() => setOpen(false)} />
     </div>
   );
 }

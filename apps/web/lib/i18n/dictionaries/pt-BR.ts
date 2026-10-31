@@ -530,6 +530,8 @@ const dict: Dictionary = {
     locations: {
       newLabel: "Nova localização",
       placeholder: "Ex.: Portaria P2",
+      mobilityPointLabel: "Unidade (ponto de mobilidade)",
+      mobilityPointNone: "Sem unidade",
       deleteConfirm: 'Excluir a localização "{name}"?',
     },
     detail: {

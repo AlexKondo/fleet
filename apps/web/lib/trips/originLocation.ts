@@ -50,6 +50,28 @@ export function isWorkLocationOrigin(originText: string, work: { name: string; a
   return text === normalizePlaceText(work.name) || text === normalizePlaceText(work.addressLabel);
 }
 
+export interface MobilityPointRef {
+  id: string;
+  name: string;
+  aliases: readonly string[];
+  addressLabel?: string | null;
+}
+
+/**
+ * The unit (corporate mobility point) an origin text names: its name, one of its nicknames or its address, accent/case-insensitive.
+ * Exact wins; otherwise a name/nickname contained in the text (or containing it) counts only when exactly one point fits (never guessed).
+ */
+export function resolveMobilityPoint<P extends MobilityPointRef>(points: readonly P[], originText: string): P | null {
+  const text = normalizePlaceText(originText);
+  if (text.length < 3) return null;
+  const names = (p: P) => [p.name, ...p.aliases, p.addressLabel ?? ""].map(normalizePlaceText).filter((n) => n.length >= 3);
+  const exact = points.filter((p) => names(p).includes(text));
+  if (exact.length === 1) return exact[0]!;
+  if (exact.length > 1) return null;
+  const partial = points.filter((p) => names(p).some((n) => text.includes(n) || n.includes(text)));
+  return partial.length === 1 ? partial[0]! : null;
+}
+
 export type OriginResolution =
   | { kind: "location"; location: OriginLocation }
   /** the org has no registered locations: there is nothing to compare, the search stays unfiltered */

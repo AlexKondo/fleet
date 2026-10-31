@@ -7,7 +7,7 @@ import { errorLabel } from "@/lib/i18n/errorLabel";
 
 const initialState: FleetActionState = { status: "idle" };
 
-export function LocationForm({ dict, onSaved }: { dict: Dictionary; onSaved?: () => void }) {
+export function LocationForm({ dict, mobilityPoints, onSaved }: { dict: Dictionary; mobilityPoints: { id: string; name: string }[]; onSaved?: () => void }) {
   const [state, formAction, pending] = useActionState(createLocation, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -32,6 +32,15 @@ export function LocationForm({ dict, onSaved }: { dict: Dictionary; onSaved?: ()
           placeholder={dict.fleet.locations.placeholder}
           className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none placeholder:text-fog-600 focus-visible:border-gwm-accent focus-visible:ring-1 focus-visible:ring-gwm-accent"
         />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium uppercase tracking-widest text-fog-400">{dict.fleet.locations.mobilityPointLabel}</span>
+        <select name="mobilityPointId" defaultValue="" data-testid="location-unit-select" className="rounded-sm border border-line-800 bg-panel-900 px-3 py-2 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent">
+          <option value="">{dict.fleet.locations.mobilityPointNone}</option>
+          {mobilityPoints.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
       </label>
       <button
         type="submit"

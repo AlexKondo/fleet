@@ -11,10 +11,12 @@ const initialState: FleetActionState = { status: "idle" };
 
 export function LocationRow({
   location,
+  mobilityPoints,
   dict,
   T,
 }: {
-  location: { id: string; name: string;lifecycle_version?:number };
+  location: { id: string; name: string; lifecycle_version?: number; mobility_point_id?: string | null };
+  mobilityPoints: { id: string; name: string }[];
   dict: Dictionary;
   T: Record<FleetKey, string>;
 }) {
@@ -39,6 +41,20 @@ export function LocationRow({
             autoFocus
             className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
           />
+          <label className="flex flex-col gap-1">
+            <span className="text-xs uppercase tracking-widest text-fog-400">{dict.fleet.locations.mobilityPointLabel}</span>
+            <select
+              name="mobilityPointId"
+              defaultValue={location.mobility_point_id ?? ""}
+              data-testid="location-unit-select"
+              className="rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
+            >
+              <option value="">{dict.fleet.locations.mobilityPointNone}</option>
+              {mobilityPoints.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </label>
           <div className="flex items-center gap-3">
             <button
               type="submit"
@@ -68,6 +84,7 @@ export function LocationRow({
   return (
     <li className="flex flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4">
       <p className="text-sm text-paper-50">{location.name}</p>
+      <p className="text-xs text-fog-400">{mobilityPoints.find((p) => p.id === location.mobility_point_id)?.name ?? dict.fleet.locations.mobilityPointNone}</p>
       <div className="flex items-center gap-3 border-t border-line-800 pt-3">
         <button
           type="button"

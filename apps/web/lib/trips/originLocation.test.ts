@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isWorkLocationOrigin, normalizePlaceText, resolveOriginLocation, splitByOrigin } from "./originLocation";
+import { isWorkLocationOrigin, normalizePlaceText, resolveMobilityPoint, resolveOriginLocation, splitByOrigin } from "./originLocation";
 
 const fabrica = { id: "L1", name: "Fábrica da GWM - ao lado do restaurante" };
 const spOffice = { id: "L2", name: "SP Office - 3º subsolo" };
@@ -64,5 +64,22 @@ describe("isWorkLocationOrigin", () => {
     expect(isWorkLocationOrigin("Iracemápolis", work)).toBe(false);
     expect(isWorkLocationOrigin("ab", work)).toBe(false);
     expect(isWorkLocationOrigin("São Paulo Office", null)).toBe(false);
+  });
+});
+
+describe("resolveMobilityPoint", () => {
+  const points = [
+    { id: "p1", name: "Iracemápolis", aliases: ["Planta de Iracemapolis", "Ira"], addressLabel: "Portaria Fábrica da GWM Brasil - Iracemápolis - SP" },
+    { id: "p2", name: "São Paulo Office", aliases: ["Torre de Controle"], addressLabel: "EZ TOWERS - Torre A - São Paulo - SP" },
+  ];
+  it("matches the name, a nickname or the address (accents and case ignored)", () => {
+    expect(resolveMobilityPoint(points, "iracemapolis")?.id).toBe("p1");
+    expect(resolveMobilityPoint(points, "Torre de controle")?.id).toBe("p2");
+    expect(resolveMobilityPoint(points, "Portaria Fábrica da GWM Brasil - Iracemápolis - SP")?.id).toBe("p1");
+  });
+  it("matches an origin that contains the point name, never a guess between two points", () => {
+    expect(resolveMobilityPoint(points, "fábrica de Iracemápolis")?.id).toBe("p1");
+    expect(resolveMobilityPoint(points, "Iracemápolis ou São Paulo Office")).toBeNull();
+    expect(resolveMobilityPoint(points, "lugar nenhum")).toBeNull();
   });
 });

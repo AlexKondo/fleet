@@ -1359,6 +1359,7 @@ export type Database = {
           enabled: boolean
           lifecycle_version: number
           id: string
+          mobility_point_id: string | null
           name: string
           organization_id: string
         }
@@ -1366,6 +1367,7 @@ export type Database = {
           enabled?: boolean
           lifecycle_version?: number
           id?: string
+          mobility_point_id?: string | null
           name: string
           organization_id: string
         }
@@ -1373,6 +1375,7 @@ export type Database = {
           enabled?: boolean
           lifecycle_version?: number
           id?: string
+          mobility_point_id?: string | null
           name?: string
           organization_id?: string
         }

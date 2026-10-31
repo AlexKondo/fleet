@@ -53,13 +53,14 @@ export default async function FleetPage() {
     { data: locations, error: locationsError },
     { data: categories, error: categoriesError },
     { data: vehicles, error: vehiclesError },
+    { data: mobilityPointRows },
   ] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, role, organization_id, organization:organizations(name)")
       .eq("id", user.id)
       .single(),
-    supabase.from("vehicle_locations").select("id, name,lifecycle_version").eq("enabled",true).order("name"),
+    supabase.from("vehicle_locations").select("id, name,lifecycle_version,mobility_point_id").eq("enabled",true).order("name"),
     supabase.from("vehicle_categories").select("id, name, passenger_capacity, supports_cargo, energy_type,lifecycle_version").eq("enabled",true).order("name"),
     pageAll("fleet vehicles",(a,b)=>supabase
       .from("fm_managed_vehicles")
@@ -67,7 +68,9 @@ export default async function FleetPage() {
         "id, plate, name, vin, next_service_date, color, photo_storage_path, lifecycle_version, category_id, status, odometer_km, next_service_odometer_km, estimated_range_km, fuel_level_percent, battery_level_percent, home_location_id, category:vehicle_categories(name, energy_type), current_location:vehicle_locations!vehicles_current_location_id_fkey(name)",
       ).is("archived_at",null)
       .order("plate").order("id").range(a,b)).then(data=>({data,error:null})).catch(()=>({data:null,error:{message:"fleet_unavailable"}})),
+    supabase.from("corporate_mobility_points").select("id, name").eq("is_active", true).order("name"),
   ]);
+  const mobilityPoints = mobilityPointRows ?? [];
 
   // Checklist items (0041_safety_equipment_items.sql) shown right here — a fleet manager
   // registering a vehicle is exactly the moment they'd notice the standard kit is
@@ -293,7 +296,7 @@ export default async function FleetPage() {
                   {locations && locations.length > 0 ? (
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                       {locations.map((l) => (
-                        <LocationRow key={l.id} location={l} dict={dict} T={T} />
+                        <LocationRow key={l.id} location={l} mobilityPoints={mobilityPoints} dict={dict} T={T} />
                       ))}
                     </ul>
                   ) : (
@@ -302,7 +305,7 @@ export default async function FleetPage() {
                       hint={dict.fleet.emptyState.locationsHint}
                     />
                   )}
-                  <AddLocationSection dict={dict} />
+                  <AddLocationSection dict={dict} mobilityPoints={mobilityPoints} />
                 </div>
               ),
             },

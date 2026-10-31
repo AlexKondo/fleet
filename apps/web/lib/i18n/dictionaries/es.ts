@@ -529,6 +529,8 @@ const dict: Dictionary = {
     locations: {
       newLabel: "Nueva ubicación",
       placeholder: "P. ej.: Portería P2",
+      mobilityPointLabel: "Unidad (punto de movilidad)",
+      mobilityPointNone: "Sin unidad",
       deleteConfirm: '¿Eliminar la ubicación "{name}"?',
     },
     detail: {

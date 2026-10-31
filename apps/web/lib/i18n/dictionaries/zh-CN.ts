@@ -516,6 +516,8 @@ const dict: Dictionary = {
     locations: {
       newLabel: "新增停放点",
       placeholder: "例如：P2 门岗",
+      mobilityPointLabel: "所属单位（出行点）",
+      mobilityPointNone: "无单位",
       deleteConfirm: "确定删除停放点“{name}”吗？",
     },
     detail: {

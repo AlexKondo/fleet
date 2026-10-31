@@ -529,6 +529,8 @@ const dict: Dictionary = {
     locations: {
       newLabel: "New location",
       placeholder: "e.g. Gate P2",
+      mobilityPointLabel: "Unit (mobility point)",
+      mobilityPointNone: "No unit",
       deleteConfirm: 'Delete the location "{name}"?',
     },
     detail: {
