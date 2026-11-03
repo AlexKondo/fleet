@@ -22,6 +22,12 @@ describe("layoutTimeline", () => {
     expect(r.carpool[0]!.leftPct).toBe(r.booking[1]!.leftPct);
   });
 
+  it("an offer nobody joined is not a carpool: no carpool bar", () => {
+    const r = layoutTimeline([{ id: "a", start: "2026-11-04T11:00:00Z", end: "2026-11-04T23:00:00Z", status: "confirmed", label: "x", carpool: { seats: 4, taken: 0 } }], NOW);
+    expect(r.booking).toHaveLength(1);
+    expect(r.carpool).toHaveLength(0);
+  });
+
   it("a confirmed reservation that is under way is 'inUse'; bookings outside the window are dropped", () => {
     const r = layoutTimeline(
       [

@@ -144,7 +144,8 @@ export default async function FleetPage() {
       end: r.end_at as string,
       status: r.status as string,
       label: [tr?.requester?.full_name, tr?.destination].filter(Boolean).join(" · ") || "—",
-      carpool: seats ? { seats, taken: takenByTrip.get(r.trip_request_id as string) ?? 0 } : undefined,
+      // the carpool bar is for a carpool that is happening: an offer nobody joined yet is not shown
+      carpool: seats && (takenByTrip.get(r.trip_request_id as string) ?? 0) > 0 ? { seats, taken: takenByTrip.get(r.trip_request_id as string) ?? 0 } : undefined,
     });
     bookingsByVehicle.set(r.vehicle_id, list);
   }

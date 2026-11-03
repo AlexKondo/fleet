@@ -44,7 +44,7 @@ export function layoutTimeline(bookings: TimelineBooking[], now: number, days = 
     const left = ((Math.max(s, win.start) - win.start) / span) * 100;
     const width = Math.max(((Math.min(e, win.end) - Math.max(s, win.start)) / span) * 100, 0.6);
     booking.push({ id: b.id, kind: bookingKind(b.status, s, e, now), leftPct: left, widthPct: width, label: b.label, start: b.start, end: b.end });
-    if (b.carpool && b.status !== "completed") {
+    if (b.carpool && b.carpool.taken > 0 && b.status !== "completed") {
       carpool.push({ id: `${b.id}:carpool`, kind: "carpool", leftPct: left, widthPct: width, label: `${b.carpool.taken}/${b.carpool.seats}`, start: b.start, end: b.end });
     }
   }
