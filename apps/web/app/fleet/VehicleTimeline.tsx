@@ -5,19 +5,11 @@ import { formatDateTimeShort, formatDayMonth } from "@/lib/formatDateTime";
 import { fmt } from "./fmt";
 import { layoutTimeline, timelineWindow, type TimelineBooking } from "./timelineLayout";
 
-/** The vehicle's schedule: one bar per reservation for its period and, when the trip has an active carpool, a bar of another color under it. */
-export function VehicleTimeline({ bookings, locale, T, now }: { bookings: TimelineBooking[]; locale: Locale; T: Record<FleetKey, string>; now: number }) {
+/** Top of the chart column: the legend and the days. Sits on the same line as the list heading. */
+export function TimelineHeader({ locale, T, now }: { locale: Locale; T: Record<FleetKey, string>; now: number }) {
   const win = timelineWindow(now);
-  const { booking, carpool } = layoutTimeline(bookings, now);
-  const todayPct = ((now - win.start) / (win.end - win.start)) * 100;
-  const byId = (id: string) => bookings.find((b) => b.id === id.replace(":carpool", ""));
-  const seatsLabel = (id: string) => {
-    const c = byId(id)?.carpool;
-    return c ? fmt(T.carpoolSeats, { taken: c.taken, total: c.seats }) : T.legendCarpool;
-  };
   return (
-    <section className="vt" aria-label={T.timelineTitle}>
-      <h3>{T.timelineTitle}</h3>
+    <div className="vt-head">
       <ul className="vt-legend" aria-label={T.timelineLegend}>
         <li><i className="vt-key" data-kind="pending" />{T.legendPending}</li>
         <li><i className="vt-key" data-kind="reserved" />{T.legendReserved}</li>
@@ -25,31 +17,35 @@ export function VehicleTimeline({ bookings, locale, T, now }: { bookings: Timeli
         <li><i className="vt-key" data-kind="completed" />{T.legendCompleted}</li>
         <li><i className="vt-key" data-kind="carpool" />{T.legendCarpool}</li>
       </ul>
-      <div className="vt-scroll">
-        <div className="vt-chart">
-          <div className="vt-days" aria-hidden="true">
-            {win.dayStarts.map((d) => <span key={d}>{formatDayMonth(new Date(d + 3_600_000), locale)}</span>)}
-          </div>
-          <div className="vt-row" data-testid="vehicle-timeline-booking">
-            <i className="vt-today" style={{ left: `${todayPct}%` }} aria-hidden="true" />
-            {booking.map((b) => (
-              <span key={b.id} className="vt-bar" data-kind={b.kind} style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%` }} title={`${b.label}\n${formatDateTimeShort(b.start, locale)} → ${formatDateTimeShort(b.end, locale)}`}>
-                {b.label}
-              </span>
-            ))}
-          </div>
-          {carpool.length > 0 ? (
-            <div className="vt-row" data-testid="vehicle-timeline-carpool">
-              {carpool.map((b) => (
-                <span key={b.id} className="vt-bar" data-kind="carpool" style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%` }} title={`${seatsLabel(b.id)}\n${formatDateTimeShort(b.start, locale)} → ${formatDateTimeShort(b.end, locale)}`}>
-                  {seatsLabel(b.id)}
-                </span>
-              ))}
-            </div>
-          ) : null}
-        </div>
+      <div className="vt-days" aria-hidden="true">
+        {win.dayStarts.map((d) => <span key={d}>{formatDayMonth(new Date(d + 3_600_000), locale)}</span>)}
       </div>
-      {booking.length === 0 ? <p className="vt-empty">{T.timelineNoBookings}</p> : null}
-    </section>
+    </div>
+  );
+}
+
+/** One vehicle's schedule, aligned with its row of the list: a bar per reservation and, only when the trip has an active carpool, a bar of another color under it. */
+export function TimelineLane({ bookings, locale, T, now, plate }: { bookings: TimelineBooking[]; locale: Locale; T: Record<FleetKey, string>; now: number; plate: string }) {
+  const win = timelineWindow(now);
+  const { booking, carpool } = layoutTimeline(bookings, now);
+  const todayPct = ((now - win.start) / (win.end - win.start)) * 100;
+  const seatsLabel = (id: string) => {
+    const c = bookings.find((b) => b.id === id.replace(":carpool", ""))?.carpool;
+    return c ? fmt(T.carpoolSeats, { taken: c.taken, total: c.seats }) : T.legendCarpool;
+  };
+  return (
+    <div className="vt-lane" role="img" aria-label={`${T.timelineTitle} ${plate}`} data-testid={`vehicle-timeline-${plate}`}>
+      <i className="vt-today" style={{ left: `${todayPct}%` }} aria-hidden="true" />
+      <div className="vt-track">
+        {booking.map((b) => (
+          <span key={b.id} className="vt-bar" data-kind={b.kind} style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%` }} title={`${b.label}\n${formatDateTimeShort(b.start, locale)} → ${formatDateTimeShort(b.end, locale)}`}>{b.label}</span>
+        ))}
+      </div>
+      <div className="vt-track">
+        {carpool.map((b) => (
+          <span key={b.id} className="vt-bar" data-kind="carpool" style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%` }} title={`${seatsLabel(b.id)}\n${formatDateTimeShort(b.start, locale)} → ${formatDateTimeShort(b.end, locale)}`}>{seatsLabel(b.id)}</span>
+        ))}
+      </div>
+    </div>
   );
 }

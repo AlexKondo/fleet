@@ -59,3 +59,15 @@
 .vt-row{position:relative;height:30px;margin-top:6px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(100%/15 - 1px),var(--lt-eaf0f9, #eaf0f9) calc(100%/15 - 1px),var(--lt-eaf0f9, #eaf0f9) calc(100%/15))}
 .vt-bar{position:absolute;top:3px;height:24px;border-radius:5px;color:#fff;font-size:11px;line-height:24px;padding:0 6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-sizing:border-box}
 .vt-today{position:absolute;top:0;bottom:0;width:2px;background:#d92d20;z-index:1}.vt-empty{font-size:12px;color:#697996;margin:8px 0 0}
+/* list and schedule share each row: the row height is the height of the vehicle's two lanes (reservation + carpool) */
+.vw-wide{overflow:hidden}.vw-hint-top{margin:0;padding:0 12px 8px}.vw-scroll{overflow-x:auto}.vw-grid{min-width:880px}
+.vw-grid-row{display:grid;grid-template-columns:minmax(300px,.8fr) minmax(0,1.6fr);align-items:stretch}
+.vw-grid-row.vw-row{min-height:84px;display:grid}.vw-grid-row .vw-rowmain{display:flex;align-items:center;min-width:0}.vw-grid-row .vw-rowmain .vw-select{flex:1;min-width:0}
+.vw-list-heading.vw-grid-row{padding:0;align-items:end}.vw-list-heading .vw-rowmain{justify-content:space-between;padding:14px}
+.vt-head{padding:8px 12px 0;min-width:0}.vt-head .vt-legend{margin:0 0 6px}
+.vt-days{display:grid;grid-template-columns:repeat(15,1fr);font-size:10px;color:#637295;border-bottom:1px solid var(--lt-eaf0f9, #eaf0f9)}.vt-days span{padding:2px 0 4px;border-left:1px solid var(--lt-eaf0f9, #eaf0f9);text-align:center}
+.vt-lane{position:relative;margin:0 12px;display:flex;flex-direction:column;justify-content:center;gap:6px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(100%/15 - 1px),var(--lt-eaf0f9, #eaf0f9) calc(100%/15 - 1px),var(--lt-eaf0f9, #eaf0f9) calc(100%/15))}
+.vt-track{position:relative;height:26px}.vt-lane .vt-bar{top:1px;height:24px}
+.vw-dtabs .vw-tabs{margin:0 0 12px;flex-wrap:wrap;overflow:visible}.vw-dpanel article{border:1px solid var(--fm-border);border-radius:8px;padding:14px}.vw-dpanel article>a,.vw-dpanel article>button{display:block;margin-top:10px;font-size:12px}.vw-dpanel h3{font-size:14px;margin:0 0 10px}.vw-dpanel p{font-size:12px;margin:8px 0}
+.vw-dpanel .vw-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.vw-dpanel dl{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:12px;margin:0}.vw-dpanel dd{margin:0;font-weight:700;text-align:right}
+@media(max-width:800px){.vw-grid{min-width:760px}}

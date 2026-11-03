@@ -10,6 +10,7 @@ export type FleetKey =
   | "vehicleDetails" | "noPhoto" | "plateLabel" | "categoryLine" | "vinLine" | "notRegistered"
   | "propulsionLine" | "baseUnitLine" | "notLinked" | "unavailable" | "physicalLocationLine"
   | "timelineTitle" | "timelineLegend" | "timelineNoBookings" | "legendPending" | "legendReserved" | "legendInUse" | "legendCompleted" | "legendCarpool" | "carpoolSeats" | "editToSeeData" | "vehicleDataTitle" | "timelineRowBooking" | "timelineRowCarpool"
+  | "tabEditData" | "tabMaintenanceCosts" | "tabTripsUtilization" | "tabDocsEquipment" | "dialogTabs"
   | "quickActions" | "viewBookings" | "recordAndMaintenance" | "documents" | "exportRecord"
   | "tabOverview" | "tabLocation" | "tabUtilization" | "tabMaintenance" | "tabTrips" | "tabCosts" | "tabDocuments" | "tabIntelligence"
   | "vehicleInfoTabs"
@@ -65,6 +66,11 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     unavailable: "Indisponível",
     physicalLocationLine: "Local físico: {value}",
     quickActions: "Ações rápidas",
+    tabEditData: "Editar dados",
+    tabMaintenanceCosts: "Manutenção e custos",
+    tabTripsUtilization: "Viagens e utilização",
+    tabDocsEquipment: "Documentos e equipamentos",
+    dialogTabs: "Menu do veículo",
     timelineTitle: "Agenda do veículo",
     timelineLegend: "Legenda",
     timelineNoBookings: "Nenhuma reserva neste período.",
@@ -173,6 +179,11 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     unavailable: "Unavailable",
     physicalLocationLine: "Physical location: {value}",
     quickActions: "Quick actions",
+    tabEditData: "Edit data",
+    tabMaintenanceCosts: "Maintenance and costs",
+    tabTripsUtilization: "Trips and utilization",
+    tabDocsEquipment: "Documents and equipment",
+    dialogTabs: "Vehicle menu",
     timelineTitle: "Vehicle schedule",
     timelineLegend: "Legend",
     timelineNoBookings: "No bookings in this period.",
@@ -281,6 +292,11 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     unavailable: "No disponible",
     physicalLocationLine: "Ubicación física: {value}",
     quickActions: "Acciones rápidas",
+    tabEditData: "Editar datos",
+    tabMaintenanceCosts: "Mantenimiento y costos",
+    tabTripsUtilization: "Viajes y utilización",
+    tabDocsEquipment: "Documentos y equipos",
+    dialogTabs: "Menú del vehículo",
     timelineTitle: "Agenda del vehículo",
     timelineLegend: "Leyenda",
     timelineNoBookings: "Ninguna reserva en este período.",
@@ -389,6 +405,11 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     unavailable: "不可用",
     physicalLocationLine: "实际地点：{value}",
     quickActions: "快捷操作",
+    tabEditData: "编辑数据",
+    tabMaintenanceCosts: "维护与成本",
+    tabTripsUtilization: "行程与使用率",
+    tabDocsEquipment: "文档与设备",
+    dialogTabs: "车辆菜单",
     timelineTitle: "车辆日程",
     timelineLegend: "图例",
     timelineNoBookings: "此期间没有预订。",
