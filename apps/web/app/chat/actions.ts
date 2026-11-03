@@ -25,7 +25,7 @@ import { cleanCancelReason } from "@/lib/trips/notifyManagersCancellation";
 import { loadWorkLocation } from "@/lib/geospatial/workLocation";
 import { RESERVATION_WORDS, workUnitHasNoVehicles } from "@/lib/geospatial/workUnitFleet";
 import { licenseState, summarizePastTrips } from "@/lib/trips/driverContext";
-import { overlappingPeriods, type OwnPeriod } from "@/lib/trips/overlapNotice";
+import { findOwnOverlappingReservations } from "@/lib/trips/ownOverlap";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
   carpoolFirstForReservation,
@@ -383,26 +383,19 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     };
   }
 
-  // Warnings before the proposal: the requested period overlaps a reservation the person already has, or the only carpool at that time is their own.
-  async function overlapNotices(slots: Record<string, string>): Promise<string> {
-    if (!user) return "";
-    const parts: string[] = [];
-    const mine = await findActiveReservations(supabase, user.id);
-    const own: OwnPeriod[] = mine.map((r) => ({ plate: r.vehiclePlate, destination: r.destination, startAt: r.departureAt, endAt: r.expectedReturnAt }));
-    for (const p of overlappingPeriods(own, slots.departureAt, slots.expectedReturnAt)) {
-      parts.push(fillTemplate(dictNow.chat.replies.overlapsOwnReservation, {
-        plate: p.plate ?? "—", destination: p.destination, from: formatDateTimeShort(p.startAt, locale), to: p.endAt ? formatDateTimeShort(p.endAt, locale) : "—",
-      }));
-    }
-    const { data: offers } = await supabase
-      .from("carpool_offers")
-      .select("trip_request:trip_requests(destination, departure_at, expected_return_at)")
-      .eq("host_id", user.id)
-      .eq("status", "active");
-    const ownOffers: OwnPeriod[] = (offers ?? []).flatMap((o) => (o.trip_request ? [{ destination: o.trip_request.destination, startAt: o.trip_request.departure_at, endAt: o.trip_request.expected_return_at }] : []));
-    const offer = overlappingPeriods(ownOffers, slots.departureAt, slots.expectedReturnAt)[0];
-    if (offer) parts.push(fillTemplate(dictNow.chat.replies.ownCarpoolNotice, { destination: offer.destination, from: formatDateTimeShort(offer.startAt, locale) }));
-    return parts.join("\n\n");
+  // Before the proposal: a person cannot hold two vehicles in the same period (the same rule the site and the confirmation apply). An own reservation
+  // in the requested period BLOCKS the request: nothing is proposed (no vehicle, no carpool, not even the person's own carpool); they are told the period.
+  async function overlapBlock(slots: Record<string, string>): Promise<string | null> {
+    if (!user) return null;
+    const start = Date.parse(slots.departureAt ?? "");
+    const end = Date.parse(slots.expectedReturnAt ?? "");
+    if (!Number.isFinite(start)) return null;
+    const endIso = new Date(Number.isFinite(end) && end > start ? end : start + 3_600_000).toISOString();
+    const overlaps = await findOwnOverlappingReservations(supabase, user.id, new Date(start).toISOString(), endIso);
+    const o = overlaps[0];
+    if (!o) return null;
+    const reservation = `${o.vehicleName || o.vehiclePlate}${o.vehiclePlate && o.vehicleName !== o.vehiclePlate ? ` (${o.vehiclePlate})` : ""}, ${o.origin} → ${o.destination}, ${formatDateTimeShort(o.startAt, locale)} – ${formatDateTimeShort(o.endAt, locale)}`;
+    return fillTemplate(dictNow.chat.replies.reservationOverlap, { reservation });
   }
 
   // After the places are verified: carpool-first (when the org runs it) and then the vehicle card. Shared by a new request and by the choice of a place.
@@ -410,14 +403,14 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     slots: Record<string, string>,
     llmSummary: string | null,
   ): Promise<{ assistantContent: string; pendingAction?: ChatState["pendingAction"]; status: ChatState["status"]; link?: ChatMessage["link"]; noVehicleSlots?: Record<string, string> }> {
-    const notices = await overlapNotices(slots);
-    const withNotices = (text: string) => (notices ? `${notices}\n\n${text}` : text);
+    const blocked = await overlapBlock(slots);
+    if (blocked) return { assistantContent: blocked, status: "idle" };
     const first = carpoolCtx?.gating.carpoolFirst
       ? await carpoolFirstForReservation(carpoolCtx, slots)
       : ({ kind: "none" } as { kind: "none"; note?: string });
     if (first.kind === "options") {
       return {
-        assistantContent: withNotices(first.summary),
+        assistantContent: first.summary,
         pendingAction: { intent: "CREATE_RESERVATION", slots, summary: first.summary, options: first.options },
         status: "needs_confirmation",
       };
@@ -426,7 +419,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     // when the organization's booking_mode allows it, list real alternatives by plate.
     const built = await buildReservationCard(slots, llmSummary, first.note ?? "");
     return {
-      assistantContent: withNotices(built.assistantContent),
+      assistantContent: built.assistantContent,
       pendingAction: built.pendingAction,
       status: built.status,
       link: built.link,

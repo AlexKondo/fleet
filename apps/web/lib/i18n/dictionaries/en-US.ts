@@ -1341,8 +1341,6 @@ const dict: Dictionary = {
       },
       placeChoose: "I found more than one place for “{text}”. Which one is the destination? Pick a button or say the number.",
       noVehicleAtWorkUnit: "There is no vehicle registered at your unit ({unit}). Ask the fleet administrator to register a vehicle.",
-      overlapsOwnReservation: "⚠️ Heads-up: you already have a reservation in this period ({plate}, to {destination}, {from} to {to}). If you go on, you will have two reservations at the same time. If it was a mistake, cancel the previous one or change the time.",
-      ownCarpoolNotice: "ℹ️ The carpool at this time is your own (to {destination}, leaving {from}). You cannot request a seat on your own trip.",
       licenseMissing: "⚠️ Before booking: you have not uploaded your driver's license yet. Send a photo in My account > License, otherwise you will not be able to pick up the vehicle.",
       licenseExpired: "⚠️ Attention: your driver's license expired on {date}. Renew it and update it in My account > License, otherwise you will not be able to pick up the vehicle.",
       licenseExpiring: "⚠️ Heads-up: your driver's license expires on {date} (in {days} days). Please renew it and update it in My account > License.",
