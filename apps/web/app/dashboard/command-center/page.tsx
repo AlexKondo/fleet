@@ -105,8 +105,6 @@ export default async function FleetCommandCenterPage({
     vehicles?.filter((v) => v.status === "maintenance").length ?? null;
   const blocked =
     vehicles?.filter((v) => v.status === "blocked").length ?? null;
-  const noLocation =
-    vehicles?.filter((v) => !v.current_location_id).length ?? null;
   const categories = [
     ...new Set(vehicles?.map((v) => v.category?.name ?? t.noCategory)),
   ].map((name) => ({
@@ -329,44 +327,6 @@ export default async function FleetCommandCenterPage({
               </div>
             </section>
             <div className="fc-middle">
-              <Card
-                title={t.fleetLocation}
-                viewDetails={t.viewDetails}
-                className="fc-location"
-                href="/fleet"
-              >
-                <div className="fc-location-list">
-                  {vehicles === null || data.locations === null ? (
-                    <Empty>{t.locationsError}</Empty>
-                  ) : (
-                    <>
-                      {data.locations
-                        .filter((l) =>
-                          vehicles.some((v) => v.current_location_id === l.id),
-                        )
-                        .slice(0, 5)
-                        .map((l) => (
-                          <Link
-                            key={l.id}
-                            href={`/dashboard/command-center?period=${range.period}&location=${l.id}`}
-                          >
-                            <span>{l.name}</span>
-                            <strong>
-                              {
-                                vehicles.filter(
-                                  (v) => v.current_location_id === l.id,
-                                ).length
-                              }
-                            </strong>
-                          </Link>
-                        ))}
-                      <p>
-                        {t.noLocationLabel} <strong>{number(noLocation)}</strong>
-                      </p>
-                    </>
-                  )}
-                </div>
-              </Card>
               <Card
                 title={t.economyTitle}
                 viewDetails={t.viewDetails}
