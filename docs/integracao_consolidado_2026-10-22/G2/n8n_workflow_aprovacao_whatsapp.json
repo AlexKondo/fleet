@@ -666,20 +666,14 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Config entrada').first().json.evoBase }}/{{ $json.type === 'image' ? 'send/media' : $json.type === 'buttons' ? 'send/button' : 'send/text' }}",
+        "url": "={{ $('Config entrada').first().json.evoBase }}/{{ $('Uma por vez').item.json.type === 'image' ? 'send/media' : $('Uma por vez').item.json.type === 'buttons' ? 'send/button' : 'send/text' }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json.type === 'image' ? { number: $json.number, type: 'image', caption: $json.text, filename: 'mapa.png', url: $json.image } : $json.type === 'buttons' ? { number: $json.number, title: 'FleetMind', description: $json.text, footer: 'FleetMind', buttons: $json.buttons.map(b => ({ type: 'reply', displayText: b.title, id: b.id })) } : { number: $json.number, text: $json.text }) }}",
+        "jsonBody": "={{ JSON.stringify($('Uma por vez').item.json.type === 'image' ? { number: $('Uma por vez').item.json.number, type: 'image', caption: $('Uma por vez').item.json.text, filename: 'mapa.png', url: $('Uma por vez').item.json.image } : $('Uma por vez').item.json.type === 'buttons' ? { number: $('Uma por vez').item.json.number, title: 'FleetMind', description: $('Uma por vez').item.json.text, footer: 'FleetMind', buttons: $('Uma por vez').item.json.buttons.map(b => ({ type: 'reply', displayText: b.title, id: b.id })) } : { number: $('Uma por vez').item.json.number, text: $('Uma por vez').item.json.text }) }}",
         "options": {
-          "timeout": 30000,
-          "batching": {
-            "batch": {
-              "batchSize": 1,
-              "batchInterval": 1500
-            }
-          }
+          "timeout": 30000
         }
       },
       "id": "n-sendtxt",
@@ -687,8 +681,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2090,
-        860
+        2530,
+        760
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -993,6 +987,103 @@
           "name": "Evolution Go (Geral)"
         }
       }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "ff42143e-98f3-44f0-ae99-f927135c3f3f",
+      "name": "Uma por vez",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1870,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config entrada').first().json.evoBase }}/message/presence",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Uma por vez').item.json.number, state: 'composing' }) }}",
+        "options": {
+          "timeout": 8000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "eedbcfda-d791-42e2-a480-02878762cc96",
+      "name": "Digitando resposta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2090,
+        760
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.min(6, Math.max(1, (String($('Uma por vez').item.json.text || '').length) / 30)) }}",
+        "unit": "seconds"
+      },
+      "id": "d445c08e-1b60-4a3a-9bcd-00118ab51ad8",
+      "name": "Aguardar digitacao",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2310,
+        760
+      ],
+      "webhookId": "359c5d95-bb92-4582-bad4-a8eead7e189e"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config entrada').first().json.evoBase }}/message/presence",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Classificar mensagem').first().json.from, state: 'composing' }) }}",
+        "options": {
+          "timeout": 8000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "134416c7-6d5b-464a-9f01-5ab1977c17ae",
+      "name": "Mostrar digitando",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        550,
+        940
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "evoGoGeral01",
+          "name": "Evolution Go (Geral)"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -1176,6 +1267,11 @@
             "node": "E audio?",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Mostrar digitando",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -1246,7 +1342,7 @@
       "main": [
         [
           {
-            "node": "Enviar mensagem ao usuario",
+            "node": "Uma por vez",
             "type": "main",
             "index": 0
           }
@@ -1360,6 +1456,51 @@
         [
           {
             "node": "Avisar 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Uma por vez": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Digitando resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Digitando resposta": {
+      "main": [
+        [
+          {
+            "node": "Aguardar digitacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar digitacao": {
+      "main": [
+        [
+          {
+            "node": "Enviar mensagem ao usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar mensagem ao usuario": {
+      "main": [
+        [
+          {
+            "node": "Uma por vez",
             "type": "main",
             "index": 0
           }
