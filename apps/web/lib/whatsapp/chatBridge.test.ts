@@ -514,6 +514,27 @@ describe("choosing the place of a name that fits several buildings (WhatsApp)", 
   });
 });
 
+describe("you already have a reservation in that period (WhatsApp)", () => {
+  const OPT = [
+    { id: "11111111-1111-4111-8111-111111111111", label: "Cancelar a atual" },
+    { id: "22222222-2222-4222-8222-222222222222", label: "Mostrar reservas" },
+    { id: "33333333-3333-4333-8333-333333333333", label: "Manter a atual" },
+  ];
+  const offer = (options: { id: string; label: string }[]): ChatState => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Você já tem uma reserva nesse período" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { overlapChoices: "[]" }, summary: "x", options } });
+
+  it("cancel / show / keep come as three buttons (20 characters at most each)", () => {
+    const [r] = renderState(offer(OPT), "https://x.invalid");
+    expect(r).toMatchObject({ type: "buttons", buttons: [{ id: `chat:opt:${OPT[0]!.id}` }, { id: `chat:opt:${OPT[1]!.id}` }, { id: `chat:opt:${OPT[2]!.id}` }] });
+    expect((r as { buttons: { title: string }[] }).buttons.map((b) => b.title)).toEqual(["1 · Cancelar a atual", "2 · Mostrar reservas", "3 · Manter a atual"]);
+  });
+  it("the reservations listed to pick one come numbered in the text (long names do not fit a button)", () => {
+    const long = [{ id: OPT[0]!.id, label: "CCD0710, São Paulo Office, 04/11 08:00 – 20:00" }, { id: OPT[2]!.id, label: "Manter a atual" }];
+    const [r] = renderState(offer(long), "https://x.invalid");
+    expect(r).toMatchObject({ type: "text" });
+    expect((r as { text: string }).text).toContain("*1.* CCD0710, São Paulo Office");
+  });
+});
+
 describe("route map picture", () => {
   const proposal = (slots: Record<string, unknown>, extra: Record<string, unknown> = {}) => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar" }], pendingAction: { intent: "CREATE_RESERVATION", slots, summary: "Vou reservar", ...extra } }) as ChatState;
   const done = (): ChatState => ({ status: "idle", conversationId: "c1", messages: [{ role: "assistant", content: "Reserva criada" }] });

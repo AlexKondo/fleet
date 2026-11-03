@@ -146,6 +146,10 @@ export function renderState(state: ChatState, appUrl: string, lastOnly = false):
     if (pending.slots.placeChoices && pending.options.length <= MAX_VEHICLE_BUTTONS) {
       return [{ type: "buttons", text: clip(body), buttons: pending.options.map((o, i) => ({ id: `${OPTION_BUTTON_PREFIX}${o.id}`, title: `${i + 1} · ${o.label.split(" - ")[0]}`.slice(0, 20) })) }];
     }
+    // the answers to "cancel the reservation you already have?" (cancel / show / keep, or the reason) are buttons when their names fit (20 characters with the number)
+    if (pending.slots.overlapChoices && pending.options.length <= MAX_VEHICLE_BUTTONS && pending.options.every((o) => o.label.length <= 16)) {
+      return [{ type: "buttons", text: clip(body), buttons: pending.options.map((o, i) => ({ id: `${OPTION_BUTTON_PREFIX}${o.id}`, title: `${i + 1} · ${o.label}` })) }];
+    }
     return [text(body)];
   }
   const card: Reply = { type: "buttons", text: clip(`${body}\n\n${TEXTS.confirmHint}`), buttons: [{ id: CHAT_BUTTON.confirm, title: TEXTS.confirm }, { id: CHAT_BUTTON.cancel, title: TEXTS.cancel }] };

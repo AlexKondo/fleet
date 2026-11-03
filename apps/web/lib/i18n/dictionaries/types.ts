@@ -1288,6 +1288,20 @@ export type Dictionary = {
       cancelAskReason: string;
       /** {reservation} = the person's existing reservation in the requested period. */
       reservationOverlap: string;
+      overlapFound: string;
+      overlapQuestionOne: string;
+      overlapQuestionMany: string;
+      overlapCancelThis: string;
+      overlapShowAll: string;
+      overlapKeep: string;
+      overlapKept: string;
+      overlapListIntro: string;
+      overlapNone: string;
+      overlapAskReason: string;
+      overlapReasonChange: string;
+      overlapReasonMistake: string;
+      overlapReasonTrip: string;
+      overlapCancelConfirm: string;
     };
     thinking: string;
     carpool: {

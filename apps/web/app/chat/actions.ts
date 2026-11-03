@@ -383,19 +383,119 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     };
   }
 
-  // Before the proposal: a person cannot hold two vehicles in the same period (the same rule the site and the confirmation apply). An own reservation
-  // in the requested period BLOCKS the request: nothing is proposed (no vehicle, no carpool, not even the person's own carpool); they are told the period.
-  async function overlapBlock(slots: Record<string, string>): Promise<string | null> {
+  // A person cannot hold two vehicles in the same period (the same rule the site and the confirmation apply). An own reservation in the requested
+  // period stops the request, but nothing dead-ends: the person is told the period and offered to cancel that reservation (asking the reason, like a
+  // normal cancellation), to see all their reservations numbered and pick which to cancel, or to keep it. After the cancellation the new request goes on.
+  type OverlapKind = "cancel" | "list" | "keep" | "reason";
+  type OverlapChoice = { id: string; kind: OverlapKind; reservationId?: string; reason?: string };
+  type OverlapDraft = { kind: OverlapKind; label: string; reservationId?: string; reason?: string };
+  type Pending = NonNullable<ChatState["pendingAction"]>;
+
+  const activeLabel = (a: { vehiclePlate: string; destination: string; departureAt: string; expectedReturnAt: string }) =>
+    `${a.vehiclePlate ? `${a.vehiclePlate}, ` : ""}${a.destination}, ${formatDateTimeShort(a.departureAt, locale)} – ${formatDateTimeShort(a.expectedReturnAt, locale)}`;
+
+  // A pending action whose numbered options are the given choices (button / number); what each number does is kept in slots.overlapChoices.
+  function overlapPending(intent: IntentName, slots: Record<string, string>, summary: string, drafts: OverlapDraft[]): Pending {
+    const withIds = drafts.map((d) => ({ ...d, id: randomUUID() }));
+    const choices: OverlapChoice[] = withIds.map((d) => ({
+      id: d.id,
+      kind: d.kind,
+      ...(d.reservationId ? { reservationId: d.reservationId } : {}),
+      ...(d.reason ? { reason: d.reason } : {}),
+    }));
+    return { intent, slots: { ...slots, overlapChoices: JSON.stringify(choices) }, summary, options: withIds.map((d) => ({ id: d.id, label: d.label.slice(0, 200) })) };
+  }
+
+  // Stores the assistant's message (with its pending options, when any) and returns the chat state. `leading` = the user's message just typed, if any.
+  async function overlapState(content: string, pendingAction: ChatState["pendingAction"], leading: ChatMessage[] = []): Promise<ChatState> {
+    await admin.from("chat_messages").insert({
+      conversation_id: conversationId,
+      role: "assistant",
+      content,
+      intent: pendingAction?.intent,
+      slots: pendingAction ? packSlots(pendingAction.slots, pendingAction.options, pendingAction.vehicleOptions) : undefined,
+    });
+    return {
+      status: pendingAction ? "needs_confirmation" : "idle",
+      conversationId,
+      messages: [...prevState.messages, ...leading, { role: "assistant", content }],
+      pendingAction,
+    };
+  }
+
+  async function overlapOffer(slots: Record<string, string>): Promise<{ content: string; pendingAction: Pending } | null> {
     if (!user) return null;
     const start = Date.parse(slots.departureAt ?? "");
     const end = Date.parse(slots.expectedReturnAt ?? "");
     if (!Number.isFinite(start)) return null;
     const endIso = new Date(Number.isFinite(end) && end > start ? end : start + 3_600_000).toISOString();
     const overlaps = await findOwnOverlappingReservations(supabase, user.id, new Date(start).toISOString(), endIso);
-    const o = overlaps[0];
-    if (!o) return null;
-    const reservation = `${o.vehicleName || o.vehiclePlate}${o.vehiclePlate && o.vehicleName !== o.vehiclePlate ? ` (${o.vehiclePlate})` : ""}, ${o.origin} → ${o.destination}, ${formatDateTimeShort(o.startAt, locale)} – ${formatDateTimeShort(o.endAt, locale)}`;
-    return fillTemplate(dictNow.chat.replies.reservationOverlap, { reservation });
+    if (overlaps.length === 0) return null;
+    const r = dictNow.chat.replies;
+    const one = overlaps.length === 1;
+    const found = overlaps
+      .map((o) => fillTemplate(r.overlapFound, { reservation: `${o.vehicleName || o.vehiclePlate}${o.vehiclePlate && o.vehicleName !== o.vehiclePlate ? ` (${o.vehiclePlate})` : ""}, ${o.origin} → ${o.destination}, ${formatDateTimeShort(o.startAt, locale)} – ${formatDateTimeShort(o.endAt, locale)}` }))
+      .join("\n");
+    const content = `${found}\n\n${one ? r.overlapQuestionOne : r.overlapQuestionMany}`;
+    const drafts: OverlapDraft[] = [
+      ...(one ? [{ kind: "cancel" as const, label: r.overlapCancelThis, reservationId: overlaps[0]!.reservationId }] : []),
+      { kind: "list", label: r.overlapShowAll },
+      { kind: "keep", label: r.overlapKeep },
+    ];
+    return { content, pendingAction: overlapPending("CREATE_RESERVATION", slots, content, drafts) };
+  }
+
+  // The last step before cancelling: the confirmation card (Confirmar / Cancelar). Confirming cancels it and goes on with the new request (confirm phase).
+  async function overlapCancelCard(reservationId: string, reason: string, resume: string, leading: ChatMessage[] = []): Promise<ChatState> {
+    const r = dictNow.chat.replies;
+    const target = user ? (await findActiveReservations(supabase, user.id)).find((a) => a.reservationId === reservationId) : undefined;
+    if (!target) return overlapState(r.overlapNone, undefined, leading);
+    const summary = fillTemplate(r.overlapCancelConfirm, { reservation: activeLabel(target), reason });
+    return overlapState(summary, { intent: "CANCEL_RESERVATION", slots: { reservationId, cancelReason: reason, resumeSlots: resume }, summary }, leading);
+  }
+
+  // Asks why the reservation is cancelled (the fleet manager is told with the reason): three quick answers, or the person writes it.
+  async function overlapAskReason(reservationId: string, resume: string, leading: ChatMessage[] = []): Promise<ChatState> {
+    const r = dictNow.chat.replies;
+    const target = user ? (await findActiveReservations(supabase, user.id)).find((a) => a.reservationId === reservationId) : undefined;
+    if (!target) return overlapState(r.overlapNone, undefined, leading);
+    const content = fillTemplate(r.overlapAskReason, { reservation: activeLabel(target) });
+    const drafts: OverlapDraft[] = [r.overlapReasonChange, r.overlapReasonMistake, r.overlapReasonTrip].map((reason) => ({ kind: "reason" as const, label: reason, reason }));
+    return overlapState(content, overlapPending("CANCEL_RESERVATION", { reservationId, awaitReason: "1", resumeSlots: resume }, content, drafts), leading);
+  }
+
+  // One of the numbered answers was chosen (button or number).
+  async function chooseOverlap(pending: Pending, optionId: string): Promise<ChatState> {
+    const r = dictNow.chat.replies;
+    let choices: OverlapChoice[] = [];
+    try {
+      const parsed: unknown = JSON.parse(pending.slots.overlapChoices ?? "[]");
+      if (Array.isArray(parsed)) choices = parsed as OverlapChoice[];
+    } catch {
+      choices = [];
+    }
+    const chosen = choices.find((c) => c && c.id === optionId && (["cancel", "list", "keep", "reason"] as string[]).includes(c.kind));
+    if (!chosen || !user) return { status: "idle", conversationId, messages: prevState.messages };
+    const { overlapChoices: _dropped, ...rest } = pending.slots;
+    void _dropped;
+    const resume = pending.slots.resumeSlots ?? JSON.stringify(rest);
+    if (chosen.kind === "keep") return overlapState(r.overlapKept, undefined);
+    if (chosen.kind === "list") {
+      const active = (await findActiveReservations(supabase, user.id)).sort((a, b) => a.departureAt.localeCompare(b.departureAt)).slice(0, 8);
+      if (active.length === 0) return overlapState(r.overlapNone, undefined);
+      const drafts: OverlapDraft[] = [
+        ...active.map((a) => ({ kind: "cancel" as const, label: activeLabel(a), reservationId: a.reservationId })),
+        { kind: "keep" as const, label: r.overlapKeep },
+      ];
+      return overlapState(r.overlapListIntro, overlapPending("CANCEL_RESERVATION", { resumeSlots: resume }, r.overlapListIntro, drafts));
+    }
+    if (chosen.kind === "cancel" && chosen.reservationId) return overlapAskReason(chosen.reservationId, resume);
+    if (chosen.kind === "reason") {
+      const reason = cleanCancelReason(chosen.reason);
+      const reservationId = pending.slots.reservationId;
+      if (reason && reservationId) return overlapCancelCard(reservationId, reason, resume);
+    }
+    return { status: "idle", conversationId, messages: prevState.messages };
   }
 
   // After the places are verified: carpool-first (when the org runs it) and then the vehicle card. Shared by a new request and by the choice of a place.
@@ -403,8 +503,8 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     slots: Record<string, string>,
     llmSummary: string | null,
   ): Promise<{ assistantContent: string; pendingAction?: ChatState["pendingAction"]; status: ChatState["status"]; link?: ChatMessage["link"]; noVehicleSlots?: Record<string, string> }> {
-    const blocked = await overlapBlock(slots);
-    if (blocked) return { assistantContent: blocked, status: "idle" };
+    const offer = await overlapOffer(slots);
+    if (offer) return { assistantContent: offer.content, pendingAction: offer.pendingAction, status: "needs_confirmation" };
     const first = carpoolCtx?.gating.carpoolFirst
       ? await carpoolFirstForReservation(carpoolCtx, slots)
       : ({ kind: "none" } as { kind: "none"; note?: string });
@@ -557,6 +657,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   // Shared by the button click (phase=select_option) and the bare-number reply: one numbered
   // carpool option (or "use a vehicle") was chosen.
   async function selectOption(pending: NonNullable<ChatState["pendingAction"]>, optionId: string): Promise<ChatState> {
+    if (pending.slots.overlapChoices) return chooseOverlap(pending, optionId);
     if (pending.slots.placeChoices) return choosePlace(pending, optionId);
     if (!carpoolCtx) return { ...sessionExpired(), conversationId };
     const result = await prepareFromOption(
@@ -675,14 +776,40 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     const assistantMessage: ChatMessage = reply.link
       ? { role: "assistant", content: reply.content, link: reply.link }
       : { role: "assistant", content: reply.content };
+    // A cancellation made to free the period for a new request (overlap offer): once it is done, the new request goes on in the same conversation.
+    let resumeSlots: Record<string, string> | null = null;
+    if (result.success && pending.intent === "CANCEL_RESERVATION" && pending.slots.resumeSlots) {
+      try {
+        const parsed = stripReservedSlots(JSON.parse(pending.slots.resumeSlots) as Record<string, string>);
+        if (parsed && typeof parsed === "object" && Object.values(parsed).every((v) => typeof v === "string") && missingRequiredSlots("CREATE_RESERVATION", parsed).length === 0) resumeSlots = parsed;
+      } catch {
+        resumeSlots = null;
+      }
+    }
     await admin.from("chat_messages").insert({
       conversation_id: conversationId,
       role: "assistant",
       // The user-facing text (never a code): codes and causes go to the server log only.
       content: reply.content,
-      intent: pending.intent,
-      slots: pending.slots,
+      intent: resumeSlots ? undefined : pending.intent,
+      slots: resumeSlots ? undefined : pending.slots,
     });
+    if (resumeSlots) {
+      const step = await reservationStep(resumeSlots, null);
+      await admin.from("chat_messages").insert({
+        conversation_id: conversationId,
+        role: "assistant",
+        content: step.assistantContent,
+        intent: step.pendingAction?.intent,
+        slots: step.pendingAction ? packSlots(step.pendingAction.slots, step.pendingAction.options, step.pendingAction.vehicleOptions) : packSlots(step.noVehicleSlots),
+      });
+      return {
+        status: step.status,
+        conversationId,
+        messages: [...prevState.messages, assistantMessage, { role: "assistant", content: step.assistantContent, ...(step.link ? { link: step.link } : {}) }],
+        pendingAction: step.pendingAction,
+      };
+    }
     await admin
       .from("chat_conversations")
       .update({ status: "resolved", updated_at: new Date().toISOString() })
@@ -760,6 +887,18 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
         return reselectVehicle(prevState.pendingAction, chosen.vehicleId);
       }
     }
+  }
+
+  // The cancellation reason is being asked (overlap offer): what the person writes IS the reason (or "no" / "keep it").
+  if (prevState.status === "needs_confirmation" && prevState.pendingAction?.slots.awaitReason && prevState.pendingAction.slots.reservationId) {
+    const asking = prevState.pendingAction;
+    const typed: ChatMessage = { role: "user", content: message };
+    await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "user", content: message });
+    const resume = asking.slots.resumeSlots ?? "{}";
+    if (/^\s*(n[aã]o|manter|esquece|deixa)\b/i.test(message)) return overlapState(dictNow.chat.replies.overlapKept, undefined, [typed]);
+    const reason = cleanCancelReason(message);
+    if (!reason) return overlapAskReason(asking.slots.reservationId!, resume, [typed]);
+    return overlapCancelCard(asking.slots.reservationId!, reason, resume, [typed]);
   }
 
   const userMessage: ChatMessage = { role: "user", content: message };
