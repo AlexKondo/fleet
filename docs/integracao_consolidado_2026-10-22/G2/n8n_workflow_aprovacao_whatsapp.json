@@ -1038,7 +1038,7 @@
     },
     {
       "parameters": {
-        "amount": "={{ Math.min(6, Math.max(1, (String($('Uma por vez').item.json.text || '').length) / 30)) }}",
+        "amount": "={{ $('Uma por vez').runIndex > 0 ? 1 : Math.min(3, Math.max(1, (String($('Uma por vez').item.json.text || '').length) / 60)) }}",
         "unit": "seconds"
       },
       "id": "d445c08e-1b60-4a3a-9bcd-00118ab51ad8",
