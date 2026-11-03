@@ -122,7 +122,9 @@ async function searchInner(
        trip_request:trip_requests(departure_at, expected_return_at, origin, destination)`,
     )
     .eq("organization_id", organizationId)
-    .eq("status", "active");
+    .eq("status", "active")
+    // a person's own offers are never suggested to them (the request would be refused: CARPOOL_CANNOT_REQUEST_OWN_OFFER)
+    .neq("host_id", user.id);
   if (offersError) {
     return { status: "unavailable", reason: "offers_unavailable" };
   }

@@ -18,7 +18,7 @@ function builder(result: TableResult, table = "") {
     state.inserts.push({ table, row });
     return { data: null, error: null };
   };
-  for (const m of ["select", "eq", "in", "order", "limit"]) b[m] = () => b;
+  for (const m of ["select", "eq", "neq", "in", "order", "limit"]) b[m] = () => b;
   b.single = async () => result;
   b.maybeSingle = async () => result;
   b.then = (resolve: (v: TableResult) => unknown) => Promise.resolve(result).then(resolve);
