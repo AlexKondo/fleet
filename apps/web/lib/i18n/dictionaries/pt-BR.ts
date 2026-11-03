@@ -1343,6 +1343,8 @@ const dict: Dictionary = {
       },
       placeChoose: "Encontrei mais de um local para “{text}”. Qual deles é o destino? Escolha pelo botão ou diga o número.",
       noVehicleAtWorkUnit: "Não há nenhum veículo cadastrado na sua unidade ({unit}). Peça para o administrador da frota cadastrar um veículo.",
+      overlapsOwnReservation: "⚠️ Atenção: você já tem uma reserva nesse período ({plate}, para {destination}, de {from} a {to}). Se continuar, ficará com duas reservas ao mesmo tempo. Se foi engano, cancele a anterior ou mude o horário.",
+      ownCarpoolNotice: "ℹ️ A carona que existe nesse horário é a sua própria (para {destination}, saída {from}). Não dá para pedir carona na própria viagem.",
       licenseMissing: "⚠️ Antes de reservar: você ainda não enviou a sua CNH no sistema. Envie uma foto em Minha conta > CNH, senão não vai conseguir retirar o veículo.",
       licenseExpired: "⚠️ Atenção: a sua CNH venceu em {date}. Renove e atualize em Minha conta > CNH, senão não vai conseguir retirar o veículo.",
       licenseExpiring: "⚠️ Aviso: a sua CNH vence em {date} (em {days} dias). Já vá renovando e atualize em Minha conta > CNH.",

@@ -1341,6 +1341,8 @@ const dict: Dictionary = {
       },
       placeChoose: "Encontré más de un lugar para “{text}”. ¿Cuál es el destino? Elige un botón o di el número.",
       noVehicleAtWorkUnit: "No hay ningún vehículo registrado en tu unidad ({unit}). Pide al administrador de la flota que registre un vehículo.",
+      overlapsOwnReservation: "⚠️ Atención: ya tienes una reserva en este período ({plate}, a {destination}, de {from} a {to}). Si continúas, tendrás dos reservas al mismo tiempo. Si fue un error, cancela la anterior o cambia el horario.",
+      ownCarpoolNotice: "ℹ️ El viaje compartido de este horario es el tuyo (a {destination}, salida {from}). No puedes pedir un lugar en tu propio viaje.",
       licenseMissing: "⚠️ Antes de reservar: todavía no subiste tu licencia de conducir. Envía una foto en Mi cuenta > Licencia, si no, no podrás retirar el vehículo.",
       licenseExpired: "⚠️ Atención: tu licencia de conducir venció el {date}. Renuévala y actualízala en Mi cuenta > Licencia, si no, no podrás retirar el vehículo.",
       licenseExpiring: "⚠️ Aviso: tu licencia de conducir vence el {date} (en {days} días). Renuévala y actualízala en Mi cuenta > Licencia.",

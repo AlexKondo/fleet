@@ -1305,6 +1305,8 @@ const dict: Dictionary = {
       },
       placeChoose: "“{text}”有多个匹配地点。哪一个是目的地？请点按钮或说出编号。",
       noVehicleAtWorkUnit: "您所在的单位（{unit}）没有登记任何车辆。请联系车队管理员登记车辆。",
+      overlapsOwnReservation: "⚠️ 注意：您在该时间段已有预订（{plate}，前往 {destination}，{from} 至 {to}）。如果继续，您将同时拥有两个预订。如是误操作，请取消之前的预订或更改时间。",
+      ownCarpoolNotice: "ℹ️ 此时间段的拼车是您自己的（前往 {destination}，{from} 出发）。您不能在自己的行程上申请座位。",
       licenseMissing: "⚠️ 预订前提醒：您还没有上传驾驶证。请在“我的账户 > 驾驶证”中上传照片，否则无法提车。",
       licenseExpired: "⚠️ 注意：您的驾驶证已于 {date} 过期。请更新并在“我的账户 > 驾驶证”中重新上传，否则无法提车。",
       licenseExpiring: "⚠️ 提醒：您的驾驶证将于 {date} 到期（还有 {days} 天）。请尽快更新并在“我的账户 > 驾驶证”中上传。",

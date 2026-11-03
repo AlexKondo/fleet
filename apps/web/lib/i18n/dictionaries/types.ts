@@ -1274,6 +1274,8 @@ export type Dictionary = {
       notAutomated: { change: string; differentVehicle: string; startTrip: string; endTrip: string; };
       placeChoose: string;
       noVehicleAtWorkUnit: string;
+      overlapsOwnReservation: string;
+      ownCarpoolNotice: string;
       licenseMissing: string;
       licenseExpired: string;
       licenseExpiring: string;
