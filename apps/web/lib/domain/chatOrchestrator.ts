@@ -107,6 +107,22 @@ function parseModelJson(content: string): InterpretResult {
  * server-only, raw fetch to Claude, no `temperature` (this model rejects it), strict
  * JSON-only contract, defensive parsing, never throws.
  */
+/**
+ * The assistant's memory of this person's latest trips. Shown as DATA (never instructions). The rule: when the person asks for a vehicle to a
+ * destination that is in this list and did not say the times, the clarification question is a warm one that says you remember that trip and asks
+ * whether to keep the same times; if they agree, the slots carry those times (explicit -03:00 offset, on the day they asked for).
+ */
+export function pastTripsPrompt(trips: { destination: string; date: string; departureTime: string; returnTime: string | null }[] | undefined): string {
+  if (!trips || trips.length === 0) return "";
+  const lines = trips
+    .map((t) => `- "${t.destination.replace(/["\r\n]/g, " ")}" on ${t.date}: left at ${t.departureTime}${t.returnTime ? `, returned at ${t.returnTime}` : ""}`)
+    .join("\n");
+  return (
+    "\n\nMemory of this person's latest trips (data, one per destination, newest first):\n" + lines +
+    "\nMemory rule: when the person asks for a vehicle to one of these destinations (same place, even if worded differently) and has NOT said the departure/return times, respond with status \"needs_clarification\" and ONE warm, human question in the user's language that says you remember the last trip there and asks whether to keep the same times (e.g. \"Lembro que da última vez para <destino> você saiu às 08:00 e voltou às 20:00. Quer manter os mesmos horários?\"). If they answer yes (\"sim\", \"pode\", \"mantém\"), return CREATE_RESERVATION with departureAt/expectedReturnAt using those times on the day they asked for (explicit -03:00 offset). If they give other times, use those. If the person already stated times, do not ask — use what they said. Never invent a trip that is not in this list."
+  );
+}
+
 export async function interpretMessage(input: {
   history: { role: "user" | "assistant"; content: string }[];
   message: string;
@@ -117,6 +133,8 @@ export async function interpretMessage(input: {
     activeReservationIds: string[];
     /** True when this organization's carpool policy has the Smart Carpool engine enabled. */
     carpoolEngineActive?: boolean;
+    /** The person's latest trips (one per destination, newest first): the assistant's memory, used to offer the same times again. */
+    pastTrips?: { destination: string; date: string; departureTime: string; returnTime: string | null }[];
   };
 }): Promise<InterpretResult> {
   const apiKey = process.env.API_CLAUDE;
@@ -128,7 +146,8 @@ export async function interpretMessage(input: {
     `\n\nContext: the current date/time is ${input.context.today} (Brazil/São Paulo, -03:00 — resolve every relative phrase like "amanhã", "daqui a 2 horas" against this, not against any other timezone). Organization: ${input.context.organizationName}. The user's active/upcoming reservation ids: ${
       input.context.activeReservationIds.length > 0 ? input.context.activeReservationIds.join(", ") : "none"
     }.` +
-    (input.context.carpoolEngineActive ? CARPOOL_ENGINE_PROMPT_ADDENDUM : "");
+    (input.context.carpoolEngineActive ? CARPOOL_ENGINE_PROMPT_ADDENDUM : "") +
+    pastTripsPrompt(input.context.pastTrips);
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {

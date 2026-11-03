@@ -1274,6 +1274,9 @@ export type Dictionary = {
       notAutomated: { change: string; differentVehicle: string; startTrip: string; endTrip: string; };
       placeChoose: string;
       noVehicleAtWorkUnit: string;
+      licenseMissing: string;
+      licenseExpired: string;
+      licenseExpiring: string;
       addressAsk: string;
       originPick: string;
       /** {origin} = where the person leaves from (their work location). Shown ALONE: no list, no form link. */

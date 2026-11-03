@@ -24,6 +24,7 @@ import { fillTemplate } from "@/lib/carpool/errorText";
 import { cleanCancelReason } from "@/lib/trips/notifyManagersCancellation";
 import { loadWorkLocation } from "@/lib/geospatial/workLocation";
 import { RESERVATION_WORDS, workUnitHasNoVehicles } from "@/lib/geospatial/workUnitFleet";
+import { licenseState, summarizePastTrips } from "@/lib/trips/driverContext";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
   carpoolFirstForReservation,
@@ -747,6 +748,16 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
   await admin.from("chat_messages").insert({ conversation_id: conversationId, role: "user", content: message });
 
   const active = await findActiveReservations(supabase, user.id);
+  // the assistant's memory: the latest trips of this person (own rows, own session) and the state of their license (own row, read server-side)
+  const { data: tripRows } = await supabase
+    .from("trip_requests")
+    .select("destination, departure_at, expected_return_at")
+    .eq("requester_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  const pastTrips = summarizePastTrips(tripRows ?? []);
+  const { data: licenseRow } = await admin.from("profiles").select("drivers_license_expiration").eq("id", user.id).maybeSingle();
+  const license = licenseRow ? licenseState(licenseRow.drivers_license_expiration) : ({ kind: "ok" } as const);
   const rawInterpretation = await interpretMessage({
     history: prevState.messages,
     message,
@@ -760,6 +771,7 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
       organizationName: (profile.organization as unknown as { name: string } | null)?.name ?? "",
       activeReservationIds: active.map((r) => r.reservationId),
       carpoolEngineActive: carpoolCtx?.gating.newEngine ?? false,
+      pastTrips,
     },
   });
   // C7b hardening: LLM-emitted slots can never carry a reserved ("__*") key into what is persisted / restored.
@@ -879,6 +891,20 @@ export async function sendChatMessage(prevState: ChatState, formData: FormData):
     console.error("chat interpretMessage failed:", interpretation.message);
     assistantContent = failureReply(dictNow, "generic", "unexpected", { mode: "chat" }).content;
     status = "error";
+  }
+
+  // license notice: once per conversation, on the first reservation reply (no license sent / expired / about to expire)
+  const reservationReply =
+    (interpretation.status === "ok" && interpretation.intent === "CREATE_RESERVATION") ||
+    (interpretation.status === "needs_clarification" && RESERVATION_WORDS.test(message));
+  if (reservationReply && license.kind !== "ok") {
+    const notice =
+      license.kind === "missing"
+        ? dictNow.chat.replies.licenseMissing
+        : license.kind === "expired"
+          ? fillTemplate(dictNow.chat.replies.licenseExpired, { date: license.date })
+          : fillTemplate(dictNow.chat.replies.licenseExpiring, { date: license.date, days: String(license.days) });
+    if (!prevState.messages.some((m) => m.role === "assistant" && m.content.startsWith(notice))) assistantContent = notice + "\n\n" + assistantContent;
   }
 
   const assistantMessage: ChatMessage = assistantLink
