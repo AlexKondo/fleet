@@ -20,6 +20,7 @@ import { LocationRow } from "./LocationRow";
 import { CategoryRow } from "./CategoryRow";
 import { VehicleRow } from "./VehicleRow";
 import { VehicleFilterGrid } from "./VehicleFilterGrid";
+import { timelineWindow, type TimelineBooking } from "./timelineLayout";
 import { EmptyState } from "./EmptyState";
 
 /**
@@ -112,6 +113,42 @@ export default async function FleetPage() {
       .map((s) => [s.path as string, s.signedUrl]),
   );
 
+  // Schedule of each vehicle (the chart next to the list): its reservations of the chart window and, for the trips that have an active carpool, the seats.
+  const nowMs = Date.now();
+  const windowStartIso = new Date(timelineWindow(nowMs).start).toISOString();
+  const { data: bookingRows } = await supabase
+    .from("fm_managed_reservations")
+    .select("id, vehicle_id, status, start_at, end_at, trip_request_id, trip_request:trip_requests(destination, requester:profiles(full_name))")
+    .in("status", ["pending_approval", "confirmed", "completed"])
+    .gte("end_at", windowStartIso)
+    .order("start_at", { ascending: true });
+  const tripIds = Array.from(new Set((bookingRows ?? []).map((r) => r.trip_request_id).filter((x): x is string => Boolean(x))));
+  const [{ data: offerRows }, { data: seatRows }] = tripIds.length
+    ? await Promise.all([
+        supabase.from("carpool_offers").select("trip_request_id, seats_offered").eq("status", "active").in("trip_request_id", tripIds),
+        supabase.from("trip_participants").select("trip_request_id, passenger_count").eq("status", "accepted").in("trip_request_id", tripIds),
+      ])
+    : [{ data: [] as { trip_request_id: string; seats_offered: number }[] }, { data: [] as { trip_request_id: string; passenger_count: number }[] }];
+  const offerByTrip = new Map((offerRows ?? []).map((o) => [o.trip_request_id, o.seats_offered]));
+  const takenByTrip = new Map<string, number>();
+  for (const p of seatRows ?? []) takenByTrip.set(p.trip_request_id, (takenByTrip.get(p.trip_request_id) ?? 0) + p.passenger_count);
+  const bookingsByVehicle = new Map<string, TimelineBooking[]>();
+  for (const r of bookingRows ?? []) {
+    if (!r.vehicle_id || !r.id) continue;
+    const seats = r.trip_request_id ? offerByTrip.get(r.trip_request_id) : undefined;
+    const tr = r.trip_request as { destination?: string; requester?: { full_name?: string } | null } | null;
+    const list = bookingsByVehicle.get(r.vehicle_id) ?? [];
+    list.push({
+      id: r.id,
+      start: r.start_at as string,
+      end: r.end_at as string,
+      status: r.status as string,
+      label: [tr?.requester?.full_name, tr?.destination].filter(Boolean).join(" · ") || "—",
+      carpool: seats ? { seats, taken: takenByTrip.get(r.trip_request_id as string) ?? 0 } : undefined,
+    });
+    bookingsByVehicle.set(r.vehicle_id, list);
+  }
+
   // Veículos (SCR-FM-002) tiles: counts of rows already loaded above.
   const o = dict.ops.fleet;
   const statusCounts = new Map<string, number>();
@@ -202,6 +239,7 @@ export default async function FleetPage() {
                       T={T}
                       locale={locale}
                       dimensionsAvailable={unitDimension!==null}
+                      now={nowMs}
                       statusOptions={statusOptions}
                       vehicles={vehicles.map((v) => ({
                         id: v.id,
@@ -214,6 +252,7 @@ export default async function FleetPage() {
                         unitName:unitDimension?.units.find(u=>u.id===unitDimension.bindings.find(b=>b.vehicle_id===v.id)?.unit_id)?.name,
                         photoUrl:v.photo_storage_path?(photoUrlByPath.get(v.photo_storage_path)??null):null,
                         locationName:v.current_location?.name??"—",
+                        bookings:bookingsByVehicle.get(v.id)??[],
                         odometerKm:v.odometer_km,nextServiceKm:v.next_service_odometer_km,vin:v.vin,nextServiceDate:v.next_service_date,
                         fuelPercent:v.fuel_level_percent,batteryPercent:v.battery_level_percent,rangeKm:v.estimated_range_km,
                         node: (
