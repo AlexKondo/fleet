@@ -1,11 +1,11 @@
 "use client";
-import Link from "next/link";
 import { createContext, useContext, useMemo, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import type { FleetKey } from "@/lib/i18n/areas/fleet";
 import { TimelineHeader, TimelineLane } from "../fleet/VehicleTimeline";
 import type { TimelineBooking } from "../fleet/timelineLayout";
-import { FmCalendarIcon, FmChevronIcon, FmGaugeIcon, FmPinIcon, FmBatteryIcon, FmFuelIcon } from "../fmIcons";
+import { FmCalendarIcon, FmGaugeIcon, FmPinIcon, FmBatteryIcon, FmFuelIcon } from "../fmIcons";
+import { ReservationActions } from "./ReservationActions";
 
 /** One reservation of the chart, with everything the detail panel shows (all prepared on the server). */
 export interface HomeItem {
@@ -22,6 +22,8 @@ export interface HomeItem {
   battery: number | null;
   fuel: number | null;
   odometer: string | null;
+  /** only a confirmed reservation has Saída / Retorno buttons */
+  showOps: boolean;
   canPickup: boolean;
   canReturn: boolean;
 }
@@ -48,8 +50,8 @@ interface Selection {
 const Ctx = createContext<Selection | null>(null);
 
 /** Shares "which reservation was tapped" between the chart (main column) and the detail panel (side column / under the chart on small screens). */
-export function HomeSelectionProvider({ items, labels, children }: { items: HomeItem[]; labels: HomeLabels; children: React.ReactNode }) {
-  const [selectedId, select] = useState<string | null>(null);
+export function HomeSelectionProvider({ items, labels, initialId = null, children }: { items: HomeItem[]; labels: HomeLabels; initialId?: string | null; children: React.ReactNode }) {
+  const [selectedId, select] = useState<string | null>(initialId);
   const value = useMemo(() => ({ selectedId, select, items: new Map(items.map((i) => [i.id, i] as const)), labels }), [selectedId, items, labels]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -144,13 +146,7 @@ export function HomeDetailPanel({ variant }: { variant: "desktop" | "mobile" }) 
             {it.fuel !== null ? <div><dt><FmFuelIcon /><span className="fm-sr-only">{labels.fuel}</span></dt><dd>{it.fuel}%</dd></div> : null}
             {it.odometer ? <div><dt><FmGaugeIcon /><span className="fm-sr-only">{labels.odometer}</span></dt><dd>{it.odometer}</dd></div> : null}
           </dl>
-          <div className="hm-next-actions">
-            <Link href={`/reservations/${it.id}`} className="fm-btn fm-btn-ghost">
-              {labels.viewDetails} <FmChevronIcon />
-            </Link>
-            {it.canPickup ? <Link href={`/reservations/${it.id}/pickup`} className="fm-btn fm-btn-primary">{labels.pickup}</Link> : null}
-            {it.canReturn ? <Link href={`/reservations/${it.id}/return`} className="fm-btn fm-btn-primary">{labels.returnAction}</Link> : null}
-          </div>
+          <ReservationActions id={it.id} viewDetails={labels.viewDetails} pickup={labels.pickup} returnLabel={labels.returnAction} showOps={it.showOps} canPickup={it.canPickup} canReturn={it.canReturn} />
         </div>
       )}
     </section>

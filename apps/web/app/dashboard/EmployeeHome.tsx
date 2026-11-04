@@ -16,6 +16,8 @@ import {
   FmPinIcon,
   FmUsersIcon,
 } from "../fmIcons";
+import { loadMyChecklistStates } from "@/lib/operations/checklistState";
+import { ReservationActions } from "./ReservationActions";
 import { HomeDetailPanel, HomeGantt, HomeSelectionProvider, type HomeItem, type HomeLabels } from "./HomeSelection";
 import { timelineWindow, type TimelineBooking } from "../fleet/timelineLayout";
 import { fleetTexts } from "@/lib/i18n/areas/fleet";
@@ -112,14 +114,15 @@ export async function EmployeeHome({
   const byId = new Map(vehicles.map((v) => [v.row.id, v] as const));
   const nextVehicle = next?.vehicle ? byId.get(next.vehicle.id) : undefined;
 
-  // Same conditions as the reservation detail page (the checklist pages re-check them server-side).
+  // What each confirmed reservation allows NOW comes from the checklist state (the same source as the reservation page): Saída only before the vehicle left,
+  // Retorno only after it left and before it came back. Without the state (it failed to load) the vehicle status decides, as before.
+  const confirmedIds = Array.from(new Set([...(chartRows ?? []).filter((r) => r.status === "confirmed").map((r) => r.id), ...(next?.status === "confirmed" ? [next.id] : [])]));
+  const checklistStates = confirmedIds.length > 0 ? await loadMyChecklistStates(supabase, confirmedIds) : new Map();
   const vStatus = next?.vehicle?.status;
-  // FIX-VENCIDAS R2: no pickup once the reservation window has ended (same rule as fm_checklist_state, 0208).
-  const canPickup =
-    next?.status === "confirmed" &&
-    (vStatus === "reserved" || vStatus === "awaiting_pickup") &&
-    new Date(next.end_at).getTime() > Date.now();
-  const canReturn = next?.status === "confirmed" && vStatus === "in_use";
+  const nextState = next ? checklistStates?.get(next.id) : undefined;
+  const canPickup = next?.status === "confirmed" && new Date(next.end_at).getTime() > Date.now() &&
+    (nextState ? nextState.can_pickup : vStatus === "reserved" || vStatus === "awaiting_pickup");
+  const canReturn = next?.status === "confirmed" && (nextState ? nextState.can_return : vStatus === "in_use");
 
   const nowMs = Date.now();
   const T = fleetTexts[locale];
@@ -137,6 +140,7 @@ export async function EmployeeHome({
     const hv = byId.get(r.vehicle.id);
     const energy = hv?.row.category?.energy_type;
     const confirmed = r.status === "confirmed";
+    const st = checklistStates?.get(r.id);
     return [{
       id: r.id,
       statusLabel: (dict.trips.statuses as Record<string, string>)[r.status] ?? r.status,
@@ -151,10 +155,17 @@ export async function EmployeeHome({
       battery: energyShows(energy, ["BEV", "PHEV"]) ? hv?.row.battery_level_percent ?? null : null,
       fuel: energyShows(energy, ["ICE", "HEV", "PHEV"]) ? hv?.row.fuel_level_percent ?? null : null,
       odometer: hv ? `${hv.row.odometer_km.toLocaleString(locale)} km` : null,
-      canPickup: confirmed && (r.vehicle.status === "reserved" || r.vehicle.status === "awaiting_pickup") && new Date(r.end_at).getTime() > nowMs,
-      canReturn: confirmed && r.vehicle.status === "in_use",
+      showOps: confirmed,
+      canPickup: confirmed && new Date(r.end_at).getTime() > nowMs && (st ? st.can_pickup : r.vehicle.status === "reserved" || r.vehicle.status === "awaiting_pickup"),
+      canReturn: confirmed && (st ? st.can_return : r.vehicle.status === "in_use"),
     }];
   });
+  // the panel opens on the CURRENT vehicle: the one taken out and not returned yet, else the one whose window is running now, else the next one
+  const stateOf = (id: string) => checklistStates?.get(id);
+  const departedNotReturned = (chartRows ?? []).find((r) => r.status === "confirmed" && stateOf(r.id) && (stateOf(r.id)!.own_pickup || stateOf(r.id)!.pickup_traveler || stateOf(r.id)!.legacy_pickup) && !(stateOf(r.id)!.own_return || stateOf(r.id)!.return_traveler));
+  const runningNow = (chartRows ?? []).find((r) => r.status === "confirmed" && Date.parse(r.start_at) <= nowMs && nowMs < Date.parse(r.end_at));
+  const upcoming = (chartRows ?? []).filter((r) => r.status !== "completed" && Date.parse(r.start_at) > nowMs).sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at))[0];
+  const initialId = (departedNotReturned ?? runningNow ?? upcoming)?.id ?? null;
   const homeLabels: HomeLabels = {
     departure: h.detailDeparture, ret: h.detailReturn, placeholder: h.detailPlaceholder, viewDetails: h.viewDetails,
     pickup: dict.trips.list.startPickup, returnAction: dict.trips.list.registerReturn,
@@ -183,7 +194,7 @@ export async function EmployeeHome({
         <h1 className="fm-title">{fillTemplate(h.greeting, { name: firstName })}</h1>
         <p className="fm-subtitle">{h.greetingSub}</p>
 
-        <HomeSelectionProvider items={homeItems} labels={homeLabels}>
+        <HomeSelectionProvider items={homeItems} labels={homeLabels} initialId={initialId}>
         <div className="hm-grid">
           <div className="hm-col-main">
             <nav className="hm-actions" aria-label={h.quickActions} data-testid="home-quick-actions">
@@ -314,17 +325,7 @@ export async function EmployeeHome({
                 <div><dt><FmGaugeIcon /><span className="fm-sr-only">{t.vehicles.odometer}</span></dt><dd>{nextVehicle.row.odometer_km.toLocaleString(locale)} km</dd></div>
               </dl>
             ) : null}
-            <div className="hm-next-actions">
-              <Link href={`/reservations/${next.id}`} className="fm-btn fm-btn-ghost">
-                {h.viewDetails} <FmChevronIcon />
-              </Link>
-              {canPickup ? (
-                <Link href={`/reservations/${next.id}/pickup`} className="fm-btn fm-btn-primary">{dict.trips.list.startPickup}</Link>
-              ) : null}
-              {canReturn ? (
-                <Link href={`/reservations/${next.id}/return`} className="fm-btn fm-btn-primary">{dict.trips.list.registerReturn}</Link>
-              ) : null}
-            </div>
+            <ReservationActions id={next.id} viewDetails={h.viewDetails} pickup={dict.trips.list.startPickup} returnLabel={dict.trips.list.registerReturn} showOps={next.status === "confirmed"} canPickup={canPickup} canReturn={canReturn} />
           </div>
         ) : (
           <div className="hm-empty">
