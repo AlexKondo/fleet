@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { VehicleForm } from "./VehicleForm";
-import { SafetyEquipmentSection } from "../settings/SafetyEquipmentSection";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { FleetKey } from "@/lib/i18n/areas/fleet";
 
@@ -71,7 +70,6 @@ export function AddVehicleSection({
         T={T}
         onSaved={() => setOpen(false)}
       />
-      <SafetyEquipmentSection dict={dict} deactivateLabel={T.deactivate} items={equipmentItems} />
     </div>
   );
 }
