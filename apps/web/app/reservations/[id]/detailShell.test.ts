@@ -185,7 +185,13 @@ describe("/reservations/[id] renders the FleetMind shell for every role", () => 
     expect(html).toContain('class="fm-sidebar"');
     expect(html).toContain('class="fm-topbar"');
     expect(html).toContain('data-testid="reservation-detail-fm"');
-    expect(html).toMatch(/aria-current="page"[^>]*href="\/trips"/); // "Viagens" stays the active nav item (its tabs are shown at the top)
+    // "Viagens" stays the active nav item (its tabs are shown at the top); the gate has no Viagens item: Portaria is its current one
+    if (role === "security") {
+      expect(html).toMatch(/aria-current="page"[^>]*href="\/gate"/);
+      expect(html).not.toMatch(/href="\/trips"[^>]*>\s*<[^>]*>[^<]*Viagens/);
+    } else {
+      expect(html).toMatch(/aria-current="page"[^>]*href="\/trips"/);
+    }
     expect(html).not.toContain("md:w-60");
     expect(html).not.toContain("bg-panel-900/40");
     // back link + vehicle header + the shared blocks

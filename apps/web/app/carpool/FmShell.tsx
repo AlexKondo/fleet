@@ -146,7 +146,9 @@ export async function FmShell({
     visible: true,
   });
   // dashboard first, then the two rider destinations, then the shared items
-  const unordered = [base[0]!, ...extra, ...base.slice(1)].filter((i) => i.visible);
+  // the gate (porteiro) only works in Portaria: the traveler destinations (Viagens, Reservar, Caronas) are not offered to that role
+  const gateOnlyHidden: string[] = ["trips", "book", "myCarpools", "carpool"];
+  const unordered = [base[0]!, ...extra, ...base.slice(1)].filter((i) => i.visible && !(role === "security" && gateOnlyHidden.includes(i.key)));
   // Fleet managers: the manager destinations come first (reference order: home, fleet, trips/carpools, maintenance,
   // energy, drivers, users, reports, settings), the personal "rider" items (book, my carpools, my trips) are
   // grouped at the end behind a divider. Same keys, same routes, same visibility: nothing is removed.
@@ -175,9 +177,11 @@ export async function FmShell({
   const firstPersonalKey = isFleetManager
     ? menuItems.find((i) => personalKeys.includes(i.key))?.key
     : undefined;
-  const currentMenuKey = menuKeyFor(active);
+  // a gate user on a trip screen (the checklists open from Portaria) stays inside Portaria: its item is the current one and its tabs are the gate's
+  const activeForGate = role === "security" && menuKeyFor(active) === "trips" ? "gate" : active;
+  const currentMenuKey = menuKeyFor(activeForGate);
   // the tabs of the area this screen belongs to (maintenance and gate already have their own)
-  const section = sectionFor(active, isFleetManager);
+  const section = sectionFor(activeForGate, isFleetManager);
   const sectionT = section ? await getAreaText(sectionTabsTexts) : null;
   const tabs = section && sectionT
     ? sectionTabs(section, { isAdministrator }).map((t) => ({ href: t.href, label: (sectionT as Record<string, string>)[t.id] ?? t.id }))
