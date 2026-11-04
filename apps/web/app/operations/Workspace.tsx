@@ -61,12 +61,14 @@ export async function Workspace({
             <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>
-          <Link
-            href={managerView ? "/dashboard/command-center" : "/maintenance"}
-            className="ow-link"
-          >
-            {t.centralLink}
-          </Link>
+          {p.role === "security" ? null : (
+            <Link
+              href={managerView ? "/dashboard/command-center" : "/maintenance"}
+              className="ow-link"
+            >
+              {t.centralLink}
+            </Link>
+          )}
         </header>
         {error && (
           <p className="ow-banner ow-error" role="alert">

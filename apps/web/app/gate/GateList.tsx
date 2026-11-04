@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Dictionary } from "../../lib/i18n/dictionaries";
+import type { GateMovementKey } from "@/lib/i18n/areas/gateMovement";
 import { FmArrowInIcon, FmArrowOutIcon } from "../fmIcons";
 
 export interface GateRow {
@@ -25,7 +26,7 @@ type View = "all" | "pickup" | "return";
  * SCR-SEC-001: the rows the gate has to act on, grouped by what comes next (departures x returns) with the real counts; nothing here is invented.
  * (The plate search was removed: the list is a handful of reservations and the gate picks the vehicle from it.)
  */
-export function GateList({ rows, dict, capped = false }: { rows: GateRow[]; dict: Dictionary; capped?: boolean }) {
+export function GateList({ rows, dict, capped = false, T }: { rows: GateRow[]; dict: Dictionary; capped?: boolean; T: Record<GateMovementKey, string> }) {
   const [view, setView] = useState<View>("all");
   const g = dict.ops.gate;
 
@@ -106,7 +107,7 @@ export function GateList({ rows, dict, capped = false }: { rows: GateRow[]; dict
                     {dict.gate.returnAction}
                   </Link>
                 ) : r.action === "movement" || r.action === "arrival" ? (
-                  <Link href={`/gate/history?reservation=${r.id}&kind=${r.action === "arrival" ? "arrival" : "departure"}`} className="fm-btn fm-btn-primary">{g.recordMovement}</Link>
+                  <Link href={`/gate/history?reservation=${r.id}&kind=${r.action === "arrival" ? "arrival" : "departure"}`} className="fm-btn fm-btn-primary">{r.action === "arrival" ? T.listArrival : T.listDeparture}</Link>
                 ) : <span className="fm-muted">{g.waitingChecklist}</span>}
               </div>
             </li>

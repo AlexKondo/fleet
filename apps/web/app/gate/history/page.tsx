@@ -16,6 +16,7 @@ import { pageAll } from "@/lib/carpool/kpi/loadKpis";
 import { getAreaText } from "@/lib/i18n/areaText";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { gateHistoryTexts } from "@/lib/i18n/areas/gateHistory";
+import { gateMovementTexts } from "@/lib/i18n/areas/gateMovement";
 export default async function GateHistory({
   searchParams,
 }: {
@@ -29,6 +30,7 @@ export default async function GateHistory({
 }) {
   const params = await searchParams;
   const T = await getAreaText(gateHistoryTexts);
+  const M = await getAreaText(gateMovementTexts);
   const locale = await getLocale();
   const opsShell = (await getDictionary()).opsShell;
   const data = await loadOperationalWorkspace([
@@ -75,8 +77,8 @@ export default async function GateHistory({
                 <label className="ow-field">
                   <span>{T.movement}</span>
                   <select name="kind" defaultValue={contextKind}>
-                    <option value={contextKind}>{contextKind === "arrival" ? T.confirmArrival : T.confirmDeparture}</option>
-                    <option value="denied">{T.recordDenied}</option>
+                    <option value={contextKind}>{contextKind === "arrival" ? M.optionArrival : M.optionDeparture}</option>
+                    <option value="denied">{M.optionDenied}</option>
                   </select>
                 </label>
               </>
@@ -106,16 +108,18 @@ export default async function GateHistory({
               </>
             )}
             <label className="ow-field">
-              <span>{T.reasonNote}</span>
+              <span>{locked && picked ? M.noteLabel : T.reasonNote}</span>
               <textarea name="reason" maxLength={1000} />
             </label>
-            <p className="ow-wide">
-              {T.legacyNote}
-            </p>
+            {locked && picked ? null : (
+              <p className="ow-wide">
+                {T.legacyNote}
+              </p>
+            )}
             <Submit
               disabled={data.migrationUnavailable || reservations === null}
             >
-              {T.confirmAudit}
+              {locked && picked ? (contextKind === "arrival" ? M.confirmArrival : M.confirmDeparture) : T.confirmAudit}
             </Submit>
           </OperationForm>
           {reservations === null && (
@@ -128,7 +132,7 @@ export default async function GateHistory({
   // the gate (porteiro) only records the movement: the history, its counters, the timeline and the integrity note are for the managers
   if (data.profile.role === "security") {
     return (
-      <Workspace data={data} title={T.recordPanel} subtitle={T.recordNote} active="gateHistory" error={params.error} success={params.success}>
+      <Workspace data={data} title={contextKind === "arrival" ? M.titleArrival : M.titleDeparture} subtitle={contextKind === "arrival" ? M.noteArrival : M.noteDeparture} active="gateHistory" error={params.error} success={params.success}>
         <div className="ow-grid">
           <div className="ow-stack">
             <Panel title={T.reservationTrip}>{recordBlock("/gate", true)}</Panel>

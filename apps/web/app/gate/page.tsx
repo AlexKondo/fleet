@@ -9,6 +9,8 @@ import { FmArrowInIcon, FmArrowOutIcon, FmCarIcon } from "../fmIcons";
 import { getStatusMeta } from "../dashboard/statusMeta";
 import "./gate.css";
 import { GateList, type GateRow } from "./GateList";
+import { getAreaText } from "@/lib/i18n/areaText";
+import { gateMovementTexts } from "@/lib/i18n/areas/gateMovement";
 
 /**
  * Portaria / gatehouse board. The `security` role is authorized end-to-end in the backend
@@ -152,7 +154,7 @@ export default async function GatePage() {
         <p role="status" className="fm-banner" data-testid="gate-cap-note" style={{ marginTop: 0, marginBottom: 16 }}>{g.capNote}</p>
       ) : null}
 
-      <GateList rows={rows} dict={dict} capped={capped} />
+      <GateList rows={rows} dict={dict} capped={capped} T={await getAreaText(gateMovementTexts)} />
     </FmShell>
   );
 }
