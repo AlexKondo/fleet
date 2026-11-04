@@ -1647,6 +1647,7 @@ export type Database = {
       fm_management_create_vehicle: {Args:{p_unit_id:string|null;p_values:Json};Returns:string};
       fm_management_create_vehicle_with_checklist: {Args:{p_unit_id:string|null;p_values:Json;p_equipment_ids:string[]};Returns:string};
       fm_can_manage_vehicle: {Args:{p_vehicle_id:string};Returns:boolean};
+      fm_equipment_checklists: {Args:Record<PropertyKey,never>;Returns:Json};
       fm_has_key_custody: {Args:Record<PropertyKey,never>;Returns:boolean};
       fm_unit_admin_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};
       fm_key_workspace: {Args:Record<PropertyKey,never>;Returns:Json};

@@ -24,6 +24,8 @@ export function VehicleRow({
   locationName,
   categories,
   locations,
+  equipmentItems,
+  checklist,
   dict,
   locale,
   T,
@@ -34,6 +36,8 @@ export function VehicleRow({
   locationName: string;
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
+  equipmentItems: { id: string; name: string }[];
+  checklist: { ids: string[]; optionalIds: string[]; version: number };
   dict: Dictionary;
   locale: Locale;
   T: Record<FleetKey, string>;
@@ -95,6 +99,9 @@ export function VehicleRow({
           vehicle={vehicle}
           categories={categories}
           locations={locations}
+          equipmentItems={equipmentItems}
+          checklist={checklist}
+          T={T}
           dict={dict}
           onSaved={close}
           onCancel={close}

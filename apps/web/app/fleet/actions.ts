@@ -372,6 +372,14 @@ export async function updateVehicle(
     return { status: "error", error: dict.errors.fleet.categoryOrLocationInvalid };
   }
 
+  // The checklist (ticked = checked at pickup and return) is edited together with the vehicle: it always keeps at least one item.
+  const withChecklist = formData.has("checklistVersion");
+  const equipmentIds = Array.from(new Set(formData.getAll("equipmentIds").map((v) => String(v)).filter(Boolean)));
+  if (withChecklist && equipmentIds.length === 0) return { status: "error", error: (await getAreaText(fleetActionTexts)).checklistRequired };
+  const idList = (raw: FormDataEntryValue | null): string[] => {
+    try { const p: unknown = JSON.parse(String(raw ?? "[]")); return Array.isArray(p) ? p.map(String) : []; } catch { return []; }
+  };
+
   // Uploaded before the row update so a failed upload can report an error without
   // silently discarding the rest of the (already-validated) form on write.
   
@@ -399,6 +407,22 @@ export async function updateVehicle(
       ? dict.errors.fleet.duplicatePlate
       : error.message.includes("ODOMETER_CORRECTION_REASON_REQUIRED")?dict.fleet.vehicleForm.odometerCorrectionReason:dict.errors.common.generic;
     return { status: "error", error: friendlyError };
+  }
+
+  if (withChecklist) {
+    const initial = new Set(idList(formData.get("checklistInitial")));
+    const changed = initial.size !== equipmentIds.length || equipmentIds.some((e) => !initial.has(e));
+    if (changed) {
+      const optional = idList(formData.get("checklistOptional")).filter((e) => !equipmentIds.includes(e));
+      const { error: checklistError } = await supabase.rpc("fm_equipment_profile_save", {
+        p_kind: "vehicle", p_target_id: id, p_required_ids: equipmentIds, p_optional_ids: optional, p_enabled: true,
+        p_version: Number(formData.get("checklistVersion")) || 0, p_reason: "Checklist alterado na edição do veículo", p_request_id: crypto.randomUUID(),
+      });
+      if (checklistError) {
+        const T = await getAreaText(fleetActionTexts);
+        return { status: "error", error: checklistError.message.includes("CONCURRENT_UPDATE") ? T.concurrentUpdate : T.checklistInvalid };
+      }
+    }
   }
 
   revalidatePath("/fleet");

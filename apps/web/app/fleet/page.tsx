@@ -84,6 +84,13 @@ export default async function FleetPage() {
         .order("created_at")
     : { data: [] as { id: string; name: string }[] };
 
+  // The checklist of each vehicle (its own, else its model's): the edit form shows it ticked
+  const { data: checklistRows } = await supabase.rpc("fm_equipment_checklists");
+  const checklistByVehicle = new Map(
+    ((Array.isArray(checklistRows) ? checklistRows : []) as unknown as { vehicle_id: string; required_ids: string[]; optional_ids: string[]; version: number }[])
+      .map((r) => [r.vehicle_id, { ids: r.required_ids ?? [], optionalIds: r.optional_ids ?? [], version: r.version ?? 0 }] as const),
+  );
+
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
   if (!profile || !isFleetManager) redirect("/dashboard");
@@ -283,6 +290,8 @@ export default async function FleetPage() {
                             locationName={v.current_location?.name ?? "—"}
                             categories={categoriesForVehicleForms}
                             locations={locations ?? []}
+                            equipmentItems={equipmentItems ?? []}
+                            checklist={checklistByVehicle.get(v.id) ?? { ids: [], optionalIds: [], version: 0 }}
                             dict={dict}
                           />
                         ),

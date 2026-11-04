@@ -43,6 +43,14 @@ describe.sequential('versioned equipment contracts in the migrated database',()=
   const effective=(await db.query<{r:{effective:{source:string;required:{name:string}[]}}}>('select fm_equipment_vehicle_snapshot($1) r',[id])).rows[0]!.r.effective;
   expect(effective.source).toBe('vehicle');expect(effective.required.map(e=>e.name)).toEqual(['Kit de reparo','Triângulo']);
  });
+ it('lists the effective checklist of each vehicle and the version of its own profile, only for managers',async()=>{
+  const {vehicle}=await fixture();await actor(admin);
+  const find=async()=>(await db.query<{r:{vehicle_id:string;required_ids:string[];version:number}[]}>('select fm_equipment_checklists() r')).rows[0]!.r.find(x=>x.vehicle_id===vehicle)!;
+  const inherited=await find();expect([...inherited.required_ids].sort()).toEqual([triangle,spare].sort());expect(inherited.version).toBe(0);
+  await config('vehicle',vehicle,[kit]);await actor(admin);
+  const own=await find();expect(own.required_ids).toEqual([kit]);expect(own.version).toBe(1);
+  await actor(driver);await expect(db.query('select fm_equipment_checklists()')).rejects.toThrow(/NOT_AUTHORIZED/);
+ });
  it('requires an explicit configuration for a new pickup and does not let an unrelated user prepare the checklist',async()=>{
   const {reservation}=await fixture(emptyCategory);await actor(driver);await expect(pickup(reservation)).rejects.toThrow(/EQUIPMENT_CONFIGURATION_REQUIRED/);
   await actor(outsider);await expect(db.query('select fm_prepare_equipment_checklist($1)',[reservation])).rejects.toThrow(/NOT_AUTHORIZED/);

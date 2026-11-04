@@ -9,6 +9,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { errorLabel } from "@/lib/i18n/errorLabel";
 import { VehiclePhotoInput } from "./VehiclePhotoInput";
 import { vehiclePhotoTypeUnsupported } from "@/lib/domain/vehiclePhotoLimit";
+import { fleetTexts, type FleetKey } from "@/lib/i18n/areas/fleet";
 
 const initialState: FleetActionState = { status: "idle" };
 
@@ -32,6 +33,9 @@ export function EditVehicleForm({
   vehicle,
   categories,
   locations,
+  equipmentItems = [],
+  checklist,
+  T = fleetTexts["pt-BR"],
   dict,
   onSaved,
   onCancel,
@@ -39,6 +43,10 @@ export function EditVehicleForm({
   vehicle: EditableVehicle;
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
+  /** The checklist items of the organization; `checklist` = the ones this vehicle checks today (ticked), and the version of its own profile. */
+  equipmentItems?: { id: string; name: string }[];
+  checklist?: { ids: string[]; optionalIds: string[]; version: number };
+  T?: Record<FleetKey, string>;
   dict: Dictionary;
   onSaved: () => void;
   onCancel: () => void;
@@ -53,6 +61,8 @@ export function EditVehicleForm({
     return result;
   }, initialState);
   const [categoryId, setCategoryId] = useState(vehicle.category_id);
+  const [checklistError, setChecklistError] = useState(false);
+  const hasChecklist = equipmentItems.length > 0 && Boolean(checklist);
 
   useEffect(() => {
     if (state.status === "success") onSaved();
@@ -72,6 +82,9 @@ export function EditVehicleForm({
       onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
+        // a vehicle always keeps at least one checklist item
+        if (hasChecklist && data.getAll("equipmentIds").length === 0) { setChecklistError(true); return; }
+        setChecklistError(false);
         startTransition(() => formAction(data));
       }}
       className="flex flex-col gap-4 rounded-md border border-gwm-accent/40 bg-panel-800/40 p-4"
@@ -268,6 +281,25 @@ export function EditVehicleForm({
           </select>
         </label>
       </div>
+
+      {hasChecklist && checklist ? (
+        <fieldset className="flex flex-col gap-2 rounded-sm border border-line-800 p-3" aria-describedby={`checklist-hint-${vehicle.id}`}>
+          <legend className="px-1 text-xs font-medium uppercase tracking-widest text-fog-400">{T.vehicleChecklistLabel}</legend>
+          <p id={`checklist-hint-${vehicle.id}`} className="text-xs text-fog-400">{T.vehicleChecklistHint}</p>
+          <input type="hidden" name="checklistVersion" value={checklist.version} />
+          <input type="hidden" name="checklistInitial" value={JSON.stringify(checklist.ids)} />
+          <input type="hidden" name="checklistOptional" value={JSON.stringify(checklist.optionalIds)} />
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {equipmentItems.map((item) => (
+              <label key={item.id} className="flex items-center gap-2 text-sm text-paper-50">
+                <input type="checkbox" name="equipmentIds" value={item.id} defaultChecked={checklist.ids.includes(item.id)} onChange={() => setChecklistError(false)} />
+                {item.name}
+              </label>
+            ))}
+          </div>
+          {checklistError ? <p role="alert" className="text-sm text-signal-red">{T.vehicleChecklistRequired}</p> : null}
+        </fieldset>
+      ) : null}
 
       <p className="text-xs text-fog-600">
         {dict.fleet.vehicleForm.statusNote}
