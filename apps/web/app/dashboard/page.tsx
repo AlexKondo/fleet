@@ -82,6 +82,9 @@ export default async function DashboardPage({
       .order("plate"),
   ]);
 
+  // the gate (porteiro) works in Portaria only: the fleet command center is not for that role
+  if (profile?.role === "security") redirect("/gate");
+
   const vehicles = vehicleRows ?? [];
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
