@@ -68,7 +68,6 @@ export function sectionTabs(section: SectionId, f: { isAdministrator: boolean })
         { id: "book", href: "/trips/new", visible: true },
         { id: "mine", href: "/trips", visible: true },
         { id: "myCarpools", href: "/carpool/mine", visible: true },
-        { id: "find", href: "/carpool", visible: true },
       ];
     case "gate":
       return [
