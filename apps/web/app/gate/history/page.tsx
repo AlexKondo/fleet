@@ -57,6 +57,62 @@ export default async function GateHistory({
       .order("id")
       .range(a, b),
   ).catch(() => null);
+  const recordBlock = (returnTo: string) => (
+    <>
+          <OperationForm command="gate.record" returnTo={returnTo}>
+            <label className="ow-field">
+              <span>{T.reservationTrip}</span>
+              <select name="reservation_id" required defaultValue={params.reservation ?? ""}>
+                <option value="">{T.select}</option>
+                {reservations?.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {data.vehicles?.find((v) => v.id === r.vehicle_id)?.plate}{" "}
+                    · {r.trip_request?.requester?.full_name} ·{" "}
+                    {date(r.start_at, true, locale)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="ow-field">
+              <span>{T.movement}</span>
+              <select name="kind" defaultValue={params.kind === "arrival" ? "arrival" : params.kind === "denied" ? "denied" : "departure"}>
+                <option value="departure">{T.confirmDeparture}</option>
+                <option value="arrival">{T.confirmArrival}</option>
+                <option value="denied">{T.recordDenied}</option>
+              </select>
+            </label>
+            <label className="ow-field">
+              <span>{T.reasonNote}</span>
+              <textarea name="reason" maxLength={1000} />
+            </label>
+            <p className="ow-wide">
+              {T.legacyNote}
+            </p>
+            <Submit
+              disabled={data.migrationUnavailable || reservations === null}
+            >
+              {T.confirmAudit}
+            </Submit>
+          </OperationForm>
+          {reservations === null && (
+            <p role="alert" className="ow-note">
+              {T.reservationsFail}
+            </p>
+          )}
+    </>
+  );
+  // the gate (porteiro) only records the movement: the history, its counters, the timeline and the integrity note are for the managers
+  if (data.profile.role === "security") {
+    return (
+      <Workspace data={data} title={T.recordPanel} subtitle={T.recordNote} active="gateHistory" error={params.error} success={params.success}>
+        <div className="ow-grid">
+          <div className="ow-stack">
+            <Panel title={T.reservationTrip}>{recordBlock("/gate")}</Panel>
+          </div>
+        </div>
+      </Workspace>
+    );
+  }
   return (
     <Workspace
       data={data}
@@ -179,46 +235,7 @@ export default async function GateHistory({
             <p className="ow-muted">
               {T.recordNote}
             </p>
-            <OperationForm command="gate.record" returnTo="/gate/history">
-              <label className="ow-field">
-                <span>{T.reservationTrip}</span>
-                <select name="reservation_id" required defaultValue={params.reservation ?? ""}>
-                  <option value="">{T.select}</option>
-                  {reservations?.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {data.vehicles?.find((v) => v.id === r.vehicle_id)?.plate}{" "}
-                      · {r.trip_request?.requester?.full_name} ·{" "}
-                      {date(r.start_at, true, locale)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="ow-field">
-                <span>{T.movement}</span>
-                <select name="kind" defaultValue={params.kind === "arrival" ? "arrival" : params.kind === "denied" ? "denied" : "departure"}>
-                  <option value="departure">{T.confirmDeparture}</option>
-                  <option value="arrival">{T.confirmArrival}</option>
-                  <option value="denied">{T.recordDenied}</option>
-                </select>
-              </label>
-              <label className="ow-field">
-                <span>{T.reasonNote}</span>
-                <textarea name="reason" maxLength={1000} />
-              </label>
-              <p className="ow-wide">
-                {T.legacyNote}
-              </p>
-              <Submit
-                disabled={data.migrationUnavailable || reservations === null}
-              >
-                {T.confirmAudit}
-              </Submit>
-            </OperationForm>
-            {reservations === null && (
-              <p role="alert" className="ow-note">
-                {T.reservationsFail}
-              </p>
-            )}
+            {recordBlock("/gate/history")}
           </Panel>
         </div>
         <aside className="ow-stack">

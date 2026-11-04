@@ -184,7 +184,7 @@ export async function FmShell({
   const section = sectionFor(activeForGate, isFleetManager);
   const sectionT = section ? await getAreaText(sectionTabsTexts) : null;
   const tabs = section && sectionT
-    ? sectionTabs(section, { isAdministrator }).map((t) => ({ href: t.href, label: (sectionT as Record<string, string>)[t.id] ?? t.id }))
+    ? sectionTabs(section, { isAdministrator }).filter((t) => !(role === "security" && t.id === "history")).map((t) => ({ href: t.href, label: (sectionT as Record<string, string>)[t.id] ?? t.id }))
     : [];
   // the bottom bar only fits the main destinations; the hamburger menu (MobileNav) lists everything
   // (employees: home + rider destinations; operations roles: their own working screens)
