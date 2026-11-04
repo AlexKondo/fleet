@@ -41,7 +41,7 @@ const setGrace=async(min:number)=>{await asPostgres();await db.query("update org
 const withoutPickup=(s:State)=>{const {can_pickup:_c,...rest}=s;void _c;return rest;};
 
 beforeAll(async()=>{
- ({db}=await migratedDatabase());
+ ({db}=await migratedDatabase({enforceVehicleInUseRule:true})); // this file builds its own open pickups: the helper that closes earlier ones must not touch them
  for(const [id,name] of [[org,"Vencidas"],[otherOrg,"Outra"]]){await db.query("insert into organizations(id,name) values($1,$2)",[id,name]);await db.query("insert into organization_settings(organization_id) values($1)",[id]);}
  for(const [id,role] of [[admin,"administrator"],[security,"security"],[custodian,"employee"],[driver,"employee"]]){
   await db.query("insert into auth.users(id) values($1)",[id]);
@@ -118,6 +118,7 @@ describe.sequential("FIX-VENCIDAS SQL (0207-0209)",()=>{
   await release(); // settle anything left by earlier tests
   const v1=await vehicle();const noShow=await reservation(v1,-600,-120);
   const v2=await vehicle();const withPickup=await reservation(v2,-1,120);
+  await db.exec('reset role');await db.query("update reservations set status='completed' where status='confirmed' and id<>$1 and exists(select 1 from inspections i where i.reservation_id=reservations.id and i.type='pickup')",[withPickup]); // earlier tests left open pickups of the same driver (rule 0248)
   await actor(driver);await pickup(withPickup);await moveWindow(withPickup,-600,-120);
   const v3=await vehicle(officeUnit);const withKeys=await reservation(v3,-1,120);
   await actor(custodian);await db.query("select fm_key_command($1,'delivered',null,$2)",[withKeys,randomUUID()]);await moveWindow(withKeys,-600,-120);

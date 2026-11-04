@@ -77,7 +77,9 @@ export async function submitPickup(
 
   if (error) {
     const dict = await getDictionary();
-    const message = error.message.includes("DRIVER_NOT_AUTHORIZED")
+    const message = error.message.includes("PREVIOUS_VEHICLE_NOT_RETURNED")
+      ? dict.errors.reservations.previousVehicleNotReturned
+      : error.message.includes("DRIVER_NOT_AUTHORIZED")
       ? dict.errors.reservations.driverNotAuthorized
       : error.message.includes("LICENSE_EXPIRED")
         ? dict.errors.reservations.licenseExpired

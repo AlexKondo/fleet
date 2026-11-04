@@ -1197,6 +1197,7 @@ const dict: Dictionary = {
       driverNotAuthorized: "This driver isn't authorized to drive. Contact your fleet manager.",
       licenseExpired:
         "The driver's license has expired. Have your fleet manager update it before picking up the vehicle.",
+      previousVehicleNotReturned: "You still have another vehicle in use. Return it (record the return) before taking this one out.",
       earlyPickupNotAllowed:
         "You can't pick up this vehicle yet — the reservation hasn't started.",
     },

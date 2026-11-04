@@ -1163,6 +1163,7 @@ const dict: Dictionary = {
       messageTypeInvalid: "消息类型无效。",
       driverNotAuthorized: "该驾驶员未获得驾驶授权。请联系车队管理员。",
       licenseExpired: "该驾驶员的驾照已过期。请在取车前联系车队管理员更新。",
+      previousVehicleNotReturned: "您还有另一辆车在使用中。请先归还（登记还车），再提取这辆车。",
       earlyPickupNotAllowed: "暂时无法取走该车辆——预订尚未开始。",
     },
   },

@@ -1220,6 +1220,7 @@ export type Dictionary = {
       driverNotAuthorized: string;
       licenseExpired: string;
       earlyPickupNotAllowed: string;
+      previousVehicleNotReturned: string;
     };
   };
   /** /gate — portaria (gatehouse) movements board. */

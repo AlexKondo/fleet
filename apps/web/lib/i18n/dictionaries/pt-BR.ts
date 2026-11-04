@@ -1199,6 +1199,7 @@ const dict: Dictionary = {
       driverNotAuthorized: "Motorista sem autorização para dirigir. Fale com o gestor de frota.",
       licenseExpired:
         "A CNH do motorista está vencida. Atualize-a com o gestor de frota antes de retirar o veículo.",
+      previousVehicleNotReturned: "Você ainda está com outro veículo em uso. Devolva-o (registre a devolução) antes de dar saída neste.",
       earlyPickupNotAllowed:
         "Ainda não é possível retirar este veículo — a reserva ainda não começou.",
     },

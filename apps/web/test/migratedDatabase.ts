@@ -7,7 +7,7 @@ import path from "node:path";
  * pgcrypto installation is omitted: this runtime has built-in gen_random_uuid
  * but no pgcrypto bundle. Storage files/Auth HTTP APIs are not simulated. */
 /** `enforceOnePersonRule`: keep the 'one vehicle per person per period' trigger (0244) on. Off by default: many fixtures give one person several simultaneous reservations. */
-export async function migratedDatabase(options?:{beforeMigration?:(db:PGlite,name:string)=>Promise<void>;enforceOnePersonRule?:boolean}) {
+export async function migratedDatabase(options?:{beforeMigration?:(db:PGlite,name:string)=>Promise<void>;enforceOnePersonRule?:boolean;enforceVehicleInUseRule?:boolean}) {
  const db=new PGlite({extensions:{btree_gist}});
  try {
   await db.exec(`
@@ -34,6 +34,8 @@ export async function migratedDatabase(options?:{beforeMigration?:(db:PGlite,nam
    try{await db.exec(sql);}catch(error){throw new Error(`Migration ${name}: ${error instanceof Error?error.message:String(error)}`);}
   }
   if(!options?.enforceOnePersonRule)await db.exec("alter table public.reservations disable trigger fm_one_vehicle_per_person_per_period");
+  // 0248 (no pickup while the previous vehicle is not returned): fixtures reuse one person for many pickups, so a new reservation closes that person's earlier open ones
+  if(!options?.enforceVehicleInUseRule)await db.exec(`create function public.zz_test_close_previous() returns trigger language plpgsql as $$ begin update public.reservations r set status='completed' from public.trip_requests t where t.id=r.trip_request_id and r.status='confirmed' and r.id<>new.id and t.requester_id=(select requester_id from public.trip_requests where id=new.trip_request_id) and exists(select 1 from public.inspections i where i.reservation_id=r.id and i.type='pickup') and not exists(select 1 from public.inspections i where i.reservation_id=r.id and i.type='return'); return new; end $$;create trigger zz_test_close_previous before insert on public.reservations for each row execute function public.zz_test_close_previous();`);
   return {db,migrations:names};
  }catch(error){await db.close();throw error;}
 }
