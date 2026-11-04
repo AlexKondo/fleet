@@ -157,7 +157,9 @@ export function renderState(state: ChatState, appUrl: string, lastOnly = false):
   if (others.length === 0) return [card];
   // the offered vehicle is never listed again: only the others, as tappable buttons (the first three) and, for the rest, by number
   const lines = others.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n");
-  const tail = others.length > MAX_VEHICLE_BUTTONS ? `\n\nPara os demais, responda com o número (por exemplo, *${MAX_VEHICLE_BUTTONS + 1}*), por texto ou áudio.` : "";
+  // WhatsApp allows 3 buttons at most: with more alternatives than that there are no buttons at all, the person answers with the number
+  if (others.length > MAX_VEHICLE_BUTTONS) return [card, text(`Se não quiser o veículo recomendado, escolha outro:\n${lines}\n\nResponda com o número da opção (por texto ou áudio).`)];
+  const tail = "";
   const pick: Reply = {
     type: "buttons",
     text: clip(`Se não quiser o veículo recomendado, escolha outro:\n${lines}${tail}`),

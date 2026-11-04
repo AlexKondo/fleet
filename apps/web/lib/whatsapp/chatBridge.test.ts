@@ -300,15 +300,21 @@ describe("choosing an option inside a sentence (spoken or written)", () => {
     expect(texts(await run(msg({ kind: "button", buttonId: "chat:veh:v4", text: undefined, messageId: "b3" })))).toEqual([TEXTS.staleChoice]);
     expect(calls.send).toHaveLength(0);
   });
-  it("shows the offered vehicle once (in the card) and at most 3 vehicle buttons; the rest are chosen by number", () => {
+  it("shows the offered vehicle once (in the card); with more than 3 alternatives there are no buttons, the person answers with the number", () => {
     const r = renderState(seven("v3"), "https://x.invalid");
     expect(r).toHaveLength(2);
-    const pick = r[1] as { text: string; buttons: { id: string; title: string }[] };
-    expect(pick.buttons.map((b) => b.id)).toEqual(["chat:veh:v1", "chat:veh:v2", "chat:veh:v4"]);
-    expect(pick.buttons.every((b) => b.title.length <= 20)).toBe(true);
+    const pick = r[1] as { type: string; text: string };
+    expect(pick.type).toBe("text");
     expect(pick.text).not.toContain("Carro 3");
     expect(pick.text).toContain("*6.* Carro 7");
-    expect(pick.text).toContain("Para os demais, responda com o número");
+    expect(pick.text).toContain("Responda com o número da opção");
+  });
+  it("with 3 alternatives or fewer, they come as buttons", () => {
+    const st = seven("v3");
+    st.pendingAction!.vehicleOptions = st.pendingAction!.vehicleOptions!.slice(0, 4);
+    const pick = renderState(st, "https://x.invalid")[1] as { buttons: { id: string; title: string }[] };
+    expect(pick.buttons.length).toBeLessThanOrEqual(3);
+    expect(pick.buttons.every((b) => b.title.length <= 20)).toBe(true);
   });
 });
 
