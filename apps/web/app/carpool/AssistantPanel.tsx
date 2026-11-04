@@ -88,6 +88,7 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
       data-moved={pos ? "true" : undefined}
       data-bubble={bubbleOpen ? "open" : "closed"}
       style={pos ? { left: pos.x, top: pos.y, bottom: "auto" } : undefined}
+      onDragStart={(e) => e.preventDefault()}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerEnd}
@@ -99,7 +100,7 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
       <div className="fm-assist-row">
         <button type="button" className="fm-assist-robot" data-drag aria-label={c.assistantTitle} onClick={() => openChat({})} data-testid="fm-assistant-robot">
           {/* eslint-disable-next-line @next/next/no-img-element -- small static illustration, next/image is overkill here */}
-          <img src="/illustrations/fleet-agent.jpg" alt="" className="fm-assist-img h-14 w-14 rounded-full border-2 border-gwm-accent object-cover" />
+          <img src="/illustrations/fleet-agent.jpg" alt="" draggable={false} className="fm-assist-img h-14 w-14 rounded-full border-2 border-gwm-accent object-cover" />
         </button>
         {bubbleOpen ? (
           <div className="fm-assist-bubble">
@@ -112,7 +113,7 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
           </div>
         ) : null}
       </div>
-      <button type="button" className="fm-assist-mic" aria-label={c.assistantMic} title={c.assistantMic} onClick={() => openChat({ voice: true })} data-testid="fm-assistant-mic">
+      <button type="button" className="fm-assist-mic" data-drag aria-label={c.assistantMic} title={c.assistantMic} onClick={() => openChat({ voice: true })} data-testid="fm-assistant-mic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="9" y="3" width="6" height="11" rx="3" />
           <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />

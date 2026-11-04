@@ -1736,3 +1736,7 @@ html body main#fleetmind-main .fm-subtitle {
 .fm-sidebar .fm-assist.fm-float .fm-assist-x:hover { background: #1f3b6e; }
 .fm-sidebar .fm-assist.fm-float[data-bubble="closed"] { gap: 2px; }
 .fm-sidebar .fm-assist.fm-float[data-bubble="closed"] .fm-assist-row { gap: 0; }
+
+.fm-assist, .fm-assist img, .fm-assist button { -webkit-user-drag: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.fm-sidebar .fm-assist.fm-float .fm-assist-robot, .fm-sidebar .fm-assist.fm-float .fm-assist-mic { cursor: grab; }
+.fm-sidebar .fm-assist.fm-float:active .fm-assist-robot, .fm-sidebar .fm-assist.fm-float:active .fm-assist-mic { cursor: grabbing; }
