@@ -118,6 +118,8 @@ export default async function ReservationDetailPage({
   const statusMeta = reservation.vehicle ? getStatusMeta(dict)[reservation.vehicle.status] : null;
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
+  // the gate (porteiro) does not need the destination, its address or the route map: the vehicle, the person and the times are enough for the check
+  const hideDestination = profile?.role === "security";
 
   // Moved here from the /trips list (which used to show these inline per reservation) so
   // the driver acts on a trip from the same screen where they see its conversation, instead
@@ -305,9 +307,11 @@ export default async function ReservationDetailPage({
             <div className="min-w-0">
               <h1 className="rd-name">{reservation.vehicle?.name ?? reservation.vehicle?.plate ?? "—"}</h1>
               <p className="ck-plate">{reservation.vehicle?.plate}</p>
-              <p className="rd-route break-user-text">
-                {reservation.trip_request.origin} → {reservation.trip_request.destination}
-              </p>
+              {hideDestination ? null : (
+                <p className="rd-route break-user-text">
+                  {reservation.trip_request.origin} → {reservation.trip_request.destination}
+                </p>
+              )}
               <p className="rd-meta">
                 {reservation.trip_request.requester?.full_name} · {formatDateTimeShort(reservation.start_at, locale)} →{" "}
                 {formatDateTimeShort(reservation.end_at, locale)}
@@ -391,11 +395,11 @@ export default async function ReservationDetailPage({
         </header>
 
         {/* once the manager confirmed the reservation, the destination can be taken to Maps / Waze / WhatsApp */}
-        {reservation.status === "confirmed" && reservation.trip_request.destination ? (
+        {!hideDestination && reservation.status === "confirmed" && reservation.trip_request.destination ? (
           <ShareAddress address={reservation.trip_request.destination} T={areaText(shareAddressTexts, locale)} />
         ) : null}
 
-        {routeMap}
+        {hideDestination ? null : routeMap}
 
         {tail}
       </div>

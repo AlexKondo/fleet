@@ -68,11 +68,14 @@ export async function ChecklistFrame({
                 </span>
               ) : null}
             </div>
-            <p className="ck-route break-user-text">
-              <FmPinIcon />
-              <span className="fm-sr-only">{dict.reservations.checklist.routeLabel}: </span>
-              {route.origin} → {route.destination}
-            </p>
+            {/* the gate (porteiro) does not need the destination */}
+            {shell.role === "security" ? null : (
+              <p className="ck-route break-user-text">
+                <FmPinIcon />
+                <span className="fm-sr-only">{dict.reservations.checklist.routeLabel}: </span>
+                {route.origin} → {route.destination}
+              </p>
+            )}
           </div>
         </section>
 

@@ -191,7 +191,13 @@ describe("/reservations/[id] renders the FleetMind shell for every role", () => 
     // back link + vehicle header + the shared blocks
     expect(html).toContain(`<a class="fm-link" href="/trips">${dict.reservations.detail.backToTrips}</a>`);
     expect(html).toContain("Veículo de teste");
-    expect(html).toContain('data-testid="route-map"');
+    // the gate (security) does not see the destination, its address or the map; every other role does
+    if (role === "security") {
+      expect(html).not.toContain('data-testid="route-map"');
+      expect(html).not.toContain("Destino de teste");
+    } else {
+      expect(html).toContain('data-testid="route-map"');
+    }
     expect(html).toContain('data-testid="message-thread"');
     expect(html).toContain(dict.reservations.detail.communicationTitle);
     // own + confirmed + vehicle available -> cancel offered for every role (legacy rule: isOwnReservation)
