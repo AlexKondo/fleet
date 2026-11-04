@@ -1623,4 +1623,91 @@ html body main#fleetmind-main .fm-subtitle {
 
 .fm-assist button { cursor: pointer; }
 .fm-assist:active { cursor: grabbing; }
-.fm-assist-build { margin: 0; align-self: center; font: 600 10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; color: rgba(230, 237, 248, 0.55); }
+
+/* ---------- the assistant, floating: no panel behind it, a big speech bubble, a slow up-and-down robot ---------- */
+.fm-sidebar .fm-assist.fm-float {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.fm-sidebar .fm-assist.fm-float .fm-assist-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.fm-sidebar .fm-assist.fm-float .fm-assist-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: auto;
+}
+.fm-sidebar .fm-assist.fm-float .fm-assist-robot {
+  width: 64px;
+  height: 64px;
+}
+.fm-sidebar .fm-assist.fm-float .fm-assist-robot img {
+  width: 64px;
+  height: 64px;
+  animation: fm-assist-bob 5s ease-in-out infinite;
+  filter: drop-shadow(0 6px 10px rgba(5, 14, 33, 0.35));
+}
+@keyframes fm-assist-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fm-sidebar .fm-assist.fm-float .fm-assist-robot img { animation: none; }
+}
+.fm-sidebar .fm-assist.fm-float .fm-assist-caption {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  flex: 0 1 auto;
+  width: 250px;
+  max-width: calc(100vw - 180px);
+  min-height: 0;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  background: #12264a;
+  color: #fff;
+  font-size: 12.5px;
+  line-height: 1.45;
+  box-shadow: 0 8px 22px rgba(5, 14, 33, 0.4);
+}
+.fm-sidebar .fm-assist.fm-float .fm-assist-caption::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  background: #12264a;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transform: rotate(45deg);
+}
+.fm-sidebar .fm-assist.fm-float .fm-assist-mic {
+  width: 48px;
+  height: 48px;
+}
+/* the commit that is deployed, fixed at the bottom of the sidebar */
+.fm-sidebar .fm-build {
+  margin: auto 0 0;
+  padding: 8px 14px 10px;
+  font: 600 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.05em;
+  color: rgba(230, 237, 248, 0.6);
+}

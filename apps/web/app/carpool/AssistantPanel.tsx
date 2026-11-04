@@ -18,7 +18,7 @@ type Pos = { x: number; y: number };
  * picture and float animation the floating mascot had (animate-chat-agent-float); the floating chat button and mascot are
  * gone on these pages. The mic starts the assistant's own voice capture; a phrase pre-fills its message box.
  */
-export function AssistantPanel({ dict, build }: { dict: Dictionary; build?: string | null }) {
+export function AssistantPanel({ dict }: { dict: Dictionary }) {
   const c = dict.chrome;
   const ref = useRef<HTMLElement>(null);
   const [pos, setPos] = useState<Pos | null>(null);
@@ -74,7 +74,7 @@ export function AssistantPanel({ dict, build }: { dict: Dictionary; build?: stri
   return (
     <section
       ref={ref}
-      className="fm-assist"
+      className="fm-assist fm-float"
       aria-labelledby="fm-assist-title"
       data-testid="fm-assistant-panel"
       data-moved={pos ? "true" : undefined}
@@ -90,9 +90,9 @@ export function AssistantPanel({ dict, build }: { dict: Dictionary; build?: stri
       <div className="fm-assist-row">
         <button type="button" className="fm-assist-robot" data-drag aria-label={c.assistantTitle} onClick={() => openChat({})} data-testid="fm-assistant-robot">
           {/* eslint-disable-next-line @next/next/no-img-element -- small static illustration, next/image is overkill here */}
-          <img src="/illustrations/fleet-agent.jpg" alt="" className="animate-chat-agent-float h-14 w-14 rounded-full border-2 border-gwm-accent object-cover" />
+          <img src="/illustrations/fleet-agent.jpg" alt="" className="fm-assist-img h-14 w-14 rounded-full border-2 border-gwm-accent object-cover" />
         </button>
-        <button type="button" className="fm-assist-caption" title={dict.chat.voiceHint} onClick={() => openChat({})} data-testid="fm-assistant-caption">
+        <button type="button" className="fm-assist-caption" data-drag title={dict.chat.voiceHint} onClick={() => openChat({})} data-testid="fm-assistant-caption">
           {dict.chat.voiceHint}
         </button>
       </div>
@@ -111,7 +111,6 @@ export function AssistantPanel({ dict, build }: { dict: Dictionary; build?: stri
           </li>
         ))}
       </ul>
-      {build ? <p className="fm-assist-build" title="commit" data-testid="fm-build">{build}</p> : null}
     </section>
   );
 }

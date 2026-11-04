@@ -242,7 +242,9 @@ export async function FmShell({
           <nav className="fm-nav" aria-label={dict.carpool.buscar.navMain}>
             {menuItems.map(link)}
           </nav>
-          <AssistantPanel dict={dict} build={process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null} />
+          <AssistantPanel dict={dict} />
+          {/* the commit that is deployed: fixed at the bottom of the sidebar (the assistant floats, this does not) */}
+          {process.env.VERCEL_GIT_COMMIT_SHA ? <p className="fm-build" title="commit" data-testid="fm-build">{process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)}</p> : null}
         </aside>
       )}
 
