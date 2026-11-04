@@ -55,6 +55,7 @@ describe.sequential("the gate does the full checklist (0250)",()=>{
   expect(rows).toEqual([{role:"traveler",odo:150},{role:"security",odo:null}]); // the full data (odometer 150) is the traveler-side record made on his behalf
   await actor(security);await command(id,"departure");
   await db.exec("reset role");expect((await db.query("select 1 from fm_gate_events where reservation_id=$1 and kind='departure'",[id])).rows).toHaveLength(1);
+  expect((await db.query("select 1 from notifications where user_id=$1 and title='Saída liberada pela portaria' and entity_id=$2",[admin,id])).rows).toHaveLength(1); // the fleet manager is told in the bell
  });
  it("an office-mode reservation is untouched: the traveler fills his own and the porter cannot fill it for him",async()=>{
   const id=await reservation(officeLocation);

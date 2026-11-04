@@ -4,7 +4,8 @@ import type { AreaTexts } from "../areaText";
 type K =
   | "listDeparture" | "listArrival"
   | "titleDeparture" | "titleArrival" | "noteDeparture" | "noteArrival"
-  | "confirmDeparture" | "confirmArrival" | "optionDeparture" | "optionArrival" | "optionDenied" | "noteLabel";
+  | "confirmDeparture" | "confirmArrival" | "optionDeparture" | "optionArrival" | "optionDenied" | "noteLabel"
+  | "resultDeparture" | "resultArrival" | "resultDenied" | "managerNotified" | "ok" | "errorTitle";
 export type GateMovementKey = K;
 
 export const gateMovementTexts: AreaTexts<K> = {
@@ -21,6 +22,12 @@ export const gateMovementTexts: AreaTexts<K> = {
     optionArrival: "O veículo chegou",
     optionDenied: "Saída impedida (não liberei o veículo)",
     noteLabel: "Observação (opcional)",
+    resultDeparture: "Saída liberada",
+    resultArrival: "Chegada registrada",
+    resultDenied: "Saída impedida registrada",
+    managerNotified: "O gestor da frota foi avisado por e-mail.",
+    ok: "OK",
+    errorTitle: "Não foi possível registrar",
   },
   "en-US": {
     listDeparture: "Release the vehicle",
@@ -35,6 +42,12 @@ export const gateMovementTexts: AreaTexts<K> = {
     optionArrival: "The vehicle arrived",
     optionDenied: "Departure refused (I did not release it)",
     noteLabel: "Note (optional)",
+    resultDeparture: "Departure released",
+    resultArrival: "Arrival recorded",
+    resultDenied: "Refused departure recorded",
+    managerNotified: "The fleet manager was told by e-mail.",
+    ok: "OK",
+    errorTitle: "Could not record it",
   },
   es: {
     listDeparture: "Liberar la salida del vehículo",
@@ -49,6 +62,12 @@ export const gateMovementTexts: AreaTexts<K> = {
     optionArrival: "El vehículo llegó",
     optionDenied: "Salida impedida (no liberé el vehículo)",
     noteLabel: "Observación (opcional)",
+    resultDeparture: "Salida liberada",
+    resultArrival: "Llegada registrada",
+    resultDenied: "Salida impedida registrada",
+    managerNotified: "El gestor de la flota fue avisado por e-mail.",
+    ok: "OK",
+    errorTitle: "No fue posible registrar",
   },
   "zh-CN": {
     listDeparture: "放行车辆",
@@ -63,5 +82,11 @@ export const gateMovementTexts: AreaTexts<K> = {
     optionArrival: "车辆已到达",
     optionDenied: "禁止出门（未放行）",
     noteLabel: "备注（可选）",
+    resultDeparture: "已放行出门",
+    resultArrival: "已登记到达",
+    resultDenied: "已登记禁止出门",
+    managerNotified: "已通过电子邮件通知车队经理。",
+    ok: "好的",
+    errorTitle: "无法登记",
   },
 };

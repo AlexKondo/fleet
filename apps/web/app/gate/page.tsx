@@ -9,6 +9,7 @@ import { FmArrowInIcon, FmArrowOutIcon, FmCarIcon } from "../fmIcons";
 import { getStatusMeta } from "../dashboard/statusMeta";
 import "./gate.css";
 import { GateList, type GateRow } from "./GateList";
+import { GateResultDialog } from "./GateResultDialog";
 import { getAreaText } from "@/lib/i18n/areaText";
 import { gateMovementTexts } from "@/lib/i18n/areas/gateMovement";
 
@@ -29,7 +30,8 @@ import { gateMovementTexts } from "@/lib/i18n/areas/gateMovement";
 const PICKUP_VEHICLE_STATUSES = ["available", "reserved", "awaiting_pickup"] as const;
 const RETURN_VEHICLE_STATUSES = ["in_use", "returning", "blocked"] as const;
 
-export default async function GatePage() {
+export default async function GatePage({ searchParams }: { searchParams?: Promise<{ error?: string; success?: string; moved?: string }> }) {
+  const query = (await searchParams) ?? {};
   const supabase = await createSupabaseServerClient();
   const dict = await getDictionary();
   const locale = await getLocale();
@@ -42,6 +44,7 @@ export default async function GatePage() {
   // lookup (needed only for the nav shell and the role gate below) and the reservation
   // list are independent, and running them back-to-back cost two full round trips where
   // one suffices.
+  const M = await getAreaText(gateMovementTexts);
   const [{ data: profile }, { data: reservations, error: loadError }] = await Promise.all([
     supabase
       .from("profiles")
@@ -150,11 +153,22 @@ export default async function GatePage() {
         </div>
       </section>
 
+      {query.error ? (
+        <GateResultDialog tone="error" title={M.errorTitle} message={(dict.opsShell.errors as Record<string, string>)[query.error] ?? dict.opsShell.genericError} okLabel={M.ok} />
+      ) : query.success && (query.moved === "departure" || query.moved === "arrival" || query.moved === "denied") ? (
+        <GateResultDialog
+          tone="ok"
+          title={query.moved === "departure" ? M.resultDeparture : query.moved === "arrival" ? M.resultArrival : M.resultDenied}
+          message={M.managerNotified}
+          okLabel={M.ok}
+        />
+      ) : null}
+
       {capped ? (
         <p role="status" className="fm-banner" data-testid="gate-cap-note" style={{ marginTop: 0, marginBottom: 16 }}>{g.capNote}</p>
       ) : null}
 
-      <GateList rows={rows} dict={dict} capped={capped} T={await getAreaText(gateMovementTexts)} />
+      <GateList rows={rows} dict={dict} capped={capped} T={M} />
     </FmShell>
   );
 }

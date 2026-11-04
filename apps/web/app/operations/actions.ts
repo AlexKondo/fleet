@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { operationForm, operationReturn } from "@/lib/operations/forms";
+import { notifyGateMovement } from "@/lib/operations/notifyGateMovement";
 export async function executeOperation(form: FormData) {
   const returnTo = operationReturn(form.get("return_to"));
   const url = new URL(returnTo, "https://fleet.invalid");
@@ -12,8 +13,10 @@ export async function executeOperation(form: FormData) {
   const db = await createSupabaseServerClient();
   if (!(await getCurrentUser(db))) redirect("/login");
   let issue: string | null = null;
+  let gateMovement: { reservationId: string; kind: string } | null = null;
   try {
     const { command, payload, requestId } = operationForm(form);
+    if (command === "gate.record") gateMovement = { reservationId: String(payload.reservation_id ?? ""), kind: String(payload.kind ?? "") };
     const { error } = await db.rpc("fm_v3_command", {
       p_command: command,
       p_payload: payload,
@@ -32,6 +35,11 @@ export async function executeOperation(form: FormData) {
   if (issue) url.searchParams.set("error", issue);
   else {
     url.searchParams.set("success", "1");
+    if (gateMovement) {
+      // the gate screen answers with a popup naming what was done; the fleet managers are told by e-mail (the bell is done by the database)
+      url.searchParams.set("moved", gateMovement.kind);
+      await notifyGateMovement(db, gateMovement.reservationId, gateMovement.kind);
+    }
     for (const p of ["/maintenance", "/fleet", "/gate", "/dashboard"])
       revalidatePath(p, "layout");
   }
