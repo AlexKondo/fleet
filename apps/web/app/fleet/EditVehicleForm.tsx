@@ -63,6 +63,8 @@ export function EditVehicleForm({
   const [categoryId, setCategoryId] = useState(vehicle.category_id);
   const [checklistError, setChecklistError] = useState(false);
   const hasChecklist = equipmentItems.length > 0 && Boolean(checklist);
+  // no checklist item in the organization: the vehicle cannot be saved until one exists (the checklist is mandatory)
+  const noItems = equipmentItems.length === 0;
 
   useEffect(() => {
     if (state.status === "success") onSaved();
@@ -83,7 +85,7 @@ export function EditVehicleForm({
         e.preventDefault();
         const data = new FormData(e.currentTarget);
         // a vehicle always keeps at least one checklist item
-        if (hasChecklist && data.getAll("equipmentIds").length === 0) { setChecklistError(true); return; }
+        if (noItems || data.getAll("equipmentIds").length === 0) { setChecklistError(true); return; }
         setChecklistError(false);
         startTransition(() => formAction(data));
       }}
@@ -282,6 +284,7 @@ export function EditVehicleForm({
         </label>
       </div>
 
+      {noItems ? <p role="alert" className="text-sm text-signal-red">{T.vehicleChecklistEmpty}</p> : null}
       {hasChecklist && checklist ? (
         <fieldset className="flex flex-col gap-2 rounded-sm border border-line-800 p-3" aria-describedby={`checklist-hint-${vehicle.id}`}>
           <legend className="px-1 text-xs font-medium uppercase tracking-widest text-fog-400">{T.vehicleChecklistLabel}</legend>

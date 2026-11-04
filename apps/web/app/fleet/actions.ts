@@ -375,7 +375,7 @@ export async function updateVehicle(
   // The checklist (ticked = checked at pickup and return) is edited together with the vehicle: it always keeps at least one item.
   const withChecklist = formData.has("checklistVersion");
   const equipmentIds = Array.from(new Set(formData.getAll("equipmentIds").map((v) => String(v)).filter(Boolean)));
-  if (withChecklist && equipmentIds.length === 0) return { status: "error", error: (await getAreaText(fleetActionTexts)).checklistRequired };
+  if (equipmentIds.length === 0) return { status: "error", error: (await getAreaText(fleetActionTexts)).checklistRequired };
   const idList = (raw: FormDataEntryValue | null): string[] => {
     try { const p: unknown = JSON.parse(String(raw ?? "[]")); return Array.isArray(p) ? p.map(String) : []; } catch { return []; }
   };
