@@ -60,6 +60,7 @@ export function VehicleForm({
   categories,
   locations,
   managementScope,
+  equipmentItems = [],
   dict,
   T = fleetTexts["pt-BR"],
   onSaved,
@@ -67,6 +68,8 @@ export function VehicleForm({
   categories: { id: string; name: string; energyType: string }[];
   locations: { id: string; name: string }[];
   managementScope: {mode:"all_units"|"selected_units";units:{id:string;name:string;enabled:boolean}[]}|null;
+  /** The checklist items of the organization: at least one must be ticked to register the vehicle. */
+  equipmentItems?: { id: string; name: string }[];
   dict: Dictionary;
   T?: Record<FleetKey, string>;
   onSaved?: () => void;
@@ -76,6 +79,7 @@ export function VehicleForm({
   // Read once, on mount — restores whatever survived a remount after a failed submit.
   const [draft, setDraft] = useState<Record<string,string>>({});
   const [categoryId, setCategoryId] = useState(draft.categoryId ?? "");
+  const [checklistError, setChecklistError] = useState(false);
 
   useEffect(() => {const saved=readDraft();setDraft(saved);setCategoryId(saved.categoryId??"");},[]);
   useEffect(() => {
@@ -120,6 +124,9 @@ export function VehicleForm({
       onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
+        // the checklist is part of the registration: no item, no vehicle (the server and the database refuse it too)
+        if (data.getAll("equipmentIds").length === 0) { setChecklistError(true); return; }
+        setChecklistError(false);
         writeDraft(data);
         startTransition(() => formAction(data));
       }}
@@ -291,6 +298,22 @@ export function VehicleForm({
           </select>
         </label>
       </div>
+
+      <fieldset className="flex flex-col gap-2 rounded-sm border border-line-800 p-3" aria-describedby="vehicle-checklist-hint">
+        <legend className="px-1 text-xs font-medium uppercase tracking-widest text-fog-400">{T.vehicleChecklistLabel}</legend>
+        <p id="vehicle-checklist-hint" className="text-xs text-fog-400">{T.vehicleChecklistHint}</p>
+        {equipmentItems.length === 0 ? <p role="alert" className="text-sm text-signal-red">{T.vehicleChecklistEmpty}</p> : (
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {equipmentItems.map((item) => (
+              <label key={item.id} className="flex items-center gap-2 text-sm text-paper-50">
+                <input type="checkbox" name="equipmentIds" value={item.id} onChange={() => setChecklistError(false)} />
+                {item.name}
+              </label>
+            ))}
+          </div>
+        )}
+        {checklistError ? <p role="alert" className="text-sm text-signal-red">{T.vehicleChecklistRequired}</p> : null}
+      </fieldset>
 
       {state.status === "error" ? (
         <p role="alert" className="text-sm text-signal-red">

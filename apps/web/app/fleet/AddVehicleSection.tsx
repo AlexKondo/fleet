@@ -66,6 +66,7 @@ export function AddVehicleSection({
         categories={categories}
         locations={locations}
         managementScope={managementScope}
+        equipmentItems={equipmentItems}
         dict={dict}
         T={T}
         onSaved={() => setOpen(false)}

@@ -222,6 +222,12 @@ export async function createVehicle(
   if (!plate || !categoryId || !locationId) {
     return { status: "error", error: dict.errors.fleet.vehicleRequiredFields };
   }
+  // The checklist is part of the registration: without at least one item the pickup screen has nothing to show, so no vehicle is saved.
+  const equipmentIds = Array.from(new Set(formData.getAll("equipmentIds").map((v) => String(v)).filter(Boolean)));
+  if (equipmentIds.length === 0) return { status: "error", error: (await getAreaText(fleetActionTexts)).checklistRequired };
+  if (!equipmentIds.every((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))) {
+    return { status: "error", error: (await getAreaText(fleetActionTexts)).checklistInvalid };
+  }
   if (!Number.isFinite(odometerKm) || odometerKm < 0) {
     return { status: "error", error: dict.errors.fleet.odometerInvalid };
   }
@@ -261,7 +267,9 @@ export async function createVehicle(
     return { status: "error", error: dict.errors.fleet.categoryOrLocationInvalid };
   }
 
-  const { data: createdId, error } = await supabase.rpc("fm_management_create_vehicle", {
+  // Vehicle and checklist in ONE transaction (migration 0246): if the checklist is refused, the vehicle is not saved either.
+  const { data: createdId, error } = await supabase.rpc("fm_management_create_vehicle_with_checklist", {
+    p_equipment_ids: equipmentIds,
     p_unit_id: String(formData.get("unitId") ?? "").trim() || null,
     p_values: {
       plate, category_id: categoryId, odometer_km: odometerKm,
@@ -274,7 +282,10 @@ export async function createVehicle(
   if (error || !inserted) {
     const friendlyError = error?.message.includes("duplicate") || error?.message.includes("unique")
       ? dict.errors.fleet.duplicatePlate
-      : error?.message === "MANAGEMENT_SCOPE_DENIED" ? (await getAreaText(fleetActionTexts)).scopeDenied : dict.errors.fleet.vehicleCreateFailed;
+      : error?.message === "MANAGEMENT_SCOPE_DENIED" ? (await getAreaText(fleetActionTexts)).scopeDenied
+      : error?.message.includes("CHECKLIST_REQUIRED") ? (await getAreaText(fleetActionTexts)).checklistRequired
+      : error?.message.includes("INVALID_REFERENCE") || error?.message.includes("DUPLICATE_EQUIPMENT_NAME") ? (await getAreaText(fleetActionTexts)).checklistInvalid
+      : dict.errors.fleet.vehicleCreateFailed;
     return { status: "error", error: friendlyError };
   }
 

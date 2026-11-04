@@ -27,7 +27,7 @@ export type FleetKey =
   | "tripsAndBookings" | "openScheduleHistoryOf"
   | "documentsAndEquipment" | "privateFilesNote" | "openDocuments" | "configureEquipment"
   | "intelligenceReached" | "intelligenceNoAlert" | "checkDraft" | "askFleetMind"
-  | "selectVehicle";
+  | "selectVehicle" | "vehicleChecklistLabel" | "vehicleChecklistHint" | "vehicleChecklistEmpty" | "vehicleChecklistRequired";
 
 export const fleetTexts: AreaTexts<FleetKey> = {
   "pt-BR": {
@@ -81,6 +81,10 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     legendCarpool: "Carona ativa",
     carpoolSeats: "Carona · {taken}/{total} vagas",
     editToSeeData: "Para ver ou alterar os dados do veículo, clique em editar. Para gravar uma alteração, clique em salvar.",
+    vehicleChecklistLabel: "Itens do checklist do veículo (marque pelo menos um)",
+    vehicleChecklistHint: "O checklist de retirada e devolução usa estes itens. Sem pelo menos um item, o veículo não é salvo.",
+    vehicleChecklistEmpty: "Não há itens de equipamento cadastrados. Cadastre pelo menos um item de equipamento antes de cadastrar um veículo.",
+    vehicleChecklistRequired: "Marque pelo menos um item do checklist. Sem ele, o veículo não é salvo.",
     vehicleDataTitle: "Dados do veículo",
     timelineRowBooking: "Reserva",
     timelineRowCarpool: "Carona",
@@ -194,6 +198,10 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     legendCarpool: "Active carpool",
     carpoolSeats: "Carpool · {taken}/{total} seats",
     editToSeeData: "To see or change the vehicle data, click edit. To keep a change, click save.",
+    vehicleChecklistLabel: "Vehicle checklist items (tick at least one)",
+    vehicleChecklistHint: "The pickup and return checklist uses these items. Without at least one item the vehicle is not saved.",
+    vehicleChecklistEmpty: "There are no equipment items yet. Create at least one equipment item before registering a vehicle.",
+    vehicleChecklistRequired: "Tick at least one checklist item. Without it the vehicle is not saved.",
     vehicleDataTitle: "Vehicle data",
     timelineRowBooking: "Booking",
     timelineRowCarpool: "Carpool",
@@ -307,6 +315,10 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     legendCarpool: "Viaje compartido activo",
     carpoolSeats: "Compartido · {taken}/{total} plazas",
     editToSeeData: "Para ver o cambiar los datos del vehículo, haz clic en editar. Para guardar un cambio, haz clic en guardar.",
+    vehicleChecklistLabel: "Ítems del checklist del vehículo (marque al menos uno)",
+    vehicleChecklistHint: "El checklist de retiro y devolución usa estos ítems. Sin al menos un ítem, el vehículo no se guarda.",
+    vehicleChecklistEmpty: "No hay ítems de equipamiento registrados. Registre al menos un ítem de equipamiento antes de registrar un vehículo.",
+    vehicleChecklistRequired: "Marque al menos un ítem del checklist. Sin él, el vehículo no se guarda.",
     vehicleDataTitle: "Datos del vehículo",
     timelineRowBooking: "Reserva",
     timelineRowCarpool: "Viaje compartido",
@@ -420,6 +432,10 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     legendCarpool: "进行中的拼车",
     carpoolSeats: "拼车 · {taken}/{total} 个座位",
     editToSeeData: "要查看或修改车辆数据，请点击编辑。要保存修改，请点击保存。",
+    vehicleChecklistLabel: "车辆检查清单项目（至少勾选一项）",
+    vehicleChecklistHint: "取车和还车检查清单使用这些项目。至少需要一项，否则车辆不会被保存。",
+    vehicleChecklistEmpty: "尚未登记任何设备项目。登记车辆前，请先至少登记一个设备项目。",
+    vehicleChecklistRequired: "请至少勾选一个检查清单项目，否则车辆不会被保存。",
     vehicleDataTitle: "车辆数据",
     timelineRowBooking: "预订",
     timelineRowCarpool: "拼车",
@@ -486,7 +502,7 @@ export const fleetTexts: AreaTexts<FleetKey> = {
 
 export type FleetActionKey =
   | "invalidRecord" | "activeOperation" | "activeReference" | "concurrentUpdate" | "notAuthorized" | "lifecycleFailed"
-  | "scopeDenied" | "createdWithoutPhoto";
+  | "scopeDenied" | "createdWithoutPhoto" | "checklistRequired" | "checklistInvalid";
 
 /** Messages returned by the server actions of /fleet. */
 export const fleetActionTexts: AreaTexts<FleetActionKey> = {
@@ -499,6 +515,8 @@ export const fleetActionTexts: AreaTexts<FleetActionKey> = {
     lifecycleFailed: "Não foi possível alterar o estado do registro.",
     scopeDenied: "Selecione uma unidade-base autorizada para sua gestão.",
     createdWithoutPhoto: "Veículo criado. A foto não foi concluída; use Editar neste veículo para tentar novamente, sem repetir o cadastro.",
+    checklistRequired: "Marque pelo menos um item do checklist. Sem ele, o veículo não é salvo.",
+    checklistInvalid: "Algum item do checklist não é válido ou foi desativado. Atualize a página e marque os itens de novo. O veículo não foi salvo.",
   },
   "en-US": {
     invalidRecord: "Check the record and reload the page.",
@@ -509,6 +527,8 @@ export const fleetActionTexts: AreaTexts<FleetActionKey> = {
     lifecycleFailed: "Could not change the record's status.",
     scopeDenied: "Select a base unit authorized for your management.",
     createdWithoutPhoto: "Vehicle created. The photo was not completed; use Edit on this vehicle to try again without repeating the registration.",
+    checklistRequired: "Tick at least one checklist item. Without it the vehicle is not saved.",
+    checklistInvalid: "A checklist item is not valid or was deactivated. Reload the page and tick the items again. The vehicle was not saved.",
   },
   es: {
     invalidRecord: "Revise el registro y recargue la página.",
@@ -519,6 +539,8 @@ export const fleetActionTexts: AreaTexts<FleetActionKey> = {
     lifecycleFailed: "No fue posible cambiar el estado del registro.",
     scopeDenied: "Seleccione una unidad base autorizada para su gestión.",
     createdWithoutPhoto: "Vehículo creado. La foto no se completó; use Editar en este vehículo para intentarlo de nuevo, sin repetir el registro.",
+    checklistRequired: "Marque al menos un ítem del checklist. Sin él, el vehículo no se guarda.",
+    checklistInvalid: "Algún ítem del checklist no es válido o fue desactivado. Actualice la página y marque los ítems de nuevo. El vehículo no se guardó.",
   },
   "zh-CN": {
     invalidRecord: "请检查记录并刷新页面。",
@@ -529,5 +551,7 @@ export const fleetActionTexts: AreaTexts<FleetActionKey> = {
     lifecycleFailed: "无法更改记录的状态。",
     scopeDenied: "请选择您管理范围内授权的所属单位。",
     createdWithoutPhoto: "车辆已创建。照片未能完成；请在该车辆上使用“编辑”重试，无需重复登记。",
+    checklistRequired: "请至少勾选一个检查清单项目，否则车辆不会被保存。",
+    checklistInvalid: "某个检查清单项目无效或已停用。请刷新页面并重新勾选。车辆未保存。",
   },
 };

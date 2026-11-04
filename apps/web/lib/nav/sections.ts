@@ -61,9 +61,6 @@ export function sectionTabs(section: SectionId, f: { isAdministrator: boolean })
     case "fleet":
       return [
         { id: "vehicles", href: "/fleet", visible: true },
-        { id: "carpools", href: "/fleet/carpools", visible: true },
-        { id: "energy", href: "/fleet/energy", visible: true },
-        { id: "keys", href: "/fleet/keys", visible: true },
         { id: "incidents", href: "/fleet/incidents", visible: true },
       ];
     case "trips":

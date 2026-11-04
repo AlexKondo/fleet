@@ -1,11 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { useActionState } from "react";
-import { deleteVehicle, type FleetActionState } from "./actions";
 import type { StatusMeta } from "../dashboard/statusMeta";
-import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { StatusBadge } from "../ui/StatusBadge";
 import { EditVehicleForm, type EditableVehicle } from "./EditVehicleForm";
 import { useVehicleDialog } from "./VehicleEditDialog";
@@ -13,9 +9,6 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/locales";
 import type { FleetKey } from "@/lib/i18n/areas/fleet";
 import { VEHICLE_COLOR_OPTIONS, type VehicleColorValue } from "@/lib/domain/vehicleFieldOptions";
-import { errorLabel } from "@/lib/i18n/errorLabel";
-
-const initialState: FleetActionState = { status: "idle" };
 
 /** vehicles.color stores the stable pt-BR value; free-text/legacy values pass through. */
 function colorLabel(dict: Dictionary, color: string): string {
@@ -47,7 +40,6 @@ export function VehicleRow({
 }) {
   // Rendered inside the edit popup of VehicleFilterGrid (pencil icon): the form is always open; saving / cancelling closes the popup.
   const { close } = useVehicleDialog();
-  const [deleteState, deleteAction, deletePending] = useActionState(deleteVehicle, initialState);
   const meta = statusMeta;
 
   return (
@@ -108,33 +100,6 @@ export function VehicleRow({
           onCancel={close}
         />
       </div>
-      <div className="flex items-center gap-3 border-t border-line-800 pt-3">
-        <Link
-          href={`/fleet/vehicles/${vehicle.id}`}
-          className="text-xs uppercase tracking-widest text-fog-400 hover:text-gwm-accent"
-        >
-          {dict.fleet.vehicleRow.viewSchedule}
-        </Link>
-        <form action={deleteAction}>
-          <input type="hidden" name="id" value={vehicle.id} />
-          <input type="hidden" name="lifecycleVersion" value={vehicle.lifecycle_version??1}/>
-          <input name="archiveReason" aria-label={T.archiveReason} placeholder={T.archiveReason} required minLength={3} maxLength={1000}/>
-          <ConfirmSubmitButton
-            confirmMessage={T.archiveConfirm}
-            disabled={deletePending}
-            className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
-          >
-            {deletePending ? T.registering : T.archive}
-          </ConfirmSubmitButton>
-        </form>
-      </div>
-
-      {deleteState.status === "error" ? (
-        <p role="alert" className="text-xs text-signal-red">
-          {errorLabel(dict, deleteState.error)}
-        </p>
-      ) : null}
-
     </li>
   );
 }

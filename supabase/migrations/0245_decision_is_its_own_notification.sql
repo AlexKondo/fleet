@@ -2,6 +2,9 @@
 -- Every event is now its own notification: the request stays as it was, and the decision is a NEW notification ("Reserva aprovada por <name>" /
 -- "Reserva cancelada por <name>") for the same people who were told about the request (never for the requester: the decision RPCs already send them their own).
 
+-- The 0242 backup exists in production (made by hand); a fresh database (tests, new environments) gets it empty so this file runs anywhere
+create table if not exists public.zz_backup_notifications_2026_11_03 (like public.notifications);
+
 -- Backup of the rows 0243 rewrote (they are changed back below)
 create table if not exists public.zz_backup_notifications_2026_11_04 as
   select * from public.notifications where title ~ '^Reserva (aprovada|cancelada|recusada) por';

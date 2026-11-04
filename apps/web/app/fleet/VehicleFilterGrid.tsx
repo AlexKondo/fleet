@@ -8,7 +8,7 @@ import {fleetTexts,type FleetKey} from "@/lib/i18n/areas/fleet";
 import {filterVehicles,selectFilteredVehicle} from "@/lib/operations/vehicleSelection";
 import {PencilIcon,VehicleEditDialog} from "./VehicleEditDialog";
 import {TimelineHeader,TimelineLane} from "./VehicleTimeline";
-import {VehicleDialogTabs} from "./VehicleDialogTabs";
+import {VehicleDetailBlocks} from "./VehicleDetailBlocks";
 import type {TimelineBooking} from "./timelineLayout";
 import "./vehicle-workspace.css";
 export interface FilterableVehicle {
@@ -38,6 +38,7 @@ export function VehicleFilterGrid({vehicles,statusOptions,dict,T=fleetTexts["pt-
   </div></div>
   {filtered.length===0&&<p className="vw-empty">{dict.fleet.filters.noMatches}</p>}
   <footer className="vw-pagination"><span>{fmt(T.paginationSummary,{count:filtered.length,page:selection.page,pages:selection.pages})}</span><button type="button" disabled={selection.page<=1} onClick={()=>{setPage(selection.page-1);setSelectedId(null);}}>{T.previous}</button><button type="button" disabled={selection.page>=selection.pages} onClick={()=>{setPage(selection.page+1);setSelectedId(null);}}>{T.next}</button></footer>
+  {v&&<VehicleDetailBlocks v={v} T={T} locale={locale} dimensionsAvailable={dimensionsAvailable}/>}
  </section>
- {editing?<VehicleEditDialog key={editing.id} title={editLabel(editing)} closeLabel={dict.common.close} onClose={()=>setEditId(null)}><VehicleDialogTabs v={editing} T={T} locale={locale} dimensionsAvailable={dimensionsAvailable} form={editing.node}/></VehicleEditDialog>:null}</div>;
+ {editing?<VehicleEditDialog key={editing.id} title={editLabel(editing)} closeLabel={dict.common.close} onClose={()=>setEditId(null)}><ul className="vw-dialog-list">{editing.node}</ul></VehicleEditDialog>:null}</div>;
 }

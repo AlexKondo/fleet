@@ -1645,6 +1645,7 @@ export type Database = {
       fm_manager_scope_admin_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};
       fm_manager_scope_command: {Args:{p_user_id:string;p_mode:string;p_unit_ids:string[];p_version:number;p_reason:string;p_request_id:string};Returns:Json};
       fm_management_create_vehicle: {Args:{p_unit_id:string|null;p_values:Json};Returns:string};
+      fm_management_create_vehicle_with_checklist: {Args:{p_unit_id:string|null;p_values:Json;p_equipment_ids:string[]};Returns:string};
       fm_can_manage_vehicle: {Args:{p_vehicle_id:string};Returns:boolean};
       fm_has_key_custody: {Args:Record<PropertyKey,never>;Returns:boolean};
       fm_unit_admin_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};

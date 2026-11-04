@@ -33,6 +33,16 @@ describe.sequential('versioned equipment contracts in the migrated database',()=
   expect(effective.source).toBe('vehicle');expect(effective.required.map(e=>e.name)).toEqual(['Kit de reparo','Triângulo']);
   await actor(driver);await pickup(reservation,['Estepe']);
  });
+ it('registering a vehicle needs at least one checklist item; vehicle and checklist are saved together, otherwise nothing is saved',async()=>{
+  await db.exec('reset role');const location=randomUUID();await db.query("insert into vehicle_locations(id,organization_id,name) values($1,$2,'Garagem teste')",[location,org]);
+  const values=(plate:string)=>JSON.stringify({plate,category_id:emptyCategory,home_location_id:location,odometer_km:10,estimated_range_km:300});
+  const exists=async(plate:string)=>{await db.exec('reset role');return(await db.query('select 1 from vehicles where plate=$1',[plate])).rows.length;};
+  await actor(admin);await expect(db.query("select fm_management_create_vehicle_with_checklist(null,$1,'{}')",[values('SEMITEM1')])).rejects.toThrow(/CHECKLIST_REQUIRED/);expect(await exists('SEMITEM1')).toBe(0);
+  await actor(admin);await expect(db.query('select fm_management_create_vehicle_with_checklist(null,$1,$2)',[values('ITEMRUIM'),[randomUUID()]])).rejects.toThrow(/INVALID_REFERENCE/);expect(await exists('ITEMRUIM')).toBe(0);
+  await actor(admin);const id=(await db.query<{id:string}>('select fm_management_create_vehicle_with_checklist(null,$1,$2) id',[values('COMITEM1'),[triangle,kit]])).rows[0]!.id;
+  const effective=(await db.query<{r:{effective:{source:string;required:{name:string}[]}}}>('select fm_equipment_vehicle_snapshot($1) r',[id])).rows[0]!.r.effective;
+  expect(effective.source).toBe('vehicle');expect(effective.required.map(e=>e.name)).toEqual(['Kit de reparo','Triângulo']);
+ });
  it('requires an explicit configuration for a new pickup and does not let an unrelated user prepare the checklist',async()=>{
   const {reservation}=await fixture(emptyCategory);await actor(driver);await expect(pickup(reservation)).rejects.toThrow(/EQUIPMENT_CONFIGURATION_REQUIRED/);
   await actor(outsider);await expect(db.query('select fm_prepare_equipment_checklist($1)',[reservation])).rejects.toThrow(/NOT_AUTHORIZED/);

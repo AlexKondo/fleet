@@ -49,9 +49,9 @@ describe("tabs", () => {
   it("the current tab is the exact address, else the longest tab that contains it", () => {
     const tabs = sectionTabs("fleet", { isAdministrator: false });
     expect(activeTabHref(tabs, "/fleet")).toBe("/fleet");
-    expect(activeTabHref(tabs, "/fleet/energy")).toBe("/fleet/energy");
+    expect(activeTabHref(tabs, "/fleet/incidents")).toBe("/fleet/incidents");
     expect(activeTabHref(tabs, "/fleet/vehicles/abc")).toBe("/fleet");
-    expect(activeTabHref(tabs, "/fleet/energy/x")).toBe("/fleet/energy");
+    expect(activeTabHref(tabs, "/fleet/incidents/x")).toBe("/fleet/incidents");
     expect(activeTabHref(tabs, "/settings")).toBeNull();
   });
 });
