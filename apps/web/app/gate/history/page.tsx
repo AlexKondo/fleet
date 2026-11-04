@@ -57,30 +57,54 @@ export default async function GateHistory({
       .order("id")
       .range(a, b),
   ).catch(() => null);
-  const recordBlock = (returnTo: string) => (
+  // the reservation the porter came for (the button of that vehicle): fixed, no list of the other vehicles
+  const picked = params.reservation ? reservations?.find((r) => r.id === params.reservation) : undefined;
+  const contextKind = params.kind === "arrival" ? "arrival" : "departure";
+  const recordBlock = (returnTo: string, locked = false) => (
     <>
           <OperationForm command="gate.record" returnTo={returnTo}>
-            <label className="ow-field">
-              <span>{T.reservationTrip}</span>
-              <select name="reservation_id" required defaultValue={params.reservation ?? ""}>
-                <option value="">{T.select}</option>
-                {reservations?.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {data.vehicles?.find((v) => v.id === r.vehicle_id)?.plate}{" "}
-                    · {r.trip_request?.requester?.full_name} ·{" "}
-                    {date(r.start_at, true, locale)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="ow-field">
-              <span>{T.movement}</span>
-              <select name="kind" defaultValue={params.kind === "arrival" ? "arrival" : params.kind === "denied" ? "denied" : "departure"}>
-                <option value="departure">{T.confirmDeparture}</option>
-                <option value="arrival">{T.confirmArrival}</option>
-                <option value="denied">{T.recordDenied}</option>
-              </select>
-            </label>
+            {locked && picked ? (
+              <>
+                <input type="hidden" name="reservation_id" value={picked.id} />
+                <div className="ow-field" data-testid="gate-fixed-reservation">
+                  <span>{T.reservationTrip}</span>
+                  <p>
+                    <strong>{data.vehicles?.find((v) => v.id === picked.vehicle_id)?.plate}</strong> · {picked.trip_request?.requester?.full_name} · {date(picked.start_at, true, locale)}
+                  </p>
+                </div>
+                <label className="ow-field">
+                  <span>{T.movement}</span>
+                  <select name="kind" defaultValue={contextKind}>
+                    <option value={contextKind}>{contextKind === "arrival" ? T.confirmArrival : T.confirmDeparture}</option>
+                    <option value="denied">{T.recordDenied}</option>
+                  </select>
+                </label>
+              </>
+            ) : (
+              <>
+              <label className="ow-field">
+                <span>{T.reservationTrip}</span>
+                <select name="reservation_id" required defaultValue={params.reservation ?? ""}>
+                  <option value="">{T.select}</option>
+                  {reservations?.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {data.vehicles?.find((v) => v.id === r.vehicle_id)?.plate}{" "}
+                      · {r.trip_request?.requester?.full_name} ·{" "}
+                      {date(r.start_at, true, locale)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="ow-field">
+                <span>{T.movement}</span>
+                <select name="kind" defaultValue={params.kind === "arrival" ? "arrival" : params.kind === "denied" ? "denied" : "departure"}>
+                  <option value="departure">{T.confirmDeparture}</option>
+                  <option value="arrival">{T.confirmArrival}</option>
+                  <option value="denied">{T.recordDenied}</option>
+                </select>
+              </label>
+              </>
+            )}
             <label className="ow-field">
               <span>{T.reasonNote}</span>
               <textarea name="reason" maxLength={1000} />
@@ -107,7 +131,7 @@ export default async function GateHistory({
       <Workspace data={data} title={T.recordPanel} subtitle={T.recordNote} active="gateHistory" error={params.error} success={params.success}>
         <div className="ow-grid">
           <div className="ow-stack">
-            <Panel title={T.reservationTrip}>{recordBlock("/gate")}</Panel>
+            <Panel title={T.reservationTrip}>{recordBlock("/gate", true)}</Panel>
           </div>
         </div>
       </Workspace>
