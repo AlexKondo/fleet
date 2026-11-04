@@ -602,3 +602,46 @@ describe("choosing a vehicle shows only the new proposal", () => {
     expect(body.text).toContain("PHEV35");
   });
 });
+
+describe("the rider answers the invitation to take over a cancelled carpool trip (WhatsApp)", () => {
+  const TOKEN = "c".repeat(64);
+  const tap = (kind: "yes" | "no", over: Partial<InboundMessage> = {}) => msg({ kind: "button", buttonId: `tk:${kind}:${TOKEN}`, text: undefined, from: "5511982593096", messageId: `tk-${kind}`, ...over });
+  const seen = { apply: [] as Record<string, unknown>[], after: [] as string[] };
+  const withApply = (data: unknown, registerNew = true) => deps({
+    rpc: async (name, args) => {
+      if (name === "fm_takeover_token_apply") { seen.apply.push(args); return { data, error: null }; }
+      if (name === "fm_whatsapp_register_inbound") return { data: registerNew, error: null };
+      return { data: null, error: { message: "unexpected" } };
+    },
+    afterTakeoverAccepted: async (id) => { seen.after.push(id); },
+  });
+  beforeEach(() => { seen.apply.length = 0; seen.after.length = 0; });
+
+  it("Aceitar: applies it with the token and the sender's number, asks the manager to approve, tells the rider", async () => {
+    const r = await run(tap("yes"), withApply({ ok: true, outcome: "accepted", reservation_id: "res-1", candidate_id: "u9" }));
+    expect(seen.apply).toEqual([{ p_token: TOKEN, p_from_phone: "5511982593096", p_accept: true }]);
+    expect(seen.after).toEqual(["res-1"]);
+    expect(texts(r)[0]).toBe(TEXTS.tkAccepted);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("Recusar: passes it on, the manager is not asked", async () => {
+    const r = await run(tap("no"), withApply({ ok: true, outcome: "declined", reservation_id: "res-1", candidate_id: "u9" }));
+    expect(seen.apply[0]).toMatchObject({ p_accept: false });
+    expect(seen.after).toHaveLength(0);
+    expect(texts(r)[0]).toBe(TEXTS.tkDeclined);
+  });
+  it("a tap from somebody else's number or an unknown token is never answered", async () => {
+    expect((await run(tap("yes"), withApply({ ok: false, reason: "phone_mismatch" }))).replies).toHaveLength(0);
+    expect((await run(tap("yes"), withApply({ ok: false, reason: "invalid" }))).replies).toHaveLength(0);
+  });
+  it("an old or already answered invitation is explained; an expired one says the deadline passed; one that cannot be taken says why", async () => {
+    expect(texts(await run(tap("yes"), withApply({ ok: false, reason: "already_answered", candidate_id: "u9" })))).toEqual([TEXTS.tkGone]);
+    expect(texts(await run(tap("yes"), withApply({ ok: false, reason: "expired", candidate_id: "u9" })))).toEqual([TEXTS.tkExpired]);
+    expect(texts(await run(tap("yes"), withApply({ ok: false, reason: "overlap", candidate_id: "u9" })))).toEqual([TEXTS.tkCannot]);
+  });
+  it("the same tap delivered twice is answered once", async () => {
+    const r = await run(tap("yes"), withApply({ ok: true, outcome: "accepted", reservation_id: "res-1", candidate_id: "u9" }, false));
+    expect(r.replies).toHaveLength(0);
+    expect(seen.after).toHaveLength(0); // the manager is asked once, by the first delivery
+  });
+});

@@ -37,7 +37,11 @@ export async function cancelMyReservation(reservationId: string, formData?: Form
     redirect("/trips?tripActionError=1");
   }
 
-  if (user) {
+  // the reservation may have been PASSED ON to an accepted carpool rider instead of cancelled (migration 0251): then nobody is told it was cancelled
+  const { data: takeover } = await supabase.rpc("fm_takeover_info", { p_reservation_id: reservationId });
+  const passedOn = Boolean(takeover && typeof takeover === "object" && !Array.isArray(takeover) && (takeover as { role?: string }).role === "owner");
+
+  if (user && !passedOn) {
     const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user.id).single();
     if (profile) {
       await notifyManagersOfCancellation(supabase, {

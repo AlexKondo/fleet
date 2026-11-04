@@ -19,6 +19,8 @@ import { clampText, MAX_JUSTIFICATION_TEXT, MAX_LOCATION_TEXT } from "@/lib/trip
 import { executeCarpoolIntent, loadChatCarpoolCtx, publishOfferForNewReservation } from "./carpoolChat";
 import { dictionaries, type Dictionary } from "@/lib/i18n/dictionaries";
 import { fillTemplate } from "@/lib/carpool/errorText";
+import { areaText } from "@/lib/i18n/areaText";
+import { takeoverTexts } from "@/lib/i18n/areas/takeover";
 import { noVehicleReply } from "./noVehicle";
 import { classifyError, composeFailure, failureReply, type AssistantReply, type ReplyAction } from "./replies";
 
@@ -238,6 +240,14 @@ export async function dispatchIntent(
       if (!cancelReason) return failed(dict, "cancel", "missing_cancel_reason", { mode: "chat" });
       const { error } = await supabase.rpc("cancel_reservation", { p_reservation_id: reservationId, p_reason: cancelReason });
       if (error) return failed(dict, "cancel", "cancel_failed", { mode: "chat" }, error.code, error.message);
+      // the reservation may have been PASSED ON to an accepted carpool rider instead of cancelled (migration 0251): say so, and do not tell the managers it was cancelled
+      const { data: takeover } = await supabase.rpc("fm_takeover_info", { p_reservation_id: reservationId });
+      const passed = takeover && typeof takeover === "object" && !Array.isArray(takeover) && (takeover as { role?: string }).role === "owner" ? (takeover as { other_name?: string | null }) : null;
+      if (passed) {
+        revalidatePath("/trips");
+        revalidatePath("/dashboard");
+        return ok(fillTemplate(areaText(takeoverTexts, locale).passedBody, { name: passed.other_name ?? "—" }));
+      }
       const { data: cancellerProfile } = await supabase.from("profiles").select("organization_id").eq("id", user.id).single();
       if (cancellerProfile) {
         await notifyManagersOfCancellation(supabase, {

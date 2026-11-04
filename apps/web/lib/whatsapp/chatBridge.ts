@@ -56,6 +56,8 @@ export interface BridgeDeps {
   now?: () => number;
   /** tells the carpool rider what the host answered (WhatsApp, best effort, never throws) */
   notifyRider?: (requestId: string, justification?: string) => Promise<void>;
+  /** the rider accepted the vehicle of a cancelled carpool trip: his manager (or the fleet managers) are asked to approve; best effort */
+  afterTakeoverAccepted?: (reservationId: string) => Promise<void> | void;
   /** the same route map the screen shows (runs as the member); null when it is not available - the card is then sent without it */
   routeMap?: (origin: string, destination: string) => Promise<{ imageBase64: string; caption: string } | null>;
 }
@@ -79,6 +81,11 @@ export const TEXTS = {
     "• _Cancelar minha reserva_\n\n" +
     "É só continuar a conversa por aqui. Para trocar de perfil (se o seu número tem mais de um), escreva *trocar perfil*.",
   cpGone: "Este pedido de carona já foi respondido ou não está mais disponível.",
+  tkGone: "Este convite já foi respondido ou não está mais disponível.",
+  tkExpired: "O prazo para responder a este convite terminou.",
+  tkCannot: "Você não pode assumir esta reserva agora (confira a sua CNH e se você tem outra reserva no mesmo horário).",
+  tkAccepted: "✅ Pronto! A reserva ficou com você. Enviei o pedido ao seu gestor e aviso quando ele decidir. O veículo continua reservado.",
+  tkDeclined: "Tudo bem, recusei. Passei a reserva para o próximo caroneiro; se ninguém assumir, ela será cancelada.",
   cpFailed: "Não consegui registrar sua resposta agora (talvez não haja mais lugar no veículo). Abra o FleetMind em Minhas Caronas para responder.",
   cpReasonAgain: "Não consegui entender o motivo. Escreva em uma mensagem curta, ou grave outro áudio.",
   couldNotEnter: "Não consegui acessar a sua conta agora. Tente de novo em instantes.",
@@ -101,6 +108,8 @@ export const TEXTS = {
 } as const;
 
 const CARPOOL_TAP = /^cp:(yes|no):([0-9a-f]{32,128})$/;
+/** The rider answered "assume the vehicle of the cancelled carpool trip": tk:yes:<token> / tk:no:<token>. */
+const TAKEOVER_TAP = /^tk:(yes|no):([0-9a-f]{32,128})$/;
 const MAX_REASON = 300;
 
 const norm = (s: string) => s.trim().toLowerCase().replace(/[.!]+$/g, "").trim();
@@ -214,6 +223,30 @@ async function handleCarpoolTap(decision: "accept" | "reject", token: string, ms
   return { replies: [text(`✅ Pronto! Você aceitou a carona de *${rider}*. Avisei ${rider}.`)] };
 }
 
+/** The rider tapped Aceitar / Recusar on the invitation to take over the vehicle of a cancelled carpool trip. The token binds it to that takeover, that rider and his number. */
+async function handleTakeoverTap(accept: boolean, token: string, msg: InboundMessage, deps: BridgeDeps): Promise<{ replies: Reply[] }> {
+  const none = { replies: [] as Reply[] };
+  const res = await deps.rpc("fm_takeover_token_apply", { p_token: token, p_from_phone: msg.from, p_accept: accept });
+  const r = res.data as { ok?: boolean; reason?: string; outcome?: string; reservation_id?: string; candidate_id?: string } | null;
+  if (res.error || !r) return none;
+  // a tap from somebody else's number or an unknown token is never answered
+  if (r.ok !== true && (r.reason === "phone_mismatch" || r.reason === "invalid")) return none;
+  if (r.candidate_id) {
+    const reg = await deps.rpc("fm_whatsapp_register_inbound", { p_message_id: msg.messageId, p_user: r.candidate_id, p_org: null, p_kind: "button", p_handled: true });
+    if (reg.error || reg.data === false) return none; // the same tap delivered twice
+  }
+  if (r.ok !== true) {
+    if (r.reason === "expired") return { replies: [text(TEXTS.tkExpired)] };
+    if (r.reason === "overlap" || r.reason === "cannot_drive" || r.reason === "licence_expires") return { replies: [text(TEXTS.tkCannot)] };
+    return { replies: [text(TEXTS.tkGone)] };
+  }
+  if (r.outcome === "accepted") {
+    if (r.reservation_id) await Promise.resolve(deps.afterTakeoverAccepted?.(r.reservation_id)).catch(() => undefined);
+    return { replies: [text(TEXTS.tkAccepted)] };
+  }
+  return { replies: [text(TEXTS.tkDeclined)] };
+}
+
 /** After Recusar: the next message of the host's number (text or voice) is the justification that goes to the rider. */
 async function handleCarpoolReason(p: { request_id: string; host_id: string; host_email: string; rider_name?: string }, msg: InboundMessage, deps: BridgeDeps): Promise<{ replies: Reply[] }> {
   const none = { replies: [] as Reply[] };
@@ -245,6 +278,8 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
   if (msg.kind === "button") {
     const tap = CARPOOL_TAP.exec(msg.buttonId ?? "");
     if (tap) return handleCarpoolTap(tap[1] === "yes" ? "accept" : "reject", tap[2]!, msg, deps);
+    const tk = TAKEOVER_TAP.exec(msg.buttonId ?? "");
+    if (tk) return handleTakeoverTap(tk[1] === "yes", tk[2]!, msg, deps);
   }
   if (msg.kind === "text" || msg.kind === "audio") {
     const pr = await deps.rpc("fm_carpool_pending_reason", { p_phone: msg.from });

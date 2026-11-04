@@ -7,6 +7,8 @@ import { OfficeCustodyNotice } from "./OfficeCustodyNotice";
 import { ShareAddress } from "./ShareAddress";
 import { areaText } from "@/lib/i18n/areaText";
 import { shareAddressTexts } from "@/lib/i18n/areas/shareAddress";
+import { takeoverTexts } from "@/lib/i18n/areas/takeover";
+import { TakeoverCard, type TakeoverInfo } from "./TakeoverCard";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -184,6 +186,9 @@ export default async function ReservationDetailPage({
       ) : null}
     </>
   );
+  // the carpool takeover of this reservation, for the member looking at it (candidate: the invitation; owner: "it was passed on")
+  const { data: takeoverRaw } = await supabase.rpc("fm_takeover_info", { p_reservation_id: id });
+  const takeoverInfo = takeoverRaw && typeof takeoverRaw === "object" && !Array.isArray(takeoverRaw) ? (takeoverRaw as unknown as TakeoverInfo) : null;
   // Route map of THIS trip's own origin -> destination, only after the visibility checks above (requester or
   // privileged role - the same rule as the page itself). Lazy client card: never delays the page.
   const routeMap = (
@@ -301,6 +306,16 @@ export default async function ReservationDetailPage({
         <Link href="/trips" className="fm-link">
           {dict.reservations.detail.backToTrips}
         </Link>
+
+        {takeoverInfo ? (
+          <TakeoverCard
+            info={takeoverInfo}
+            reservationId={id}
+            T={areaText(takeoverTexts, locale)}
+            whenLabel={formatDateTimeShort(takeoverInfo.expires_at, locale)}
+            failed={query?.takeover === "failed"}
+          />
+        ) : null}
 
         <header className="fm-card rd-head">
           <div className="rd-head-top">

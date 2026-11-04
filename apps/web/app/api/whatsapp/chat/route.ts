@@ -7,6 +7,7 @@ import { runAsUser } from "@/lib/auth/actingUser";
 import { mintUserClient } from "@/lib/auth/mintUserClient";
 import { getAppUrl } from "@/lib/getAppUrl";
 import { notifyRiderOfDecision } from "@/lib/carpool/notifyRider";
+import { afterTakeoverAccepted } from "@/lib/carpool/afterTakeoverAccepted";
 import { loadLatestChatState } from "@/app/chat/queries";
 import { sendChatMessage } from "@/app/chat/actions";
 import { getTripRouteMap } from "@/app/carpool/routeMapActions";
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
     send: sendChatMessage,
     transcribe: (audio, mime) => transcribeAudio(audio, mime),
     appUrl: getAppUrl(),
+    afterTakeoverAccepted: (reservationId) => afterTakeoverAccepted(reservationId),
     routeMap: async (origin, destination) => {
       const r = await getTripRouteMap({ originText: origin, destinationText: destination });
       if (r.status !== "ok") return null;

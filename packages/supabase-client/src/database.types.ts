@@ -1653,6 +1653,13 @@ export type Database = {
       fm_equipment_checklists: {Args:Record<PropertyKey,never>;Returns:Json};
       fm_set_mobility_point_checklist_by: {Args:{p_point_id:string;p_checklist_by:string};Returns:undefined};
       fm_checklist_by: {Args:{p_reservation_id:string};Returns:string};
+      fm_takeover_respond: {Args:{p_takeover_id:string;p_accept:boolean};Returns:Json};
+      fm_takeover_token_apply: {Args:{p_token:string;p_from_phone:string;p_accept:boolean};Returns:Json};
+      fm_takeover_expire_due: {Args:Record<PropertyKey,never>;Returns:number};
+      fm_takeover_fleet_notice: {Args:{p_reservation_id:string};Returns:Json};
+      fm_takeover_info: {Args:{p_reservation_id:string};Returns:Json};
+      fm_wa_outbox_claim: {Args:{p_limit?:number};Returns:Json};
+      fm_wa_outbox_mark: {Args:{p_id:string;p_ok:boolean;p_error?:string};Returns:undefined};
       fm_has_key_custody: {Args:Record<PropertyKey,never>;Returns:boolean};
       fm_unit_admin_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};
       fm_key_workspace: {Args:Record<PropertyKey,never>;Returns:Json};
