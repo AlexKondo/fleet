@@ -21,6 +21,7 @@ export function ReturnForm({
   locations,
   homeLocationId,
   equipmentItems,
+  doneHref = "/trips",
   dict,
   locale,
 }: {
@@ -30,6 +31,8 @@ export function ReturnForm({
   locations: { id: string; name: string }[];
   homeLocationId: string | null;
   equipmentItems: { id: string; name: string }[];
+  /** where the person goes when the checklist is done (the porter: Portaria) */
+  doneHref?: string;
   dict: Dictionary;
   locale: Locale;
 }) {
@@ -119,7 +122,7 @@ export function ReturnForm({
         return;
       }
 
-      router.push("/trips");
+      router.push(doneHref);
     });
   }
 
@@ -266,7 +269,7 @@ export function ReturnForm({
               failedPhotoAngles.map((angle) => dict.reservations.photos.angles[angle]).join(", "),
             )}
           </p>
-          <button type="button" onClick={() => router.push("/trips")} className="fm-btn fm-btn-ghost ck-msg-btn">
+          <button type="button" onClick={() => router.push(doneHref)} className="fm-btn fm-btn-ghost ck-msg-btn">
             {tc.goToTrips}
           </button>
         </div>

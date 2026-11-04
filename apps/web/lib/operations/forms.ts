@@ -131,6 +131,7 @@ const paths = new Set([
   "/maintenance/vehicles",
   "/fleet/maintenance",
   "/fleet/energy",
+  "/gate",
   "/gate/history",
   "/gate/exceptions",
   "/fleet/incidents",

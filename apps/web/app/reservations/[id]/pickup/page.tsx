@@ -86,6 +86,7 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
           energyType={energyType}
           currentOdometer={vehicle.odometer_km}
           equipmentItems={equipmentItems ?? []}
+          doneHref={state.inspection_role === "security" ? "/gate" : "/trips"}
           dict={dict}
         /></>:<p role="alert" className="fm-banner fm-banner-danger ck-blocked">Não foi possível preparar a configuração de equipamentos. Solicite ao gestor a configuração deste veículo antes de uma nova retirada. O registro físico de chegada continua disponível na unidade.</p>
         )}

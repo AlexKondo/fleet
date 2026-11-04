@@ -7,6 +7,7 @@ import type { PhotoAngle } from "@/lib/domain/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { uploadInspectionPhotos } from "@/lib/domain/uploadInspectionPhotos";
+import { notifyGateMovement } from "@/lib/operations/notifyGateMovement";
 import { notifyReturnTasks } from "@/lib/email/notifyReturnTasks";
 
 export interface ReturnFormInput {
@@ -89,6 +90,12 @@ export async function submitReturn(
     p_workflow_tasks: outcome.workflowTasks,
     p_current_location_id: input.currentLocationId,
   });
+  // The vehicle comes back: at the gate the porter does it in ONE step, so the physical arrival is recorded here, right before the two return checklists.
+  if (gateFull && !checklistState.arrived) {
+    const arrival = await supabase.rpc("fm_v3_command", { p_command: "gate.record", p_payload: { reservation_id: input.reservationId, kind: "arrival" }, p_request_id: crypto.randomUUID() });
+    if (arrival.error) return { success: false, error: arrival.error.message };
+    await notifyGateMovement(supabase, input.reservationId, "arrival");
+  }
   let { data: inspectionId, error } = await supabase.rpc("record_return", callArgs(gateFull ? "traveler" : checklistState.inspection_role));
   let securityInspectionId: string | null = null;
   if (gateFull && !error) {

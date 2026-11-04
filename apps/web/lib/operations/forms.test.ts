@@ -23,6 +23,10 @@ describe("operational boundary", () => {
     );
     expect(operationReturn("http://[")).toBe("/maintenance");
   });
+  it("the gate screens can return to /gate (the porter has no other place to land)", () => {
+    expect(operationReturn("/gate")).toBe("/gate");
+    expect(operationReturn("/gate?error=x")).toBe("/gate?error=x");
+  });
   it("rejects NaN and other nondecimal costs before calling the database", () => {
     const f = new FormData();
     Object.entries({

@@ -57,6 +57,16 @@ describe.sequential("the gate does the full checklist (0250)",()=>{
   await db.exec("reset role");expect((await db.query("select 1 from fm_gate_events where reservation_id=$1 and kind='departure'",[id])).rows).toHaveLength(1);
   expect((await db.query("select 1 from notifications where user_id=$1 and title='Saída liberada pela portaria' and entity_id=$2",[admin,id])).rows).toHaveLength(1); // the fleet manager is told in the bell
  });
+ it("after the departure the porter's next step is the return: can_return is true for him, the arrival and both return checklists complete the trip",async()=>{
+  const id=await reservation(gateLocation);
+  await actor(security);await pickup(id,"traveler");await pickup(id,"security");await command(id,"departure");
+  expect(await state(id)).toMatchObject({departed:true,can_pickup:false,can_return:true});
+  await actor(driver);expect(await state(id)).toMatchObject({can_return:false}); // the traveler still has nothing to do
+  await actor(security);await command(id,"arrival");
+  const ret=(role:string)=>db.query("select record_return($1,180,60,null,false,null,'{}',false,false,$2,'COMPLETE_RETURN_INSPECTION_CLEAN','{}',$3)",[id,role,gateLocation]);
+  await ret("traveler");await ret("security");
+  await db.exec("reset role");expect((await db.query<{status:string}>("select status from reservations where id=$1",[id])).rows[0]!.status).toBe("completed");
+ });
  it("an office-mode reservation is untouched: the traveler fills his own and the porter cannot fill it for him",async()=>{
   const id=await reservation(officeLocation);
   await actor(security);await expect(pickup(id,"traveler")).rejects.toThrow(/INSPECTION_NOT_AUTHORIZED/);

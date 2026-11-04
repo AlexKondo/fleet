@@ -18,12 +18,15 @@ export function PickupForm({
   energyType,
   currentOdometer,
   equipmentItems,
+  doneHref = "/trips",
   dict,
 }: {
   reservationId: string;
   energyType: EnergyType;
   currentOdometer: number;
   equipmentItems: { id: string; name: string }[];
+  /** where the person goes when the checklist is done (the porter: Portaria) */
+  doneHref?: string;
   dict: Dictionary;
 }) {
   const t = dict.reservations.pickup;
@@ -113,7 +116,7 @@ export function PickupForm({
         return;
       }
 
-      router.push("/trips");
+      router.push(doneHref);
     });
   }
 
@@ -246,7 +249,7 @@ export function PickupForm({
               failedPhotoAngles.map((angle) => dict.reservations.photos.angles[angle]).join(", "),
             )}
           </p>
-          <button type="button" onClick={() => router.push("/trips")} className="fm-btn fm-btn-ghost ck-msg-btn">
+          <button type="button" onClick={() => router.push(doneHref)} className="fm-btn fm-btn-ghost ck-msg-btn">
             {tc.goToTrips}
           </button>
         </div>
