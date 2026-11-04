@@ -379,3 +379,5 @@
   min-height: 0;
   min-width: 0;
 }
+
+.hm-gantt .vw-rowmain small{display:block}.hm-gantt .vw-rowmain{padding:6px 4px}

@@ -16,7 +16,10 @@ import {
   FmPinIcon,
   FmUsersIcon,
 } from "../fmIcons";
-import { EnergyGauge } from "./EnergyGauge";
+import { TimelineHeader, TimelineLane } from "../fleet/VehicleTimeline";
+import { timelineWindow, type TimelineBooking } from "../fleet/timelineLayout";
+import { fleetTexts } from "@/lib/i18n/areas/fleet";
+import "../fleet/vehicle-workspace.css";
 import type { StatusMeta } from "./statusMeta";
 import "./home.css";
 
@@ -53,9 +56,6 @@ export async function EmployeeHome({
   dict,
   locale,
   vehicles,
-  vehiclesError,
-  statusMeta,
-  attentionLabels,
   fleetActionError,
   actionSuccess,
 }: {
@@ -65,9 +65,9 @@ export async function EmployeeHome({
   dict: Dictionary;
   locale: Locale;
   vehicles: HomeVehicle[];
-  vehiclesError: boolean;
-  statusMeta: Record<string, StatusMeta>;
-  attentionLabels: Record<string, string>;
+  vehiclesError?: boolean;
+  statusMeta?: Record<string, StatusMeta>;
+  attentionLabels?: Record<string, string>;
   fleetActionError: boolean;
   actionSuccess: boolean;
 }) {
@@ -77,9 +77,8 @@ export async function EmployeeHome({
   const nowIso = new Date().toISOString();
 
   // Next reservation: the earliest still-open one that has not ended (own query, so it never depends on how many past rows exist).
-  // Most-reserved ranking: a count per vehicle over ALL the employee's non-cancelled reservations, read page by page
-  // (1000 rows each, only the vehicle columns) instead of a capped list.
-  const [{ data: nextRows, error: nextReservationError }, { data: myRequests, error: carpoolRequestsError }, usageRows] = await Promise.all([
+  // The chart of the employee's own reservations (the same window as the fleet schedule), one row per vehicle they reserved.
+  const [{ data: nextRows, error: nextReservationError }, { data: myRequests, error: carpoolRequestsError }, { data: chartRows, error: chartError }] = await Promise.all([
     supabase
       .from("reservations")
       .select(
@@ -100,22 +99,13 @@ export async function EmployeeHome({
       .gte("requested_departure_at", nowIso)
       .order("requested_departure_at", { ascending: true })
       .limit(3),
-    (async () => {
-      const rows: { vehicle: { id: string; plate: string; name: string | null } | null }[] = [];
-      for (let page = 0; ; page++) {
-        const { data, error } = await supabase
-          .from("reservations")
-          .select("id, vehicle:vehicles(id, plate, name), trip_request:trip_requests!inner(requester_id)")
-          .eq("trip_request.requester_id", userId)
-          .neq("status", "cancelled")
-          .order("id", { ascending: true })
-          .range(page * 1000, page * 1000 + 999);
-        if (error) return null;
-        rows.push(...(data ?? []));
-        if (!data || data.length < 1000) break;
-      }
-      return rows;
-    })(),
+    supabase
+      .from("reservations")
+      .select("id, status, start_at, end_at, trip_request:trip_requests!inner(destination, requester_id), vehicle:vehicles(id, plate, name)")
+      .eq("trip_request.requester_id", userId)
+      .in("status", ["pending_approval", "confirmed", "completed"])
+      .gte("end_at", new Date(timelineWindow(Date.now()).start).toISOString())
+      .order("start_at", { ascending: true }),
   ]);
 
   const next = nextRows?.[0] ?? null;
@@ -131,20 +121,16 @@ export async function EmployeeHome({
     new Date(next.end_at).getTime() > Date.now();
   const canReturn = next?.status === "confirmed" && vStatus === "in_use";
 
-  // "Veículos mais reservados por você": reservations per vehicle (what is counted is reservations, not trips taken).
-  const counts = new Map<string, { id: string; plate: string; name: string | null; count: number }>();
-  for (const r of usageRows ?? []) {
+  const nowMs = Date.now();
+  const T = fleetTexts[locale];
+  const chartByVehicle = new Map<string, { id: string; plate: string; name: string | null; bookings: TimelineBooking[] }>();
+  for (const r of chartRows ?? []) {
     if (!r.vehicle) continue;
-    const c = counts.get(r.vehicle.id) ?? { id: r.vehicle.id, plate: r.vehicle.plate, name: r.vehicle.name, count: 0 };
-    c.count += 1;
-    counts.set(r.vehicle.id, c);
+    const row = chartByVehicle.get(r.vehicle.id) ?? { id: r.vehicle.id, plate: r.vehicle.plate, name: r.vehicle.name, bookings: [] };
+    row.bookings.push({ id: r.id, start: r.start_at, end: r.end_at, status: r.status, label: r.trip_request?.destination ?? "" });
+    chartByVehicle.set(r.vehicle.id, row);
   }
-  const used = [...counts.values()].sort((a, b) => b.count - a.count).slice(0, 3);
-
-  const attentionByReason = vehicles.reduce<Record<string, { id: string; plate: string }[]>>((acc, { row, attention }) => {
-    for (const reason of attention) (acc[reason] ??= []).push({ id: row.id, plate: row.plate });
-    return acc;
-  }, {});
+  const chartVehicles = [...chartByVehicle.values()];
 
   const firstName = (userName.split(" ")[0] ?? userName).trim() || userName;
   const nextTone = next?.status === "confirmed" ? "ok" : "warn";
@@ -176,20 +162,6 @@ export async function EmployeeHome({
                 <span className="hm-action-text">
                   <strong>{h.actionBook}</strong>
                   <small>{h.actionBookHint}</small>
-                </span>
-              </Link>
-              <Link href="/carpool" className="hm-action" data-tone="green">
-                <span className="hm-action-icon"><FmUsersIcon /></span>
-                <span className="hm-action-text">
-                  <strong>{h.actionCarpool}</strong>
-                  <small>{h.actionCarpoolHint}</small>
-                </span>
-              </Link>
-              <Link href="/trips" className="hm-action" data-tone="violet">
-                <span className="hm-action-icon"><FmCalendarIcon /></span>
-                <span className="hm-action-text">
-                  <strong>{h.actionTrips}</strong>
-                  <small>{h.actionTripsHint}</small>
                 </span>
               </Link>
             </nav>
@@ -226,70 +198,51 @@ export async function EmployeeHome({
               </section>
             ) : null}
 
-            <section className="fm-card hm-card" aria-labelledby="hm-attention" data-testid="home-attention">
-              <h2 id="hm-attention" className="fm-h2">{t.attention.heading}</h2>
-              {next?.impacted_at ? (
-                <p className="hm-alert" role="status">
-                  <span className="hm-alert-icon"><FmAlertIcon /></span>
-                  <span>
-                    <strong>{dict.reservations.detail.impactedTitle}</strong>{" "}
-                    {next.impacted_reason ?? dict.reservations.detail.impactedDefaultReason}
-                  </span>
-                </p>
-              ) : null}
-              {next?.status === "pending_approval" ? (
-                <p className="hm-alert" role="status">
-                  <span className="hm-alert-icon"><FmAlertIcon /></span>
-                  <span>{h.alertAwaiting}</span>
-                </p>
-              ) : null}
-              {vehiclesError ? (
-                <p className="fm-error" role="alert" data-testid="home-attention-error">{t.vehicles.loadError}</p>
-              ) : Object.keys(attentionByReason).length === 0 ? (
-                <p className="hm-muted">{t.attention.empty}</p>
-              ) : (
-                <ul className="hm-attention-list">
-                  {Object.entries(attentionByReason).map(([reason, list]) => (
-                    <li key={reason}>
-                      <strong>{list.length}</strong> {attentionLabels[reason] ?? reason}:{" "}
-                      {list.map((v, i) => (
-                        <span key={v.id}>
-                          <a href={`#vehicle-${v.id}`} className="hm-link">{v.plate}</a>
-                          {i < list.length - 1 ? ", " : ""}
-                        </span>
-                      ))}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            {usageRows === null ? (
-              <section className="fm-card hm-card" role="alert" data-testid="home-usage-error">
-                <h2 className="fm-h2">{h.usedTitle}</h2>
-                <p className="fm-error">{t.vehicles.loadError}</p>
-              </section>
-            ) : used.length > 0 ? (
-              <section className="fm-card hm-card" aria-labelledby="hm-used" data-testid="home-used-vehicles">
-                <h2 id="hm-used" className="fm-h2">{h.usedTitle}</h2>
-                <ul className="hm-used">
-                  {used.map((u) => {
-                    const v = byId.get(u.id);
-                    return (
-                      <li key={u.id} className="hm-used-item">
-                        <span className="hm-row-icon"><FmCarIcon /></span>
-                        <strong>{u.name ?? u.plate}</strong>
-                        <span className="hm-plate">{u.plate}</span>
-                        {v?.row.category ? <span className="fm-chip">{v.row.category.energy_type}</span> : null}
-                        <span className="hm-muted">
-                          {fillTemplate(u.count === 1 ? h.usedCountOne : h.usedCountOther, { count: u.count })}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+            {next?.impacted_at || next?.status === "pending_approval" ? (
+              <section className="fm-card hm-card" aria-label={dict.reservations.detail.impactedTitle} data-testid="home-alerts">
+                {next?.impacted_at ? (
+                  <p className="hm-alert" role="status">
+                    <span className="hm-alert-icon"><FmAlertIcon /></span>
+                    <span>
+                      <strong>{dict.reservations.detail.impactedTitle}</strong>{" "}
+                      {next.impacted_reason ?? dict.reservations.detail.impactedDefaultReason}
+                    </span>
+                  </p>
+                ) : null}
+                {next?.status === "pending_approval" ? (
+                  <p className="hm-alert" role="status">
+                    <span className="hm-alert-icon"><FmAlertIcon /></span>
+                    <span>{h.alertAwaiting}</span>
+                  </p>
+                ) : null}
               </section>
             ) : null}
+
+            <section className="fm-card hm-card vw hm-gantt" aria-labelledby="hm-gantt" data-testid="home-reservations-gantt">
+              <h2 id="hm-gantt" className="fm-h2">{h.actionTrips}</h2>
+              {chartError ? (
+                <p className="fm-error" role="alert">{t.vehicles.loadError}</p>
+              ) : chartVehicles.length === 0 ? (
+                <p className="hm-muted">{h.nextEmpty}</p>
+              ) : (
+                <div className="vw-scroll">
+                  <div className="vw-grid">
+                    <div className="vw-list-heading vw-grid-row">
+                      <div className="vw-rowmain"><strong>{T.listHeadVehicle}</strong></div>
+                      <TimelineHeader locale={locale} T={T} now={nowMs} />
+                    </div>
+                    <ul>
+                      {chartVehicles.map((v) => (
+                        <li key={v.id} className="vw-row vw-grid-row">
+                          <div className="vw-rowmain"><span><strong>{v.name ?? v.plate}</strong><small>{v.plate}</small></span></div>
+                          <TimelineLane bookings={v.bookings} locale={locale} T={T} now={nowMs} plate={v.plate} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
 
           <aside className="hm-col-side" aria-label={h.nextTitle}>
@@ -299,63 +252,6 @@ export async function EmployeeHome({
           </aside>
         </div>
 
-        <section className="hm-fleet" aria-labelledby="hm-fleet">
-          <h2 id="hm-fleet" className="fm-h2">{t.vehicles.heading}</h2>
-          {vehiclesError ? (
-            <p className="fm-error" role="alert">{t.vehicles.loadError}</p>
-          ) : vehicles.length === 0 ? (
-            <p className="hm-muted">{t.vehicles.emptyLead} {t.vehicles.emptyEmployeeHint}</p>
-          ) : (
-            <ul className="hm-vehicles">
-              {vehicles.map(({ row, attention }) => {
-                const energy = row.category?.energy_type;
-                const showFuel = energy === "ICE" || energy === "HEV" || energy === "PHEV";
-                const showBattery = energy === "BEV" || energy === "PHEV";
-                const meta = statusMeta[row.status];
-                return (
-                  <li key={row.id} id={`vehicle-${row.id}`} className="fm-card hm-vehicle" data-testid="home-vehicle">
-                    <div className="hm-vehicle-head">
-                      <div>
-                        <p className="hm-plate-lg">{row.plate}</p>
-                        <p className="hm-muted">{row.category?.name ?? "—"}</p>
-                      </div>
-                      <span className="fm-pill" data-tone="neutral">{meta?.label ?? row.status}</span>
-                    </div>
-                    <dl className="hm-vehicle-data">
-                      {showFuel ? (
-                        <div>
-                          <dt>{t.vehicles.fuel}</dt>
-                          <dd><EnergyGauge percent={row.fuel_level_percent} kind="fuel" dict={dict} locale={locale} /></dd>
-                        </div>
-                      ) : null}
-                      {showBattery ? (
-                        <div>
-                          <dt>{t.vehicles.battery}</dt>
-                          <dd><EnergyGauge percent={row.battery_level_percent} kind="battery" dict={dict} locale={locale} /></dd>
-                        </div>
-                      ) : null}
-                      <div>
-                        <dt>{t.vehicles.odometer}</dt>
-                        <dd>{row.odometer_km.toLocaleString(locale)} km</dd>
-                      </div>
-                      <div>
-                        <dt>{t.vehicles.currentLocation}</dt>
-                        <dd>{row.current_location?.name ?? "—"}</dd>
-                      </div>
-                    </dl>
-                    {attention.length > 0 ? (
-                      <div className="fm-chips">
-                        {attention.map((reason) => (
-                          <span key={reason} className="fm-chip hm-chip-warn">{attentionLabels[reason] ?? reason}</span>
-                        ))}
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
       </div>
     </FmShell>
   );
