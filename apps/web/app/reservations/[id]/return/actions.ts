@@ -72,7 +72,9 @@ export async function submitReturn(
   // arg types omit `| null` even though these Postgres parameters accept NULL.
   const checklistState=await loadChecklistState(supabase,input.reservationId);
   if(!checklistState?.inspection_role) return {success:false,error:"checklist_not_authorized"};
-  const { data: inspectionId, error } = await supabase.rpc("record_return", {
+  // Gate mode (0250): the porter records the FULL checklist as the traveler's (on his behalf) and then his own visual one; the traveler does not fill his.
+  const gateFull = checklistState.inspection_role === "security" && checklistState.checklist_by === "gate";
+  const callArgs = (role: "traveler" | "security") => ({
     p_reservation_id: input.reservationId,
     p_odometer_km: input.odometerKm,
     p_fuel_level_percent: input.fuelLevelPercent as number,
@@ -82,11 +84,18 @@ export async function submitReturn(
     p_missing_safety_equipment: input.missingSafetyEquipment,
     p_is_dirty_exterior: input.isDirtyExterior,
     p_is_dirty_interior: input.isDirtyInterior,
-    p_role: checklistState.inspection_role,
+    p_role: role,
     p_vehicle_event: outcome.vehicleEvent,
     p_workflow_tasks: outcome.workflowTasks,
     p_current_location_id: input.currentLocationId,
   });
+  let { data: inspectionId, error } = await supabase.rpc("record_return", callArgs(gateFull ? "traveler" : checklistState.inspection_role));
+  let securityInspectionId: string | null = null;
+  if (gateFull && !error) {
+    const second = await supabase.rpc("record_return", callArgs("security"));
+    error = second.error;
+    securityInspectionId = second.data ?? null;
+  }
 
   if (error) return { success: false, error: error.message };
   if (!inspectionId) return { success: false, error: "inspection_not_created" };
@@ -103,6 +112,10 @@ export async function submitReturn(
     inspectionId,
     photos,
   );
+  if (securityInspectionId) {
+    const failedSecond = await uploadInspectionPhotos(supabase, profile.organization_id, securityInspectionId, photos);
+    for (const angle of failedSecond) if (!failedPhotoAngles.includes(angle)) failedPhotoAngles.push(angle);
+  }
 
   const damagePhotoFile = photos.get("photo_damage");
   const damageEvidenceMissing =

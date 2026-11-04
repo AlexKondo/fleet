@@ -1094,6 +1094,7 @@ export type Database = {
           address_label: string
           aliases: string[]
           category: string | null
+          checklist_by: string
           created_at: string
           id: string
           is_active: boolean
@@ -1107,6 +1108,7 @@ export type Database = {
         Insert: {
           address_label: string
           aliases?: string[]
+          checklist_by?: string
           category?: string | null
           created_at?: string
           id?: string
@@ -1121,6 +1123,7 @@ export type Database = {
         Update: {
           address_label?: string
           aliases?: string[]
+          checklist_by?: string
           category?: string | null
           created_at?: string
           id?: string
@@ -1648,6 +1651,8 @@ export type Database = {
       fm_management_create_vehicle_with_checklist: {Args:{p_unit_id:string|null;p_values:Json;p_equipment_ids:string[]};Returns:string};
       fm_can_manage_vehicle: {Args:{p_vehicle_id:string};Returns:boolean};
       fm_equipment_checklists: {Args:Record<PropertyKey,never>;Returns:Json};
+      fm_set_mobility_point_checklist_by: {Args:{p_point_id:string;p_checklist_by:string};Returns:undefined};
+      fm_checklist_by: {Args:{p_reservation_id:string};Returns:string};
       fm_has_key_custody: {Args:Record<PropertyKey,never>;Returns:boolean};
       fm_unit_admin_snapshot: {Args:Record<PropertyKey,never>;Returns:Json};
       fm_key_workspace: {Args:Record<PropertyKey,never>;Returns:Json};

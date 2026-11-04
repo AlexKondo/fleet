@@ -1,6 +1,6 @@
 import type {TypedSupabaseClient} from "@fleet/supabase-client";
 const flags=["pickup_traveler","pickup_security","return_traveler","return_security","departed","arrived","own_pickup","own_return","legacy_pickup","can_pickup","can_return"] as const;
-export type ChecklistState=Record<typeof flags[number],boolean>&{inspection_role:"traveler"|"security"|null;own_pickup_id:string|null;own_return_id:string|null;workflow?:"gate_visual"|"key_custody";keys_delivered?:boolean;keys_received?:boolean};
+export type ChecklistState=Record<typeof flags[number],boolean>&{inspection_role:"traveler"|"security"|null;own_pickup_id:string|null;own_return_id:string|null;workflow?:"gate_visual"|"key_custody";checklist_by?:"gate";keys_delivered?:boolean;keys_received?:boolean};
 export function parseChecklistState(value:unknown):ChecklistState|null{
  if(!value || typeof value!=="object" || Array.isArray(value))return null;
  const row=value as Record<string,unknown>;

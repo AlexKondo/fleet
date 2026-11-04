@@ -32,6 +32,7 @@ const point = (name: string, extra: Partial<CorporateMobilityPoint> = {}): Corpo
   isActive: true,
   category: null,
   providerPlaceRef: null,
+  checklistBy: "traveler",
   ...extra,
 });
 const place = (text: string): PlaceSuggestion => ({ id: `g-${text}`, text, main: text, secondary: "", kind: "place" });

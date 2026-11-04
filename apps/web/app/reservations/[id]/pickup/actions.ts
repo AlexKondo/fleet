@@ -62,7 +62,9 @@ export async function submitPickup(
   // the casts below are for the generated types only, not a runtime concern.
   const checklistState=await loadChecklistState(supabase,input.reservationId);
   if(!checklistState?.inspection_role) return {success:false,error:"checklist_not_authorized"};
-  const { data: inspectionId, error } = await supabase.rpc("record_pickup", {
+  // Gate mode (0250): the porter records the FULL checklist as the traveler's (on his behalf) and then his own visual one; the traveler does not fill his.
+  const gateFull = checklistState.inspection_role === "security" && checklistState.checklist_by === "gate";
+  const callArgs = (role: "traveler" | "security") => ({
     p_reservation_id: input.reservationId,
     p_odometer_km: input.odometerKm,
     p_fuel_level_percent: input.fuelLevelPercent as number,
@@ -72,8 +74,15 @@ export async function submitPickup(
     p_missing_safety_equipment: input.missingSafetyEquipment,
     p_is_dirty_exterior: input.isDirtyExterior,
     p_is_dirty_interior: input.isDirtyInterior,
-    p_role: checklistState.inspection_role,
+    p_role: role,
   });
+  let { data: inspectionId, error } = await supabase.rpc("record_pickup", callArgs(gateFull ? "traveler" : checklistState.inspection_role));
+  let securityInspectionId: string | null = null;
+  if (gateFull && !error) {
+    const second = await supabase.rpc("record_pickup", callArgs("security"));
+    error = second.error;
+    securityInspectionId = second.data ?? null;
+  }
 
   if (error) {
     const dict = await getDictionary();
@@ -102,6 +111,10 @@ export async function submitPickup(
     inspectionId,
     photos,
   );
+  if (securityInspectionId) {
+    const failedSecond = await uploadInspectionPhotos(supabase, profile.organization_id, securityInspectionId, photos);
+    for (const angle of failedSecond) if (!failedPhotoAngles.includes(angle)) failedPhotoAngles.push(angle);
+  }
 
   const damagePhotoFile = photos.get("photo_damage");
   const damageEvidenceMissing =

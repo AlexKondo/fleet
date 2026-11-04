@@ -23,6 +23,8 @@ export interface CorporateMobilityPoint {
   isActive: boolean;
   category: string | null;
   providerPlaceRef: string | null;
+  /** who does the vehicle check-in / check-out for the vehicles based here: the gate (portaria) or the traveler himself */
+  checklistBy: "gate" | "traveler";
 }
 
 type Row = Database["public"]["Tables"]["corporate_mobility_points"]["Row"];
@@ -39,6 +41,7 @@ function toDomain(row: Row): CorporateMobilityPoint {
     isActive: row.is_active,
     category: row.category,
     providerPlaceRef: row.provider_place_ref,
+    checklistBy: row.checklist_by === "gate" ? "gate" : "traveler",
   };
 }
 

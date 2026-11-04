@@ -6,6 +6,7 @@ import {
   createMobilityPoint,
   deactivateMobilityPoint,
   deleteMobilityPoint,
+  setMobilityPointChecklistBy,
   updateMobilityPoint,
   type MobilityPointActionState,
 } from "./actions";
@@ -26,12 +27,43 @@ function AddressField({ id, initial, dict, className }: { id: string; initial: s
 /** Minimal CRUD screen (list / create / edit / deactivate) for Corporate Mobility Points —
  * deliberately no map picker or place-search autocomplete wiring in this phase (that's the
  * matching engine's job, Phase C3+); the coordinates come from the address (geocoded when saving). */
+/** Who does the vehicle check-in / check-out at this point: a select (administrators) saved on its own, with the effect explained right under it. */
+function ChecklistByControl({ point, dict, canEdit }: { point: CorporateMobilityPoint; dict: Dictionary; canEdit: boolean }) {
+  const t = dict.mobilityPoints;
+  const [state, action, saving] = useActionState(setMobilityPointChecklistBy, initialState);
+  const labelOf = (v: string) => (v === "gate" ? t.checklistByGate : t.checklistByTraveler);
+  return (
+    <form action={action} className="mt-2 flex flex-wrap items-center gap-2 text-xs" data-testid={`mp-checklist-by-${point.id}`}>
+      <input type="hidden" name="pointId" value={point.id} />
+      <label className="text-fog-400" htmlFor={`mp-cb-${point.id}`}>{t.checklistByLabel}:</label>
+      {canEdit ? (
+        <>
+          <select id={`mp-cb-${point.id}`} name="checklistBy" defaultValue={point.checklistBy} className="rounded-sm border border-line-800 bg-panel-900 px-2 py-1 text-xs text-paper-50">
+            <option value="gate">{t.checklistByGate}</option>
+            <option value="traveler">{t.checklistByTraveler}</option>
+          </select>
+          <button type="submit" disabled={saving} className="rounded-sm border border-gwm-accent px-2 py-1 text-xs font-semibold uppercase tracking-widest text-gwm-accent hover:bg-gwm-accent/10 disabled:opacity-50">
+            {dict.common.save}
+          </button>
+          {state.status === "success" ? <span role="status" className="text-fog-400">{t.checklistBySaved}</span> : null}
+          {state.status === "error" ? <span role="alert" className="text-signal-red">{state.error}</span> : null}
+        </>
+      ) : (
+        <span className="text-paper-50" title={t.checklistByAdminOnly}>{labelOf(point.checklistBy)}</span>
+      )}
+      <span className="basis-full text-fog-600">{t.checklistByHint}</span>
+    </form>
+  );
+}
+
 export function MobilityPointsSection({
   dict,
   points,
+  canSetChecklist = false,
 }: {
   dict: Dictionary;
   points: CorporateMobilityPoint[];
+  canSetChecklist?: boolean;
 }) {
   const t = dict.mobilityPoints;
   const [createState, createAction, creating] = useActionState(createMobilityPoint, initialState);
@@ -103,7 +135,7 @@ export function MobilityPointsSection({
           ) : (
             <li
               key={point.id}
-              className="flex items-center justify-between rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2 text-sm text-paper-50"
+              className="flex items-start justify-between gap-3 rounded-sm border border-line-800 bg-panel-900/60 px-3 py-2 text-sm text-paper-50"
             >
               <div>
                 <span className={point.isActive ? "" : "text-fog-600 line-through"}>{point.name}</span>
@@ -116,6 +148,7 @@ export function MobilityPointsSection({
                 {!point.isActive ? (
                   <span className="ml-2 text-xs uppercase tracking-widest text-fog-600">{t.inactiveLabel}</span>
                 ) : null}
+                <ChecklistByControl point={point} dict={dict} canEdit={canSetChecklist} />
               </div>
               <div className="flex items-center gap-3">
                 <button

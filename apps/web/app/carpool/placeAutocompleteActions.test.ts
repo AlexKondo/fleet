@@ -86,7 +86,7 @@ describe("suggestPlaces", () => {
   });
   it("mobility points come first and are labelled as points; total capped at 6", async () => {
     state.points = [
-      { id: "p1", organizationId: "org1", name: "Matriz Paulista", aliases: [], addressLabel: "Av. Paulista, 1", latitude: 1, longitude: 1, isActive: true, category: null, providerPlaceRef: null },
+      { id: "p1", organizationId: "org1", name: "Matriz Paulista", aliases: [], addressLabel: "Av. Paulista, 1", latitude: 1, longitude: 1, isActive: true, category: null, providerPlaceRef: null, checklistBy: "traveler" },
     ];
     state.google = vi.fn(async (_o, _i, _l, _t, limit: number) => googleOk(limit + 3));
     const r = await suggestPlaces({ input: "paulista" });
@@ -101,7 +101,7 @@ describe("suggestPlaces", () => {
     const none = await suggestPlaces({ input: "abcd" });
     expect(none).toEqual({ status: "unavailable", reason: "unavailable" });
     expect(JSON.stringify(none)).not.toContain("AIza");
-    state.points = [{ id: "p1", organizationId: "org1", name: "Abcd Matriz", aliases: [], addressLabel: "X", latitude: 1, longitude: 1, isActive: true, category: null, providerPlaceRef: null }];
+    state.points = [{ id: "p1", organizationId: "org1", name: "Abcd Matriz", aliases: [], addressLabel: "X", latitude: 1, longitude: 1, isActive: true, category: null, providerPlaceRef: null, checklistBy: "traveler" }];
     const some = await suggestPlaces({ input: "abcd" });
     expect(some).toMatchObject({ status: "ok", suggestions: [{ kind: "point" }] });
   });

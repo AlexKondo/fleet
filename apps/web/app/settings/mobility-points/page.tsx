@@ -49,7 +49,8 @@ export default async function MobilityPointsPage() {
       legacy
     >
       <section className="fm-panel">
-        <MobilityPointsSection dict={dict} points={points} />
+        <MobilityPointsSection dict={dict} points={points}  canSetChecklist={isAdministrator}
+          />
       </section>
     </FmShell>
   );

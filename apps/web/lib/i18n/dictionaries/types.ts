@@ -298,6 +298,7 @@ export type Dictionary = {
       detailReturn: string;
       detailPlaceholder: string;
       detailAwaitingGate: string;
+      detailGateDoes: string;
       viewDetails: string;
       alertAwaiting: string;
       carpoolTitle: string;
@@ -1370,6 +1371,12 @@ export type Dictionary = {
     categoryLabel: string;
     categoryPlaceholder: string;
     aliasesLabel: string;
+    checklistByLabel: string;
+    checklistByGate: string;
+    checklistByTraveler: string;
+    checklistByHint: string;
+    checklistBySaved: string;
+    checklistByAdminOnly: string;
     aliasesPlaceholder: string;
     addButton: string;
     deactivateAction: string;

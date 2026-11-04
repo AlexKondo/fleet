@@ -133,3 +133,22 @@ export async function deleteMobilityPoint(id: string): Promise<void> {
   await deleteCorporateMobilityPoint(auth.supabase, id);
   revalidatePath("/settings/mobility-points");
 }
+
+/**
+ * Who does the vehicle check-in / check-out for the vehicles based at this point: the gate (portaria) or the traveler. Administrators only (the database checks it
+ * too). Only reservations created after the change use it; the ones that already exist finish as they were created.
+ */
+export async function setMobilityPointChecklistBy(
+  _prevState: MobilityPointActionState,
+  formData: FormData,
+): Promise<MobilityPointActionState> {
+  const auth = await requireFleetManager();
+  if (!auth.ok) return { status: "error", error: "not_authorized" };
+  const pointId = String(formData.get("pointId") ?? "");
+  const value = String(formData.get("checklistBy") ?? "");
+  if (!pointId || (value !== "gate" && value !== "traveler")) return { status: "error", error: "invalid_values" };
+  const { error } = await auth.supabase.rpc("fm_set_mobility_point_checklist_by", { p_point_id: pointId, p_checklist_by: value });
+  if (error) return { status: "error", error: error.message.includes("NOT_AUTHORIZED") ? "not_authorized" : "invalid_values" };
+  revalidatePath("/settings/mobility-points");
+  return { status: "success" };
+}

@@ -60,14 +60,16 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
   const energyType = vehicle.category?.energy_type ?? "ICE";
   const showElectricRange = energyType === "BEV" || energyType === "PHEV";
 
-  const equipmentContract=state.inspection_role==="security"?null:await loadEquipmentContract(supabase,id);
+  // 0250: where the gate does the full checklist the porter gets the same full form (his action also records his own visual check)
+  const quickGate=state.inspection_role==="security"&&state.checklist_by!=="gate";
+  const equipmentContract=quickGate?null:await loadEquipmentContract(supabase,id);
   const equipmentItems=equipmentContract?.required_names.map((name,index)=>({id:`${equipmentContract.id}-${index}`,name}))??[];
 
   return (
     <ChecklistFrame
       dict={dict}
-      title={state.inspection_role==="security" ? dict.ops.gate.visualTitle : dict.reservations.return.title}
-      intro={state.inspection_role==="security" ? dict.ops.gate.visualDescription : dict.reservations.checklist.returnIntro}
+      title={quickGate ? dict.ops.gate.visualTitle : dict.reservations.return.title}
+      intro={quickGate ? dict.ops.gate.visualDescription : dict.reservations.checklist.returnIntro}
       shell={{
         orgName: profile?.organization?.name ?? "—",
         userName: profile?.full_name ?? user.email ?? "—",
@@ -81,10 +83,10 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
         energyType,
         estimatedRangeKm: vehicle.estimated_range_km,
       }}
-      showElectricRange={state.inspection_role==="security" ? false : showElectricRange}
+      showElectricRange={quickGate ? false : showElectricRange}
       route={{ origin: reservation.trip_request?.origin, destination: reservation.trip_request?.destination }}
     >
-        {state.inspection_role==="security" ? <GateVisualForm reservationId={id} phase="return" dict={dict}/> : (
+        {quickGate ? <GateVisualForm reservationId={id} phase="return" dict={dict}/> : (
         equipmentContract?<><p className="ck-note">Equipamentos: {equipmentContract.source==="legacy_return_observation"?"Observações do processo legado; requisitos específicos ainda não verificados":`Conjunto ${equipmentContract.source==="vehicle"?"do veículo":"do modelo"} · revisão ${equipmentContract.configuration_version}`}</p>{equipmentContract.optional_names.length>0&&<p className="ck-note">Itens disponíveis sem exigência de ausência no checklist: {equipmentContract.optional_names.join(", ")}</p>}
         <ReturnForm
           reservationId={reservation.id}
