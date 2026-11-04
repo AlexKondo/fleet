@@ -25,20 +25,27 @@ export async function POST(request: NextRequest) {
   const given = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (!secret || !given || !safeEqual(given, secret)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const admin = createSupabaseAdminClient();
-  const rpc = admin.rpc as unknown as Rpc;
-  const expired = await rpc("fm_takeover_expire_due", {});
-  const claimed = await rpc("fm_wa_outbox_claim", { p_limit: 20 });
-  const rows = Array.isArray(claimed.data) ? (claimed.data as OutboxRow[]) : [];
-  let sent = 0;
-  let failed = 0;
-  for (const row of rows) {
-    const result = await sendWhatsAppNotice({ to: row.phone_e164, text: row.text, title: row.title, buttons: row.buttons });
-    // "not configured" is not a delivery attempt: the message stays queued until n8n is configured
-    const ok = result.status === "sent";
-    await rpc("fm_wa_outbox_mark", { p_id: row.id, p_ok: ok, p_error: result.status === "sent" ? null : result.status === "failed" ? result.error : result.reason });
-    if (ok) sent += 1;
-    else failed += 1;
+  try {
+    const admin = createSupabaseAdminClient();
+    // called as a method of the client (a detached `admin.rpc` loses its `this`)
+    const rpc: Rpc = (name, args) => (admin.rpc as unknown as Rpc)(name, args);
+    const expired = await rpc("fm_takeover_expire_due", {});
+    const claimed = await rpc("fm_wa_outbox_claim", { p_limit: 20 });
+    const rows = Array.isArray(claimed.data) ? (claimed.data as OutboxRow[]) : [];
+    let sent = 0;
+    let failed = 0;
+    for (const row of rows) {
+      const result = await sendWhatsAppNotice({ to: row.phone_e164, text: row.text, title: row.title, buttons: row.buttons });
+      // "not configured" is not a delivery attempt: the message stays queued until n8n is configured
+      const ok = result.status === "sent";
+      await rpc("fm_wa_outbox_mark", { p_id: row.id, p_ok: ok, p_error: result.status === "sent" ? null : result.status === "failed" ? result.error : result.reason });
+      if (ok) sent += 1;
+      else failed += 1;
+    }
+    return NextResponse.json({ expired: typeof expired.data === "number" ? expired.data : 0, claimed: rows.length, sent, failed });
+  } catch (e) {
+    // a failure here must be readable by the server tick, never an empty 500
+    console.error("whatsapp outbox failed:", e instanceof Error ? e.message : e);
+    return NextResponse.json({ error: "outbox_failed", detail: e instanceof Error ? e.message.slice(0, 200) : "unknown" }, { status: 500 });
   }
-  return NextResponse.json({ expired: typeof expired.data === "number" ? expired.data : 0, claimed: rows.length, sent, failed });
 }
