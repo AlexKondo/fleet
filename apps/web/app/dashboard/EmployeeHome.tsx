@@ -156,6 +156,7 @@ export async function EmployeeHome({
       fuel: energyShows(energy, ["ICE", "HEV", "PHEV"]) ? hv?.row.fuel_level_percent ?? null : null,
       odometer: hv ? `${hv.row.odometer_km.toLocaleString(locale)} km` : null,
       showOps: confirmed,
+      awaitingGate: Boolean(st && st.workflow !== "key_custody" && st.pickup_traveler && !st.departed && !(st.own_return || st.return_traveler)),
       canPickup: confirmed && new Date(r.end_at).getTime() > nowMs && (st ? st.can_pickup : r.vehicle.status === "reserved" || r.vehicle.status === "awaiting_pickup"),
       canReturn: confirmed && (st ? st.can_return : r.vehicle.status === "in_use"),
     }];
@@ -167,7 +168,7 @@ export async function EmployeeHome({
   const upcoming = (chartRows ?? []).filter((r) => r.status !== "completed" && Date.parse(r.start_at) > nowMs).sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at))[0];
   const initialId = (departedNotReturned ?? runningNow ?? upcoming)?.id ?? null;
   const homeLabels: HomeLabels = {
-    departure: h.detailDeparture, ret: h.detailReturn, placeholder: h.detailPlaceholder, viewDetails: h.viewDetails,
+    departure: h.detailDeparture, ret: h.detailReturn, placeholder: h.detailPlaceholder, awaitingGate: h.detailAwaitingGate, viewDetails: h.viewDetails,
     pickup: dict.trips.list.startPickup, returnAction: dict.trips.list.registerReturn,
     location: t.vehicles.currentLocation, battery: t.vehicles.battery, fuel: t.vehicles.fuel, odometer: t.vehicles.odometer,
   };
@@ -325,7 +326,7 @@ export async function EmployeeHome({
                 <div><dt><FmGaugeIcon /><span className="fm-sr-only">{t.vehicles.odometer}</span></dt><dd>{nextVehicle.row.odometer_km.toLocaleString(locale)} km</dd></div>
               </dl>
             ) : null}
-            <ReservationActions id={next.id} viewDetails={h.viewDetails} pickup={dict.trips.list.startPickup} returnLabel={dict.trips.list.registerReturn} showOps={next.status === "confirmed"} canPickup={canPickup} canReturn={canReturn} />
+            <ReservationActions id={next.id} viewDetails={h.viewDetails} pickup={dict.trips.list.startPickup} returnLabel={dict.trips.list.registerReturn} showOps={next.status === "confirmed"} canPickup={canPickup} canReturn={canReturn} hint={nextState && nextState.workflow !== "key_custody" && nextState.pickup_traveler && !nextState.departed && !(nextState.own_return || nextState.return_traveler) ? h.detailAwaitingGate : null} />
           </div>
         ) : (
           <div className="hm-empty">

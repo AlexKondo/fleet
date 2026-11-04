@@ -6,9 +6,10 @@ import { FmChevronIcon } from "../fmIcons";
  * and disabled (e.g. Saída once the vehicle already left), so the person sees both steps of the trip.
  */
 export function ReservationActions({
-  id, viewDetails, pickup, returnLabel, showOps, canPickup, canReturn,
-}: { id: string; viewDetails: string; pickup: string; returnLabel: string; showOps: boolean; canPickup: boolean; canReturn: boolean }) {
+  id, viewDetails, pickup, returnLabel, showOps, canPickup, canReturn, hint,
+}: { id: string; viewDetails: string; pickup: string; returnLabel: string; showOps: boolean; canPickup: boolean; canReturn: boolean; hint?: string | null }) {
   return (
+    <>
     <div className="hm-next-actions">
       <Link href={`/reservations/${id}`} className="fm-btn fm-btn-ghost">
         {viewDetails} <FmChevronIcon />
@@ -24,5 +25,7 @@ export function ReservationActions({
           : <span className="fm-btn fm-btn-primary hm-btn-off" aria-disabled="true" data-testid="home-return-off">{returnLabel}</span>
       ) : null}
     </div>
+    {hint ? <p className="hm-muted hm-gate-hint" data-testid="home-awaiting-gate">{hint}</p> : null}
+    </>
   );
 }

@@ -297,6 +297,7 @@ export type Dictionary = {
       detailDeparture: string;
       detailReturn: string;
       detailPlaceholder: string;
+      detailAwaitingGate: string;
       viewDetails: string;
       alertAwaiting: string;
       carpoolTitle: string;

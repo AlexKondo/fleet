@@ -246,6 +246,7 @@ const dict: Dictionary = {
       detailDeparture: "Salida",
       detailReturn: "Devolución",
       detailPlaceholder: "Toque una fila o una barra del gráfico para ver los detalles de la reserva.",
+      detailAwaitingGate: "Su checklist de retiro está registrado. El vehículo solo sale cuando la portería registra la salida; la devolución se habilita después.",
       viewDetails: "Ver detalles",
       alertAwaiting: "Tu reserva espera la aprobación del gestor de la flota.",
       carpoolTitle: "Mis viajes compartidos",

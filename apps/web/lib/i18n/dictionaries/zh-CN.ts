@@ -240,6 +240,7 @@ const dict: Dictionary = {
       detailDeparture: "出发",
       detailReturn: "归还",
       detailPlaceholder: "点击图表中的一行或一个条形，即可查看预订详情。",
+      detailAwaitingGate: "您的取车检查已登记。门卫登记出门后车辆才算离开；之后才可还车。",
       viewDetails: "查看详情",
       alertAwaiting: "您的预订正在等待车队经理批准。",
       carpoolTitle: "我的拼车",

@@ -386,3 +386,5 @@
 .hm-detail-times{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.hm-detail-times dt{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.75}.hm-detail-times dt svg{width:14px;height:14px}.hm-detail-times dd{margin:2px 0 0;font-weight:600}
 
 .fm-theme .hm-btn-off{background:#7b8798 !important;border-color:#7b8798 !important;color:#e6ebf3 !important;opacity:.7;cursor:not-allowed;pointer-events:none;box-shadow:none}
+
+.hm-gate-hint{margin:10px 0 0;font-size:12px;line-height:1.4}

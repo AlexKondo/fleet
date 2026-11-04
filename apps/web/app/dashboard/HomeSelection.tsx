@@ -24,6 +24,8 @@ export interface HomeItem {
   odometer: string | null;
   /** only a confirmed reservation has Saída / Retorno buttons */
   showOps: boolean;
+  /** the traveler's pickup checklist is recorded but the gate has not released the vehicle yet */
+  awaitingGate: boolean;
   canPickup: boolean;
   canReturn: boolean;
 }
@@ -32,6 +34,7 @@ export interface HomeLabels {
   departure: string;
   ret: string;
   placeholder: string;
+  awaitingGate: string;
   viewDetails: string;
   pickup: string;
   returnAction: string;
@@ -146,7 +149,7 @@ export function HomeDetailPanel({ variant }: { variant: "desktop" | "mobile" }) 
             {it.fuel !== null ? <div><dt><FmFuelIcon /><span className="fm-sr-only">{labels.fuel}</span></dt><dd>{it.fuel}%</dd></div> : null}
             {it.odometer ? <div><dt><FmGaugeIcon /><span className="fm-sr-only">{labels.odometer}</span></dt><dd>{it.odometer}</dd></div> : null}
           </dl>
-          <ReservationActions id={it.id} viewDetails={labels.viewDetails} pickup={labels.pickup} returnLabel={labels.returnAction} showOps={it.showOps} canPickup={it.canPickup} canReturn={it.canReturn} />
+          <ReservationActions id={it.id} viewDetails={labels.viewDetails} pickup={labels.pickup} returnLabel={labels.returnAction} showOps={it.showOps} canPickup={it.canPickup} canReturn={it.canReturn} hint={it.awaitingGate ? labels.awaitingGate : null} />
         </div>
       )}
     </section>

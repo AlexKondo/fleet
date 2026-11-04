@@ -246,6 +246,7 @@ const dict: Dictionary = {
       detailDeparture: "Departure",
       detailReturn: "Return",
       detailPlaceholder: "Tap a row or a bar of the chart to see the reservation details.",
+      detailAwaitingGate: "Your pickup checklist is recorded. The vehicle only leaves once the gate registers the departure; the return is enabled after that.",
       viewDetails: "View details",
       alertAwaiting: "Your reservation is waiting for the fleet manager's approval.",
       carpoolTitle: "My carpools",
