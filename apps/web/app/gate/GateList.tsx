@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Dictionary } from "../../lib/i18n/dictionaries";
-import { Field, Input } from "../ui/Input";
 import { FmArrowInIcon, FmArrowOutIcon } from "../fmIcons";
 
 export interface GateRow {
@@ -23,13 +22,10 @@ export interface GateRow {
 type View = "all" | "pickup" | "return";
 
 /**
- * Plate search is a pure client-side filter over the already-fetched rows: the actionable
- * set at any moment is at most a handful of reservations per org, so a server round-trip
- * per keystroke would cost more than it saves. SCR-SEC-001: the same rows, grouped by what the gate has to do next
- * (departures x returns) with the real counts; nothing here is invented.
+ * SCR-SEC-001: the rows the gate has to act on, grouped by what comes next (departures x returns) with the real counts; nothing here is invented.
+ * (The plate search was removed: the list is a handful of reservations and the gate picks the vehicle from it.)
  */
 export function GateList({ rows, dict, capped = false }: { rows: GateRow[]; dict: Dictionary; capped?: boolean }) {
-  const [query, setQuery] = useState("");
   const [view, setView] = useState<View>("all");
   const g = dict.ops.gate;
 
@@ -43,12 +39,8 @@ export function GateList({ rows, dict, capped = false }: { rows: GateRow[]; dict
   );
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase().replace(/[\s-]/g, "");
-    return rows.filter((r) => {
-      if (view !== "all" && r.action !== view) return false;
-      return !q || r.plate.toLowerCase().replace(/[\s-]/g, "").includes(q);
-    });
-  }, [rows, query, view]);
+    return rows.filter((r) => view === "all" || r.action === view);
+  }, [rows, view]);
 
   const tab = (key: View, label: string) => (
     <button
@@ -66,25 +58,6 @@ export function GateList({ rows, dict, capped = false }: { rows: GateRow[]; dict
 
   return (
     <div>
-      <section className="fm-panel gt-search" aria-labelledby="gt-search-title">
-        <h2 id="gt-search-title" className="fm-h2">{g.searchTitle}</h2>
-        <p className="fm-muted" style={{ marginBottom: 12 }}>{dict.gate.description}</p>
-        <div className="max-w-md">
-          <Field label={dict.gate.searchLabel} htmlFor="gate-plate-search">
-            <Input
-              id="gate-plate-search"
-              type="search"
-              inputMode="text"
-              autoComplete="off"
-              placeholder={dict.gate.searchPlaceholder}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="font-mono uppercase"
-            />
-          </Field>
-        </div>
-      </section>
-
       <div className="gt-tabs" role="group" aria-label={g.viewLabel}>
         {tab("all", g.tabAll)}
         {tab("pickup", g.tabPickup)}
@@ -94,7 +67,7 @@ export function GateList({ rows, dict, capped = false }: { rows: GateRow[]; dict
       {rows.length === 0 ? (
         <p className="fm-empty">{dict.gate.empty}</p>
       ) : filtered.length === 0 ? (
-        <p className="fm-empty">{query.trim() ? dict.gate.noResults : g.noneInView}</p>
+        <p className="fm-empty">{g.noneInView}</p>
       ) : (
         <ul className="gt-list">
           {filtered.map((r) => (
