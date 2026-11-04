@@ -213,3 +213,5 @@
     grid-column: auto;
   }
 }
+
+.tp-panels>[data-show]{display:none}.tp-panels[data-tab=all]>[data-show~=all]{display:block}.tp-panels[data-tab=upcoming]>[data-show~=upcoming]{display:block}.tp-panels[data-tab=active]>[data-show~=active]{display:block}.tp-panels[data-tab=carpools]>[data-show~=carpools]{display:block}.tp-panels[data-tab=done]>[data-show~=done]{display:block}.tp-panels[data-tab=cancelled]>[data-show~=cancelled]{display:block}

@@ -17,6 +17,7 @@ import {
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { ClientGantt as ReservationGantt } from "./ClientGantt";
+import { TripsTabs } from "./TripsTabs";
 import type { GanttZoomLevel } from "../ganttZoomActions";
 import { getStatusMeta } from "../dashboard/statusMeta";
 import { FmCarIcon, FmChevronIcon, FmPlusIcon, FmUsersIcon } from "../fmIcons";
@@ -216,17 +217,16 @@ export async function TripsWorkspace({
     cancelled: m.tabCancelled,
   };
 
-  const show = (section: "active" | "upcoming" | "carpools" | "history") => {
-    if (tab === "all") return true;
-    if (section === "history") return tab === "done" || tab === "cancelled";
-    return tab === section;
+  // every panel is rendered once; the tabs only show / hide them in the browser (TripsTabs). What each tab lists:
+  const hasCarpoolPanel = requests.length > 0 || listedCarpools.length > 0;
+  const shownBy: Record<Tab, number> = {
+    all: activeList.length + upcomingList.length + historyList.length + (hasCarpoolPanel ? 1 : 0),
+    upcoming: upcomingList.length,
+    active: activeList.length,
+    carpools: hasCarpoolPanel ? 1 : 0,
+    done: doneList.length,
+    cancelled: cancelledList.length,
   };
-  const historyShown =
-    tab === "done"
-      ? doneList
-      : tab === "cancelled"
-        ? cancelledList
-        : historyList;
 
   type Row = (typeof all)[number];
   const tone = (s: string) =>
@@ -331,14 +331,6 @@ export async function TripsWorkspace({
       </section>
     );
 
-  const showCarpools =
-    show("carpools") && (requests.length > 0 || listedCarpools.length > 0);
-  const visibleCount =
-    (show("active") ? activeList.length : 0) +
-    (show("upcoming") ? upcomingList.length : 0) +
-    (show("history") ? historyShown.length : 0) +
-    (showCarpools ? 1 : 0);
-
   return (
     <FmShell
       active={carpoolOnly ? "myCarpools" : "trips"}
@@ -388,23 +380,11 @@ export async function TripsWorkspace({
           </div>
         ) : null}
 
-        <nav
-          className="tp-tabs"
-          aria-label={m.tabsLabel}
-          data-testid="trips-tabs"
+        <TripsTabs
+          tabs={(carpoolOnly ? (["carpools"] as const) : TABS).map((k) => ({ key: k, label: tabLabels[k], count: counts[k] }))}
+          initial={tab}
+          ariaLabel={m.tabsLabel}
         >
-          {(carpoolOnly ? (["carpools"] as const) : TABS).map((k) => (
-            <Link
-              key={k}
-              href={k === "all" ? "/trips" : `/trips?tab=${k}`}
-              className="tp-tab"
-              aria-current={k === tab ? "page" : undefined}
-              data-tab={k}
-            >
-              {tabLabels[k]} <span className="tp-count">({counts[k]})</span>
-            </Link>
-          ))}
-        </nav>
 
         {total === 0 ? (
           <div className="fm-card tp-empty" data-testid="trips-empty">
@@ -413,25 +393,17 @@ export async function TripsWorkspace({
               {m.newReservation}
             </Link>
           </div>
-        ) : visibleCount === 0 ? (
-          <p className="fm-card tp-empty" data-testid="trips-tab-empty">
+        ) : (Object.keys(shownBy) as Tab[]).filter((k) => shownBy[k] === 0).map((k) => (
+          <p key={k} data-show={k} className="fm-card tp-empty" data-testid="trips-tab-empty">
             {m.tabEmpty}
           </p>
-        ) : null}
+        ))}
 
-        {show("active")
-          ? section("tp-active", m.activeTitle, activeList, "trips-active")
-          : null}
-        {show("upcoming")
-          ? section(
-              "tp-upcoming",
-              m.upcomingTitle,
-              upcomingList,
-              "trips-upcoming",
-            )
-          : null}
+        <div data-show="all active">{section("tp-active", m.activeTitle, activeList, "trips-active")}</div>
+        <div data-show="all upcoming">{section("tp-upcoming", m.upcomingTitle, upcomingList, "trips-upcoming")}</div>
 
-        {showCarpools && requests.length > 0 ? (
+        <div data-show="all carpools">
+        {requests.length > 0 ? (
           <section
             className="tp-section"
             aria-labelledby="tp-requests"
@@ -523,7 +495,7 @@ export async function TripsWorkspace({
           </section>
         ) : null}
 
-        {showCarpools && listedCarpools.length > 0 ? (
+        {listedCarpools.length > 0 ? (
           <section
             className="tp-section"
             aria-labelledby="tp-carpools"
@@ -586,11 +558,14 @@ export async function TripsWorkspace({
           </section>
         ) : null}
 
-        {show("history")
-          ? section("tp-history", m.historyTitle, historyShown, "trips-history")
-          : null}
+        </div>
 
-        {tab === "all" && all.length > 0 ? (
+        <div data-show="all">{section("tp-history", m.historyTitle, historyList, "trips-history")}</div>
+        <div data-show="done">{section("tp-history-done", m.historyTitle, doneList, "trips-history-done")}</div>
+        <div data-show="cancelled">{section("tp-history-cancelled", m.historyTitle, cancelledList, "trips-history-cancelled")}</div>
+
+        {all.length > 0 ? (
+          <div data-show="all">
           <section
             className="tp-section"
             aria-labelledby="tp-schedule"
@@ -630,7 +605,9 @@ export async function TripsWorkspace({
               />
             </div>
           </section>
+          </div>
         ) : null}
+        </TripsTabs>
       </div>
     </FmShell>
   );
