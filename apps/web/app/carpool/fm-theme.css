@@ -1711,3 +1711,28 @@ html body main#fleetmind-main .fm-subtitle {
   letter-spacing: 0.05em;
   color: rgba(230, 237, 248, 0.6);
 }
+
+/* the speech bubble has an x; once it is closed the microphone comes right next to the robot */
+.fm-sidebar .fm-assist.fm-float .fm-assist-bubble { position: relative; display: block; }
+.fm-sidebar .fm-assist.fm-float .fm-assist-x {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: #0b1a36;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+}
+.fm-sidebar .fm-assist.fm-float .fm-assist-x:hover { background: #1f3b6e; }
+.fm-sidebar .fm-assist.fm-float[data-bubble="closed"] { gap: 2px; }
+.fm-sidebar .fm-assist.fm-float[data-bubble="closed"] .fm-assist-row { gap: 0; }

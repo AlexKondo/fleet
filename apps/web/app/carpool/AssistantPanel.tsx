@@ -10,6 +10,8 @@ function open(detail: OpenChatDetail) {
 
 /** Where the viewer left the assistant (a per-viewer convenience only; the page works without it). */
 const POS_KEY = "fleet.assistant-pos.v1";
+/** The speech bubble can be closed with its x; the choice is remembered in this browser. */
+const BUBBLE_KEY = "fleet.assistant-bubble.v1";
 type Pos = { x: number; y: number };
 
 /**
@@ -22,6 +24,7 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
   const c = dict.chrome;
   const ref = useRef<HTMLElement>(null);
   const [pos, setPos] = useState<Pos | null>(null);
+  const [bubbleOpen, setBubbleOpen] = useState(true);
   const posRef = useRef<Pos | null>(null);
   const drag = useRef<{ dx: number; dy: number; sx: number; sy: number; moved: boolean; id: number } | null>(null);
   const swallowClick = useRef(false);
@@ -37,6 +40,7 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
       const p = raw ? (JSON.parse(raw) as Partial<Pos>) : null;
       if (p && typeof p.x === "number" && typeof p.y === "number") place(clamp(p.x, p.y));
     } catch { /* no saved place: the default corner */ }
+    try { if (window.localStorage.getItem(BUBBLE_KEY) === "closed") setBubbleOpen(false); } catch { /* the bubble stays open */ }
     const onResize = () => { if (posRef.current) place(clamp(posRef.current.x, posRef.current.y)); };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -70,6 +74,10 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
     try { window.localStorage.setItem(POS_KEY, JSON.stringify(posRef.current)); } catch { /* not saved */ }
   };
   const openChat = (detail: OpenChatDetail) => { if (!swallowClick.current) open(detail); };
+  const closeBubble = () => {
+    setBubbleOpen(false);
+    try { window.localStorage.setItem(BUBBLE_KEY, "closed"); } catch { /* not remembered */ }
+  };
   const examples = [c.assistantExample1, c.assistantExample2, c.assistantExample3, c.assistantExample4];
   return (
     <section
@@ -78,6 +86,7 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
       aria-labelledby="fm-assist-title"
       data-testid="fm-assistant-panel"
       data-moved={pos ? "true" : undefined}
+      data-bubble={bubbleOpen ? "open" : "closed"}
       style={pos ? { left: pos.x, top: pos.y, bottom: "auto" } : undefined}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -92,9 +101,16 @@ export function AssistantPanel({ dict }: { dict: Dictionary }) {
           {/* eslint-disable-next-line @next/next/no-img-element -- small static illustration, next/image is overkill here */}
           <img src="/illustrations/fleet-agent.jpg" alt="" className="fm-assist-img h-14 w-14 rounded-full border-2 border-gwm-accent object-cover" />
         </button>
-        <button type="button" className="fm-assist-caption" data-drag title={dict.chat.voiceHint} onClick={() => openChat({})} data-testid="fm-assistant-caption">
-          {dict.chat.voiceHint}
-        </button>
+        {bubbleOpen ? (
+          <div className="fm-assist-bubble">
+            <button type="button" className="fm-assist-caption" data-drag title={dict.chat.voiceHint} onClick={() => openChat({})} data-testid="fm-assistant-caption">
+            {dict.chat.voiceHint}
+          </button>
+            <button type="button" className="fm-assist-x" aria-label={dict.common.close} title={dict.common.close} onClick={closeBubble} data-testid="fm-assistant-close">
+              ×
+            </button>
+          </div>
+        ) : null}
       </div>
       <button type="button" className="fm-assist-mic" aria-label={c.assistantMic} title={c.assistantMic} onClick={() => openChat({ voice: true })} data-testid="fm-assistant-mic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
