@@ -40,6 +40,11 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+/** Size the viewer gave the chat window (per browser, a convenience only): the position is always the centre when it opens. */
+const CHAT_SIZE_KEY = "fleet.chat-size.v1";
+type Geom = { x: number; y: number; w: number; h: number };
+const clampNum = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), Math.max(lo, hi));
+
 export function ChatPanel({
   dict,
   locale,
@@ -70,7 +75,38 @@ export function ChatPanel({
   // actions update the visible state directly instead; it's cleared whenever a real
   // server-driven update (a genuinely new actionState) comes in, so it never masks it.
   const [override, setOverride] = useState<ChatState | null>(null);
+  // Window mode (pages with the sidebar, wide screens): the chat opens CENTERED on the screen, above everything, and can be moved by its title and resized
+  // from its bottom-right corner. On small screens it stays the full sheet it was.
+  const [geom, setGeom] = useState<Geom | null>(null);
+  const dragRef = useRef<{ dx: number; dy: number; id: number } | null>(null);
+  useEffect(() => {
+    if (!embedded || !isOpen) return;
+    if (!window.matchMedia("(min-width: 768px)").matches) { setGeom(null); return; }
+    let w = 560;
+    let h = 640;
+    try {
+      const p = JSON.parse(window.localStorage.getItem(CHAT_SIZE_KEY) ?? "null") as Partial<Geom> | null;
+      if (p && typeof p.w === "number" && typeof p.h === "number") { w = p.w; h = p.h; }
+    } catch { /* default size */ }
+    w = clampNum(w, 340, window.innerWidth - 24);
+    h = clampNum(h, 340, window.innerHeight - 24);
+    setGeom({ x: Math.round((window.innerWidth - w) / 2), y: Math.round((window.innerHeight - h) / 2), w, h });
+  }, [embedded, isOpen]);
   const state = override ?? actionState;
+  const windowRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = windowRef.current;
+    if (!geom || !el || typeof ResizeObserver === "undefined") return;
+    let timer: number | undefined;
+    const ro = new ResizeObserver(() => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        try { window.localStorage.setItem(CHAT_SIZE_KEY, JSON.stringify({ w: el.offsetWidth, h: el.offsetHeight })); } catch { /* not remembered */ }
+      }, 300);
+    });
+    ro.observe(el);
+    return () => { ro.disconnect(); window.clearTimeout(timer); };
+  }, [geom !== null]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     setOverride(null);
   }, [actionState]);
@@ -328,7 +364,7 @@ export function ChatPanel({
 
   return (
     <div
-      ref={panelRef}
+      ref={(el) => { panelRef.current = el; windowRef.current = el; }}
       tabIndex={-1}
       onKeyDown={onPanelKeyDown}
       aria-modal={modal ? "true" : undefined}
@@ -336,11 +372,28 @@ export function ChatPanel({
       aria-label={t.panelTitle}
       aria-hidden={!isOpen}
       data-embedded={embedded ? "true" : undefined}
+      data-window={geom ? "true" : undefined}
+      style={geom ? { left: geom.x, top: geom.y, right: "auto", bottom: "auto", width: geom.w, height: geom.h, maxWidth: "none", zIndex: 2000, resize: "both", overflow: "hidden", minWidth: 320, minHeight: 320 } : undefined}
       className={`${embedded ? "fm-chat-panel " : ""}fixed bottom-20 right-5 z-40 flex h-[31rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col rounded-md border border-line-800 bg-panel-900 shadow-xl shadow-black/40 ${
         isOpen ? "" : "hidden"
       }`}
     >
-      <div className="flex items-center justify-between border-b border-line-800 px-4 py-3">
+      <div
+        className={`flex items-center justify-between border-b border-line-800 px-4 py-3${geom ? " cursor-grab select-none active:cursor-grabbing" : ""}`}
+        style={geom ? { touchAction: "none" } : undefined}
+        onPointerDown={(e) => {
+          if (!geom || e.button !== 0 || (e.target as HTMLElement).closest("button")) return;
+          dragRef.current = { dx: e.clientX - geom.x, dy: e.clientY - geom.y, id: e.pointerId };
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* the move still follows */ }
+        }}
+        onPointerMove={(e) => {
+          const d = dragRef.current;
+          if (!d || !geom) return;
+          setGeom({ ...geom, x: clampNum(e.clientX - d.dx, 0, window.innerWidth - geom.w), y: clampNum(e.clientY - d.dy, 0, window.innerHeight - 56) });
+        }}
+        onPointerUp={() => { dragRef.current = null; }}
+        onPointerCancel={() => { dragRef.current = null; }}
+      >
         <p className="text-sm font-semibold uppercase tracking-widest text-paper-50">{t.panelTitle}</p>
         <button type="button" onClick={onClose} aria-label={dict.common.close} className="text-fog-400 hover:text-paper-50">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4 w-4" aria-hidden="true">
