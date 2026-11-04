@@ -109,7 +109,7 @@ export function GateList({ rows, dict, capped = false }: { rows: GateRow[]; dict
                 </div>
               </div>
               <div className="gt-info">
-                <p className="gt-route">{r.route}</p>
+                {r.route ? <p className="gt-route">{r.route}</p> : null}
                 <p className="gt-meta">
                   {r.requesterName ?? "—"} · <span className="tabular-nums">{r.startAt}</span>
                 </p>

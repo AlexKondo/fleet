@@ -86,7 +86,8 @@ export default async function GatePage() {
         plate: r.vehicle?.plate ?? "—",
         vehicleName: r.vehicle?.name ?? null,
         requesterName: r.trip_request?.requester?.full_name ?? null,
-        route: `${r.trip_request?.origin ?? "—"} → ${r.trip_request?.destination ?? "—"}`,
+        // the gate (porteiro) does not need to know where the trip goes
+        route: isSecurity ? "" : `${r.trip_request?.origin ?? "—"} → ${r.trip_request?.destination ?? "—"}`,
         startAt: formatDateTimeShort(r.start_at, locale),
         statusLabel: meta?.label ?? vehicleStatus,
         statusClass: meta?.text ?? "text-fog-400",

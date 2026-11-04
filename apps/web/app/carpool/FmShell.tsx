@@ -240,9 +240,11 @@ export async function FmShell({
             <p className="fm-brand-name">FleetMind</p>
             <p className="fm-brand-org">{dict.chrome.brandTagline}</p>
           </div>
-          <Link href="/trips/new" className="fm-cta">
-            {dict.chrome.requestTrip}
-          </Link>
+          {role === "security" ? null : (
+            <Link href="/trips/new" className="fm-cta">
+              {dict.chrome.requestTrip}
+            </Link>
+          )}
           <nav className="fm-nav" aria-label={dict.carpool.buscar.navMain}>
             {menuItems.map(link)}
           </nav>
