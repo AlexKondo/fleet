@@ -16,7 +16,7 @@ import {
   FmPinIcon,
   FmUsersIcon,
 } from "../fmIcons";
-import { TimelineHeader, TimelineLane } from "../fleet/VehicleTimeline";
+import { HomeDetailPanel, HomeGantt, HomeSelectionProvider, type HomeItem, type HomeLabels } from "./HomeSelection";
 import { timelineWindow, type TimelineBooking } from "../fleet/timelineLayout";
 import { fleetTexts } from "@/lib/i18n/areas/fleet";
 import "../fleet/vehicle-workspace.css";
@@ -101,7 +101,7 @@ export async function EmployeeHome({
       .limit(3),
     supabase
       .from("reservations")
-      .select("id, status, start_at, end_at, trip_request:trip_requests!inner(destination, requester_id), vehicle:vehicles(id, plate, name)")
+      .select("id, status, start_at, end_at, trip_request:trip_requests!inner(origin, destination, requester_id), vehicle:vehicles(id, plate, name, status)")
       .eq("trip_request.requester_id", userId)
       .in("status", ["pending_approval", "confirmed", "completed"])
       .gte("end_at", new Date(timelineWindow(Date.now()).start).toISOString())
@@ -131,6 +131,35 @@ export async function EmployeeHome({
     chartByVehicle.set(r.vehicle.id, row);
   }
   const chartVehicles = [...chartByVehicle.values()];
+  const energyShows = (e: string | undefined, kinds: string[]) => (e ? kinds.includes(e) : false);
+  const homeItems: HomeItem[] = (chartRows ?? []).flatMap((r) => {
+    if (!r.vehicle) return [];
+    const hv = byId.get(r.vehicle.id);
+    const energy = hv?.row.category?.energy_type;
+    const confirmed = r.status === "confirmed";
+    return [{
+      id: r.id,
+      statusLabel: (dict.trips.statuses as Record<string, string>)[r.status] ?? r.status,
+      tone: confirmed ? "ok" : r.status === "pending_approval" ? "warn" : r.status === "cancelled" ? "bad" : "neutral",
+      startLabel: formatDateTimeShort(r.start_at, locale),
+      endLabel: formatDateTimeShort(r.end_at, locale),
+      origin: r.trip_request?.origin ?? "—",
+      destination: r.trip_request?.destination ?? "—",
+      vehicleName: r.vehicle.name ?? r.vehicle.plate,
+      plate: r.vehicle.plate,
+      location: hv?.row.current_location?.name ?? null,
+      battery: energyShows(energy, ["BEV", "PHEV"]) ? hv?.row.battery_level_percent ?? null : null,
+      fuel: energyShows(energy, ["ICE", "HEV", "PHEV"]) ? hv?.row.fuel_level_percent ?? null : null,
+      odometer: hv ? `${hv.row.odometer_km.toLocaleString(locale)} km` : null,
+      canPickup: confirmed && (r.vehicle.status === "reserved" || r.vehicle.status === "awaiting_pickup") && new Date(r.end_at).getTime() > nowMs,
+      canReturn: confirmed && r.vehicle.status === "in_use",
+    }];
+  });
+  const homeLabels: HomeLabels = {
+    departure: h.detailDeparture, ret: h.detailReturn, placeholder: h.detailPlaceholder, viewDetails: h.viewDetails,
+    pickup: dict.trips.list.startPickup, returnAction: dict.trips.list.registerReturn,
+    location: t.vehicles.currentLocation, battery: t.vehicles.battery, fuel: t.vehicles.fuel, odometer: t.vehicles.odometer,
+  };
 
   const firstName = (userName.split(" ")[0] ?? userName).trim() || userName;
   const nextTone = next?.status === "confirmed" ? "ok" : "warn";
@@ -154,6 +183,7 @@ export async function EmployeeHome({
         <h1 className="fm-title">{fillTemplate(h.greeting, { name: firstName })}</h1>
         <p className="fm-subtitle">{h.greetingSub}</p>
 
+        <HomeSelectionProvider items={homeItems} labels={homeLabels}>
         <div className="hm-grid">
           <div className="hm-col-main">
             <nav className="hm-actions" aria-label={h.quickActions} data-testid="home-quick-actions">
@@ -165,11 +195,6 @@ export async function EmployeeHome({
                 </span>
               </Link>
             </nav>
-
-            {/* mobile order: the next reservation sits right under the actions (the aside is hidden there) */}
-            <section className="fm-card hm-card hm-next hm-next-mobile" aria-labelledby="hm-next-m">
-              <NextReservation idSuffix="m" />
-            </section>
 
             {carpoolRequestsError ? (
               <section className="fm-card hm-card" role="alert" data-testid="home-carpools-error">
@@ -225,32 +250,22 @@ export async function EmployeeHome({
               ) : chartVehicles.length === 0 ? (
                 <p className="hm-muted">{h.nextEmpty}</p>
               ) : (
-                <div className="vw-scroll">
-                  <div className="vw-grid">
-                    <div className="vw-list-heading vw-grid-row">
-                      <div className="vw-rowmain"><strong>{T.listHeadVehicle}</strong></div>
-                      <TimelineHeader locale={locale} T={T} now={nowMs} />
-                    </div>
-                    <ul>
-                      {chartVehicles.map((v) => (
-                        <li key={v.id} className="vw-row vw-grid-row">
-                          <div className="vw-rowmain"><span><strong>{v.name ?? v.plate}</strong><small>{v.plate}</small></span></div>
-                          <TimelineLane bookings={v.bookings} locale={locale} T={T} now={nowMs} plate={v.plate} />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                <HomeGantt rows={chartVehicles.map((v) => ({ id: v.id, name: v.name ?? v.plate, plate: v.plate, bookings: v.bookings }))} locale={locale} T={T} now={nowMs} headLabel={T.listHeadVehicle} />
               )}
+            </section>
+
+            <HomeDetailPanel variant="mobile" />
+
+            <section className="fm-card hm-card hm-next" aria-labelledby="hm-next-d">
+              <NextReservation idSuffix="d" />
             </section>
           </div>
 
-          <aside className="hm-col-side" aria-label={h.nextTitle}>
-            <section className="fm-card hm-card hm-next hm-next-desktop" aria-labelledby="hm-next-d">
-              <NextReservation idSuffix="d" />
-            </section>
+          <aside className="hm-col-side" aria-label={h.actionTrips}>
+            <HomeDetailPanel variant="desktop" />
           </aside>
         </div>
+        </HomeSelectionProvider>
 
       </div>
     </FmShell>

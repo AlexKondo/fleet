@@ -294,6 +294,9 @@ export type Dictionary = {
       viewAll: string;
       nextEmpty: string;
       nextEmptyCta: string;
+      detailDeparture: string;
+      detailReturn: string;
+      detailPlaceholder: string;
       viewDetails: string;
       alertAwaiting: string;
       carpoolTitle: string;

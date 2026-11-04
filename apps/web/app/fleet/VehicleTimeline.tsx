@@ -25,7 +25,7 @@ export function TimelineHeader({ locale, T, now }: { locale: Locale; T: Record<F
 }
 
 /** One vehicle's schedule, aligned with its row of the list: a bar per reservation and, only when the trip has an active carpool, a bar of another color under it. */
-export function TimelineLane({ bookings, locale, T, now, plate }: { bookings: TimelineBooking[]; locale: Locale; T: Record<FleetKey, string>; now: number; plate: string }) {
+export function TimelineLane({ bookings, locale, T, now, plate, onSelect }: { bookings: TimelineBooking[]; locale: Locale; T: Record<FleetKey, string>; now: number; plate: string; onSelect?: (bookingId: string) => void }) {
   const win = timelineWindow(now);
   const { booking, carpool } = layoutTimeline(bookings, now);
   const todayPct = ((now - win.start) / (win.end - win.start)) * 100;
@@ -34,11 +34,11 @@ export function TimelineLane({ bookings, locale, T, now, plate }: { bookings: Ti
     return c ? fmt(T.carpoolSeats, { taken: c.taken, total: c.seats }) : T.legendCarpool;
   };
   return (
-    <div className="vt-lane" role="img" aria-label={`${T.timelineTitle} ${plate}`} data-testid={`vehicle-timeline-${plate}`}>
+    <div className="vt-lane" role={onSelect ? "group" : "img"} aria-label={`${T.timelineTitle} ${plate}`} data-testid={`vehicle-timeline-${plate}`}>
       <i className="vt-today" style={{ left: `${todayPct}%` }} aria-hidden="true" />
       <div className="vt-track">
         {booking.map((b) => (
-          <span key={b.id} className="vt-bar" data-kind={b.kind} style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%` }} title={`${b.label}\n${formatDateTimeShort(b.start, locale)} → ${formatDateTimeShort(b.end, locale)}`}>{b.label}</span>
+          <span key={b.id} className="vt-bar" data-kind={b.kind} style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%` }} {...(onSelect ? { role: "button", tabIndex: 0, onClick: (e: React.MouseEvent) => { e.stopPropagation(); onSelect(b.id); }, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onSelect(b.id); } } } : {})} title={`${b.label}\n${formatDateTimeShort(b.start, locale)} → ${formatDateTimeShort(b.end, locale)}`}>{b.label}</span>
         ))}
       </div>
       <div className="vt-track">
