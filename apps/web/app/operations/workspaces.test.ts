@@ -189,7 +189,7 @@ describe("operational workspace rendering", () => {
     expect(content).toContain("Serviço de teste");
     expect(content).toContain("100,00");
   });
-  it.each(["overview", "integrations", "audit", "ai"] as const)(
+  it.each(["integrations", "audit", "ai"] as const)(
     "renders administration %s from the actual view",
     async (view) => {
       const d = fixture();
@@ -200,7 +200,8 @@ describe("operational workspace rendering", () => {
         await AdminWorkspace({ view, params: {} }),
         "admin-" + view,
       );
-      expect(content).toContain("Administração");
+      expect(content).toContain({ integrations: "Integrações e Saúde do Sistema", audit: "Auditoria, Segurança e Privacidade", ai: "Configuração de Inteligência Artificial" }[view]);
+      expect(content).not.toContain("Veículos cadastrados");
       if (view === "ai") {
         expect(content).toContain("Desativado");
         expect(content).toContain("Política de teste");

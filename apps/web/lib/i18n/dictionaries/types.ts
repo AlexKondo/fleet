@@ -1700,7 +1700,6 @@ export type Dictionary = {
     budgetApprovals: string;
     reservationApprovals: string;
     keyTracking: string;
-    admin: string;
     myCarpools: string;
     carpoolManagement: string;
     skipToContent: string;

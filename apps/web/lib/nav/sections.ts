@@ -77,7 +77,6 @@ export function sectionTabs(section: SectionId, f: { isAdministrator: boolean })
     case "settings":
       return [
         { id: "policies", href: "/settings", visible: true },
-        { id: "adminOverview", href: "/admin", visible: a },
         { id: "integrations", href: "/admin/integrations", visible: a },
         { id: "audit", href: "/admin/audit", visible: a },
         { id: "ai", href: "/admin/ai", visible: a },

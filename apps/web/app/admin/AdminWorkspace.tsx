@@ -4,7 +4,6 @@ import { loadOperationalWorkspace } from "@/lib/operations/load";
 import { pageAll } from "@/lib/carpool/kpi/loadKpis";
 import {
   Workspace,
-  Metrics,
   Panel,
   Empty,
   Tag,
@@ -52,7 +51,7 @@ export async function AdminWorkspace({
   view,
   params,
 }: {
-  view: "overview" | "integrations" | "audit" | "ai";
+  view: "integrations" | "audit" | "ai";
   params: { q?: string; action?: string; error?: string; success?: string };
 }) {
   const data = await loadOperationalWorkspace(["administrator"]);
@@ -92,7 +91,6 @@ export async function AdminWorkspace({
   ]);
   const state = adminResult.error ? null : governance(adminResult.data);
   const titles = {
-    overview: T.titleOverview,
     integrations: T.titleIntegrations,
     audit: T.titleAudit,
     ai: T.titleAi,
@@ -133,92 +131,7 @@ export async function AdminWorkspace({
           {T.govUnavailable}
         </p>
       )}
-      <Metrics
-        items={[
-          {
-            label: T.mVehicles,
-            value: data.vehicles?.length ?? null,
-          },
-          { label: T.mUsers, value: users?.length ?? null },
-          {
-            label: T.mLocations,
-            value: data.locations?.length ?? null,
-          },
-          {
-            label: T.mPrivacyOpen,
-            value:
-              state?.privacy_requests.filter(
-                (r) => !["completed", "rejected"].includes(r.status),
-              ).length ?? null,
-            tone: "amber",
-          },
-          { label: T.mAudited, value: audit?.length ?? null },
-        ]}
-      />
-      {view === "overview" ? (
-        <>
-          <div className="ow-grid-equal">
-            <Panel title={T.recentPanel}>
-              {!audit ? (
-                <Empty>{T.auditUnavailable}</Empty>
-              ) : (
-                <ul className="ow-list">
-                  {audit
-                    .slice()
-                    .sort((a, b) => b.created_at.localeCompare(a.created_at))
-                    .slice(0, 8)
-                    .map((a) => (
-                      <li key={a.id}>
-                        <Tag>{a.entity_type}</Tag>
-                        <div>
-                          <strong>{auditActionLabel(dict, a.action)}</strong>
-                          <small>
-                            {date(a.created_at, true)} ·{" "}
-                            {a.actor_role ?? T.system}
-                          </small>
-                        </div>
-                      </li>
-                    ))}
-                  {!audit.length && <Empty />}
-                </ul>
-              )}
-            </Panel>
-            <Panel title={T.govPanel}>
-              <ul className="ow-list">
-                <li>
-                  <strong>{T.fleetmindAssistant}</strong>
-                  <Tag tone={state?.policy.enabled ? "green" : "amber"}>
-                    {state
-                      ? state.policy.enabled
-                        ? T.enabled
-                        : T.disabled
-                      : T.unavailable}
-                  </Tag>
-                </li>
-                <li>
-                  <strong>Google Maps / Routes</strong>
-                  <span>
-                    {google
-                      ? T.googleOk
-                      : T.googleNo}
-                  </span>
-                </li>
-                <li>
-                  <strong>SMTP</strong>
-                  <span>
-                    {smtp
-                      ? T.smtpOk
-                      : T.smtpNo}
-                  </span>
-                </li>
-              </ul>
-              <p className="ow-note">
-                {T.credNote}
-              </p>
-            </Panel>
-          </div>
-        </>
-      ) : view === "integrations" ? (
+      {view === "integrations" ? (
         <div className="ow-grid">
           <div className="ow-stack">
             <Panel
@@ -308,7 +221,7 @@ export async function AdminWorkspace({
               ) : !quota.length ? (
                 <Empty>{T.noCallsYet}</Empty>
               ) : (
-                <div className="ow-table-scroll">
+                <div className="ow-table-scroll ow-table-ten" data-testid="geo-readings">
                   <table className="ow-table">
                     <thead>
                       <tr>
@@ -457,8 +370,7 @@ export async function AdminWorkspace({
           </Panel>
         </div>
       ) : (
-        <>
-          <div className="ow-grid">
+        <div className="ow-stack">
             <Panel title={T.auditListPanel}>
               <form className="ow-filters" method="get">
                 <Field
@@ -518,15 +430,6 @@ export async function AdminWorkspace({
                 </div>
               )}
             </Panel>
-            <Panel title={T.auditPrivacyPanel}>
-              <p className="ow-muted">
-                {T.auditImmutable}
-              </p>
-              <p className="ow-note">
-                {T.deletionNote}
-              </p>
-            </Panel>
-          </div>
           <Panel title={T.privacyPanel}>
             {!state ? (
               <Empty>{T.requestsUnavailable}</Empty>
@@ -606,7 +509,7 @@ export async function AdminWorkspace({
               </ul>
             )}
           </Panel>
-        </>
+        </div>
       )}
     </Workspace>
   );

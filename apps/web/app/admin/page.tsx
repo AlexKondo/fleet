@@ -1,13 +1,6 @@
-import { AdminWorkspace } from "@/app/admin/AdminWorkspace";
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    q?: string;
-    action?: string;
-    error?: string;
-    success?: string;
-  }>;
-}) {
-  return <AdminWorkspace view="overview" params={await searchParams} />;
+import { redirect } from "next/navigation";
+
+/** The overview only repeated the Auditoria, Integrações and Governança de IA tabs: this address keeps old links working. */
+export default function Page() {
+  redirect("/settings");
 }

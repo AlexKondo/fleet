@@ -254,6 +254,16 @@
 .ow-table-scroll {
   overflow-x: auto;
 }
+/* ten rows of 42px plus the 39px header, then it scrolls; the header stays in place */
+.ow-table-ten {
+  max-height: 459px;
+  overflow-y: auto;
+}
+.ow-table-ten th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
 .ow-table {
   border-collapse: collapse;
   width: 100%;

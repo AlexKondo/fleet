@@ -1760,7 +1760,6 @@ const dict: Dictionary = {
     budgetApprovals: "Approve quotes",
     reservationApprovals: "Approve bookings",
     keyTracking: "Key tracking",
-    admin: "Administration",
     myCarpools: "My Carpools",
     carpoolManagement: "Carpool Management",
     skipToContent: "Skip to main content",

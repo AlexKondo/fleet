@@ -163,13 +163,6 @@ export function buildBaseNavItems(
     {key:"reservationApprovals",href:"/approvals",label:dict.navExtra.reservationApprovals,icon:TripsIcon,visible:canReservationApproval},
     {key:"keyManagement",href:"/fleet/keys",label:dict.navExtra.keyTracking,icon:GateIcon,visible:isFleetManager},
     {
-      key: "admin",
-      href: "/admin",
-      label: dict.navExtra.admin,
-      icon: SettingsIcon,
-      visible: isAdministrator,
-    },
-    {
       key: "settings",
       href: "/settings",
       label: dict.nav.settings,

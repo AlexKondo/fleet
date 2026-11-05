@@ -34,7 +34,7 @@ describe("one menu item per area", () => {
 
 describe("tabs", () => {
   it("administration tabs are for the administrator; the fleet manager keeps Políticas and Locais de mobilidade, and Motoristas", () => {
-    expect(sectionTabs("settings", { isAdministrator: true }).map((t) => t.id)).toEqual(["policies", "adminOverview", "integrations", "audit", "ai", "units", "mobility"]);
+    expect(sectionTabs("settings", { isAdministrator: true }).map((t) => t.id)).toEqual(["policies", "integrations", "audit", "ai", "units", "mobility"]);
     expect(sectionTabs("settings", { isAdministrator: false }).map((t) => t.id)).toEqual(["policies", "mobility"]);
     expect(sectionTabs("team", { isAdministrator: false }).map((t) => t.id)).toEqual(["drivers"]);
     expect(sectionTabs("team", { isAdministrator: true }).map((t) => t.id)).toEqual(["people", "drivers", "contact"]);
