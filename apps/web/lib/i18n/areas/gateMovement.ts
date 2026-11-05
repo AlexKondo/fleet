@@ -5,7 +5,7 @@ type K =
   | "listDeparture" | "listArrival"
   | "titleDeparture" | "titleArrival" | "noteDeparture" | "noteArrival"
   | "confirmDeparture" | "confirmArrival" | "optionDeparture" | "optionArrival" | "optionDenied" | "noteLabel"
-  | "resultDeparture" | "resultArrival" | "resultDenied" | "managerNotified" | "ok" | "errorTitle";
+  | "resultDeparture" | "resultArrival" | "resultDenied" | "managerNotified" | "ok" | "errorTitle" | "notPickedUp";
 export type GateMovementKey = K;
 
 export const gateMovementTexts: AreaTexts<K> = {
@@ -28,6 +28,7 @@ export const gateMovementTexts: AreaTexts<K> = {
     managerNotified: "O gestor da frota foi avisado por e-mail.",
     ok: "OK",
     errorTitle: "Não foi possível registrar",
+    notPickedUp: "Veículo reservado e não retirado",
   },
   "en-US": {
     listDeparture: "Release the vehicle",
@@ -48,6 +49,7 @@ export const gateMovementTexts: AreaTexts<K> = {
     managerNotified: "The fleet manager was told by e-mail.",
     ok: "OK",
     errorTitle: "Could not record it",
+    notPickedUp: "Vehicle reserved and not picked up",
   },
   es: {
     listDeparture: "Liberar la salida del vehículo",
@@ -68,6 +70,7 @@ export const gateMovementTexts: AreaTexts<K> = {
     managerNotified: "El gestor de la flota fue avisado por e-mail.",
     ok: "OK",
     errorTitle: "No fue posible registrar",
+    notPickedUp: "Vehículo reservado y no retirado",
   },
   "zh-CN": {
     listDeparture: "放行车辆",
@@ -88,5 +91,6 @@ export const gateMovementTexts: AreaTexts<K> = {
     managerNotified: "已通过电子邮件通知车队经理。",
     ok: "好的",
     errorTitle: "无法登记",
+    notPickedUp: "车辆已预约但未取走",
   },
 };

@@ -18,6 +18,8 @@ export interface GateRow {
   /** vehicles.status, drives the colour dot next to the label */
   status: string;
   action: "pickup" | "return" | "movement" | "arrival" | "waiting";
+  /** the window ended and the vehicle never left (the car is released): shown as a status, with no action */
+  notPickedUp?: boolean;
 }
 
 type View = "all" | "pickup" | "return";
@@ -88,7 +90,7 @@ export function GateList({ rows, dict, capped = false, T }: { rows: GateRow[]; d
                   {r.requesterName ?? "—"} · <span className="tabular-nums">{r.startAt}</span>
                 </p>
                 <p className="gt-meta">
-                  <span className="fm-pill" data-tone="neutral" style={{ gap: 8 }}>
+                  <span className="fm-pill" data-tone={r.notPickedUp ? "warn" : "neutral"} style={{ gap: 8 }} data-testid={r.notPickedUp ? "gate-not-picked-up" : undefined}>
                     <span className="fm-dot" data-s={r.status} aria-hidden="true" />
                     {r.statusLabel}
                   </span>
@@ -108,7 +110,7 @@ export function GateList({ rows, dict, capped = false, T }: { rows: GateRow[]; d
                   </Link>
                 ) : r.action === "movement" || r.action === "arrival" ? (
                   <Link href={`/gate/history?reservation=${r.id}&kind=${r.action === "arrival" ? "arrival" : "departure"}`} className="fm-btn fm-btn-primary">{r.action === "arrival" ? T.listArrival : T.listDeparture}</Link>
-                ) : <span className="fm-muted">{g.waitingChecklist}</span>}
+                ) : r.notPickedUp ? null : <span className="fm-muted">{g.waitingChecklist}</span>}
               </div>
             </li>
           ))}

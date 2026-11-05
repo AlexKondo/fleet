@@ -68,6 +68,11 @@ describe("FIX-VENCIDAS R1 /trips grouping", () => {
     expect(g.historyList.map((r) => r.id)).toEqual(["reported", "pendingPast", "released", "cancelled", "done"]);
   });
 
+  it("hasOperationalActivity: at the gate the pickup checklists alone are not activity (the vehicle has not left)", () => {
+    expect(hasOperationalActivity({ ...none, workflow: "gate_visual", pickup_traveler: true, pickup_security: true })).toBe(false);
+    expect(hasOperationalActivity({ ...none, workflow: "gate_visual", pickup_traveler: true, pickup_security: true, departed: true })).toBe(true);
+    expect(hasOperationalActivity({ ...none, workflow: "key_custody", pickup_traveler: true })).toBe(true);
+  });
   it("hasOperationalActivity: any pickup/gate/key flag counts; a missing state is unknown", () => {
     expect(hasOperationalActivity(none)).toBe(false);
     expect(hasOperationalActivity(undefined)).toBeNull();

@@ -1,6 +1,8 @@
 import { gateAction,loadGateChecklistStates } from "@/lib/operations/checklistState";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { automaticReleaseEnabled } from "@/lib/operations/autoReleasePolicy";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTimeShort } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
@@ -45,23 +47,11 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
   // list are independent, and running them back-to-back cost two full round trips where
   // one suffices.
   const M = await getAreaText(gateMovementTexts);
-  const [{ data: profile }, { data: reservations, error: loadError }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name, role, organization:organizations(name)")
-      .eq("id", user.id)
-      .single(),
-    supabase
-      .from("reservations")
-      .select(
-        `id, status, start_at, end_at,
-       trip_request:trip_requests(origin, destination, requester:profiles(full_name)),
-       vehicle:vehicles(plate, name, status)`,
-      )
-      .eq("status", "confirmed")
-      .order("start_at")
-      .limit(100),
-  ]);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id, full_name, role, organization:organizations(name)")
+    .eq("id", user.id)
+    .single();
 
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
   const isAdministrator = profile?.role === "administrator";
@@ -70,13 +60,37 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
   // no error flag (there is no error-flag convention on these role gates).
   if (!profile || !(isSecurity || isFleetManager)) redirect("/dashboard");
 
+  // A reservation whose window ended without the vehicle leaving frees the vehicle (once the organization's grace period passes): checked every time the gate opens, so
+  // the car does not wait for the daily routine. Best-effort: a failure here never blocks the board.
+  if (automaticReleaseEnabled()) {
+    try {
+      await createSupabaseAdminClient().rpc("fm_release_expired_reservations", { p_organization_id: profile.organization_id });
+    } catch {
+      // the daily cron (/api/cron/reservation-expiry) is the fallback
+    }
+  }
+  const nowMs = Date.now();
+  const sinceIso = new Date(nowMs - 24 * 3600 * 1000).toISOString();
+  const { data: reservations, error: loadError } = await supabase
+    .from("reservations")
+    .select(
+      `id, status, start_at, end_at, cancellation_reason,
+       trip_request:trip_requests(origin, destination, requester:profiles(full_name)),
+       vehicle:vehicles(plate, name, status)`,
+    )
+    // open reservations + the ones the automatic release cancelled in the last 24 hours (they stay on the board as "reserved and not picked up")
+    .or(`status.eq.confirmed,and(status.eq.cancelled,cancellation_reason.eq.no_show_auto,cancelled_at.gte.${sinceIso})`)
+    .order("start_at")
+    .limit(100);
+
   // Org-wide (RLS: "members read own organization reservations" is org-scoped for every
   // role), deliberately NOT narrowed to the reservations a given manager approved and not
   // date-filtered — the gate cares about the current actionable set, whatever day it
   // started on. Fetched in the Promise.all above.
-  const checklistStates=await loadGateChecklistStates(supabase,(reservations??[]).map(r=>r.id));
+  const checklistStates=await loadGateChecklistStates(supabase,(reservations??[]).filter((r)=>r.status==="confirmed").map(r=>r.id));
   const rows: GateRow[] = (reservations ?? [])
     .filter((r) => {
+      if (r.status === "cancelled") return r.vehicle !== null && r.vehicle !== undefined;
       const s = r.vehicle?.status;
       return (
         s !== undefined &&
@@ -86,6 +100,10 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
     .map((r) => {
       const vehicleStatus = r.vehicle!.status;
       const meta = statusMeta[vehicleStatus];
+      // the window ended and the vehicle never left (still reserved / waiting for pickup), or the automatic release already cancelled it
+      const notPickedUp =
+        r.status === "cancelled" ||
+        (new Date(r.end_at).getTime() <= nowMs && (PICKUP_VEHICLE_STATUSES as readonly string[]).includes(vehicleStatus));
       return {
         id: r.id,
         plate: r.vehicle?.plate ?? "—",
@@ -94,10 +112,11 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
         // the gate (porteiro) does not need to know where the trip goes
         route: isSecurity ? "" : `${r.trip_request?.origin ?? "—"} → ${r.trip_request?.destination ?? "—"}`,
         startAt: formatDateTimeShort(r.start_at, locale),
-        statusLabel: meta?.label ?? vehicleStatus,
+        statusLabel: notPickedUp ? M.notPickedUp : (meta?.label ?? vehicleStatus),
         statusClass: meta?.text ?? "text-fog-400",
-        status: vehicleStatus,
-        action: gateAction(checklistStates?.get(r.id)),
+        status: notPickedUp ? "inspection" : vehicleStatus,
+        action: notPickedUp ? "waiting" : gateAction(checklistStates?.get(r.id)),
+        notPickedUp,
       };
     });
 

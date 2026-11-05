@@ -80,7 +80,7 @@ describe.sequential("Pacote 01 corrections with the actual migrated SQL",()=>{
  });
  it("D1-05: scope, CNH of the driver and custodian independence still apply",async()=>{
   const out=await reservation(driver,otherUnit);await actor(limited);await expect(pickup(out.id)).rejects.toThrow(/INSPECTION_NOT_AUTHORIZED/);
-  await asPostgres();await db.query("update profiles set drivers_license_expiration=current_date-1 where id=$1",[driver2]);
+  await asPostgres();await db.query("update profiles set drivers_license_expiration=current_date-2 where id=$1",[driver2]);
   const expired=await reservation(driver2);await actor(admin);await expect(pickup(expired.id)).rejects.toThrow(/LICENSE_EXPIRED/);
   await asPostgres();await db.query("update profiles set drivers_license_expiration=current_date+30 where id=$1",[driver2]);
   const office=await reservation(driver,officeUnit);await actor(custodian);await keys(office.id,"delivered");

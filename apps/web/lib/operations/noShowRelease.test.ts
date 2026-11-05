@@ -114,7 +114,7 @@ describe.sequential("FIX-VENCIDAS SQL (0207-0209)",()=>{
   expect(typeof (await release()).released).toBe("number");
  });
 
- it("R3: releases an expired no-show (vehicle back to available, notification, audit) and skips one with activity; idempotent",async()=>{
+ it("R3: releases an expired no-show (vehicle back to available, notification, audit) - also when only the pickup checklists were done - and skips one whose vehicle moved; idempotent",async()=>{
   await release(); // settle anything left by earlier tests
   const v1=await vehicle();const noShow=await reservation(v1,-600,-120);
   const v2=await vehicle();const withPickup=await reservation(v2,-1,120);
@@ -122,19 +122,25 @@ describe.sequential("FIX-VENCIDAS SQL (0207-0209)",()=>{
   await actor(driver);await pickup(withPickup);await moveWindow(withPickup,-600,-120);
   const v3=await vehicle(officeUnit);const withKeys=await reservation(v3,-1,120);
   await actor(custodian);await db.query("select fm_key_command($1,'delivered',null,$2)",[withKeys,randomUUID()]);await moveWindow(withKeys,-600,-120);
-  const v4=await vehicle(gateUnit,"available");const pending=await reservation(v4,-600,-120,"pending_approval");
+  const v5=await vehicle();const departed=await reservation(v5,-1,120);
+ await asPostgres();await db.exec("set session_replication_role=replica");await db.query("insert into fm_gate_events(organization_id,reservation_id,vehicle_id,kind,created_by) values($1,$2,$3,'departure',$4)",[org,departed,v5,security]);await db.exec("set session_replication_role=origin");await moveWindow(departed,-600,-120);
+ const v4=await vehicle(gateUnit,"available");const pending=await reservation(v4,-600,-120,"pending_approval");
 
   const r=await release();
-  expect(r).toMatchObject({released:2,vehicles_released:1,skipped_locked:0});
+  expect(r).toMatchObject({released:3,vehicles_released:2,skipped_locked:0});
   expect(r.skipped_with_activity).toBeGreaterThanOrEqual(2);
   expect(await res(noShow)).toMatchObject({status:"cancelled",cancellation_reason:"no_show_auto",cancelled_by:null});
   expect((await res(noShow)).cancelled_at).not.toBeNull();
   expect(await vstatus(v1)).toBe("available");
   expect(await res(pending)).toMatchObject({status:"cancelled",cancellation_reason:"expired_unapproved"});
   expect(await vstatus(v4)).toBe("available");
-  expect(await res(withPickup)).toMatchObject({status:"confirmed"});
+  // only the pickup checklists were done and the vehicle never left (gate): a no-show like any other
+  expect(await res(withPickup)).toMatchObject({status:"cancelled",cancellation_reason:"no_show_auto"});
+  expect(await vstatus(v2)).toBe("available");
+  // the vehicle really moved (gate departure / keys delivered): never touched
+  expect(await res(departed)).toMatchObject({status:"confirmed"});
   expect(await res(withKeys)).toMatchObject({status:"confirmed"});
-  expect(await vstatus(v2)).not.toBe("available");
+  expect(await vstatus(v5)).not.toBe("available");
   expect(await audits(noShow)).toBe(1);expect(await audits(pending)).toBe(1);
   expect(await notes(noShow)).toBe(1);expect(await notes(pending)).toBe(1);
   await asPostgres();

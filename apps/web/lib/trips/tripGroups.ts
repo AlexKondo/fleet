@@ -20,6 +20,8 @@ export interface TripActivityState {
   legacy_pickup: boolean;
   keys_delivered?: boolean;
   keys_received?: boolean;
+  /** at the gate the pickup checklists come before the departure: they alone are not a movement of the vehicle */
+  workflow?: "gate_visual" | "key_custody";
 }
 
 export interface TripGroupRow {
@@ -38,9 +40,9 @@ export type ExpiredBadge = "notPickedUp" | "expiredUnapproved";
 /** true = some activity recorded, false = none, null = unknown (state not loaded). */
 export function hasOperationalActivity(state: TripActivityState | null | undefined): boolean | null {
   if (!state) return null;
+  const pickedUp = state.workflow === "gate_visual" ? false : state.pickup_traveler || state.pickup_security;
   return (
-    state.pickup_traveler ||
-    state.pickup_security ||
+    pickedUp ||
     state.return_traveler ||
     state.return_security ||
     state.departed ||
