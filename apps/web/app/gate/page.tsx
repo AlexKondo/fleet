@@ -7,13 +7,13 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { formatDateTimeShort } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { FmShell } from "../carpool/FmShell";
-import { FmArrowInIcon, FmArrowOutIcon, FmCarIcon } from "../fmIcons";
 import { getStatusMeta } from "../dashboard/statusMeta";
 import "./gate.css";
 import { GateList, type GateRow } from "./GateList";
 import { GateResultDialog } from "./GateResultDialog";
 import { getAreaText } from "@/lib/i18n/areaText";
 import { gateMovementTexts } from "@/lib/i18n/areas/gateMovement";
+import { nearestEventFirst } from "@/lib/operations/gateOrder";
 
 /**
  * Portaria / gatehouse board. The `security` role is authorized end-to-end in the backend
@@ -88,7 +88,7 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
   // date-filtered — the gate cares about the current actionable set, whatever day it
   // started on. Fetched in the Promise.all above.
   const checklistStates=await loadGateChecklistStates(supabase,(reservations??[]).filter((r)=>r.status==="confirmed").map(r=>r.id));
-  const rows: GateRow[] = (reservations ?? [])
+  const listed = (reservations ?? [])
     .filter((r) => {
       if (r.status === "cancelled") return r.vehicle !== null && r.vehicle !== undefined;
       const s = r.vehicle?.status;
@@ -104,6 +104,11 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
       const notPickedUp =
         r.status === "cancelled" ||
         (new Date(r.end_at).getTime() <= nowMs && (PICKUP_VEHICLE_STATUSES as readonly string[]).includes(vehicleStatus));
+      const action = notPickedUp ? "waiting" : gateAction(checklistStates?.get(r.id));
+      // what comes next for this reservation: once the vehicle has left that is its return, until then its departure
+      const eventKind: GateRow["eventKind"] =
+        !notPickedUp && (action === "return" || action === "arrival" || vehicleStatus === "in_use" || vehicleStatus === "returning") ? "return" : "departure";
+      const eventIso = eventKind === "return" ? r.end_at : r.start_at;
       return {
         id: r.id,
         plate: r.vehicle?.plate ?? "—",
@@ -111,23 +116,21 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
         requesterName: r.trip_request?.requester?.full_name ?? null,
         // the gate (porteiro) does not need to know where the trip goes
         route: isSecurity ? "" : `${r.trip_request?.origin ?? "—"} → ${r.trip_request?.destination ?? "—"}`,
-        startAt: formatDateTimeShort(r.start_at, locale),
+        eventKind,
+        eventAt: formatDateTimeShort(eventIso, locale),
+        eventMs: new Date(eventIso).getTime(),
         statusLabel: notPickedUp ? M.notPickedUp : (meta?.label ?? vehicleStatus),
         statusClass: meta?.text ?? "text-fog-400",
         status: notPickedUp ? "inspection" : vehicleStatus,
-        action: notPickedUp ? "waiting" : gateAction(checklistStates?.get(r.id)),
+        action,
         notPickedUp,
       };
     });
+  const rows: GateRow[] = nearestEventFirst(listed, nowMs).map(({ eventMs: _eventMs, ...row }) => row);
 
   const g = dict.ops.gate;
-  const pickupCount = rows.filter((r) => r.action === "pickup").length;
-  // distinct VEHICLES (a vehicle can have more than one confirmed reservation row in the list)
-  const inUseCount = new Set(rows.filter((r) => r.status === "in_use").map((r) => r.plate)).size;
-  const returningCount = new Set(rows.filter((r) => r.status === "returning").map((r) => r.plate)).size;
   // the reservation query is .limit(100): say so instead of showing a silently truncated count
   const capped = (reservations?.length ?? 0) >= 100;
-  const plus = capped ? "+" : "";
 
   return (
     <FmShell
@@ -147,30 +150,6 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
           {dict.gate.loadError}
         </div>
       ) : null}
-
-      <section className="fm-kpis" aria-label={g.kpisLabel} data-testid="gate-kpis" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-        <div className="fm-kpi" data-testid="gate-kpi-pickup">
-          <span className="fm-kpi-icon"><FmArrowOutIcon /></span>
-          <div className="fm-kpi-body">
-            <p className="fm-kpi-value">{pickupCount}{plus}</p>
-            <p className="fm-kpi-label">{g.kpiPickup}</p>
-          </div>
-        </div>
-        <div className="fm-kpi" data-testid="gate-kpi-inuse">
-          <span className="fm-kpi-icon" data-tone="ok"><FmCarIcon /></span>
-          <div className="fm-kpi-body">
-            <p className="fm-kpi-value">{inUseCount}{plus}</p>
-            <p className="fm-kpi-label">{g.kpiInUse}</p>
-          </div>
-        </div>
-        <div className="fm-kpi" data-testid="gate-kpi-returning">
-          <span className="fm-kpi-icon" data-tone="violet"><FmArrowInIcon /></span>
-          <div className="fm-kpi-body">
-            <p className="fm-kpi-value">{returningCount}{plus}</p>
-            <p className="fm-kpi-label">{g.kpiReturning}</p>
-          </div>
-        </div>
-      </section>
 
       {query.error ? (
         <GateResultDialog tone="error" title={M.errorTitle} message={(dict.opsShell.errors as Record<string, string>)[query.error] ?? dict.opsShell.genericError} okLabel={M.ok} />

@@ -12,7 +12,9 @@ export interface GateRow {
   vehicleName: string | null;
   requesterName: string | null;
   route: string;
-  startAt: string;
+  /** what comes next for this reservation, and when */
+  eventKind: "departure" | "return";
+  eventAt: string;
   statusLabel: string;
   statusClass: string;
   /** vehicles.status, drives the colour dot next to the label */
@@ -87,7 +89,7 @@ export function GateList({ rows, dict, capped = false, T }: { rows: GateRow[]; d
               <div className="gt-info">
                 {r.route ? <p className="gt-route">{r.route}</p> : null}
                 <p className="gt-meta">
-                  {r.requesterName ?? "—"} · <span className="tabular-nums">{r.startAt}</span>
+                  {r.requesterName ?? "—"} · <span className="tabular-nums">{r.eventKind === "return" ? T.eventReturn : T.eventDeparture}: {r.eventAt}</span>
                 </p>
                 <p className="gt-meta">
                   <span className="fm-pill" data-tone={r.notPickedUp ? "warn" : "neutral"} style={{ gap: 8 }} data-testid={r.notPickedUp ? "gate-not-picked-up" : undefined}>
