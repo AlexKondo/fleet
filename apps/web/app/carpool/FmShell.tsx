@@ -46,7 +46,6 @@ export async function FmShell({
   wide = false,
   commandCenter = false,
   workspace,
-  searchContent,
   nonDrivingWorkspace = false,
   children,
 }: {
@@ -68,7 +67,6 @@ export async function FmShell({
   wide?: boolean;
   commandCenter?: boolean;
   workspace?: "manager" | "operations";
-  searchContent?: React.ReactNode;
   /** Only the authorized local-custody page: custody does not require a CNH. */
   nonDrivingWorkspace?: boolean;
   children: React.ReactNode;
@@ -254,7 +252,6 @@ export async function FmShell({
       <div className="fm-main">
         <header className="fm-topbar">
           <p className="fm-topbar-brand">FleetMind</p>
-          {licenseGateActive ? null : searchContent}
           <div className="fm-topbar-right">
             <LanguageToggle locale={locale} dict={dict} />
             {/* the light/dark toggle is on EVERY screen (the FleetMind look has a dark theme: `:root[data-theme="dark"] .fm-theme` in fm-theme.css) */}

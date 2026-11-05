@@ -116,6 +116,7 @@ export function Metrics({
     value: string | number | null;
     detail?: string;
     tone?: string;
+    icon?: ReactNode;
   }[];
 }) {
   return (
@@ -126,7 +127,7 @@ export function Metrics({
             className={`ow-metric-symbol ${i.tone ?? ""}`}
             aria-hidden="true"
           >
-            ◇
+            {i.icon ?? "◇"}
           </span>
           <div>
             <strong>{i.value === null ? "—" : i.value}</strong>

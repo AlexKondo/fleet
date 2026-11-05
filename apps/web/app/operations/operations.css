@@ -88,6 +88,40 @@
   color: #0868f9;
   line-height: 1;
 }
+.ow-metric-symbol svg {
+  display: block;
+  width: 30px;
+  height: 30px;
+}
+/* Próxima revisão: the triangle blinks while the vehicle is close to the review km */
+.ow-review {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ow-review-alert {
+  display: inline-flex;
+  flex: none;
+  color: #efa53a;
+  animation: ow-review-blink 1.2s ease-in-out infinite;
+}
+.ow-review-alert[data-overdue] {
+  color: #ee5165;
+}
+.ow-review-alert svg {
+  width: 22px;
+  height: 22px;
+}
+@keyframes ow-review-blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ow-review-alert {
+    animation: none;
+  }
+}
 .ow-metric-symbol.red {
   color: #ee5165;
 }

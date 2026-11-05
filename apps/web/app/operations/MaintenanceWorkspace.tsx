@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { MAINTENANCE_DUE_SOON_KM } from "@fleet/domain";
+import { loadOrgConfig } from "@/lib/domain/orgConfig";
+import { reviewAlert } from "@/lib/operations/reviewAlert";
+import { FmAlertIcon, FmCalendarIcon, FmCarIcon, FmGaugeIcon, FmWrenchIcon } from "../fmIcons";
 import { OrderAdjustments } from "./OrderAdjustments";
 import { getDictionary } from "@/lib/i18n/getLocale";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -55,6 +59,7 @@ export async function MaintenanceWorkspace({
       : ["fleet_manager", "administrator", "maintenance_operator"],
   );
   const { vehicles, records, manager } = data;
+  const dueSoonKm = view === "overview" ? await loadOrgConfig(data.db, data.profile.organization_id).then((c) => c.maintenanceDueSoonKm, () => MAINTENANCE_DUE_SOON_KM) : 0;
   const { orders, lines } = records;
   const selected = orders?.find((o) => o.id === params.order) ?? orders?.[0];
   const selectedVehicle =
@@ -124,6 +129,7 @@ export async function MaintenanceWorkspace({
                 (v) => !["maintenance", "blocked"].includes(v.status),
               ).length ?? null,
             tone: "green",
+            icon: <FmCarIcon />,
           },
           {
             label: t.mInMaintenance,
@@ -131,12 +137,14 @@ export async function MaintenanceWorkspace({
               vehicles?.filter((v) => v.status === "maintenance").length ??
               null,
             tone: "red",
+            icon: <FmWrenchIcon />,
           },
           {
             label: t.mScheduled,
             value:
               orders?.filter((o) => o.status === "scheduled").length ?? null,
             tone: "amber",
+            icon: <FmCalendarIcon />,
           },
           {
             label: t.mInProgress,
@@ -144,11 +152,7 @@ export async function MaintenanceWorkspace({
               orders?.filter((o) =>
                 ["in_progress", "partial"].includes(o.status),
               ).length ?? null,
-          },
-          {
-            label: t.mEffectiveCost,
-            value: money(effective),
-            detail: t.mEffectiveCostDetail,
+            icon: <FmGaugeIcon />,
           },
         ]}
       />
@@ -522,66 +526,9 @@ export async function MaintenanceWorkspace({
           </aside>
         </div>
       ) : (
-        <div className="ow-stack">
-          <Panel title={t.operationVehicles}>
-            <VehicleTable data={data} dict={dict} />
-          </Panel>
-          <div className="ow-grid-equal">
-            <Panel title={t.ordersByStatus}>
-              {orders ? (
-                <div
-                  className="ow-bars"
-                  role="img"
-                  aria-label={ORDER_STATES.map(
-                    (s) =>
-                      `${labels[s]}: ${orders.filter((o) => o.status === s).length}`,
-                  ).join("; ")}
-                >
-                  {ORDER_STATES.filter((s) =>
-                    orders.some((o) => o.status === s),
-                  ).map((s) => {
-                    const n = orders.filter((o) => o.status === s).length;
-                    return (
-                      <div key={s}>
-                        <strong>{n}</strong>
-                        <span
-                          style={{
-                            height: `${(n / Math.max(orders.length, 1)) * 110}px`,
-                          }}
-                        />
-                        <small>{labels[s]}</small>
-                      </div>
-                    );
-                  })}
-                  {orders.length === 0 && <Empty />}
-                </div>
-              ) : (
-                <Empty>{t.dataUnavailable}</Empty>
-              )}
-            </Panel>
-            <Panel title={t.plannedReviews}>
-              {!dueVehicles ? (
-                <Empty>{t.dataUnavailable}</Empty>
-              ) : (
-                <ul className="ow-list">
-                  {dueVehicles.slice(0, 6).map((v) => (
-                    <li key={v.id}>
-                      <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
-                        <strong>{v.plate}</strong>
-                        <small>
-                          {reviewLimits(t, v)}
-                        </small>
-                      </Link>
-                    </li>
-                  ))}
-                  {!dueVehicles.length && (
-                    <Empty>{t.noReviews}</Empty>
-                  )}
-                </ul>
-              )}
-            </Panel>
-          </div>
-        </div>
+        <Panel title={t.operationVehicles}>
+          <VehicleTable data={data} dict={dict} dueSoonKm={dueSoonKm} />
+        </Panel>
       )}
     </Workspace>
   );
@@ -1036,12 +983,24 @@ function reviewLimits(t: Dictionary["maintenance"], v: { next_service_date: stri
   return km ? fmt(t.kmOnly, { km }) : "";
 }
 
+function ReviewAlert({ t, alert }: { t: Dictionary["maintenance"]; alert: NonNullable<ReturnType<typeof reviewAlert>> }) {
+  const label = fmt(alert.overdue ? t.reviewOverdue : t.reviewSoon, { km: alert.km.toLocaleString("pt-BR") });
+  return (
+    <span className="ow-review-alert" data-overdue={alert.overdue ? "" : undefined} role="img" aria-label={label} title={label} data-testid="review-alert">
+      <FmAlertIcon />
+    </span>
+  );
+}
+
 function VehicleTable({
   data,
   dict,
+  dueSoonKm,
 }: {
   data: OperationalData;
   dict: Dictionary;
+  /** Configurações > Políticas: how close to the review km a vehicle gets the blinking triangle. */
+  dueSoonKm: number;
 }) {
   const t = dict.maintenance;
   if (!data.vehicles) return <Empty>{t.fleetUnavailable}</Empty>;
@@ -1079,8 +1038,16 @@ function VehicleTable({
               <td>{v.current_location?.name ?? "—"}</td>
               <td>{v.odometer_km.toLocaleString("pt-BR")} km</td>
               <td>
-                {v.next_service_date ? date(v.next_service_date) : null}
-                {v.next_service_odometer_km != null ? <small>{v.next_service_odometer_km.toLocaleString("pt-BR")} km</small> : null}
+                <div className="ow-review">
+                  <div>
+                    {v.next_service_date ? date(v.next_service_date) : null}
+                    {v.next_service_odometer_km != null ? <small>{v.next_service_odometer_km.toLocaleString("pt-BR")} km</small> : null}
+                  </div>
+                  {(() => {
+                    const alert = reviewAlert(v.odometer_km, v.next_service_odometer_km, dueSoonKm);
+                    return alert ? <ReviewAlert t={t} alert={alert} /> : null;
+                  })()}
+                </div>
               </td>
               <td>
                 <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>

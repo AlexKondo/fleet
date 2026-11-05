@@ -16,7 +16,6 @@ import {
 } from "../../fmIcons";
 import { getStatusMeta, VEHICLE_STATUSES } from "../statusMeta";
 import "./command-center.css";
-import { CommandSearch } from "./CommandSearch";
 
 const fmt = (text: string, values: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? ""));
@@ -101,18 +100,16 @@ export default async function FleetCommandCenterPage({
       .length ?? null;
   const available =
     vehicles?.filter((v) => v.status === "available").length ?? null;
+  const reserved =
+    vehicles?.filter((v) => ["reserved", "awaiting_pickup"].includes(v.status))
+      .length ?? null;
   const maintenance =
     vehicles?.filter((v) => v.status === "maintenance").length ?? null;
   const blocked =
     vehicles?.filter((v) => v.status === "blocked").length ?? null;
-  const categories = [
-    ...new Set(vehicles?.map((v) => v.category?.name ?? t.noCategory)),
-  ].map((name) => ({
-    name,
-    count:
-      vehicles?.filter((v) => (v.category?.name ?? t.noCategory) === name)
-        .length ?? 0,
-  }));
+  const otherStatuses =
+    (total ?? 0) -
+    [active, available, reserved, maintenance, blocked].reduce<number>((sum, n) => sum + (n ?? 0), 0);
   const services = vehicles
     ?.filter((v) => v.next_service_odometer_km !== null)
     .sort(
@@ -121,10 +118,6 @@ export default async function FleetCommandCenterPage({
         a.odometer_km -
         (b.next_service_odometer_km! - b.odometer_km),
     )
-    .slice(0, 5);
-  const recent = reservations
-    ?.slice()
-    .sort((a, b) => b.start_at.localeCompare(a.start_at))
     .slice(0, 5);
   const href = (period: string) =>
     `/dashboard/command-center?period=${period}&location=${encodeURIComponent(data.selectedLocation)}`;
@@ -138,28 +131,6 @@ export default async function FleetCommandCenterPage({
       userName={profile.full_name ?? user.email ?? "—"}
       wide
       commandCenter
-      searchContent={
-        <CommandSearch
-          items={[
-            ...(vehicles ?? []).map((v) => ({
-              label: `${v.plate} · ${v.category?.name ?? t.vehicleFallback}`,
-              detail: statuses[v.status].label,
-              href: `/fleet/vehicles/${v.id}`,
-            })),
-            ...(reservations ?? []).map((r) => ({
-              label: r.trip_request?.requester?.full_name ?? t.tripFallback,
-              detail: `${r.trip_request?.origin ?? ""} → ${r.trip_request?.destination ?? ""}`,
-              href: `/reservations/${r.id}`,
-            })),
-          ]}
-          labels={{
-            aria: t.searchAria,
-            placeholder: t.searchPlaceholder,
-            heading: t.searchHeading,
-            noResults: t.searchNoResults,
-          }}
-        />
-      }
     >
       <div className="fc" data-testid="fleet-command-center">
         <div className="fc-heading">
@@ -233,8 +204,10 @@ export default async function FleetCommandCenterPage({
                   {[
                     [t.inOperation, active],
                     [t.available, available],
+                    [t.reserved, reserved],
                     [t.inMaintenance, maintenance],
                     [t.blocked, blocked],
+                    ...(otherStatuses > 0 ? [[t.otherStatuses, otherStatuses]] : []),
                   ].map(([label, n]) => (
                     <div key={String(label)}>
                       <dt>{label}</dt>
@@ -326,95 +299,7 @@ export default async function FleetCommandCenterPage({
                 <p>{t.occupancyPending}</p>
               </div>
             </section>
-            <div className="fc-charts">
-              <Card title={t.fleetUtilization} viewDetails={t.viewDetails}>
-                <p className="fc-caption">
-                  {t.utilizationCaption}
-                </p>
-                {reservations === null ? (
-                  <Empty>{t.seriesUnavailable}</Empty>
-                ) : !data.daily.some((d) => d.count) ? (
-                  <Empty>{t.noDepartures}</Empty>
-                ) : (
-                  <div
-                    className="fc-bars"
-                    role="img"
-                    aria-label={data.daily
-                      .map((d) => fmt(t.departuresCount, { day: d.day, n: d.count }))
-                      .join("; ")}
-                  >
-                    {data.daily.map((d) => (
-                      <div key={d.day} title={fmt(t.departuresCount, { day: d.day, n: d.count })}>
-                        <span
-                          style={{
-                            height: `${(d.count / Math.max(...data.daily.map((x) => x.count), 1)) * 100}%`,
-                          }}
-                        />
-                        <small>{d.day.slice(8)}</small>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-              <Card title={t.seatOccupancy} viewDetails={t.viewDetails}>
-                <Empty>{t.seatOccupancyEmpty}</Empty>
-                <p className="fc-caption">{t.seatOccupancyCaption}</p>
-              </Card>
-              <Card title={t.tripsByUse} viewDetails={t.viewDetails}>
-                <Empty>{t.tripsByUseEmpty}</Empty>
-              </Card>
-            </div>
             <div className="fc-bottom">
-              <Card
-                title={t.vehiclesByCategory}
-                href="/fleet"
-                viewDetails={t.viewDetails}
-              >
-                {vehicles === null ? (
-                  <Empty>{t.dataUnavailable}</Empty>
-                ) : !total ? (
-                  <Empty>{t.noVehicles}</Empty>
-                ) : (
-                  <div className="fc-category-bars">
-                    {categories.map((c) => (
-                      <div key={c.name}>
-                        <strong>{c.count}</strong>
-                        <span
-                          style={{
-                            height: `${(c.count / Math.max(...categories.map((x) => x.count), 1)) * 90}px`,
-                          }}
-                        />
-                        <small>{c.name}</small>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-              <Card title={t.fleetStatus} viewDetails={t.viewDetails}>
-                {vehicles === null ? (
-                  <Empty>{t.dataUnavailable}</Empty>
-                ) : (
-                  <dl className="fc-status-list">
-                    {counts
-                      .filter((c) => c.count)
-                      .map((c) => (
-                        <div key={c.status}>
-                          <dt>
-                            <i data-status={c.status} />
-                            {statuses[c.status].label}
-                          </dt>
-                          <dd>
-                            {c.count}{" "}
-                            <small>
-                              {total ? Math.round((c.count / total) * 100) : 0}%
-                            </small>
-                          </dd>
-                        </div>
-                      ))}
-                    {!total && <Empty>{t.noVehiclesFilter}</Empty>}
-                  </dl>
-                )}
-              </Card>
               <Card
                 title={t.upcomingMaintenance}
                 href="/dashboard#open-tasks"
@@ -451,43 +336,6 @@ export default async function FleetCommandCenterPage({
                             {v.next_service_odometer_km! <= v.odometer_km
                               ? t.reviewReached
                               : t.untilReview}
-                          </small>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Card>
-              <Card
-                title={t.recentTrips}
-                href="/trips"
-                viewDetails={t.viewDetails}
-              >
-                {reservations === null ? (
-                  <Empty>{t.dataUnavailable}</Empty>
-                ) : !recent?.length ? (
-                  <Empty>{t.noTrips}</Empty>
-                ) : (
-                  <ul className="fc-records">
-                    {recent.map((r) => (
-                      <li key={r.id}>
-                        <Link href={`/reservations/${r.id}`}>
-                          <strong>
-                            {r.trip_request?.requester?.full_name ?? t.driverFallback}
-                          </strong>
-                          <small>
-                            {r.trip_request?.destination ??
-                              t.destinationMissing}
-                          </small>
-                        </Link>
-                        <span>
-                          {new Date(r.start_at).toLocaleDateString(dateLocale, {
-                            timeZone: "America/Sao_Paulo",
-                            day: "2-digit",
-                            month: "2-digit",
-                          })}
-                          <small>
-                            {dict.fleet.detail.reservationStatus[r.status]}
                           </small>
                         </span>
                       </li>
