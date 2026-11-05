@@ -45,8 +45,9 @@ export async function ChecklistFrame({
       isAdministrator={shell.role === "administrator"}
     >
       <div className="ck" data-testid="checklist-page">
-        <Link href="/trips" className="fm-link">
-          {dict.reservations.detail.backToTrips}
+        {/* the porter comes from Portaria and has no trips of his own */}
+        <Link href={shell.role === "security" ? "/gate" : "/trips"} className="fm-link">
+          {shell.role === "security" ? dict.reservations.detail.backToGate : dict.reservations.detail.backToTrips}
         </Link>
         <h1 className="fm-title">{title}</h1>
         <p className="fm-subtitle">{intro}</p>

@@ -31,6 +31,8 @@ export default async function NewTripPage({
     .select("full_name, role, organization_id, organization:organizations(name)")
     .eq("id", user.id)
     .single();
+  // the gate does not book vehicles: its screen is Portaria
+  if (profile?.role === "security") redirect("/gate");
 
   // Phase C5: the org policy decides whether the new carpool engine owns carpool (hides the old
   // consent checkbox, enables carpool-first and the host seat-offer step).

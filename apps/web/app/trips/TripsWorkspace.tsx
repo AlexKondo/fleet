@@ -129,6 +129,8 @@ export async function TripsWorkspace({
       .order("created_at", { ascending: false })
       .limit(20),
   ]);
+  // the gate has no trips of its own: its screen is Portaria (this workspace also answers /carpool/mine)
+  if (profile?.role === "security") redirect("/gate");
 
   const {data:notDeparted}=await supabase.rpc('fm_not_departed_reservations',{p_ids:(reservations??[]).filter(r=>r.status==='cancelled').map(r=>r.id)});
   const notDepartedIds=new Set(notDeparted??[]);

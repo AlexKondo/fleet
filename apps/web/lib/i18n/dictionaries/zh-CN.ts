@@ -982,6 +982,7 @@ const dict: Dictionary = {
     detail: {
       title: "行程",
       backToTrips: "← 我的行程",
+      backToGate: "← 门岗",
       impactedTitle: "该预订受延误影响",
       impactedDefaultReason: "该车辆上一段行程的延误可能会影响此时间段。",
       impactedReassignPrefix: "可考虑重新指派车辆，前往",

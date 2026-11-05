@@ -1008,6 +1008,7 @@ const dict: Dictionary = {
     detail: {
       title: "Viagem",
       backToTrips: "← Minhas Viagens",
+      backToGate: "← Portaria",
       impactedTitle: "Reserva impactada por atraso",
       impactedDefaultReason: "Um atraso na viagem anterior deste veículo pode afetar este horário.",
       impactedReassignPrefix: "Avalie reatribuir o veículo em",

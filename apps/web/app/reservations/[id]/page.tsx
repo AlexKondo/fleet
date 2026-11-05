@@ -302,8 +302,9 @@ export default async function ReservationDetailPage({
     >
       <div className="rd" data-testid="reservation-detail-fm">
         {banners}
-        <Link href="/trips" className="fm-link">
-          {dict.reservations.detail.backToTrips}
+        {/* the porter comes from Portaria and has no trips of his own */}
+        <Link href={profile?.role === "security" ? "/gate" : "/trips"} className="fm-link">
+          {profile?.role === "security" ? dict.reservations.detail.backToGate : dict.reservations.detail.backToTrips}
         </Link>
 
         {takeoverInfo ? (

@@ -1032,6 +1032,7 @@ export type Dictionary = {
     detail: {
       title: string;
       backToTrips: string;
+      backToGate: string;
       impactedTitle: string;
       impactedDefaultReason: string;
       impactedReassignPrefix: string;

@@ -23,6 +23,8 @@ export default async function CarpoolPage() {
     .select("full_name, role, organization_id, organization:organizations(name)")
     .eq("id", user.id)
     .single();
+  // the gate does not book or ride: its screen is Portaria
+  if (profile?.role === "security") redirect("/gate");
 
   const gate = profile ? deriveBuscarGate(await loadLatestPolicy(supabase, profile.organization_id)) : "unknown";
   const role = profile?.role ?? "employee";
