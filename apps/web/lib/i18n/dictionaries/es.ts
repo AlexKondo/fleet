@@ -240,6 +240,7 @@ const dict: Dictionary = {
       actionTrips: "Mis Reservas",
       actionTripsHint: "Sigue y modifica tus reservas",
       nextTitle: "Próxima reserva",
+      nextTitleMany: "Próximas reservas",
       viewAll: "Ver todas",
       nextEmpty: "No tienes ninguna reserva próxima.",
       nextEmptyCta: "Reservar vehículo",

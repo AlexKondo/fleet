@@ -1,4 +1,3 @@
-import { loadMyChecklistStates } from "@/lib/operations/checklistState";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -17,41 +16,9 @@ import {
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { ClientGantt as ReservationGantt } from "./ClientGantt";
-import { TripsTabs } from "./TripsTabs";
 import type { GanttZoomLevel } from "../ganttZoomActions";
-import { getStatusMeta } from "../dashboard/statusMeta";
-import { FmCarIcon, FmChevronIcon, FmPlusIcon, FmUsersIcon } from "../fmIcons";
-import { expiredBadge, groupTrips, hasOperationalActivity, isActiveTrip } from "@/lib/trips/tripGroups";
+import { FmPlusIcon, FmUsersIcon } from "../fmIcons";
 import "./trips.css";
-
-const TABS = [
-  "all",
-  "upcoming",
-  "active",
-  "carpools",
-  "done",
-  "cancelled",
-] as const;
-type Tab = (typeof TABS)[number];
-
-const TZ = "America/Sao_Paulo";
-function dateBlock(iso: string, locale: string) {
-  const d = new Date(iso);
-  const f = (o: Intl.DateTimeFormatOptions) =>
-    d.toLocaleString(locale, { timeZone: TZ, ...o }).replace(".", "");
-  return {
-    day: f({ day: "2-digit" }),
-    month: f({ month: "short" }),
-    weekday: f({ weekday: "short" }),
-  };
-}
-function timeOf(iso: string, locale: string) {
-  return new Date(iso).toLocaleTimeString(locale, {
-    timeZone: TZ,
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export async function TripsWorkspace({
   searchParams,
@@ -67,18 +34,12 @@ export async function TripsWorkspace({
   const {
     tripActionError,
     carpoolActionError,
-    tab: requestedTab,
   } = await searchParams;
-  const tabParam = carpoolOnly ? "carpools" : requestedTab;
-  const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? "")
-    ? (tabParam as Tab)
-    : "all";
   const dict = await getDictionary();
   const locale = await getLocale();
   const m = dict.trips.minhas;
   const reservationStatusLabel = (status: string): string =>
     (dict.trips.statuses as Record<string, string>)[status] ?? status;
-  const vehicleStatusMeta = getStatusMeta(dict);
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
@@ -132,10 +93,6 @@ export async function TripsWorkspace({
   // the gate has no trips of its own: its screen is Portaria (this workspace also answers /carpool/mine)
   if (profile?.role === "security") redirect("/gate");
 
-  const {data:notDeparted}=await supabase.rpc('fm_not_departed_reservations',{p_ids:(reservations??[]).filter(r=>r.status==='cancelled').map(r=>r.id)});
-  const notDepartedIds=new Set(notDeparted??[]);
-  const closedLabel=locale==='en-US'?'Closed: vehicle did not leave':locale==='es'?'Cerrada: el vehículo no salió':locale==='zh-CN'?'已结束：车辆未出发':'Encerrada: veículo não saiu';
-  const checklistStates=await loadMyChecklistStates(supabase,(reservations??[]).filter(r=>r.status==="confirmed").map(r=>r.id));
   const carpoolTripRequestIds = (participations ?? []).map(
     (p) => p.trip_request_id,
   );
@@ -192,146 +149,11 @@ export async function TripsWorkspace({
   // R1 (FIX-VENCIDAS): an open reservation whose window ended without any pickup/gate/key
   // activity is not "upcoming" — it is listed in History (cancelled tab) with a badge.
   const all = reservations ?? [];
-  const isActive = isActiveTrip;
-  const nowMs = Date.now();
-  const activityOf = (r: (typeof all)[number]) =>
-    r.status === "confirmed" ? hasOperationalActivity(checklistStates?.get(r.id)) : false;
-  const { activeList, upcomingList, doneList, cancelledList, historyList } =
-    groupTrips(all, nowMs, activityOf);
   const requests = carpoolRequests ?? [];
   const carpoolCount = requests.length + listedCarpools.length;
   const total = all.length + carpoolCount;
 
-  const counts: Record<Tab, number> = {
-    all: total,
-    upcoming: upcomingList.length,
-    active: activeList.length,
-    carpools: carpoolCount,
-    done: doneList.length,
-    cancelled: cancelledList.length,
-  };
-  const tabLabels: Record<Tab, string> = {
-    all: m.tabAll,
-    upcoming: m.tabUpcoming,
-    active: m.tabActive,
-    carpools: m.tabCarpools,
-    done: m.tabDone,
-    cancelled: m.tabCancelled,
-  };
-
-  // every panel is rendered once; the tabs only show / hide them in the browser (TripsTabs). What each tab lists:
   const hasCarpoolPanel = requests.length > 0 || listedCarpools.length > 0;
-  const shownBy: Record<Tab, number> = {
-    all: activeList.length + upcomingList.length + historyList.length + (hasCarpoolPanel ? 1 : 0),
-    upcoming: upcomingList.length,
-    active: activeList.length,
-    carpools: hasCarpoolPanel ? 1 : 0,
-    done: doneList.length,
-    cancelled: cancelledList.length,
-  };
-
-  type Row = (typeof all)[number];
-  const tone = (s: string) =>
-    s === "confirmed"
-      ? "ok"
-      : s === "pending_approval"
-        ? "warn"
-        : s === "cancelled"
-          ? "bad"
-          : "neutral";
-
-  const card = (r: Row) => {
-    const d = dateBlock(r.start_at, locale);
-    const vs = r.vehicle?.status;
-    const expired = expiredBadge(r, nowMs, activityOf(r));
-    // The SQL flag already turns false once end_at has passed (0208); the window check here keeps
-    // the button hidden even against a database where 0208 is not applied yet.
-    const canPickup=(checklistStates?.get(r.id)?.can_pickup ?? false) && new Date(r.end_at).getTime() > nowMs;
-    const canReturn=checklistStates?.get(r.id)?.can_return ?? false;
-    return (
-      <li
-        key={r.id}
-        className="fm-card tp-card"
-        data-testid="trip-card"
-        data-status={r.status}
-      >
-        <div className="tp-date" aria-hidden="true">
-          <strong>{d.day}</strong>
-          <span>{d.month}</span>
-          <small>{d.weekday}</small>
-        </div>
-        <div className="tp-main">
-          <p className="tp-title">
-            <span className="tp-kind">
-              <FmCarIcon />
-              {m.kindVehicle}
-            </span>
-            <strong>{r.vehicle?.name ?? r.vehicle?.plate ?? "—"}</strong>
-            <span className="tp-plate">{r.vehicle?.plate ?? "—"}</span>
-          </p>
-          <p className="tp-route break-user-text">
-            {r.trip_request?.origin} → {r.trip_request?.destination}
-          </p>
-          <p className="tp-meta">
-            {formatDateTimeShort(r.start_at, locale)} →{" "}
-            {timeOf(r.end_at, locale)}
-          </p>
-        </div>
-        <div className="tp-side">
-          {expired && r.status !== "cancelled" ? (
-            <span className="fm-pill" data-tone="bad" data-testid="trip-expired-badge">
-              {m[expired]}
-            </span>
-          ) : (
-            <span className="fm-pill" data-tone={tone(r.status)}>
-              {notDepartedIds.has(r.id)?closedLabel:reservationStatusLabel(r.status)}
-            </span>
-          )}
-          {expired && r.status === "cancelled" ? (
-            <span className="fm-pill" data-tone="neutral" data-testid="trip-expired-badge">
-              {m[expired]}
-            </span>
-          ) : null}
-          {isActive(r) && vs ? (
-            <span className="fm-pill" data-tone="info">
-              {vehicleStatusMeta[vs]?.label ?? vs}
-            </span>
-          ) : null}
-        </div>
-        <div className="tp-actions">
-          {canPickup ? (
-            <Link
-              href={`/reservations/${r.id}/pickup`}
-              className="fm-btn fm-btn-primary"
-            >
-              {dict.trips.list.startPickup}
-            </Link>
-          ) : null}
-          {canReturn ? (
-            <Link
-              href={`/reservations/${r.id}/return`}
-              className="fm-btn fm-btn-primary"
-            >
-              {dict.trips.list.registerReturn}
-            </Link>
-          ) : null}
-          <Link href={`/reservations/${r.id}`} className="fm-btn fm-btn-ghost">
-            {m.viewDetails} <FmChevronIcon />
-          </Link>
-        </div>
-      </li>
-    );
-  };
-
-  const section = (id: string, title: string, rows: Row[], testid: string) =>
-    rows.length === 0 ? null : (
-      <section className="tp-section" aria-labelledby={id} data-testid={testid}>
-        <h2 id={id} className="fm-h2">
-          {title}
-        </h2>
-        <ul className="fm-list">{rows.map(card)}</ul>
-      </section>
-    );
 
   return (
     <FmShell
@@ -353,7 +175,6 @@ export async function TripsWorkspace({
           </Link>
         </div>
 
-        {checklistStates===null ? <p role="alert" className="fm-banner fm-banner-danger">{dict.ops.gate.checklistUnavailable}</p> : null}
         {tripActionError ? (
           <div role="alert" className="fm-banner fm-banner-danger tp-banner">
             {/* The pickup/return checklist pages redirect here with a specific reason when
@@ -382,11 +203,12 @@ export async function TripsWorkspace({
           </div>
         ) : null}
 
-        <TripsTabs
-          tabs={(carpoolOnly ? (["carpools"] as const) : TABS).map((k) => ({ key: k, label: tabLabels[k], count: counts[k] }))}
-          initial={tab}
-          ariaLabel={m.tabsLabel}
-        >
+        {/* the car reservations are on the home screen; here only the carpools and, below, the agenda of the vehicles (its bars open the reservation) */}
+        <div className="tp-tabs" data-testid="trips-tabs">
+          <span className="tp-tab" aria-current="page">
+            {m.tabCarpools} <span className="tp-count">({carpoolCount})</span>
+          </span>
+        </div>
 
         {total === 0 ? (
           <div className="fm-card tp-empty" data-testid="trips-empty">
@@ -395,16 +217,13 @@ export async function TripsWorkspace({
               {m.newReservation}
             </Link>
           </div>
-        ) : (Object.keys(shownBy) as Tab[]).filter((k) => shownBy[k] === 0).map((k) => (
-          <p key={k} data-show={k} className="fm-card tp-empty" data-testid="trips-tab-empty">
+        ) : !hasCarpoolPanel ? (
+          <p className="fm-card tp-empty" data-testid="trips-tab-empty">
             {m.tabEmpty}
           </p>
-        ))}
+        ) : null}
 
-        <div data-show="all active">{section("tp-active", m.activeTitle, activeList, "trips-active")}</div>
-        <div data-show="all upcoming">{section("tp-upcoming", m.upcomingTitle, upcomingList, "trips-upcoming")}</div>
-
-        <div data-show="all carpools">
+        <div>
         {requests.length > 0 ? (
           <section
             className="tp-section"
@@ -562,12 +381,8 @@ export async function TripsWorkspace({
 
         </div>
 
-        {/* "Todas" shows past trips on the vehicle agenda below; a list of them here would repeat it. These two tabs are the way to a past reservation's details. */}
-        <div data-show="done">{section("tp-history-done", tabLabels.done, doneList, "trips-history-done")}</div>
-        <div data-show="cancelled">{section("tp-history-cancelled", tabLabels.cancelled, cancelledList, "trips-history-cancelled")}</div>
-
-        {all.length > 0 ? (
-          <div data-show="all">
+        {all.length > 0 && !carpoolOnly ? (
+          <div>
           <section
             className="tp-section"
             aria-labelledby="tp-schedule"
@@ -609,7 +424,6 @@ export async function TripsWorkspace({
           </section>
           </div>
         ) : null}
-        </TripsTabs>
       </div>
     </FmShell>
   );

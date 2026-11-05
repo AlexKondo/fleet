@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { formatDateTimeShort } from "@/lib/formatDateTime";
+import { formatDate, formatDateTimeShort } from "@/lib/formatDateTime";
 import { carpoolStatusText, fillTemplate } from "@/lib/carpool/errorText";
 import type { Dictionary } from "../../lib/i18n/dictionaries";
 import type { Locale } from "../../lib/i18n/locales";
@@ -8,7 +8,6 @@ import { FmShell } from "../carpool/FmShell";
 import {
   FmAlertIcon,
   FmCalendarIcon,
-  FmChevronIcon,
   FmFuelIcon,
   FmGaugeIcon,
   FmBatteryIcon,
@@ -17,7 +16,8 @@ import {
 } from "../fmIcons";
 import { loadMyChecklistStates } from "@/lib/operations/checklistState";
 import { ReservationActions } from "./ReservationActions";
-import { HomeDetailPanel, HomeGantt, HomeSelectionProvider, type HomeItem, type HomeLabels } from "./HomeSelection";
+import { HomeGantt } from "./HomeGantt";
+import { openReservationsNearestFirst } from "@/lib/trips/homeReservations";
 import { timelineWindow, type TimelineBooking } from "../fleet/timelineLayout";
 import { fleetTexts } from "@/lib/i18n/areas/fleet";
 import "../fleet/vehicle-workspace.css";
@@ -77,21 +77,8 @@ export async function EmployeeHome({
   const supabase = await createSupabaseServerClient();
   const nowIso = new Date().toISOString();
 
-  // Next reservation: the earliest still-open one that has not ended (own query, so it never depends on how many past rows exist).
-  // The chart of the employee's own reservations (the same window as the fleet schedule), one row per vehicle they reserved.
-  const [{ data: nextRows, error: nextReservationError }, { data: myRequests, error: carpoolRequestsError }, { data: chartRows, error: chartError }] = await Promise.all([
-    supabase
-      .from("reservations")
-      .select(
-        `id, status, start_at, end_at, impacted_at, impacted_reason,
-         trip_request:trip_requests!inner(origin, destination, requester_id),
-         vehicle:vehicles(id, plate, name, status)`,
-      )
-      .eq("trip_request.requester_id", userId)
-      .in("status", ["pending_approval", "confirmed"])
-      .gte("end_at", nowIso)
-      .order("start_at", { ascending: true })
-      .limit(1),
+  // The chart of the employee's own reservations (the same window as the fleet schedule), one row per vehicle they reserved; the list below it comes from the same rows.
+  const [{ data: myRequests, error: carpoolRequestsError }, { data: chartRows, error: chartError }] = await Promise.all([
     supabase
       .from("carpool_ride_requests")
       .select("id, status, requested_departure_at")
@@ -102,27 +89,18 @@ export async function EmployeeHome({
       .limit(3),
     supabase
       .from("reservations")
-      .select("id, status, start_at, end_at, trip_request:trip_requests!inner(origin, destination, requester_id), vehicle:vehicles(id, plate, name, status)")
+      .select("id, status, start_at, end_at, impacted_at, impacted_reason, trip_request:trip_requests!inner(origin, destination, requester_id), vehicle:vehicles(id, plate, name, status)")
       .eq("trip_request.requester_id", userId)
       .in("status", ["pending_approval", "confirmed", "completed"])
       .gte("end_at", new Date(timelineWindow(Date.now()).start).toISOString())
       .order("start_at", { ascending: true }),
   ]);
 
-  const next = nextRows?.[0] ?? null;
   const byId = new Map(vehicles.map((v) => [v.row.id, v] as const));
-  const nextVehicle = next?.vehicle ? byId.get(next.vehicle.id) : undefined;
-
   // What each confirmed reservation allows NOW comes from the checklist state (the same source as the reservation page): Saída only before the vehicle left,
   // Retorno only after it left and before it came back. Without the state (it failed to load) the vehicle status decides, as before.
-  const confirmedIds = Array.from(new Set([...(chartRows ?? []).filter((r) => r.status === "confirmed").map((r) => r.id), ...(next?.status === "confirmed" ? [next.id] : [])]));
+  const confirmedIds = (chartRows ?? []).filter((r) => r.status === "confirmed").map((r) => r.id);
   const checklistStates = confirmedIds.length > 0 ? await loadMyChecklistStates(supabase, confirmedIds) : new Map();
-  const vStatus = next?.vehicle?.status;
-  const nextState = next ? checklistStates?.get(next.id) : undefined;
-  const canPickup = next?.status === "confirmed" && new Date(next.end_at).getTime() > Date.now() &&
-    (nextState ? nextState.can_pickup : vStatus === "reserved" || vStatus === "awaiting_pickup");
-  const canReturn = next?.status === "confirmed" && (nextState ? nextState.can_return : vStatus === "in_use");
-
   const nowMs = Date.now();
   const T = fleetTexts[locale];
   const chartByVehicle = new Map<string, { id: string; plate: string; name: string | null; bookings: TimelineBooking[] }>();
@@ -134,18 +112,26 @@ export async function EmployeeHome({
   }
   const chartVehicles = [...chartByVehicle.values()];
   const energyShows = (e: string | undefined, kinds: string[]) => (e ? kinds.includes(e) : false);
-  const homeItems: HomeItem[] = (chartRows ?? []).flatMap((r) => {
+  const stateOf = (id: string) => checklistStates?.get(id);
+  const isOut = (r: { id: string; status: string }) => {
+    const st = stateOf(r.id);
+    return r.status === "confirmed" && Boolean(st && (st.own_pickup || st.pickup_traveler || st.legacy_pickup) && !(st.own_return || st.return_traveler));
+  };
+  const openRows = openReservationsNearestFirst(chartRows ?? [], isOut, nowMs);
+  const next = openRows[0] ?? null;
+  const listed = openRows.flatMap((r) => {
     if (!r.vehicle) return [];
     const hv = byId.get(r.vehicle.id);
     const energy = hv?.row.category?.energy_type;
     const confirmed = r.status === "confirmed";
-    const st = checklistStates?.get(r.id);
+    const st = stateOf(r.id);
+    const sameDay = formatDate(r.start_at, locale) === formatDate(r.end_at, locale);
     return [{
       id: r.id,
       statusLabel: (dict.trips.statuses as Record<string, string>)[r.status] ?? r.status,
-      tone: confirmed ? "ok" : r.status === "pending_approval" ? "warn" : r.status === "cancelled" ? "bad" : "neutral",
+      tone: confirmed ? "ok" : "warn",
       startLabel: formatDateTimeShort(r.start_at, locale),
-      endLabel: formatDateTimeShort(r.end_at, locale),
+      endLabel: sameDay ? timeOf(r.end_at, locale) : formatDateTimeShort(r.end_at, locale),
       origin: r.trip_request?.origin ?? "—",
       destination: r.trip_request?.destination ?? "—",
       vehicleName: r.vehicle.name ?? r.vehicle.plate,
@@ -155,26 +141,15 @@ export async function EmployeeHome({
       fuel: energyShows(energy, ["ICE", "HEV", "PHEV"]) ? hv?.row.fuel_level_percent ?? null : null,
       odometer: hv ? `${hv.row.odometer_km.toLocaleString(locale)} km` : null,
       showOps: confirmed,
-      gateDoes: st?.checklist_by === "gate",
-      awaitingGate: Boolean(st && st.workflow !== "key_custody" && st.pickup_traveler && !st.departed && !(st.own_return || st.return_traveler)),
+      hint: st?.checklist_by === "gate" ? h.detailGateDoes
+        : st && st.workflow !== "key_custody" && st.pickup_traveler && !st.departed && !(st.own_return || st.return_traveler) ? h.detailAwaitingGate
+        : null,
       canPickup: confirmed && new Date(r.end_at).getTime() > nowMs && (st ? st.can_pickup : r.vehicle.status === "reserved" || r.vehicle.status === "awaiting_pickup"),
       canReturn: confirmed && (st ? st.can_return : r.vehicle.status === "in_use"),
     }];
   });
-  // the panel opens on the CURRENT vehicle: the one taken out and not returned yet, else the one whose window is running now, else the next one
-  const stateOf = (id: string) => checklistStates?.get(id);
-  const departedNotReturned = (chartRows ?? []).find((r) => r.status === "confirmed" && stateOf(r.id) && (stateOf(r.id)!.own_pickup || stateOf(r.id)!.pickup_traveler || stateOf(r.id)!.legacy_pickup) && !(stateOf(r.id)!.own_return || stateOf(r.id)!.return_traveler));
-  const runningNow = (chartRows ?? []).find((r) => r.status === "confirmed" && Date.parse(r.start_at) <= nowMs && nowMs < Date.parse(r.end_at));
-  const upcoming = (chartRows ?? []).filter((r) => r.status !== "completed" && Date.parse(r.start_at) > nowMs).sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at))[0];
-  const initialId = (departedNotReturned ?? runningNow ?? upcoming)?.id ?? null;
-  const homeLabels: HomeLabels = {
-    departure: h.detailDeparture, ret: h.detailReturn, placeholder: h.detailPlaceholder, awaitingGate: h.detailAwaitingGate, gateDoes: h.detailGateDoes, viewDetails: h.viewDetails,
-    pickup: dict.trips.list.startPickup, returnAction: dict.trips.list.registerReturn,
-    location: t.vehicles.currentLocation, battery: t.vehicles.battery, fuel: t.vehicles.fuel, odometer: t.vehicles.odometer,
-  };
 
   const firstName = (userName.split(" ")[0] ?? userName).trim() || userName;
-  const nextTone = next?.status === "confirmed" ? "ok" : "warn";
 
   return (
     <FmShell active="dashboard" orgName={orgName} userName={userName} role="employee" isFleetManager={false} isAdministrator={false}>
@@ -195,7 +170,6 @@ export async function EmployeeHome({
         <h1 className="fm-title">{fillTemplate(h.greeting, { name: firstName })}</h1>
         <p className="fm-subtitle">{h.greetingSub}</p>
 
-        <HomeSelectionProvider items={homeItems} labels={homeLabels} initialId={initialId}>
         <div className="hm-grid">
           <div className="hm-col-main">
             {carpoolRequestsError ? (
@@ -256,75 +230,52 @@ export async function EmployeeHome({
               )}
             </section>
 
-            <HomeDetailPanel variant="mobile" />
-
-            <section className="fm-card hm-card hm-next" aria-labelledby="hm-next-d">
-              <NextReservation idSuffix="d" />
+            <section className="fm-card hm-card hm-next" aria-labelledby="hm-next">
+              <div className="hm-card-head">
+                <h2 id="hm-next" className="fm-h2">{listed.length > 1 ? h.nextTitleMany : h.nextTitle}</h2>
+              </div>
+              {chartError ? (
+                <p className="fm-error" role="alert" data-testid="home-next-error">{t.vehicles.loadError}</p>
+              ) : listed.length > 0 ? (
+                <ul className="hm-next-list" data-testid="home-reservations">
+                  {listed.map((it, index) => (
+                    <li key={it.id} className="hm-next-body" data-testid={index === 0 ? "home-next-reservation" : "home-later-reservation"}>
+                      <div className="hm-next-when">
+                        <span className="hm-next-icon"><FmCalendarIcon /></span>
+                        <span>
+                          <strong>{it.startLabel}</strong>
+                          <span className="hm-muted"> → {it.endLabel}</span>
+                        </span>
+                      </div>
+                      <div className="hm-next-vehicle">
+                        <div>
+                          <p className="hm-next-name">{it.vehicleName}</p>
+                          <p className="hm-plate">{it.plate}</p>
+                          <p className="hm-muted hm-route">{it.origin} → {it.destination}</p>
+                        </div>
+                        <span className="fm-pill" data-tone={it.tone}>{it.statusLabel}</span>
+                      </div>
+                      <dl className="hm-next-facts">
+                        {it.location ? <div><dt><FmPinIcon /><span className="fm-sr-only">{t.vehicles.currentLocation}</span></dt><dd>{it.location}</dd></div> : null}
+                        {it.battery !== null ? <div><dt><FmBatteryIcon /><span className="fm-sr-only">{t.vehicles.battery}</span></dt><dd>{it.battery}%</dd></div> : null}
+                        {it.fuel !== null ? <div><dt><FmFuelIcon /><span className="fm-sr-only">{t.vehicles.fuel}</span></dt><dd>{it.fuel}%</dd></div> : null}
+                        {it.odometer ? <div><dt><FmGaugeIcon /><span className="fm-sr-only">{t.vehicles.odometer}</span></dt><dd>{it.odometer}</dd></div> : null}
+                      </dl>
+                      <ReservationActions id={it.id} viewDetails={h.viewDetails} pickup={dict.trips.list.startPickup} returnLabel={dict.trips.list.registerReturn} showOps={it.showOps} canPickup={it.canPickup} canReturn={it.canReturn} hint={it.hint} />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="hm-empty">
+                  <p className="hm-muted">{h.nextEmpty}</p>
+                  <Link href="/trips/new" className="fm-btn fm-btn-primary">{h.nextEmptyCta}</Link>
+                </div>
+              )}
             </section>
           </div>
-
-          <aside className="hm-col-side" aria-label={h.actionTrips}>
-            <HomeDetailPanel variant="desktop" />
-          </aside>
         </div>
-        </HomeSelectionProvider>
 
       </div>
     </FmShell>
   );
-
-  /** The "next reservation" card; rendered twice (mobile slot / desktop aside), only one is visible per breakpoint. */
-  function NextReservation({ idSuffix }: { idSuffix: string }) {
-    return (
-      <>
-        <div className="hm-card-head">
-          <h2 id={`hm-next-${idSuffix}`} className="fm-h2">{h.nextTitle}</h2>
-          <Link href="/trips" className="hm-link">{h.viewAll}</Link>
-        </div>
-        {nextReservationError ? (
-          <p className="fm-error" role="alert" data-testid={`home-next-error-${idSuffix}`}>{t.vehicles.loadError}</p>
-        ) : next ? (
-          <div className="hm-next-body" data-testid={idSuffix === "d" ? "home-next-reservation" : "home-next-reservation-mobile"}>
-            <div className="hm-next-when">
-              <span className="hm-next-icon"><FmCalendarIcon /></span>
-              <span>
-                <strong>{formatDateTimeShort(next.start_at, locale)}</strong>
-                <span className="hm-muted"> → {timeOf(next.end_at, locale)}</span>
-              </span>
-            </div>
-            <div className="hm-next-vehicle">
-              <div>
-                <p className="hm-next-name">{next.vehicle?.name ?? next.vehicle?.plate ?? "—"}</p>
-                <p className="hm-plate">{next.vehicle?.plate}</p>
-                <p className="hm-muted hm-route">{next.trip_request?.origin} → {next.trip_request?.destination}</p>
-              </div>
-              <span className="fm-pill" data-tone={nextTone}>
-                {(dict.trips.statuses as Record<string, string>)[next.status] ?? next.status}
-              </span>
-            </div>
-            {nextVehicle ? (
-              <dl className="hm-next-facts">
-                {nextVehicle.row.current_location ? (
-                  <div><dt><FmPinIcon /><span className="fm-sr-only">{t.vehicles.currentLocation}</span></dt><dd>{nextVehicle.row.current_location.name}</dd></div>
-                ) : null}
-                {nextVehicle.row.battery_level_percent !== null && (nextVehicle.row.category?.energy_type === "BEV" || nextVehicle.row.category?.energy_type === "PHEV") ? (
-                  <div><dt><FmBatteryIcon /><span className="fm-sr-only">{t.vehicles.battery}</span></dt><dd>{nextVehicle.row.battery_level_percent}%</dd></div>
-                ) : null}
-                {nextVehicle.row.fuel_level_percent !== null && (nextVehicle.row.category?.energy_type === "ICE" || nextVehicle.row.category?.energy_type === "HEV" || nextVehicle.row.category?.energy_type === "PHEV") ? (
-                  <div><dt><FmFuelIcon /><span className="fm-sr-only">{t.vehicles.fuel}</span></dt><dd>{nextVehicle.row.fuel_level_percent}%</dd></div>
-                ) : null}
-                <div><dt><FmGaugeIcon /><span className="fm-sr-only">{t.vehicles.odometer}</span></dt><dd>{nextVehicle.row.odometer_km.toLocaleString(locale)} km</dd></div>
-              </dl>
-            ) : null}
-            <ReservationActions id={next.id} viewDetails={h.viewDetails} pickup={dict.trips.list.startPickup} returnLabel={dict.trips.list.registerReturn} showOps={next.status === "confirmed"} canPickup={canPickup} canReturn={canReturn} hint={nextState?.checklist_by === "gate" ? h.detailGateDoes : nextState && nextState.workflow !== "key_custody" && nextState.pickup_traveler && !nextState.departed && !(nextState.own_return || nextState.return_traveler) ? h.detailAwaitingGate : null} />
-          </div>
-        ) : (
-          <div className="hm-empty">
-            <p className="hm-muted">{h.nextEmpty}</p>
-            <Link href="/trips/new" className="fm-btn fm-btn-primary">{h.nextEmptyCta}</Link>
-          </div>
-        )}
-      </>
-    );
-  }
 }

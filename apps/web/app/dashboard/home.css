@@ -16,15 +16,11 @@
   gap: 16px;
   align-items: start;
 }
-.fm-theme .hm-col-main,
-.fm-theme .hm-col-side {
+.fm-theme .hm-col-main {
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-}
-.fm-theme .hm-col-side {
-  display: none;
 }
 .fm-theme .hm-card {
   padding: 16px;
@@ -52,6 +48,18 @@
 /* quick actions */
 
 /* next reservation */
+.fm-theme .hm-next-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fm-theme .hm-next-list > li + li {
+  padding-top: 16px;
+  border-top: 1px solid var(--fm-border);
+}
 .fm-theme .hm-next-body {
   margin-top: 12px;
   display: flex;
@@ -268,15 +276,6 @@
   }
 }
 @media (min-width: 1280px) {
-  .fm-theme .hm-grid {
-    grid-template-columns: minmax(0, 1fr) 380px;
-  }
-  .fm-theme .hm-col-side {
-    display: flex;
-  }
-  .fm-theme .hm-next-mobile {
-    display: none;
-  }
   .fm-theme .hm-vehicles {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -284,11 +283,6 @@
 @media (min-width: 1600px) {
   .fm-theme .hm-vehicles {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-@media (max-width: 1279px) {
-  .fm-theme .hm-next-desktop {
-    display: none;
   }
 }
 
@@ -303,7 +297,6 @@
 .hm-gantt .vw-rowmain small{display:block}.hm-gantt .vw-rowmain{padding:6px 4px}
 
 .hm-gantt .vw-row{cursor:pointer}.hm-gantt .vw-row:hover,.hm-gantt .vw-row[data-selected=true]{background:rgba(46,123,230,.08)}.hm-gantt .vw-row:focus-visible{outline:2px solid var(--fm-blue-500, #2e7be6);outline-offset:-2px}.hm-gantt .vt-bar{cursor:pointer}
-.hm-detail-times{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.hm-detail-times dt{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.75}.hm-detail-times dt svg{width:14px;height:14px}.hm-detail-times dd{margin:2px 0 0;font-weight:600}
 
 .fm-theme .hm-btn-off{background:#7b8798 !important;border-color:#7b8798 !important;color:#e6ebf3 !important;opacity:.7;cursor:not-allowed;pointer-events:none;box-shadow:none}
 

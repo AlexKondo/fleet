@@ -291,6 +291,7 @@ export type Dictionary = {
       actionTrips: string;
       actionTripsHint: string;
       nextTitle: string;
+      nextTitleMany: string;
       viewAll: string;
       nextEmpty: string;
       nextEmptyCta: string;

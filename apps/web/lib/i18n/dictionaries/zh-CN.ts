@@ -234,6 +234,7 @@ const dict: Dictionary = {
       actionTrips: "我的预订",
       actionTripsHint: "查看并修改您的预订",
       nextTitle: "下一个预订",
+      nextTitleMany: "后续预订",
       viewAll: "查看全部",
       nextEmpty: "您没有即将到来的预订。",
       nextEmptyCta: "预订车辆",
