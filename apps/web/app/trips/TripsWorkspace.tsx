@@ -562,9 +562,9 @@ export async function TripsWorkspace({
 
         </div>
 
-        <div data-show="all">{section("tp-history", m.historyTitle, historyList, "trips-history")}</div>
-        <div data-show="done">{section("tp-history-done", m.historyTitle, doneList, "trips-history-done")}</div>
-        <div data-show="cancelled">{section("tp-history-cancelled", m.historyTitle, cancelledList, "trips-history-cancelled")}</div>
+        {/* "Todas" shows past trips on the vehicle agenda below; a list of them here would repeat it. These two tabs are the way to a past reservation's details. */}
+        <div data-show="done">{section("tp-history-done", tabLabels.done, doneList, "trips-history-done")}</div>
+        <div data-show="cancelled">{section("tp-history-cancelled", tabLabels.cancelled, cancelledList, "trips-history-cancelled")}</div>
 
         {all.length > 0 ? (
           <div data-show="all">
