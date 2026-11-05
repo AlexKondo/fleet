@@ -1001,89 +1001,6 @@
         1870,
         760
       ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Config entrada').first().json.evoBase }}/message/presence",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $('Uma por vez').item.json.number, state: 'composing' }) }}",
-        "options": {
-          "timeout": 8000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
-        }
-      },
-      "id": "eedbcfda-d791-42e2-a480-02878762cc96",
-      "name": "Digitando resposta",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2090,
-        760
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "evoGoGeral01",
-          "name": "Evolution Go (Geral)"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "amount": "={{ $('Uma por vez').runIndex > 0 ? 1 : Math.min(3, Math.max(1, (String($('Uma por vez').item.json.text || '').length) / 60)) }}",
-        "unit": "seconds"
-      },
-      "id": "d445c08e-1b60-4a3a-9bcd-00118ab51ad8",
-      "name": "Aguardar digitacao",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        2310,
-        760
-      ],
-      "webhookId": "359c5d95-bb92-4582-bad4-a8eead7e189e"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Config entrada').first().json.evoBase }}/message/presence",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $('Classificar mensagem').first().json.from, state: 'composing' }) }}",
-        "options": {
-          "timeout": 8000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
-        }
-      },
-      "id": "134416c7-6d5b-464a-9f01-5ab1977c17ae",
-      "name": "Mostrar digitando",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        550,
-        940
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "evoGoGeral01",
-          "name": "Evolution Go (Geral)"
-        }
-      },
-      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -1265,11 +1182,6 @@
         [
           {
             "node": "E audio?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Mostrar digitando",
             "type": "main",
             "index": 0
           }
@@ -1465,28 +1377,6 @@
     "Uma por vez": {
       "main": [
         [],
-        [
-          {
-            "node": "Digitando resposta",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Digitando resposta": {
-      "main": [
-        [
-          {
-            "node": "Aguardar digitacao",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aguardar digitacao": {
-      "main": [
         [
           {
             "node": "Enviar mensagem ao usuario",
