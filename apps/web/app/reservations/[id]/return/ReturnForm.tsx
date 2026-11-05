@@ -17,7 +17,7 @@ type EnergyType = Database["public"]["Enums"]["energy_type"];
 export function ReturnForm({
   reservationId,
   energyType,
-  currentOdometer,
+  odometerReference,
   locations,
   homeLocationId,
   equipmentItems,
@@ -27,7 +27,8 @@ export function ReturnForm({
 }: {
   reservationId: string;
   energyType: EnergyType;
-  currentOdometer: number;
+  /** The km of the departure when it was recorded; see returnOdometerReference. */
+  odometerReference: { km: number; fromPickup: boolean };
   locations: { id: string; name: string }[];
   homeLocationId: string | null;
   equipmentItems: { id: string; name: string }[];
@@ -148,11 +149,11 @@ export function ReturnForm({
               type="number"
               name="odometerKm"
               required
-              min={currentOdometer}
-              defaultValue={currentOdometer}
+              min={odometerReference.km}
+              autoComplete="off"
               className="fm-input"
             />
-            <span className="ck-hint">{t.odometerAtPickup.replace("{km}", currentOdometer.toLocaleString(locale))}</span>
+            <span className="ck-hint">{(odometerReference.fromPickup ? t.odometerAtPickup : tc.odometerLast).replace("{km}", odometerReference.km.toLocaleString(locale))}</span>
           </label>
           <label className="fm-field">
             <span className="fm-label">{t.parkedWhereLabel}</span>

@@ -1,5 +1,6 @@
 "use client";
 import {fieldsWithoutPhotos,directInspectionPhotos} from "@/lib/domain/directPhotoUpload";
+import type { Locale } from "@/lib/i18n/locales";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,6 +18,7 @@ export function PickupForm({
   reservationId,
   energyType,
   currentOdometer,
+  locale,
   equipmentItems,
   doneHref = "/trips",
   dict,
@@ -24,6 +26,7 @@ export function PickupForm({
   reservationId: string;
   energyType: EnergyType;
   currentOdometer: number;
+  locale: Locale;
   equipmentItems: { id: string; name: string }[];
   /** where the person goes when the checklist is done (the porter: Portaria) */
   doneHref?: string;
@@ -143,9 +146,10 @@ export function PickupForm({
               name="odometerKm"
               required
               min={currentOdometer}
-              defaultValue={currentOdometer}
+              autoComplete="off"
               className="fm-input"
             />
+            <span className="ck-hint">{tc.odometerLast.replace("{km}", currentOdometer.toLocaleString(locale))}</span>
           </label>
           {showFuel ? (
             <label className="fm-field">

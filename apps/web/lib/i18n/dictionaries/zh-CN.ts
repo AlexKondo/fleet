@@ -1059,6 +1059,7 @@ const dict: Dictionary = {
       routeLabel: "路线",
       electricRange: "纯电续航：{km} 公里",
       fuelLabel: "燃油（%）",
+      odometerLast: "上次记录：{km} 公里",
       batteryLabel: "电量（%）",
       safetyEquipmentLegend: "随车必备装备齐全",
       damageNotesPlaceholder: "描述损坏情况",

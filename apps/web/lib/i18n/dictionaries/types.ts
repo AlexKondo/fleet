@@ -1109,6 +1109,7 @@ export type Dictionary = {
       routeLabel: string;
       electricRange: string;
       fuelLabel: string;
+      odometerLast: string;
       batteryLabel: string;
       safetyEquipmentLegend: string;
       damageNotesPlaceholder: string;

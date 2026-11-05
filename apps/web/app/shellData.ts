@@ -161,7 +161,7 @@ export function buildBaseNavItems(
     {
       key: "keys",href:"/account/keys",label:dict.navExtra.keyCustody,icon:GateIcon,visible:canKeyCustody,
     },
-    {key:"budgetApprovals",href:"/account/maintenance-approvals",label:dict.navExtra.budgetApprovals,icon:TripsIcon,visible:canBudgetApproval||isFleetManager},
+    {key:"budgetApprovals",href:"/account/maintenance-approvals",label:dict.navExtra.budgetApprovals,icon:TripsIcon,visible:canBudgetApproval},
     {key:"reservationApprovals",href:"/approvals",label:dict.navExtra.reservationApprovals,icon:TripsIcon,visible:canReservationApproval},
     {key:"keyManagement",href:"/fleet/keys",label:dict.navExtra.keyTracking,icon:GateIcon,visible:isFleetManager},
     {

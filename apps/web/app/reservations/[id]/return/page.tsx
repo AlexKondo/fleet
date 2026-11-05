@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { ReturnForm } from "./ReturnForm";
+import { returnOdometerReference } from "@/lib/operations/odometerReference";
 import { ChecklistFrame } from "../ChecklistFrame";
 import { ChecklistReports } from "../ChecklistReports";
 import { getDictionary, getLocale } from "../../../../lib/i18n/getLocale";
@@ -65,6 +66,8 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
   const quickGate=state.inspection_role==="security"&&state.checklist_by!=="gate";
   const equipmentContract=quickGate?null:await loadEquipmentContract(supabase,id);
   const equipmentItems=equipmentContract?.required_names.map((name,index)=>({id:`${equipmentContract.id}-${index}`,name}))??[];
+  const { data: pickupChecks } = quickGate ? { data: null } : await supabase.from("inspections").select("odometer_km, actor_role_at_recording").eq("reservation_id", id).eq("type", "pickup");
+  const odometerReference = returnOdometerReference(vehicle.odometer_km, (pickupChecks ?? []).filter((c) => c.actor_role_at_recording !== null).map((c) => c.odometer_km));
 
   return (
     <ChecklistFrame
@@ -93,7 +96,7 @@ export default async function ReturnPage({ params }: { params: Promise<{ id: str
         <ReturnForm
           reservationId={reservation.id}
           energyType={energyType}
-          currentOdometer={vehicle.odometer_km}
+          odometerReference={odometerReference}
           locations={locations ?? []}
           homeLocationId={vehicle.home_location_id}
           equipmentItems={equipmentItems ?? []}

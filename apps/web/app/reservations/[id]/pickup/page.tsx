@@ -88,6 +88,7 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
           reservationId={reservation.id}
           energyType={energyType}
           currentOdometer={vehicle.odometer_km}
+          locale={locale}
           equipmentItems={equipmentItems ?? []}
           doneHref={state.inspection_role === "security" ? "/gate" : "/trips"}
           dict={dict}

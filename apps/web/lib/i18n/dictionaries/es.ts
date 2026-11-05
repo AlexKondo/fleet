@@ -1085,6 +1085,7 @@ const dict: Dictionary = {
       routeLabel: "Ruta",
       electricRange: "Autonomía eléctrica: {km} km",
       fuelLabel: "Combustible (%)",
+      odometerLast: "Último registro: {km} km",
       batteryLabel: "Batería (%)",
       safetyEquipmentLegend: "Equipamiento obligatorio presente",
       damageNotesPlaceholder: "Describe el daño",
