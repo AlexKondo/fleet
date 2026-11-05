@@ -6,11 +6,13 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { PickupForm } from "./PickupForm";
 import { ChecklistFrame } from "../ChecklistFrame";
-import { getDictionary } from "../../../../lib/i18n/getLocale";
+import { ChecklistReports } from "../ChecklistReports";
+import { getDictionary, getLocale } from "../../../../lib/i18n/getLocale";
 
 export default async function PickupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const dict = await getDictionary();
+  const locale = await getLocale();
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser(supabase);
   if (!user) redirect("/login");
@@ -79,6 +81,7 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
       showElectricRange={quickGate ? false : showElectricRange}
       route={{ origin: reservation.trip_request?.origin, destination: reservation.trip_request?.destination }}
     >
+        {state.inspection_role === "security" ? <ChecklistReports supabase={supabase} reservationId={id} locale={locale} /> : null}
         {quickGate ? <GateVisualForm reservationId={id} phase="pickup" dict={dict}/> : (
         equipmentContract?<><p className="ck-note">Equipamentos: {equipmentContract.source==="legacy_return_observation"?"Observações do processo legado; requisitos específicos ainda não verificados":`Conjunto ${equipmentContract.source==="vehicle"?"do veículo":"do modelo"} · revisão ${equipmentContract.configuration_version}`}</p>{equipmentContract.optional_names.length>0&&<p className="ck-note">Itens disponíveis sem exigência de ausência no checklist: {equipmentContract.optional_names.join(", ")}</p>}
         <PickupForm

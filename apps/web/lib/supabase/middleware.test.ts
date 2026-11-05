@@ -58,7 +58,7 @@ describe("CNH gate versus administrative access (S3-03)", () => {
   type License = { drivers_license_number: string | null; drivers_license_expiration: string | null; driver_authorized: boolean };
   const NO_CNH: License = { drivers_license_number: null, drivers_license_expiration: null, driver_authorized: false };
   const EXPIRED: License = { drivers_license_number: "12345678900", drivers_license_expiration: "2026-01-10", driver_authorized: true };
-  const ADMIN_PATHS = ["/", "/admin", "/admin/units", "/admin/integrations", "/admin/audit", "/admin/ai", "/analytics", "/analytics/carpool", "/dashboard", "/dashboard/command-center", "/gate", "/gate/exceptions", "/gate/history", "/fleet", "/fleet/carpools", "/settings/users", "/maintenance/planning", "/reservations/abc"];
+  const ADMIN_PATHS = ["/", "/admin", "/admin/units", "/admin/integrations", "/admin/audit", "/admin/ai", "/analytics", "/analytics/carpool", "/dashboard", "/dashboard/command-center", "/gate", "/gate/history", "/fleet", "/fleet/carpools", "/settings/users", "/maintenance/planning", "/reservations/abc"];
   const DRIVING_PATHS = ["/trips/new", "/reservations/abc/pickup"];
 
   async function load(opts: { role: string; license: License; enabled?: boolean; mustChange?: boolean }) {

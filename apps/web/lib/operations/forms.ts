@@ -133,7 +133,6 @@ const paths = new Set([
   "/fleet/energy",
   "/gate",
   "/gate/history",
-  "/gate/exceptions",
   "/fleet/incidents",
 ]);
 export function operationReturn(value: unknown) {

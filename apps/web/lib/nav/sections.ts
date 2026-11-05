@@ -8,7 +8,7 @@ export type SectionId = "team" | "fleet" | "trips" | "dashboard" | "settings" | 
 /** Menu keys that are no longer menu items: they are tabs of an area (or already have their own tabs: maintenance, gate). */
 export const TAB_ONLY_KEYS = [
   "planning", "orders", "vehicleHistory", // Manutenção: its own tabs
-  "gateExceptions", "gateHistory", // Portaria tabs
+  "gateHistory", // Portaria tabs
   "energy", "incidents", "keyManagement", "drivers", "carpool", // Frota / Equipe / Viagens tabs
   "analytics", "admin", // Painel / Configurações tabs
   "book", "myCarpools", "find", // Viagens tabs
@@ -19,7 +19,7 @@ export function menuKeyFor(active: string): string {
   switch (active) {
     case "drivers": return "team";
     case "planning": case "orders": case "vehicleHistory": return "maintenance";
-    case "gateExceptions": case "gateHistory": return "gate";
+    case "gateHistory": return "gate";
     case "energy": case "incidents": case "keyManagement": case "carpool": return "fleet";
     case "book": case "myCarpools": case "find": return "trips";
     case "analytics": return "dashboard";
@@ -72,7 +72,6 @@ export function sectionTabs(section: SectionId, f: { isAdministrator: boolean })
     case "gate":
       return [
         { id: "queue", href: "/gate", visible: true },
-        { id: "exceptions", href: "/gate/exceptions", visible: true },
         { id: "history", href: "/gate/history", visible: true },
       ];
     case "dashboard":

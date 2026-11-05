@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {IncidentCases} from "./IncidentCases";
+import { hasChecklistReport } from "@/lib/operations/checklistReports";
 import {incidentCommand} from "@/app/fleet/incidents/actions";
 import {randomUUID} from "node:crypto";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
@@ -19,10 +20,8 @@ import {
   date,
 } from "./Workspace";
 export async function IncidentsWorkspace({
-  gate,
   params,
 }: {
-  gate: boolean;
   params: {
     q?: string;
     inspection?: string;
@@ -37,11 +36,7 @@ export async function IncidentsWorkspace({
   const T = await getAreaText(incidentsTexts);
   const locale = await getLocale();
   const opsShell = (await getDictionary()).opsShell;
-  const data = await loadOperationalWorkspace(
-    gate
-      ? ["security", "fleet_manager", "administrator"]
-      : ["fleet_manager", "administrator"],
-  );
+  const data = await loadOperationalWorkspace(["fleet_manager", "administrator"]);
   const inspections = await pageAll("incident inspections", (a, b) =>
     (data.manager ? data.db.from("fm_managed_inspections") : data.db.from("inspections"))
       .select(
@@ -51,13 +46,7 @@ export async function IncidentsWorkspace({
       .order("id")
       .range(a, b),
   ).catch(() => null);
-  const incidents = inspections?.filter(
-    (i) =>
-      i.has_new_damage ||
-      (i.missing_safety_equipment?.length ?? 0) ||
-      i.is_dirty_exterior ||
-      i.is_dirty_interior,
-  );
+  const incidents = inspections?.filter(hasChecklistReport);
   const filtered = incidents?.filter(
     (i) =>
       (!params.q ||
@@ -73,24 +62,16 @@ export async function IncidentsWorkspace({
   );
   const selected =
     filtered?.find((i) => i.id === params.inspection) ?? filtered?.[0];
-  const base = gate ? "/gate/exceptions" : "/fleet/incidents";
+  const base = "/fleet/incidents";
   const acks = data.records.acknowledgements;
-  const casePanel=!gate?await IncidentCases({data,params,T,locale}):null;
+  const casePanel=await IncidentCases({data,params,T,locale});
   return (
     <Workspace
       data={data}
-      title={
-        gate
-          ? T.gateTitle
-          : T.title
-      }
-      subtitle={
-        gate
-          ? T.gateSubtitle
-          : T.subtitle
-      }
-      active={gate ? "gateExceptions" : "incidents"}
-      managerView={!gate}
+      title={T.title}
+      subtitle={T.subtitle}
+      active="incidents"
+      managerView
       error={params.error}
       success={params.success}
     >
@@ -271,7 +252,7 @@ export async function IncidentsWorkspace({
                 >
                   {T.openReservation}
                 </Link>
-                {!gate&&<details><summary>{T.openTreatment}</summary><form action={incidentCommand} className="ow-form"><input type="hidden" name="command" value="create"/><input type="hidden" name="request_id" value={randomUUID()}/><input type="hidden" name="vehicle_id" value={selected.vehicle_id}/><input type="hidden" name="inspection_id" value={selected.id}/><input type="hidden" name="reservation_id" value={selected.reservation_id}/><input type="hidden" name="kind" value={selected.has_new_damage?'damage':selected.missing_safety_equipment?.length?'equipment':'cleaning'}/><Field label={T.incidentTitleLabel} name="title" required maxLength={160} value={selected.has_new_damage?T.titleDamage:selected.missing_safety_equipment?.length?T.titleEquipment:T.titleCleaning}/><label className="ow-field">{T.severity}<select name="severity"><option value="low">{T.sevLow}</option><option value="medium">{T.sevMedium}</option><option value="high">{T.sevHigh}</option><option value="critical">{T.sevCritical}</option></select></label><label className="ow-field">{T.descContext}<textarea name="notes" required minLength={3} maxLength={3000} defaultValue={selected.damage_notes??''}/></label><Submit>{T.registerLinked}</Submit></form></details>}
+                <details><summary>{T.openTreatment}</summary><form action={incidentCommand} className="ow-form"><input type="hidden" name="command" value="create"/><input type="hidden" name="request_id" value={randomUUID()}/><input type="hidden" name="vehicle_id" value={selected.vehicle_id}/><input type="hidden" name="inspection_id" value={selected.id}/><input type="hidden" name="reservation_id" value={selected.reservation_id}/><input type="hidden" name="kind" value={selected.has_new_damage?'damage':selected.missing_safety_equipment?.length?'equipment':'cleaning'}/><Field label={T.incidentTitleLabel} name="title" required maxLength={160} value={selected.has_new_damage?T.titleDamage:selected.missing_safety_equipment?.length?T.titleEquipment:T.titleCleaning}/><label className="ow-field">{T.severity}<select name="severity"><option value="low">{T.sevLow}</option><option value="medium">{T.sevMedium}</option><option value="high">{T.sevHigh}</option><option value="critical">{T.sevCritical}</option></select></label><label className="ow-field">{T.descContext}<textarea name="notes" required minLength={3} maxLength={3000} defaultValue={selected.damage_notes??''}/></label><Submit>{T.registerLinked}</Submit></form></details>
                 {acks === null ? (
                   <Empty>{T.acksUnavailable}</Empty>
                 ) : acks.some(

@@ -13,5 +13,5 @@ export default async function Page({
     success?: string;
   }>;
 }) {
-  return <IncidentsWorkspace gate={false} params={await searchParams} />;
+  return <IncidentsWorkspace params={await searchParams} />;
 }

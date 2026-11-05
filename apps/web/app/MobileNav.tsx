@@ -47,7 +47,6 @@ const ICONS_BY_KEY: Record<
   energy: AnalyticsIcon,
   drivers: TeamIcon,
   incidents: GateIcon,
-  gateExceptions: GateIcon,
   gateHistory: TripsIcon,
   keys: GateIcon,
   keyManagement: GateIcon,

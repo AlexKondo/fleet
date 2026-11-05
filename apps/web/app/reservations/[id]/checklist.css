@@ -327,6 +327,26 @@
   line-height: 1.5;
 }
 
+/* Portaria: what the checklists of this reservation already reported, above the check of the vehicle. */
+.fm-theme .ck-reports {
+  margin-bottom: 12px;
+}
+.fm-theme .ck-reports ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fm-theme .ck-reports small {
+  color: var(--fm-text-muted);
+  font-size: 12px;
+}
+.fm-theme .ck-reports p {
+  font-size: 14px;
+}
+
 /* Reservation chat: an icon on the reservation header opens a small window (a full sheet on phones). */
 .fm-theme .rd-chat-open {
   position: relative;
