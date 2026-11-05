@@ -493,7 +493,7 @@ try {
   await go(mgr, "/settings");
   await act(mgr, () => mgr.locator("li", { hasText: "Item LB novo" }).locator('button:has-text("Remover")').click());
   record("Settings: removing a checklist item works (DB)", Number((await sql(`select count(*) c from safety_equipment_items where organization_id='${O}' and name='Item LB novo'`))[0].c) === 0);
-  await mgr.getByRole("link", { name: /Pontos de Mobilidade/ }).click();
+  await mgr.getByRole("link", { name: /Locais de mobilidade/ }).click();
   await mgr.waitForTimeout(2000);
   record("Mobility points: opens from /settings, in .fm-theme, has a single h1 page title, no horizontal scroll", path_(mgr) === "/settings/mobility-points" && (await hasFm(mgr)) && (await mgr.locator("h1").count()) === 1 && /Pontos de Mobilidade/.test(await mgr.locator("h1").innerText()) && (await hscroll(mgr)) <= 0);
   await shot(mgr, "mobility-points-desktop", true);

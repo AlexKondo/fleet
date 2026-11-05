@@ -147,11 +147,6 @@ export default async function SettingsPage() {
           <div className="fm-panel"><SafetyEquipmentSection dict={dict} deactivateLabel={T.deactivate} items={equipmentItems ?? []} /></div>
           <div className="fm-panel"><ChatUsageSummary dict={dict} stats={chatUsageStats} /></div>
           <div className="fm-panel"><CarpoolPolicySection dict={dict} locale={locale} versions={policyVersions} /></div>
-          <div className="fm-panel">
-            <a href="/settings/mobility-points" className="fm-link">
-              {dict.mobilityPoints.title} →
-            </a>
-          </div>
         </div>
       </section>
     </FmShell>
