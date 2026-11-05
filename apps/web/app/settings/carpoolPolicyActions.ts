@@ -67,6 +67,8 @@ export async function publishCarpoolPolicy(
     allow_intermediate_pickup: v.allowIntermediatePickup,
     allow_intermediate_dropoff: v.allowIntermediateDropoff,
     minimum_seat_availability: v.minimumSeatAvailability,
+    host_can_accept_over_detour: v.hostCanAcceptOverDetour,
+    host_sees_rider_before_accept: v.hostSeesRiderBeforeAccept,
   });
   if (error) {
     console.error("publishCarpoolPolicy failed:", error.message);

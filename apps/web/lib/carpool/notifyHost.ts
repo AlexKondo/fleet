@@ -15,6 +15,10 @@ interface CarpoolNotice {
   status?: string;
   token?: string | null;
   rider_name?: string | null;
+  detour_km?: number | string | null;
+  detour_min?: number | string | null;
+  limit_km?: number | string | null;
+  limit_min?: number | string | null;
   seats?: number | null;
   pickup_label?: string | null;
   destination?: string | null;
@@ -27,6 +31,12 @@ interface CarpoolNotice {
 export const CARPOOL_YES = "cp:yes:";
 export const CARPOOL_NO = "cp:no:";
 
+function overLimitLine(n: CarpoolNotice): string | null {
+  const [km, min, limitKm, limitMin] = [n.detour_km, n.detour_min, n.limit_km, n.limit_min].map((v) => (v === null || v === undefined ? Number.NaN : Number(v)));
+  if (![km, min, limitKm, limitMin].every(Number.isFinite) || (km! <= limitKm! && min! <= limitMin!)) return null;
+  return `⚠️ Desvio de ${Math.round(km! * 10) / 10} km e ${Math.round(min!)} min, acima do limite da política (${limitKm} km e ${limitMin} min).`;
+}
+
 export function buildHostMessage(n: CarpoolNotice): string {
   const rider = cleanUserText(n.rider_name, 80) || "Um colega";
   const seats = Number(n.seats ?? 1) > 1 ? ` (${Number(n.seats)} lugares)` : "";
@@ -38,6 +48,8 @@ export function buildHostMessage(n: CarpoolNotice): string {
   const vehicle = [cleanUserText(n.vehicle_name, 60), cleanUserText(n.plate, 12) ? `(${cleanUserText(n.plate, 12)})` : ""].filter(Boolean).join(" ");
   if (vehicle) lines.push(`Veículo: ${vehicle}`);
   if (n.pickup_label) lines.push("", `Embarque do passageiro: ${cleanUserText(n.pickup_label)}`);
+  const over = overLimitLine(n);
+  if (!accepted && over) lines.push("", over);
   if (!accepted) lines.push("", "Você aceita levar?");
   return lines.join("\n");
 }

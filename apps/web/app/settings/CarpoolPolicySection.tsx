@@ -74,6 +74,8 @@ export function CarpoolPolicySection({
           {check("hostApprovalRequired", t.hostApprovalRequired, true)}
           {check("allowIntermediatePickup", t.allowIntermediatePickup, true)}
           {check("allowIntermediateDropoff", t.allowIntermediateDropoff, true)}
+          {check("hostCanAcceptOverDetour", t.hostCanAcceptOverDetour, false)}
+          {check("hostSeesRiderBeforeAccept", t.hostSeesRiderBeforeAccept, true)}
         </div>
         <div className="flex flex-wrap gap-4">
           {num("departureWindowMinutes", t.departureWindowMinutes, 15)}

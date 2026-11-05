@@ -19,6 +19,7 @@ import {
   evaluatePolicyPredicates,
   type CarpoolPolicyConfig,
   type PolicyPredicateFailureReason,
+  MAX_OVER_DETOUR_FACTOR,
 } from "./carpoolPolicy";
 import type { RouteEvaluationResult } from "../geospatial/providers";
 import { isValidSeatCount } from "./inputValidation";
@@ -122,10 +123,15 @@ export function evaluateRouteMatch(input: RouteMatchInput): RouteMatchResult {
   }
 
   const { additionalDistanceKm, additionalTimeMin } = input.route;
-  if (additionalDistanceKm > input.policy.maxAdditionalDistanceKm) {
+  // Above the limits the ride may still reach the host, whose decision it then is (hostCanAcceptOverDetour).
+  const hostDecides =
+    input.policy.hostCanAcceptOverDetour === true &&
+    additionalDistanceKm <= input.policy.maxAdditionalDistanceKm * MAX_OVER_DETOUR_FACTOR &&
+    additionalTimeMin <= input.policy.maxAdditionalTimeMinutes * MAX_OVER_DETOUR_FACTOR;
+  if (additionalDistanceKm > input.policy.maxAdditionalDistanceKm && !hostDecides) {
     reasons.push("ADDITIONAL_DISTANCE_EXCEEDS_POLICY");
   }
-  if (additionalTimeMin > input.policy.maxAdditionalTimeMinutes) {
+  if (additionalTimeMin > input.policy.maxAdditionalTimeMinutes && !hostDecides) {
     reasons.push("ADDITIONAL_TIME_EXCEEDS_POLICY");
   }
 

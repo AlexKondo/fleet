@@ -1,4 +1,5 @@
 import type { createSupabaseServerClient } from "@/lib/supabase/server";
+import { detourOverLimit, hostSeesRider } from "@/lib/carpool/hostRules";
 import { loadLatestPolicy } from "@/lib/carpool/loadPolicy";
 import type { HostOfferView, HostParticipantView, HostRequestView } from "./CarpoolHostSection";
 
@@ -97,11 +98,17 @@ export async function loadHostCarpool(
     id: r.id,
     status: r.status,
     statusReason: r.status_reason,
-    riderName: r.rider?.full_name ?? null,
+    // never in the view while hidden: this object goes to the browser
+    riderName: hostSeesRider(policyLoad, r.status) ? (r.rider?.full_name ?? null) : null,
     requestedSeats: r.requested_seats,
     requestedDepartureAt: r.requested_departure_at,
     detourKm: r.match_additional_distance_km === null ? null : Number(r.match_additional_distance_km),
     detourMin: r.match_additional_time_min === null ? null : Number(r.match_additional_time_min),
+    detourLimit: detourOverLimit(
+      policyLoad,
+      r.match_additional_distance_km === null ? null : Number(r.match_additional_distance_km),
+      r.match_additional_time_min === null ? null : Number(r.match_additional_time_min),
+    ),
     ...placesForHost(r.status, placeByRequest.get(r.id)),
   });
 

@@ -975,6 +975,8 @@ export type Database = {
           max_additional_time_minutes: number
           max_candidates_for_precise_routing: number
           minimum_seat_availability: number
+          host_can_accept_over_detour: boolean
+          host_sees_rider_before_accept: boolean
           organization_id: string
           policy_version: number
           request_expiry_minutes: number
@@ -994,6 +996,8 @@ export type Database = {
           max_additional_time_minutes: number
           max_candidates_for_precise_routing?: number
           minimum_seat_availability?: number
+          host_can_accept_over_detour?: boolean
+          host_sees_rider_before_accept?: boolean
           organization_id: string
           policy_version: number
           request_expiry_minutes?: number
@@ -1013,6 +1017,8 @@ export type Database = {
           max_additional_time_minutes?: number
           max_candidates_for_precise_routing?: number
           minimum_seat_availability?: number
+          host_can_accept_over_detour?: boolean
+          host_sees_rider_before_accept?: boolean
           organization_id?: string
           policy_version?: number
           request_expiry_minutes?: number

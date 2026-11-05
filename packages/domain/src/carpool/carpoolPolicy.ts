@@ -30,7 +30,15 @@ export interface CarpoolPolicyConfig {
    * have at least as many seats available as the rider is requesting; this field is the
    * policy-level minimum requests are additionally held to (default 1). */
   minimumSeatAvailability: number;
+  /** The host may accept a detour above the two limits (never past MAX_OVER_DETOUR_FACTOR times them). It is always the host's decision: such a request
+   * is never accepted automatically. */
+  hostCanAcceptOverDetour: boolean;
+  /** The host sees who asked before answering. When false the name only appears once accepted. */
+  hostSeesRiderBeforeAccept: boolean;
 }
+
+/** How far past the policy limits a detour may go when `hostCanAcceptOverDetour` is on. Mirrored in create_carpool_ride_request_as_rider (0257). */
+export const MAX_OVER_DETOUR_FACTOR = 2;
 
 /**
  * Pack TEST/UAT defaults (§ referenced in the plan's Phase C1 scope): ±15 minute departure
@@ -54,6 +62,8 @@ export const defaultCarpoolPolicyConfig: CarpoolPolicyConfig = {
   allowIntermediatePickup: true,
   allowIntermediateDropoff: true,
   minimumSeatAvailability: 1,
+  hostCanAcceptOverDetour: false,
+  hostSeesRiderBeforeAccept: true,
 };
 
 export interface PolicyPredicateInput {

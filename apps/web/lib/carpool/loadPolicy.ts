@@ -13,7 +13,7 @@ import type { createSupabaseServerClient } from "@/lib/supabase/server";
 export type PolicyLoad = { ok: true; policy: CarpoolPolicyConfig; policyVersion: number | null } | { ok: false };
 
 export const POLICY_COLUMNS =
-  "policy_version, carpool_enabled, carpool_first_enabled, host_opt_in_required, host_approval_required, departure_window_minutes, return_window_minutes, max_additional_distance_km, max_additional_time_minutes, max_candidates_for_precise_routing, request_expiry_minutes, allow_intermediate_pickup, allow_intermediate_dropoff, minimum_seat_availability";
+  "policy_version, carpool_enabled, carpool_first_enabled, host_opt_in_required, host_approval_required, departure_window_minutes, return_window_minutes, max_additional_distance_km, max_additional_time_minutes, max_candidates_for_precise_routing, request_expiry_minutes, allow_intermediate_pickup, allow_intermediate_dropoff, minimum_seat_availability, host_can_accept_over_detour, host_sees_rider_before_accept";
 
 export interface PolicyRow {
   policy_version: number;
@@ -30,6 +30,8 @@ export interface PolicyRow {
   allow_intermediate_pickup: boolean;
   allow_intermediate_dropoff: boolean;
   minimum_seat_availability: number;
+  host_can_accept_over_detour: boolean;
+  host_sees_rider_before_accept: boolean;
 }
 
 export function policyFromRow(data: PolicyRow): CarpoolPolicyConfig {
@@ -47,6 +49,8 @@ export function policyFromRow(data: PolicyRow): CarpoolPolicyConfig {
     allowIntermediatePickup: data.allow_intermediate_pickup,
     allowIntermediateDropoff: data.allow_intermediate_dropoff,
     minimumSeatAvailability: data.minimum_seat_availability,
+    hostCanAcceptOverDetour: data.host_can_accept_over_detour,
+    hostSeesRiderBeforeAccept: data.host_sees_rider_before_accept,
   };
 }
 

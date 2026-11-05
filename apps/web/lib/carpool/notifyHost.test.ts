@@ -22,6 +22,18 @@ describe("message to the host", () => {
     expect(t).toMatch(/Saída: .* às 09:00/);
     expect(t).toContain("Você aceita levar?");
   });
+  it("a detour above the policy limit is told before asking", () => {
+    const text = buildHostMessage({ ...NOTICE, status: "PENDING", detour_km: "8.2", detour_min: "15", limit_km: "5", limit_min: "10" });
+    expect(text).toContain("⚠️ Desvio de 8.2 km e 15 min, acima do limite da política (5 km e 10 min).");
+    expect(text.indexOf("⚠️")).toBeLessThan(text.indexOf("Você aceita levar?"));
+  });
+  it("within the limit, or already accepted, there is no warning", () => {
+    expect(buildHostMessage({ ...NOTICE, status: "PENDING", detour_km: 5, detour_min: 10, limit_km: 5, limit_min: 10 })).not.toContain("⚠️");
+    expect(buildHostMessage({ ...NOTICE, status: "ACCEPTED", detour_km: 8, detour_min: 15, limit_km: 5, limit_min: 10 })).not.toContain("⚠️");
+  });
+  it("with the rider hidden by the policy the message says a colleague", () => {
+    expect(buildHostMessage({ ...NOTICE, status: "PENDING", rider_name: null })).toContain("*Um colega quer ir de carona com você.*");
+  });
   it("a name typed by the user cannot add WhatsApp formatting", () => {
     expect(buildHostMessage({ ...NOTICE, rider_name: "*Hack* _x_" })).toContain("*Hack x vai de carona com você!*");
   });

@@ -27,6 +27,8 @@ export interface HostRequestView {
   requestedDepartureAt: string;
   detourKm: number | null;
   detourMin: number | null;
+  /** The policy limits, when this detour passes them. */
+  detourLimit: { km: number; min: number } | null;
   /** Coarse area while PENDING (street without number + neighbourhood), exact only when ACCEPTED. */
   pickupLabel: string | null;
   dropoffLabel: string | null;
@@ -190,7 +192,7 @@ export function CarpoolHostSection({
           {pending.map((r) => (
             <li key={r.id} className="rounded-sm border border-line-800 bg-panel-900/60 p-3" data-testid="carpool-pending-request">
               <p className="text-sm text-paper-50">
-                {r.riderName ?? "—"}
+                {r.riderName ?? t.anonymousRider}
                 <span className="ml-2 text-xs text-fog-600">
                   {fillTemplate(t.requestedSeats, { count: r.requestedSeats })} · {formatDateTimeShort(r.requestedDepartureAt, locale)}
                 </span>
@@ -208,6 +210,11 @@ export function CarpoolHostSection({
               {r.detourKm !== null && r.detourMin !== null ? (
                 <p className="mt-1 text-xs text-fog-600">
                   {fillTemplate(t.detourLine, { km: Math.round(r.detourKm * 10) / 10, min: Math.round(r.detourMin) })}
+                </p>
+              ) : null}
+              {r.detourLimit ? (
+                <p className="mt-1 text-xs text-signal-red" data-testid="carpool-pending-over-limit">
+                  {fillTemplate(t.detourOverLimit, { km: r.detourLimit.km, min: r.detourLimit.min })}
                 </p>
               ) : null}
               <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -240,7 +247,7 @@ export function CarpoolHostSection({
           <ul data-testid="carpool-history" className="flex flex-col gap-1.5">
             {history.map((r) => (
               <li key={r.id} className="text-sm text-fog-400">
-                <span className="text-paper-50">{r.riderName ?? "—"}</span> ·{" "}
+                <span className="text-paper-50">{r.riderName ?? t.anonymousRider}</span> ·{" "}
                 <span data-testid="carpool-history-status">{carpoolStatusText(dict, r.status)}</span>
                 {r.statusReason ? <span className="text-fog-600"> — {carpoolReasonText(dict, r.statusReason)}</span> : null}
               </li>

@@ -11,6 +11,7 @@ function form(over: Record<string, string | undefined> = {}) {
     hostApprovalRequired: "on",
     allowIntermediatePickup: "on",
     allowIntermediateDropoff: "on",
+    hostSeesRiderBeforeAccept: "on",
     departureWindowMinutes: "20",
     returnWindowMinutes: "15",
     maxAdditionalDistanceKm: "7.5",
@@ -34,6 +35,7 @@ describe("parseCarpoolPolicyForm (server-side validation, pack rule 11)", () => 
         departureWindowMinutes: 20, returnWindowMinutes: 15, maxAdditionalDistanceKm: 7.5, maxAdditionalTimeMinutes: 12,
         maxCandidatesForPreciseRouting: 4, requestExpiryMinutes: 45, allowIntermediatePickup: true,
         allowIntermediateDropoff: true, minimumSeatAvailability: 1,
+        hostCanAcceptOverDetour: false, hostSeesRiderBeforeAccept: true,
       },
     });
   });

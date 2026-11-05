@@ -236,4 +236,23 @@ describe("evaluateRouteMatch", () => {
       });
     }
   });
+
+  describe("hostCanAcceptOverDetour: the host may decide on a detour above the limits", () => {
+    const policy = { ...defaultCarpoolPolicyConfig, hostCanAcceptOverDetour: true };
+    it("off: above the limit stays out", () => {
+      expect(evaluateRouteMatch(input({ route: route({ additionalDistanceKm: 8 }) })).compatible).toBe(false);
+    });
+    it("on: reaches the host up to twice the limit", () => {
+      expect(evaluateRouteMatch(input({ policy, route: route({ additionalDistanceKm: 8, additionalTimeMin: 15 }) })).compatible).toBe(true);
+      expect(evaluateRouteMatch(input({ policy, route: route({ additionalDistanceKm: 10, additionalTimeMin: 20 }) })).compatible).toBe(true);
+    });
+    it("on: never past twice the limit, in either measure", () => {
+      const far = evaluateRouteMatch(input({ policy, route: route({ additionalDistanceKm: 10.1 }) }));
+      expect(far.compatible).toBe(false);
+      expect(far.reasons).toContain("ADDITIONAL_DISTANCE_EXCEEDS_POLICY");
+      const slow = evaluateRouteMatch(input({ policy, route: route({ additionalTimeMin: 20.1 }) }));
+      expect(slow.compatible).toBe(false);
+      expect(slow.reasons).toContain("ADDITIONAL_TIME_EXCEEDS_POLICY");
+    });
+  });
 });

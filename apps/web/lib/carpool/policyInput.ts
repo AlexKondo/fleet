@@ -41,6 +41,8 @@ const BOOLEAN_FIELDS = [
   "hostApprovalRequired",
   "allowIntermediatePickup",
   "allowIntermediateDropoff",
+  "hostCanAcceptOverDetour",
+  "hostSeesRiderBeforeAccept",
 ] as const;
 
 export type PolicyParseResult =
@@ -82,6 +84,8 @@ export function parseCarpoolPolicyForm(formData: FormData): PolicyParseResult {
       requestExpiryMinutes: numbers.requestExpiryMinutes!,
       allowIntermediatePickup: bool("allowIntermediatePickup"),
       allowIntermediateDropoff: bool("allowIntermediateDropoff"),
+      hostCanAcceptOverDetour: bool("hostCanAcceptOverDetour"),
+      hostSeesRiderBeforeAccept: bool("hostSeesRiderBeforeAccept"),
       minimumSeatAvailability: numbers.minimumSeatAvailability!,
     },
   };

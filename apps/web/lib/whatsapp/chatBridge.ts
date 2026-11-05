@@ -211,7 +211,7 @@ async function withRouteMap(before: ChatState["pendingAction"], phase: string | 
   }
 }
 
-type Resolved = { ok?: boolean; reason?: string; request_id?: string; host_id?: string; host_email?: string; rider_name?: string };
+type Resolved = { ok?: boolean; reason?: string; request_id?: string; host_id?: string; host_email?: string; rider_name?: string; rider_name_accepted?: string };
 
 /** The host tapped Aceitar / Recusar on a carpool request. The token binds the tap to that request, that host and the host's registered number. */
 async function handleCarpoolTap(decision: "accept" | "reject", token: string, msg: InboundMessage, deps: BridgeDeps): Promise<{ replies: Reply[] }> {
@@ -236,7 +236,9 @@ async function handleCarpoolTap(decision: "accept" | "reject", token: string, ms
   if (done.error) return { replies: [text(TEXTS.cpFailed)] };
   await deps.rpc("fm_carpool_token_mark", { p_request_id: r.request_id, p_status: "done", p_reason: null });
   await deps.notifyRider?.(r.request_id).catch(() => undefined);
-  return { replies: [text(`✅ Pronto! Você aceitou a carona de *${rider}*. Avisei ${rider}.`)] };
+  // accepted: the name is no longer hidden, whatever the policy says about asking
+  const accepted = r.rider_name_accepted ?? rider;
+  return { replies: [text(`✅ Pronto! Você aceitou a carona de *${accepted}*. Avisei ${accepted}.`)] };
 }
 
 /** The rider tapped Aceitar / Recusar on the invitation to take over the vehicle of a cancelled carpool trip. The token binds it to that takeover, that rider and his number. */

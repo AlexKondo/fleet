@@ -404,6 +404,14 @@ describe("the host answers a carpool request on WhatsApp", () => {
     expect(cp.marks).toEqual([{ status: "done", reason: null }]);
     expect(cp.rider).toEqual([{ id: "req-1", reason: undefined }]);
     expect(texts(r)[0]).toContain("aceitou a carona de *Maria Silva*");
+  });
+  it("with the rider hidden by the policy the name only appears after the accept", async () => {
+    w.cpResolve = { ...RESOLVED, rider_name: null, rider_name_accepted: "Maria Silva" };
+    const refused = await run(tap("no"), hostDeps());
+    expect(texts(refused)[0]).toContain("*o passageiro*");
+    expect(texts(refused)[0]).not.toContain("Maria");
+    const accepted = await run(tap("yes"), hostDeps());
+    expect(texts(accepted)[0]).toContain("aceitou a carona de *Maria Silva*");
     expect(calls.send).toHaveLength(0);
   });
   it("Recusar: nothing is rejected yet; the host is asked for the justification", async () => {

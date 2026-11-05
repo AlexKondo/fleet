@@ -1,4 +1,5 @@
 import "server-only";
+import { detourOverLimit, hostSeesRider } from "@/lib/carpool/hostRules";
 
 /**
  * Phase C6 — conversational (chat / voice) layer for Smart Carpool.
@@ -272,6 +273,9 @@ async function findOwnOffers(ctx: ChatCarpoolCtx, onlyActive: boolean): Promise<
 interface PendingRequestForHost {
   id: string;
   riderName: string;
+  /** The policy hides who asked: naming someone must neither find nor rule out this request. */
+  anonymous: boolean;
+  detourLimit: { km: number; min: number } | null;
   seats: number;
   departureAt: string;
 }
@@ -280,15 +284,23 @@ interface PendingRequestForHost {
 async function findHostPendingRequests(ctx: ChatCarpoolCtx): Promise<PendingRequestForHost[]> {
   const offers = await findOwnOffers(ctx, false);
   if (offers.length === 0) return [];
+  const policy = await loadLatestPolicy(ctx.supabase, ctx.organizationId);
   const { data } = await ctx.supabase
     .from("carpool_ride_requests")
-    .select("id, requested_seats, requested_departure_at, rider:profiles!rider_id(full_name)")
+    .select("id, requested_seats, requested_departure_at, match_additional_distance_km, match_additional_time_min, rider:profiles!rider_id(full_name)")
     .in("carpool_offer_id", offers.map((o) => o.id))
     .eq("status", "PENDING")
     .order("created_at", { ascending: true });
+  const named = hostSeesRider(policy, "PENDING");
   return (data ?? []).map((r) => ({
     id: r.id,
-    riderName: r.rider?.full_name ?? "",
+    riderName: named ? (r.rider?.full_name ?? "") : ctx.dict.carpool.host.anonymousRider,
+    anonymous: !named,
+    detourLimit: detourOverLimit(
+      policy,
+      r.match_additional_distance_km === null ? null : Number(r.match_additional_distance_km),
+      r.match_additional_time_min === null ? null : Number(r.match_additional_time_min),
+    ),
     seats: r.requested_seats,
     departureAt: r.requested_departure_at,
   }));
@@ -587,6 +599,7 @@ export async function prepareCarpoolIntent(
         // pending requests only ("Ana" matches "Ana Silva"; never anyone outside this set).
         const tokens = norm(name).split(" ");
         candidates = pending.filter((r) => {
+          if (r.anonymous) return true;
           const parts = norm(r.riderName).split(" ");
           return tokens.every((tk) => parts.some((p) => p.startsWith(tk)));
         });
@@ -613,10 +626,11 @@ export async function prepareCarpoolIntent(
       return {
         kind: "confirm",
         slots: out,
-        summary: fillTemplate(accepting ? t.acceptSummary : t.rejectSummary, {
-          name: target.riderName,
-          seats: seatsPhrase(ctx, target.seats),
-        }),
+        summary:
+          fillTemplate(accepting ? t.acceptSummary : t.rejectSummary, {
+            name: target.riderName,
+            seats: seatsPhrase(ctx, target.seats),
+          }) + (target.detourLimit ? ` ${fillTemplate(ctx.dict.carpool.host.detourOverLimit, target.detourLimit)}` : ""),
       };
     }
 
