@@ -145,6 +145,7 @@ export default async function GateHistory({
     <Workspace
       data={data}
       title={T.title}
+      hideTitle
       subtitle={T.subtitle}
       active="gateHistory"
       error={params.error}

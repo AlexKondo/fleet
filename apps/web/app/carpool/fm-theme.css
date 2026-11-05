@@ -1566,6 +1566,9 @@ body.fm-resizing {
   border-bottom: 1px solid var(--fm-border, #e0eaf6);
 }
 .fm-tab {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
   padding: 9px 14px;
   font-size: 14px;
   font-weight: 600;
@@ -1573,6 +1576,12 @@ body.fm-resizing {
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   text-decoration: none;
+}
+/* a second line says what the tab is for */
+.fm-tab small {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 .fm-tab:hover {
   color: var(--fm-text, #142644);

@@ -1449,7 +1449,6 @@ const dict: Dictionary = {
     checklistByLabel: "Check-in / check-out del vehículo",
     checklistByGate: "Portería (revisa todo)",
     checklistByTraveler: "El propio usuario",
-    checklistByHint: "Quién hace el check-in y el check-out de los vehículos de este lugar. En la portería, el vigilante llena el checklist completo (odómetro, combustible o batería, ítems de seguridad, daños, limpieza) en la salida y la devolución, y el colaborador no llena nada. Solo vale para reservas nuevas.",
     checklistBySaved: "Guardado",
     checklistByAdminOnly: "Solo el administrador puede cambiarlo",
     aliasesPlaceholder: "separados por comas",

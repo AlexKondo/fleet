@@ -1413,7 +1413,6 @@ const dict: Dictionary = {
     checklistByLabel: "车辆取车 / 还车检查",
     checklistByGate: "门卫（全部检查）",
     checklistByTraveler: "用户本人",
-    checklistByHint: "由谁办理此地点车辆的取车和还车检查。选择门卫时，门卫在出门和归还时填写完整检查清单（里程、油量或电量、安全设备、损伤、清洁），员工无需填写。仅适用于新的预订。",
     checklistBySaved: "已保存",
     checklistByAdminOnly: "仅管理员可修改",
     aliasesPlaceholder: "以逗号分隔",

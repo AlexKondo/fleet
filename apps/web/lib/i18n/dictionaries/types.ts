@@ -1386,7 +1386,6 @@ export type Dictionary = {
     checklistByLabel: string;
     checklistByGate: string;
     checklistByTraveler: string;
-    checklistByHint: string;
     checklistBySaved: string;
     checklistByAdminOnly: string;
     aliasesPlaceholder: string;

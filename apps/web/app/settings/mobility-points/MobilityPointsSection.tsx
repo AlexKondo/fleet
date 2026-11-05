@@ -51,7 +51,6 @@ function ChecklistByControl({ point, dict, canEdit }: { point: CorporateMobility
       ) : (
         <span className="text-paper-50" title={t.checklistByAdminOnly}>{labelOf(point.checklistBy)}</span>
       )}
-      <span className="basis-full text-fog-600">{t.checklistByHint}</span>
     </form>
   );
 }
