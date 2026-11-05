@@ -9,7 +9,7 @@ export type SectionId = "team" | "fleet" | "trips" | "dashboard" | "settings" | 
 export const TAB_ONLY_KEYS = [
   "planning", "orders", "vehicleHistory", // Manutenção: its own tabs
   "gateHistory", // Portaria tabs
-  "energy", "incidents", "keyManagement", "drivers", "carpool", // Frota / Equipe / Viagens tabs
+  "energy", "keyManagement", "drivers", "carpool", // Frota / Equipe / Viagens tabs
   "analytics", "admin", // Painel / Configurações tabs
   "book", "find", // the booking button / reached from Viagens
 ] as const;
@@ -20,7 +20,7 @@ export function menuKeyFor(active: string): string {
     case "drivers": return "team";
     case "planning": case "orders": case "vehicleHistory": return "maintenance";
     case "gateHistory": return "gate";
-    case "energy": case "incidents": case "keyManagement": case "carpool": return "fleet";
+    case "energy": case "keyManagement": case "carpool": return "fleet";
     case "book": case "find": return "trips";
     case "analytics": return "dashboard";
     case "admin": return "settings";
@@ -59,10 +59,7 @@ export function sectionTabs(section: SectionId, f: { isAdministrator: boolean })
         { id: "contact", href: "/settings/approvals", visible: a },
       ].filter((t) => t.visible);
     case "fleet":
-      return [
-        { id: "vehicles", href: "/fleet", visible: true },
-        { id: "incidents", href: "/fleet/incidents", visible: true },
-      ];
+      return [{ id: "vehicles", href: "/fleet", visible: true }];
     case "trips":
       // one tab means no tab bar: booking is the "+ Solicitar Viagem" button, carpools are on this screen
       return [{ id: "mine", href: "/trips", visible: true }];

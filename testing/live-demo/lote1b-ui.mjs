@@ -382,7 +382,7 @@ try {
   console.log("\n--- Veículos / manager ---");
   await go(mgr, "/fleet");
   t = await text(mgr);
-  record("Fleet: /fleet renders in .fm-theme; KPI total + status legend + propulsion tiles are real counts", (await hasFm(mgr)) && (await mgr.locator('[data-testid="fleet-kpi-total"] .fm-kpi-value').innerText()) === String(nVehicles) && (await mgr.locator('[data-testid="fleet-kpi-BEV"] .fm-kpi-value').innerText()) === "2" && (await mgr.locator('[data-testid="fleet-kpi-ICE"]').count()) === 1);
+  record("Fleet: /fleet renders in .fm-theme; KPI total + status legend + propulsion donut are real counts", (await hasFm(mgr)) && (await mgr.locator('[data-testid="fleet-kpi-total"] .fm-kpi-value').innerText()) === String(nVehicles) && (await mgr.locator('[data-testid="fleet-kpi-energy"] li', { hasText: "BEV" }).locator("strong").innerText()) === "2" && (await mgr.locator('[data-testid="fleet-kpi-energy"] circle[data-e="ICE"]').count()) === 1);
   record("Fleet: tabs Veículos/Categorias/Localizações with counts", /Veículos\s*\n?\s*13|Veículos\s+\d+/.test(t) && (await mgr.locator('[role="tab"]').count()) === 3);
   record("Fleet: vehicle cards (status, odometer, location) + Ver Agenda / Editar / Excluir", (await mgr.locator("ul > li", { hasText: "Ver Agenda" }).count()) === nVehicles && /Odômetro/.test(t) && /Ver Agenda/.test(t));
   record("Fleet: no invented elements (photos, driver, utilization %, map, costs)", !INVENTED.test(t) && !/Exportar|Motorista atual|Utilização \(/.test(t) && (await mgr.locator(".fm-theme iframe, .fm-theme canvas").count()) === 0);
@@ -450,13 +450,13 @@ try {
   record("Reports: real numbers only (1 completed trip, 120 km average, underused vehicles, carpool 0%)", (await rk("reports-kpi-trips")) === "1" && /120/.test(await rk("reports-kpi-avgkm")) && Number(await rk("reports-kpi-underused")) >= 1 && (await rk("reports-kpi-carpool")) === "0%", { trips: await rk("reports-kpi-trips"), avg: await rk("reports-kpi-avgkm") });
   record("Reports: cost / savings / sustainability omitted with an explicit 'não são exibidos' note; no invented charts", /não são exibidos/.test(t) && !INVENTED.test(t) && !/Custo total|Custo por km/.test(t) && (await mgr.locator(".fm-theme canvas, .fm-theme iframe").count()) === 0);
   record("Reports: all legacy sections kept (subutilizados, manutenção preditiva, utilização, km por viagem, destinos, carpooling)", ["Veículos Subutilizados", "Manutenção Preditiva", "Utilização por Veículo", "Km por Viagem", "Destinos Mais Frequentes", "Potencial de Carpooling"].every((h) => t.includes(h)));
-  record("Reports: link to carpool indicators kept (data-testid carpool-kpi-link)", (await mgr.locator('[data-testid="carpool-kpi-link"]').getAttribute("href")) === "/analytics/carpool");
+  record("Reports: carpool indicators reached through the Caronas tab", (await mgr.locator('[data-testid="section-tabs"] a[href="/analytics/carpool"]').getAttribute("href")) === "/analytics/carpool");
   record("Reports (desktop): no horizontal scroll, touch targets >= 44px, AA contrast, no seconds", (await hscroll(mgr)) <= 0 && (await smallTargets(mgr)).length === 0 && (await lowContrast(mgr)).length === 0 && !SECONDS.test(t), { small: (await smallTargets(mgr)).slice(0, 6), low: (await lowContrast(mgr)).slice(0, 6) });
   await shot(mgr, "reports-desktop", true);
   await go(mgrM2, "/analytics");
   record("Reports (mobile): no horizontal scroll, touch targets >= 44px", (await hscroll(mgrM2)) <= 0 && (await smallTargets(mgrM2)).length === 0, { h: await hscroll(mgrM2), small: (await smallTargets(mgrM2)).slice(0, 6) });
   await shot(mgrM2, "reports-mobile", false);
-  await mgr.locator('[data-testid="carpool-kpi-link"]').click();
+  await mgr.locator('[data-testid="section-tabs"] a[href="/analytics/carpool"]').click();
   await mgr.waitForTimeout(2000);
   t = await text(mgr);
   record("Carpool (manager): /analytics/carpool opens from the link, in .fm-theme, KPI testids render", path_(mgr) === "/analytics/carpool" && (await hasFm(mgr)) && (await mgr.locator('[data-testid="carpool-kpi-page"]').count()) === 1 && (await mgr.locator('[data-testid^="kpi-"]').count()) >= 20);

@@ -1,7 +1,7 @@
 import type { AreaTexts } from "../areaText";
 
 export type FleetCarpoolsKey =
-  | "title" | "subtitle" | "talk" | "search" | "metricsAria" | "mActive" | "mPending" | "mCompleted" | "mSavings" | "mCo2" | "mSeats"
+  | "title" | "subtitle" | "search" | "metricsAria" | "mActive" | "mPending" | "mCompleted" | "mSavings" | "mCo2" | "mSeats"
   | "calcUnavailable" | "totalScope" | "tabsAria" | "tabOffers" | "tabPending" | "tabAccepted" | "tabHistory"
   | "fDay" | "fQuery" | "fQueryPh" | "fUnit" | "fAllUnits" | "fDest" | "fAllDest" | "fTime" | "fAllTimes" | "fMorning" | "fAfternoon" | "fNight"
   | "fStatus" | "fDefaultTab" | "filter" | "clear"
@@ -16,7 +16,7 @@ export type FleetCarpoolsKey =
 export const fleetCarpoolsTexts: AreaTexts<FleetCarpoolsKey> = {
   "pt-BR": {
     title: "Gestão Inteligente de Caronas", subtitle: "Acompanhe ofertas, solicitações e ocupação no seu escopo de gestão.",
-    talk: "Falar com o FleetMind", search: "Buscar carona", metricsAria: "Indicadores no escopo",
+    search: "Buscar carona", metricsAria: "Indicadores no escopo",
     mActive: "Ofertas ativas", mPending: "Solicitações pendentes", mCompleted: "Ofertas concluídas", mSavings: "Economia estimada", mCo2: "CO₂ evitado", mSeats: "Assentos aceitos",
     calcUnavailable: "Cálculo indisponível", totalScope: "Total no escopo autorizado", tabsAria: "Situação das caronas",
     tabOffers: "Ofertas de carona", tabPending: "Solicitações recebidas", tabAccepted: "Caronas confirmadas", tabHistory: "Histórico",
@@ -45,7 +45,7 @@ export const fleetCarpoolsTexts: AreaTexts<FleetCarpoolsKey> = {
   },
   "en-US": {
     title: "Smart Carpool Management", subtitle: "Track offers, requests and occupancy within your management scope.",
-    talk: "Talk to FleetMind", search: "Find a carpool", metricsAria: "Indicators in scope",
+    search: "Find a carpool", metricsAria: "Indicators in scope",
     mActive: "Active offers", mPending: "Pending requests", mCompleted: "Completed offers", mSavings: "Estimated savings", mCo2: "CO₂ avoided", mSeats: "Accepted seats",
     calcUnavailable: "Calculation unavailable", totalScope: "Total within authorized scope", tabsAria: "Carpool status",
     tabOffers: "Carpool offers", tabPending: "Requests received", tabAccepted: "Confirmed carpools", tabHistory: "History",
@@ -74,7 +74,7 @@ export const fleetCarpoolsTexts: AreaTexts<FleetCarpoolsKey> = {
   },
   es: {
     title: "Gestión Inteligente de Viajes Compartidos", subtitle: "Siga ofertas, solicitudes y ocupación dentro de su alcance de gestión.",
-    talk: "Hablar con FleetMind", search: "Buscar viaje compartido", metricsAria: "Indicadores en el alcance",
+    search: "Buscar viaje compartido", metricsAria: "Indicadores en el alcance",
     mActive: "Ofertas activas", mPending: "Solicitudes pendientes", mCompleted: "Ofertas completadas", mSavings: "Ahorro estimado", mCo2: "CO₂ evitado", mSeats: "Asientos aceptados",
     calcUnavailable: "Cálculo no disponible", totalScope: "Total en el alcance autorizado", tabsAria: "Estado de los viajes compartidos",
     tabOffers: "Ofertas de viaje compartido", tabPending: "Solicitudes recibidas", tabAccepted: "Viajes confirmados", tabHistory: "Historial",
@@ -103,7 +103,7 @@ export const fleetCarpoolsTexts: AreaTexts<FleetCarpoolsKey> = {
   },
   "zh-CN": {
     title: "智能拼车管理", subtitle: "在您的管理范围内跟踪拼车供给、申请和占用情况。",
-    talk: "与 FleetMind 对话", search: "查找拼车", metricsAria: "范围内指标",
+    search: "查找拼车", metricsAria: "范围内指标",
     mActive: "进行中的拼车", mPending: "待处理申请", mCompleted: "已完成的拼车", mSavings: "预计节省", mCo2: "减少的 CO₂", mSeats: "已接受座位",
     calcUnavailable: "暂无法计算", totalScope: "授权范围内总计", tabsAria: "拼车状态",
     tabOffers: "拼车供给", tabPending: "收到的申请", tabAccepted: "已确认拼车", tabHistory: "历史记录",

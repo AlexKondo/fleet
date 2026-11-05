@@ -1265,4 +1265,54 @@
   .fm-theme .us-wrap input[name="licenseCategory"],
   .fm-theme .us-wrap input[name="licenseExpiration"] { max-width: 100%; min-height: 44px; }
   .fm-theme .us-wrap input[name="reason"] { width: 100%; }
+  .fm-theme .us-wrap .us-who { flex-wrap: wrap; }
+}
+/* Equipe: one member, one line (phones keep the cards above). Every label is the column header; the tooltip and the screen reader keep the full text. */
+.fm-theme .us-wrap .us-who { display: flex; min-width: 0; align-items: baseline; gap: 8px; }
+.fm-theme .us-wrap .us-name { flex: none; max-width: 100%; }
+.fm-theme .us-wrap .us-email { flex: 1 1 0; min-width: 0; color: var(--fm-text-muted); }
+.fm-theme .us-wrap .us-who[data-inactive] .us-name { color: var(--fm-text-muted); }
+.fm-theme .us-wrap .us-cnh-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.fm-theme .us-wrap .us-cnh { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.fm-theme .us-wrap .us-field { display: flex; flex-direction: column; gap: 4px; }
+.fm-theme .us-wrap .us-source { display: inline-flex; align-items: center; gap: 4px; color: var(--fm-text-muted); cursor: help; }
+.fm-theme .us-wrap .us-lock summary { display: grid; place-items: center; width: 28px; height: 28px; color: var(--fm-text-muted); cursor: pointer; list-style: none; }
+.fm-theme .us-wrap .us-lock summary::-webkit-details-marker { display: none; }
+.fm-theme .us-wrap .us-lock summary svg { width: 15px; height: 15px; }
+.fm-theme .us-wrap .us-lock[open] { flex-basis: 100%; }
+.fm-theme .us-wrap .us-lock-body { display: flex; flex-direction: column; gap: 6px; max-width: 320px; padding: 4px 0 6px; white-space: normal; }
+.fm-theme .us-wrap .us-access { width: 44px; min-height: 44px; padding: 0; justify-content: center; }
+.fm-theme .us-wrap .us-access:not([data-icon]) { width: auto; padding: 0 10px; }
+.fm-theme .us-wrap .us-access svg { width: 18px; height: 18px; }
+.fm-theme .us-wrap .us-access[data-icon]:hover:not(:disabled) { color: var(--lt-8e2f2f, #8e2f2f); border-color: currentColor; }
+.fm-theme .us-dialog { width: min(420px, calc(100vw - 32px)); margin: auto; padding: 20px; color: var(--fm-text); text-align: left; white-space: normal; background: var(--fm-surface); border: 1px solid var(--fm-border); border-radius: var(--fm-radius-md); }
+.fm-theme .us-dialog::backdrop { background: rgba(4, 10, 20, .6); }
+.fm-theme .us-dialog form { display: flex; flex-direction: column; gap: 12px; }
+.fm-theme .us-dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--fm-text-muted); }
+.fm-theme .us-dialog .us-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+@media (min-width: 700px) {
+  /* fixed widths: the name takes what is left, so one long name never pushes the row onto a second line */
+  .fm-theme .us-wrap table { table-layout: fixed; min-width: 960px; }
+  .fm-theme .us-wrap th,
+  .fm-theme .us-wrap td { padding: 7px; vertical-align: middle; white-space: nowrap; overflow-wrap: normal; }
+  .fm-theme .us-wrap th:first-child,
+  .fm-theme .us-wrap td:first-child { padding-left: 14px; }
+  .fm-theme .us-wrap th:nth-child(2) { width: 164px; }
+  .fm-theme .us-wrap th:nth-child(3) { width: 146px; }
+  .fm-theme .us-wrap th:nth-child(4) { width: 88px; }
+  .fm-theme .us-wrap th:nth-child(5) { width: 362px; }
+  .fm-theme .us-wrap th:nth-child(6) { width: 102px; }
+  .fm-theme .us-wrap th:last-child,
+  .fm-theme .us-wrap td:last-child { padding-right: 12px; }
+  .fm-theme .us-wrap td p { white-space: normal; }
+  .fm-theme .us-wrap select { width: 132px; padding-inline: 8px; font-size: 13px; }
+  .fm-theme .us-wrap select[name="role"] { width: 150px; }
+  /* !important: the generic .fm-legacy input rule outranks any selector short of repeating its four :not() */
+  .fm-theme .us-wrap input[name="licenseNumber"] { width: 108px; padding-inline: 8px !important; font-size: 13px !important; }
+  .fm-theme .us-wrap input[name="licenseCategory"] { width: 44px; padding-inline: 2px !important; font-size: 13px !important; text-align: center; }
+  .fm-theme .us-wrap input[name="licenseExpiration"] { width: 128px; padding-inline: 6px !important; font-size: 13px !important; }
+  .fm-theme .us-wrap .us-cnh { flex-wrap: nowrap; }
+  .fm-theme .us-wrap .us-cnh-line { flex-wrap: nowrap; }
+  .fm-theme .us-wrap .us-cnh-line:has(.us-lock[open]) { flex-wrap: wrap; }
+  .fm-theme .us-wrap .us-collapse { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 }

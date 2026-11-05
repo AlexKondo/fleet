@@ -131,7 +131,7 @@ describe("command center page access and rendering", () => {
     const html = await render();
     expect(html).toContain("Fleet Command Center 360°");
     expect(html).not.toContain("Mapa indisponível");
-    expect(html).toContain("Fonte de cálculo pendente");
+    expect(html).not.toContain("Economia e Sustentabilidade");
     expect(html).toContain("TEST001");
     expect(html).not.toContain("R$ 3.450");
     expect(html).toContain("period=30d");

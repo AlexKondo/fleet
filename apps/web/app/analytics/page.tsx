@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { predictNextService } from "@fleet/domain";
 import { getLocale, getDictionary } from "@/lib/i18n/getLocale";
@@ -221,15 +220,6 @@ export default async function AnalyticsPage() {
       subtitle={o.subtitle}
       legacy
       wide
-      headerActions={
-        <Link
-          href="/analytics/carpool"
-          data-testid="carpool-kpi-link"
-          className="fm-btn fm-btn-ghost"
-        >
-          {dict.carpoolKpi.linkFromAnalytics}
-        </Link>
-      }
     >
 
       {vehiclesError ? (

@@ -209,11 +209,6 @@
 .fc-segments span {
   background: #087bff;
 }
-.fc-middle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-}
 .fc-location {
   padding: 0;
   overflow: hidden;
@@ -268,39 +263,6 @@
 .fc-location-list p {
   padding: 4px;
   color: #526b95;
-}
-/* full row since the fleet-location card was removed: the four tiles side by side (2x2 below 1100px) */
-.fc-sustain-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-.fc-sustain-grid > div {
-  display: flex;
-  gap: 12px;
-  border: 1px solid var(--fm-border);
-  border-radius: 9px;
-  min-height: 96px;
-  align-items: flex-start;
-  padding: 12px;
-}
-.fc-sustain-grid > div > span {
-  font-size: 30px;
-  color: var(--lt-00a469, #00a469);
-}
-.fc-sustain-grid > div:nth-child(2) > span {
-  color: #ff9c14;
-}
-.fc-sustain-grid strong {
-  font-size: 23px;
-  line-height: 1.1;
-}
-.fc-sustain-grid p {
-  font-size: 11px;
-  margin: 3px 0 10px;
-}
-.fc-sustain-grid small {
-  font-size: 9px;
 }
 .fc-charts {
   display: grid;
@@ -617,18 +579,11 @@
   .fc-kpi {
     padding: 12px 9px;
   }
-  .fc-sustain-grid > div {
-    padding: 9px;
-    gap: 8px;
-  }
   .fc-bottom {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 1100px) {
-  .fc-sustain-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .fc-layout {
     grid-template-columns: 1fr;
   }
@@ -663,7 +618,6 @@
   .fc-kpi:last-child {
     grid-column: 1/-1;
   }
-  .fc-middle,
   .fc-charts,
   .fc-bottom,
   .fc-side {
@@ -824,21 +778,6 @@
 }
 .fc-kpi dl > div {
   line-height: 1.5;
-}
-.fc-sustain-grid > div {
-  height: 104px;
-  min-height: 104px;
-  padding: 10px;
-}
-.fc-sustain-grid p {
-  margin: 3px 0 6px;
-  font-size: 10.5px;
-}
-@media (max-width: 760px) {
-  .fc-sustain-grid > div {
-    height: auto;
-    min-height: 110px;
-  }
 }
 
 .fc-pin-svg {

@@ -373,18 +373,12 @@ export async function AdminWorkspace({
                   <p className="ow-note">
                     {T.smartBookingText}
                   </p>
-                  <Link className="ow-link" href="/settings">
-                    {T.openPolicies}
-                  </Link>
                 </div>
                 <div className="ow-panel">
                   <strong>{T.smartCarpool}</strong>
                   <p className="ow-note">
                     {T.smartCarpoolText}
                   </p>
-                  <Link className="ow-link" href="/settings">
-                    {T.openCarpoolPolicy}
-                  </Link>
                 </div>
               </div>
             </Panel>

@@ -326,32 +326,6 @@ export default async function FleetCommandCenterPage({
                 <p>{t.occupancyPending}</p>
               </div>
             </section>
-            <div className="fc-middle">
-              <Card
-                title={t.economyTitle}
-                viewDetails={t.viewDetails}
-                className="fc-sustain"
-                href="/analytics"
-              >
-                <div className="fc-sustain-grid">
-                  {[
-                    ["♧", t.ecoCarpool],
-                    ["◉", t.ecoBev],
-                    ["ϟ", t.ecoElectric],
-                    ["❧", t.ecoCo2],
-                  ].map(([icon, label]) => (
-                    <div key={label}>
-                      <span aria-hidden="true">{icon}</span>
-                      <div>
-                        <strong>—</strong>
-                        <p>{label}</p>
-                        <small>{t.calcPending}</small>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
             <div className="fc-charts">
               <Card title={t.fleetUtilization} viewDetails={t.viewDetails}>
                 <p className="fc-caption">

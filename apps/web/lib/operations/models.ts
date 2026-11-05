@@ -74,18 +74,10 @@ export interface GateEvent {
   legacy_arrival: boolean;
   created_at: string;
 }
-export interface Acknowledgement {
-  id: string;
-  inspection_id: string;
-  actor_id: string;
-  notes: string;
-  created_at: string;
-}
 export interface BudgetApproval {id:string;work_order_id:string;actor_id:string;actor_name:string;amount:number;created_at:string;policy_snapshot:{unit_id:string|null;policy_version:number;superior_required:boolean};}
 export interface OpsSnapshot {
   adjustments?:FinancialAdjustment[]|null;
   approvals?: BudgetApproval[]|null;
-  acknowledgements: Acknowledgement[] | null;
   orders: WorkOrder[] | null;
   lines: WorkOrderLine[] | null;
   energy: EnergyEvent[] | null;
@@ -157,11 +149,6 @@ export function parseSnapshot(value: unknown): OpsSnapshot {
   return {
     adjustments:rows<FinancialAdjustment>("adjustments",r=>typeof r.work_order_id==="string"&&typeof r.delta==="number"&&Number.isFinite(r.delta)&&["pending","approved","rejected"].includes(String(r.status))&&Number.isInteger(r.version)),
     approvals:rows<BudgetApproval>("approvals",r=>typeof r.work_order_id==="string"&&typeof r.actor_id==="string"&&typeof r.actor_name==="string"&&typeof r.amount==="number"&&Number.isFinite(r.amount)&&typeof r.created_at==="string"&&!!r.policy_snapshot&&typeof r.policy_snapshot==="object"),
-    acknowledgements: rows<Acknowledgement>(
-      "acknowledgements",
-      (r) =>
-        typeof r.inspection_id === "string" && typeof r.actor_id === "string",
-    ),
     orders: rows<WorkOrder>(
       "orders",
       (r) =>

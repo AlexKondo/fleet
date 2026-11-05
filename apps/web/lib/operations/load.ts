@@ -55,7 +55,6 @@ export async function loadOperationalWorkspace(roles: readonly string[]) {
     lines: null,
     energy: null,
     gate: null,
-    acknowledgements: null,
   };
   return {
     db,

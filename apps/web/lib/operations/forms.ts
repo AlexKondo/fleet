@@ -99,12 +99,6 @@ export function operationForm(form: FormData) {
     case "energy.void":
       payload = { id: id("id"), reason: text("reason", 500) };
       break;
-    case "incident.ack":
-      payload = {
-        inspection_id: id("inspection_id"),
-        notes: text("notes", 1000),
-      };
-      break;
     case "gate.record":
       payload = {
         reservation_id: id("reservation_id"),
@@ -133,7 +127,6 @@ const paths = new Set([
   "/fleet/energy",
   "/gate",
   "/gate/history",
-  "/fleet/incidents",
 ]);
 export function operationReturn(value: unknown) {
   if (typeof value !== "string") return "/maintenance";

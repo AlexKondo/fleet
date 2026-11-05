@@ -7,7 +7,7 @@ describe("one menu item per area", () => {
     expect(menuKeyFor("drivers")).toBe("team");
     for (const k of ["planning", "orders", "vehicleHistory"]) expect(menuKeyFor(k)).toBe("maintenance");
     expect(menuKeyFor("gateHistory")).toBe("gate");
-    for (const k of ["energy", "incidents", "keyManagement", "carpool"]) expect(menuKeyFor(k)).toBe("fleet");
+    for (const k of ["energy", "keyManagement", "carpool"]) expect(menuKeyFor(k)).toBe("fleet");
     for (const k of ["book", "find"]) expect(menuKeyFor(k)).toBe("trips");
     expect(menuKeyFor("analytics")).toBe("dashboard");
     expect(menuKeyFor("admin")).toBe("settings");
@@ -47,11 +47,11 @@ describe("tabs", () => {
     }
   });
   it("the current tab is the exact address, else the longest tab that contains it", () => {
-    const tabs = sectionTabs("fleet", { isAdministrator: false });
-    expect(activeTabHref(tabs, "/fleet")).toBe("/fleet");
-    expect(activeTabHref(tabs, "/fleet/incidents")).toBe("/fleet/incidents");
-    expect(activeTabHref(tabs, "/fleet/vehicles/abc")).toBe("/fleet");
-    expect(activeTabHref(tabs, "/fleet/incidents/x")).toBe("/fleet/incidents");
-    expect(activeTabHref(tabs, "/settings")).toBeNull();
+    const tabs = sectionTabs("settings", { isAdministrator: false });
+    expect(activeTabHref(tabs, "/settings")).toBe("/settings");
+    expect(activeTabHref(tabs, "/settings/mobility-points")).toBe("/settings/mobility-points");
+    expect(activeTabHref(tabs, "/settings/other")).toBe("/settings");
+    expect(activeTabHref(tabs, "/settings/mobility-points/x")).toBe("/settings/mobility-points");
+    expect(activeTabHref(tabs, "/fleet")).toBeNull();
   });
 });

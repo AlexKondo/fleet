@@ -16,7 +16,7 @@ describe('explicit non-driving manager workspaces versus driving gate',()=>{
  it('does not bypass the required initial password change',async()=>{m.password=true;const response=await updateSupabaseSession(new NextRequest('http://localhost/fleet'));expect(response.status).toBe(307);expect(response.headers.get('location')).toContain('forcePasswordChange=1');});
 });
 it('allows non-driving administrative subroutes while keeping own pickup protected',async()=>{
- for(const role of ['fleet_manager','administrator','maintenance_operator']){m.role=role;for(const path of ['/fleet/maintenance','/fleet/incidents','/settings/users'])expect((await updateSupabaseSession(new NextRequest(`http://localhost${path}`))).status).toBe(200);
+ for(const role of ['fleet_manager','administrator','maintenance_operator']){m.role=role;for(const path of ['/fleet/maintenance','/fleet/energy','/settings/users'])expect((await updateSupabaseSession(new NextRequest(`http://localhost${path}`))).status).toBe(200);
  expect((await updateSupabaseSession(new NextRequest('http://localhost/reservations/id/pickup'))).status).toBe(307);}
 });
 

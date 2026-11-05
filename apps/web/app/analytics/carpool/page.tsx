@@ -81,11 +81,6 @@ export default async function CarpoolKpiPage({ searchParams }: { searchParams: P
       subtitle={dict.ops.carpoolMgr.subtitle}
       legacy
       wide
-      headerActions={
-        <Link href="/analytics" className="fm-btn fm-btn-ghost">
-          {t.backToAnalytics}
-        </Link>
-      }
     >
       {!organizationScope&&<p role="status">{dashboardMiscTexts[locale].carpoolOrgScope}</p>}
       <div data-testid="carpool-kpi-page">

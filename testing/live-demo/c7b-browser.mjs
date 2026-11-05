@@ -163,7 +163,7 @@ try {
   st = await inert(admPage);
   record("administrator /analytics (destinations list with the hostile destination): inert", st.xss === 0 && st.imgX === 0 && st.injectedScripts === 0, { xss: st.xss, overflowPx: st.overflow });
   await shot(admPage, "xss-analytics");
-  const link = await admPage.locator('[data-testid="carpool-kpi-link"]').count();
+  const link = await admPage.locator('[data-testid="section-tabs"] a[href="/analytics/carpool"]').count();
   record("administrator: /analytics links to the carpool KPI dashboard", link === 1);
   await admPage.goto(`${BASE}/analytics/carpool?range=30`, { waitUntil: "load" });
   await admPage.waitForTimeout(1500);

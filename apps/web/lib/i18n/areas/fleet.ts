@@ -2,7 +2,7 @@ import type { AreaTexts } from "../areaText";
 
 /** /fleet (vehicle workspace, rows, forms). The client components receive the resolved Record<FleetKey,string> by props. */
 export type FleetKey =
-  | "pageTitle" | "talkToFleetMind" | "archiveLink" | "vehiclesUnavailable"
+  | "pageTitle" | "archiveLink" | "vehiclesUnavailable"
   | "archiveReason" | "archiveConfirm" | "registering" | "archive" | "deactivate"
   | "unitsLoadFailed" | "baseUnitOwner" | "noUnitAssigned" | "selectAuthorizedUnit"
   | "vehicleSelection" | "baseUnit" | "allScopeUnits" | "unitsUnavailable" | "unitFallback"
@@ -32,7 +32,6 @@ export type FleetKey =
 export const fleetTexts: AreaTexts<FleetKey> = {
   "pt-BR": {
     pageTitle: "Gestão Inteligente de Veículos",
-    talkToFleetMind: "Falar com o FleetMind",
     archiveLink: "Arquivo da frota e cadastros desativados",
     vehiclesUnavailable: "Lista de veículos indisponível. Recarregue para consultar os dados.",
     archiveReason: "Motivo da desativação",
@@ -149,7 +148,6 @@ export const fleetTexts: AreaTexts<FleetKey> = {
   },
   "en-US": {
     pageTitle: "Intelligent Vehicle Management",
-    talkToFleetMind: "Talk to FleetMind",
     archiveLink: "Fleet archive and deactivated records",
     vehiclesUnavailable: "Vehicle list unavailable. Reload to retrieve the data.",
     archiveReason: "Reason for deactivation",
@@ -266,7 +264,6 @@ export const fleetTexts: AreaTexts<FleetKey> = {
   },
   es: {
     pageTitle: "Gestión Inteligente de Vehículos",
-    talkToFleetMind: "Hablar con FleetMind",
     archiveLink: "Archivo de la flota y registros desactivados",
     vehiclesUnavailable: "Lista de vehículos no disponible. Recargue para consultar los datos.",
     archiveReason: "Motivo de la desactivación",
@@ -383,7 +380,6 @@ export const fleetTexts: AreaTexts<FleetKey> = {
   },
   "zh-CN": {
     pageTitle: "车辆智能管理",
-    talkToFleetMind: "与 FleetMind 对话",
     archiveLink: "车队档案与已停用记录",
     vehiclesUnavailable: "车辆列表不可用。请刷新以查询数据。",
     archiveReason: "停用理由",

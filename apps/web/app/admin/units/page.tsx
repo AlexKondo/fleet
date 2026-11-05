@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {randomUUID} from "node:crypto";
 import type {ReactNode} from "react";
 import {FmShell} from "@/app/carpool/FmShell";
@@ -25,7 +24,7 @@ export default async function UnitsPage({searchParams}:{searchParams:Promise<{er
  const policies=policyResult.error?null:parseMaintenancePolicies(policyResult.data);
  const {data,error}=await db.rpc("fm_unit_admin_snapshot");const state=error?null:parseUnitAdminState(data);
  return <FmShell orgName={profile.organization?.name??"—"} userName={profile.full_name} role={profile.role} isFleetManager isAdministrator active="admin" workspace="operations" wide><div className="ow">
- <header className="ow-heading"><div><h1>{T.title}</h1><p>{T.intro}</p></div><Link href="/admin">{T.adminLink}</Link></header>
+ <header className="ow-heading"><div><h1>{T.title}</h1><p>{T.intro}</p></div></header>
  {params.error&&<p className="ow-banner ow-error" role="alert">{keyErrorText(params.error)}</p>}{params.success&&<p className="ow-banner" role="status">{T.saved}</p>}
  <p>{T.custodyNote}</p>
  {!state?<p role="alert">{T.unavailable}</p>:<>

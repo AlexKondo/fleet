@@ -24,13 +24,32 @@
 .vw-identity .vw-status{margin:2px 0 6px}
 .vw-panel>article{min-height:120px}
 .fm-theme .fm-kpis.fleet-kpis{margin-bottom:16px}
-@media(min-width:1100px){.fm-theme .fm-kpis.fleet-kpis{grid-template-columns:minmax(0,2.4fr);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}.fm-theme .fm-kpis.fleet-kpis .fm-kpi-wide{grid-column:auto}}
+@media(min-width:1100px){.fm-theme .fm-kpis.fleet-kpis{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}.fm-theme .fm-kpis.fleet-kpis .fm-kpi-wide{grid-column:auto}}
 @media(max-width:559px){.fm-theme .fm-kpis.fleet-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.fm-theme .fm-kpis.fleet-kpis .fm-kpi-wide{grid-column:1/-1}.fm-theme .fm-kpis.fleet-kpis .fm-kpi{grid-template-columns:40px minmax(0,1fr);padding:12px;min-height:72px}.fm-theme .fm-kpis.fleet-kpis .fm-kpi-icon{width:40px;height:40px}}
 @media(max-width:800px){.vw-select{min-height:56px;padding:12px 8px}.vw-pagination button{min-height:44px;min-width:44px}.vw-filters button,.vw-filters select,.vw input{min-height:44px}.vw-tabs button{min-height:44px}.vw-quick a{padding:12px 8px}}
 .vw-status[data-status=reserved],.vw-status[data-status=awaiting_pickup]{color:var(--lt-0b5fcf, #0b5fcf);background:var(--lt-e4efff, #e4efff)}
 .vw-status[data-status=returning]{color:var(--lt-5b2fa3, #5b2fa3);background:var(--lt-efeafb, #efeafb)}
 .vw-status[data-status=inspection],.vw-status[data-status=cleaning]{color:var(--lt-7a5110, #7a5110);background:var(--lt-fdf5e2, #fdf5e2)}
-@media(min-width:1100px){.fm-theme .fm-kpis.fleet-kpis{align-items:start}.fm-theme .fm-kpis.fleet-kpis .fm-kpi:not(.fm-kpi-wide){min-height:84px}}
+/* Vehicles by propulsion. Same hue for each propulsion as the tiles it replaced; steps and ring order validated (validate_palette, adjacent pairs, closing pair included): light CVD 19.3 / normal 20.2, dark CVD 17.3 / normal 20.9. Yellow is under 3:1 on white, so the legend always prints name and count. */
+.fm-theme{--ev-bev:#128a63;--ev-phev:#6250d6;--ev-ice:#eda100;--ev-hev:#2a78d6}
+:root[data-theme="dark"] .fm-theme{--ev-bev:#199e70;--ev-phev:#9085e9;--ev-ice:#c98500;--ev-hev:#3987e5}
+.fm-theme .fm-kpis.fleet-kpis .fm-kpi.fleet-energy{display:flex;align-items:center;gap:20px}
+.fleet-donut{width:104px;height:104px;flex:none}
+.fleet-donut circle{transition:stroke-width .12s ease}
+.fleet-donut circle:hover{stroke-width:17}
+.fleet-donut [data-e=BEV]{stroke:var(--ev-bev)}
+.fleet-donut [data-e=PHEV]{stroke:var(--ev-phev)}
+.fleet-donut [data-e=ICE]{stroke:var(--ev-ice)}
+.fleet-donut [data-e=HEV]{stroke:var(--ev-hev)}
+.fm-theme .fm-dot[data-e=BEV]{background:var(--ev-bev)}
+.fm-theme .fm-dot[data-e=PHEV]{background:var(--ev-phev)}
+.fm-theme .fm-dot[data-e=ICE]{background:var(--ev-ice)}
+.fm-theme .fm-dot[data-e=HEV]{background:var(--ev-hev)}
+.fleet-energy-body{flex:1;min-width:0}
+.fm-theme .fleet-energy .fm-legend{display:grid;gap:3px;margin-top:6px}
+.fm-theme .fleet-energy .fm-legend li{display:flex}
+.fm-theme .fleet-energy .fm-legend strong{margin-left:auto}
+@media(max-width:1099px){.fm-theme .fm-kpis.fleet-kpis .fm-kpi.fleet-energy{grid-column:1/-1}}
 
 .vw-row{display:flex;align-items:center;border-top:1px solid var(--lt-eaf0f9, #eaf0f9)}
 .vw-row .vw-select{flex:1;min-width:0;border-top:0}

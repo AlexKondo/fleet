@@ -109,3 +109,11 @@ export const FmRouteIcon = () => (
     <path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.8" />
   </Svg>
 );
+export const FmTrashIcon = () => (
+  <Svg>
+    <path d="M4 7h16" />
+    <path d="M9.5 7V4.8c0-.4.4-.8.8-.8h3.4c.4 0 .8.4.8.8V7" />
+    <path d="m6 7 1 12.2c0 .5.5.8 1 .8h8c.5 0 1-.3 1-.8L18 7" />
+    <path d="M10 11v5.5M14 11v5.5" />
+  </Svg>
+);

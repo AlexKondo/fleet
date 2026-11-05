@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { randomUUID } from "node:crypto";
 import type { ReactNode } from "react";
 import { FmShell } from "../carpool/FmShell";
@@ -61,14 +60,6 @@ export async function Workspace({
             <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>
-          {p.role === "security" ? null : (
-            <Link
-              href={managerView ? "/dashboard/command-center" : "/maintenance"}
-              className="ow-link"
-            >
-              {t.centralLink}
-            </Link>
-          )}
         </header>
         {error && (
           <p className="ow-banner ow-error" role="alert">

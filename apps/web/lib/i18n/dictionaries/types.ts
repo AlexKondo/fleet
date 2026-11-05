@@ -894,8 +894,6 @@ export type Dictionary = {
   carpoolKpi: {
     title: string;
     loadError: string;
-    linkFromAnalytics: string;
-    backToAnalytics: string;
     rangeLabel: string;
     range7: string;
     range30: string;
@@ -1642,6 +1640,7 @@ export type Dictionary = {
       kpisLabel: string;
       kpiTotal: string;
       kpiStatusBar: string;
+      kpiEnergyMix: string;
       detailSubtitle: string;
     };
     reports: {
@@ -1681,7 +1680,6 @@ export type Dictionary = {
     vehicleRecord: string;
     energy: string;
     drivers: string;
-    incidents: string;
     gateExceptions: string;
     gateHistory: string;
     keyCustody: string;
@@ -1738,12 +1736,6 @@ export type Dictionary = {
     locationRegistered: string;
     locationsError: string;
     noLocationLabel: string;
-    economyTitle: string;
-    ecoCarpool: string;
-    ecoBev: string;
-    ecoElectric: string;
-    ecoCo2: string;
-    calcPending: string;
     fleetUtilization: string;
     utilizationCaption: string;
     seriesUnavailable: string;
@@ -1800,7 +1792,6 @@ export type Dictionary = {
     searchNoResults: string;
   };
   opsShell: {
-    centralLink: string;
     success: string;
     unavailable: string;
     unavailableEnv: string;

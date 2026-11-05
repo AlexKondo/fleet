@@ -18,6 +18,7 @@ import { FmShell } from "../../carpool/FmShell";
 import { getStatusMeta } from "../../dashboard/statusMeta";
 import { getDictionary, getLocale } from "../../../lib/i18n/getLocale";
 import { ReservationChat, type ReservationMessage } from "./ReservationChat";
+import { ChecklistReports } from "./ChecklistReports";
 import { respondToCarpoolRequest } from "./actions";
 import { cancelMyReservation } from "../../trips/actions";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
@@ -291,6 +292,7 @@ export default async function ReservationDetailPage({
   // wrapper/markup changed. The two blocks the legacy branch rendered differently keep their original conditions:
   // the evidence links stay employee-only, the "reassign on the dashboard" hint stays privileged-only.
   const isEmployee = profile?.role === "employee";
+  const checklistReports = isFleetManager ? await ChecklistReports({ supabase, reservationId: id, locale }) : null;
   return (
     <FmShell
       active="trips"
@@ -357,6 +359,7 @@ export default async function ReservationDetailPage({
           {checklistState.own_return_id ? <Link className="fm-btn fm-btn-ghost" href={`/reservations/${id}/evidence/${checklistState.own_return_id}`}>Fotos da devolução</Link> : null}
         </nav> : null}
         <OfficeCustodyNotice state={checklistState}/>
+        {checklistReports}
         {/* S3-04: offered only to whom fm_operation_exception accepts (security in gate_visual, managers in scope). inScope: this reservation was read under the viewer RLS, which already hides out-of-scope reservations from limited managers (redirect above); the RPC re-checks. */}
         {!isOwnReservation && reservation.status==='confirmed' && checklistState && !checklistState.departed && (checklistState.pickup_traveler || checklistState.pickup_security) && canShowOperationExceptionForm({role:profile?.role,workflow:checklistState.workflow,inScope:true}) ? <OperationExceptionForm reservationId={id} requestId={randomUUID()} locale={locale}/> : null}
         {/* S3-05: persistent confirmation once the reservation was closed by exception (the form itself unmounts with the status change). */}

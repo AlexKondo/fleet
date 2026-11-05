@@ -134,7 +134,6 @@ function fixture(): OperationalData {
       ],
       energy: null,
       gate: null,
-      acknowledgements: null,
     },
     unavailable: false,
     manager: false,

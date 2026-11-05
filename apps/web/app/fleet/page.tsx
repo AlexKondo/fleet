@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {loadUnitDimension} from "@/lib/operations/unitDimension";
-import {AssistantTrigger} from "../carpool/AssistantTrigger";
+import { EnergyDonut } from "./EnergyDonut";
 import {pageAll} from "@/lib/carpool/kpi/loadKpis";
 import {loadManagementScope} from "@/lib/operations/managerScope";
 import { redirect } from "next/navigation";
@@ -179,7 +179,6 @@ export default async function FleetPage() {
       subtitle={o.subtitle}
       nonDrivingWorkspace
       legacy
-      headerActions={<AssistantTrigger voice className="fm-btn fm-btn-primary">{T.talkToFleetMind}</AssistantTrigger>}
       wide
     >
       <section className="fm-kpis fleet-kpis" aria-label={o.kpisLabel} data-testid="fleet-kpis">
@@ -208,17 +207,10 @@ export default async function FleetPage() {
             </>
           ) : null}
         </div>
-        {(["BEV", "PHEV", "HEV", "ICE"] as const)
-          .filter((e) => energyCounts.has(e))
-          .map((e) => (
-            <div key={e} className="fm-kpi" data-testid={`fleet-kpi-${e}`}>
-              <span className="fm-kpi-icon" data-tone={e === "BEV" ? "ok" : e === "PHEV" ? "violet" : e === "HEV" ? "info" : "warn"}><FmCarIcon /></span>
-              <div className="fm-kpi-body">
-                <p className="fm-kpi-value">{energyCounts.get(e)}</p>
-                <p className="fm-kpi-label">{dict.fleet.categories.energy[e]}</p>
-              </div>
-            </div>
-          ))}
+        <EnergyDonut
+          title={o.kpiEnergyMix}
+          parts={(["BEV", "PHEV", "ICE", "HEV"] as const).map((e) => ({ key: e, label: dict.fleet.categories.energy[e], value: energyCounts.get(e) ?? 0 }))}
+        />
       </section>
 
       {loadError ? (

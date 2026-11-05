@@ -150,7 +150,7 @@ export async function FmShell({
   const personalKeys: NavKey[] = ["book", "trips"];
   const managerOrder: NavKey[] = [
     "dashboard", "fleet", "carpool", "gate", "maintenance", "planning", "orders", "vehicleHistory", "energy",
-    "drivers", "team", "incidents", "gateHistory", "keyManagement", "budgetApprovals", "reservationApprovals", "keys",
+    "drivers", "team", "gateHistory", "keyManagement", "budgetApprovals", "reservationApprovals", "keys",
     "analytics", "admin", "settings",
   ];
   const rank = (k: NavKey, list: NavKey[]) => {

@@ -2,7 +2,7 @@ import type { AreaTexts } from "../areaText";
 
 export type AdminUnitsKey =
   | "reason" | "saveConfig" | "workflowLabel" | "workflowGate" | "workflowKeys"
-  | "title" | "intro" | "adminLink" | "saved" | "custodyNote" | "unavailable"
+  | "title" | "intro" | "saved" | "custodyNote" | "unavailable"
   | "scopePanel" | "scopeNote" | "scopeUnavailable" | "noManagers"
   | "allUnits" | "authorizedUnits" | "accountDisabled" | "scopeLabel" | "onlySelected" | "allOrgUnits"
   | "authorizedLegend" | "unitInactive" | "scopeHint" | "scopeReason" | "saveScope"
@@ -24,7 +24,6 @@ export const adminUnitsTexts: AreaTexts<AdminUnitsKey> = {
     workflowKeys: "Custódia de chaves no escritório — SP",
     title: "Unidades e custódia de chaves",
     intro: "Designe quem entrega e recebe as chaves em cada unidade, independentemente de onde fica o gestor da frota.",
-    adminLink: "Administração",
     saved: "Configuração salva e auditada.",
     custodyNote: "Uma designação de custódia não concede gestão de frota. O gestor local também precisa ser designado para confirmar as chaves. A unidade operacional do veículo é independente do estacionamento informado no checklist.",
     unavailable: "Não foi possível consultar a configuração. Nenhuma permissão foi presumida; as alterações estão indisponíveis.",
@@ -88,7 +87,6 @@ export const adminUnitsTexts: AreaTexts<AdminUnitsKey> = {
     workflowKeys: "Key custody at the office — SP",
     title: "Units and key custody",
     intro: "Assign who hands over and receives the keys at each unit, regardless of where the fleet manager is located.",
-    adminLink: "Administration",
     saved: "Configuration saved and audited.",
     custodyNote: "A custody assignment does not grant fleet management. The local manager must also be assigned to confirm the keys. The vehicle's operating unit is independent of the parking location reported in the checklist.",
     unavailable: "The configuration could not be queried. No permission was assumed; changes are unavailable.",
@@ -152,7 +150,6 @@ export const adminUnitsTexts: AreaTexts<AdminUnitsKey> = {
     workflowKeys: "Custodia de llaves en la oficina — SP",
     title: "Unidades y custodia de llaves",
     intro: "Designe quién entrega y recibe las llaves en cada unidad, independientemente de dónde esté el gestor de la flota.",
-    adminLink: "Administración",
     saved: "Configuración guardada y auditada.",
     custodyNote: "Una designación de custodia no concede gestión de flota. El gestor local también debe ser designado para confirmar las llaves. La unidad operativa del vehículo es independiente del estacionamiento informado en el checklist.",
     unavailable: "No fue posible consultar la configuración. No se presumió ningún permiso; los cambios no están disponibles.",
@@ -216,7 +213,6 @@ export const adminUnitsTexts: AreaTexts<AdminUnitsKey> = {
     workflowKeys: "办公室钥匙保管 — SP",
     title: "单位与钥匙保管",
     intro: "指定每个单位中负责交付和接收钥匙的人员，无论车队经理位于何处。",
-    adminLink: "管理",
     saved: "配置已保存并已审计。",
     custodyNote: "钥匙保管指派不授予车队管理权限。本地经理也必须被指派才能确认钥匙。车辆所属运营单位与检查清单中填写的停放位置无关。",
     unavailable: "无法查询配置。未假定任何权限；更改不可用。",

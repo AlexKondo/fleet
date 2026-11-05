@@ -12,6 +12,8 @@ import {
 } from "./actions";
 import { getRoleOptions } from "./ROLE_LABELS";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
+import { FmTrashIcon } from "../../fmIcons";
+import { SubmitButton } from "../../ui/SubmitButton";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
 import { errorLabel } from "@/lib/i18n/errorLabel";
 import { accessErrorText } from "@/lib/i18n/areas/settingsMisc";
@@ -84,16 +86,29 @@ export function UserRow({
   const driverFormRef = useRef<HTMLFormElement>(null);
   const licenseFormRef = useRef<HTMLFormElement>(null);
 
+  const accessDialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (removeState.status === "success") accessDialogRef.current?.close();
+  }, [removeState]);
+
   const roleSaved = useAutoSavedNotice(roleState.status);
   const driverSaved = useAutoSavedNotice(driverState.status);
   const licenseSaved = useAutoSavedNotice(licenseState.status);
 
+  const accountLabel = member.enabled === true ? t.accountActive : member.enabled === false ? t.accountInactive : t.accessUnavailable;
+  const source = member.drivers_license_expiration_source;
+  const sourceLabel = source === "ai" ? t.licenseSourceAi : source === "manual" ? t.licenseSourceManual : t.licenseSourceUnknown;
+  const inactive = member.enabled === false;
+  const accessLabel = inactive ? t.reactivate : t.deactivate;
+
   return (
-    <tr className="border-b border-line-800 align-top last:border-0">
+    <tr className="border-b border-line-800 last:border-0">
       <td className="min-w-0 px-4 py-3" data-label={dict.team.columns.member}>
-        <p className="truncate text-sm text-paper-50">{member.full_name}</p>
-        <p className="truncate text-xs text-fog-400">{member.email}</p>
-        <p className="text-xs text-fog-400">{member.enabled === true ? t.accountActive : member.enabled === false ? t.accountInactive : t.accessUnavailable}</p>
+        <div className="us-who" data-inactive={inactive ? "" : undefined} title={accountLabel}>
+          <span className="us-name truncate text-sm text-paper-50">{member.full_name}</span>
+          <span className="us-email truncate text-xs text-fog-400" title={member.email}>{member.email}</span>
+          <span className="sr-only">{accountLabel}</span>
+        </div>
       </td>
 
       <td className="px-4 py-3" data-label={dict.team.columns.role}>
@@ -101,6 +116,7 @@ export function UserRow({
           <input type="hidden" name="userId" value={member.id} />
           <select
             name="role"
+            aria-label={dict.team.columns.role}
             defaultValue={member.role}
             disabled={isSelf}
             onChange={() => roleFormRef.current?.requestSubmit()}
@@ -113,38 +129,39 @@ export function UserRow({
             ))}
           </select>
         </form>
-        <form ref={workFormRef} action={workAction} className="mt-2">
-          <input type="hidden" name="userId" value={member.id} />
-          <label className="flex flex-col gap-1 text-[11px] font-medium text-fog-400">
-            {t.workLocationLabel}
-            <select
-              name="workLocationId"
-              value={workLocationId}
-              onChange={(e) => {
-                setWorkLocationId(e.target.value);
-                // submit after the state is applied, so the form carries the new value
-                setTimeout(() => workFormRef.current?.requestSubmit(), 0);
-              }}
-              data-testid="work-location-select"
-              className="w-40 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
-            >
-              <option value="">{t.workLocationNone}</option>
-              {workLocations.map((w) => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
-          </label>
-        </form>
-        {workState.status === "error" ? (
-          <p role="alert" className="mt-1 text-xs text-signal-red">{errorLabel(dict, workState.error)}</p>
-        ) : workSaved ? (
-          <p className="mt-1 text-xs text-signal-teal">{t.autoSaved}</p>
-        ) : null}
         {roleState.status === "error" ? (
           <p role="alert" className="mt-1 text-xs text-signal-red">
             {errorLabel(dict, roleState.error)}
           </p>
         ) : roleSaved ? (
+          <p className="mt-1 text-xs text-signal-teal">{t.autoSaved}</p>
+        ) : null}
+      </td>
+
+      <td className="px-4 py-3" data-label={t.workLocationLabel}>
+        <form ref={workFormRef} action={workAction}>
+          <input type="hidden" name="userId" value={member.id} />
+          <select
+            name="workLocationId"
+            aria-label={t.workLocationLabel}
+            value={workLocationId}
+            onChange={(e) => {
+              setWorkLocationId(e.target.value);
+              // submit after the state is applied, so the form carries the new value
+              setTimeout(() => workFormRef.current?.requestSubmit(), 0);
+            }}
+            data-testid="work-location-select"
+            className="w-40 rounded-sm border border-line-800 bg-panel-800 px-2 py-1.5 text-sm text-paper-50 outline-none focus-visible:border-gwm-accent"
+          >
+            <option value="">{t.workLocationNone}</option>
+            {workLocations.map((w) => (
+              <option key={w.id} value={w.id}>{w.name}</option>
+            ))}
+          </select>
+        </form>
+        {workState.status === "error" ? (
+          <p role="alert" className="mt-1 text-xs text-signal-red">{errorLabel(dict, workState.error)}</p>
+        ) : workSaved ? (
           <p className="mt-1 text-xs text-signal-teal">{t.autoSaved}</p>
         ) : null}
       </td>
@@ -156,7 +173,7 @@ export function UserRow({
               license read would have turned into blanks); the server action writes only what it receives. */}
           <input type="hidden" name="intent" value="authorization" />
           <input type="hidden" name="authorizationSubmitted" value="1" />
-          <label className="flex items-center gap-1.5 text-xs text-fog-400">
+          <label className="flex items-center gap-1.5 text-xs text-fog-400" title={t.driverAuthorized}>
             <input
               type="checkbox"
               name="driverAuthorized"
@@ -165,7 +182,7 @@ export function UserRow({
               onChange={() => driverFormRef.current?.requestSubmit()}
               className="h-3.5 w-3.5"
             />
-            {t.driverAuthorized}
+            <span className="sr-only">{t.driverAuthorized}</span>
           </label>
         </form>
         {driverState.status === "error" ? (
@@ -178,118 +195,122 @@ export function UserRow({
       </td>
 
       <td className="px-4 py-3" data-label={dict.team.columns.license}>
-        <form ref={licenseFormRef} action={licenseAction} className="flex flex-wrap items-start gap-x-2 gap-y-1.5">
-          <input type="hidden" name="userId" value={member.id} />
-          {/* M3: only the three license fields (never driver_authorized); disabled when the data did not load. */}
-          <input type="hidden" name="intent" value="license" />
-          <div className="flex flex-col gap-1">
-            <label htmlFor={`lic-num-${member.id}`} className="text-[11px] font-medium text-fog-400">
-              {t.licenseNumberLabel}
-            </label>
-            <input
-              id={`lic-num-${member.id}`}
-              type="text"
-              disabled={!licensesAvailable || locked}
-              aria-readonly={locked ? "true" : undefined}
-              name="licenseNumber"
-              placeholder={t.licenseNumberPlaceholder}
-              defaultValue={member.drivers_license_number ?? ""}
-              onBlur={() => licenseFormRef.current?.requestSubmit()}
-              className="w-28 rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor={`lic-cat-${member.id}`} className="text-[11px] font-medium text-fog-400">
-              {t.licenseCategoryLabel}
-            </label>
-            <input
-              id={`lic-cat-${member.id}`}
-              type="text"
-              name="licenseCategory"
-              disabled={!licensesAvailable || locked}
-              aria-readonly={locked ? "true" : undefined}
-              placeholder={t.licenseCategoryPlaceholder}
-              defaultValue={member.drivers_license_category ?? ""}
-              onBlur={() => licenseFormRef.current?.requestSubmit()}
-              className="w-16 rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor={`lic-exp-${member.id}`} className="text-[11px] font-medium text-fog-400">
-              {t.licenseExpirationLabel}
-            </label>
-            <input
-              id={`lic-exp-${member.id}`}
-              type="date"
-              name="licenseExpiration"
-              disabled={!licensesAvailable || locked}
-              aria-readonly={locked ? "true" : undefined}
-              defaultValue={member.drivers_license_expiration ?? ""}
-              onChange={() => licenseFormRef.current?.requestSubmit()}
-              aria-describedby={`lic-src-${member.id}`}
-              className="rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
-            />
+        <div className="us-cnh-line">
+          <form ref={licenseFormRef} action={licenseAction} className="us-cnh">
+            <input type="hidden" name="userId" value={member.id} />
+            {/* M3: only the three license fields (never driver_authorized); disabled when the data did not load. */}
+            <input type="hidden" name="intent" value="license" />
+            <div className="us-field">
+              <label htmlFor={`lic-num-${member.id}`} className="us-collapse text-[11px] font-medium text-fog-400">
+                {t.licenseNumberLabel}
+              </label>
+              <input
+                id={`lic-num-${member.id}`}
+                type="text"
+                title={t.licenseNumberLabel}
+                disabled={!licensesAvailable || locked}
+                aria-readonly={locked ? "true" : undefined}
+                name="licenseNumber"
+                placeholder={t.licenseNumberPlaceholder}
+                defaultValue={member.drivers_license_number ?? ""}
+                onBlur={() => licenseFormRef.current?.requestSubmit()}
+                className="w-28 rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
+              />
+            </div>
+            <div className="us-field">
+              <label htmlFor={`lic-cat-${member.id}`} className="us-collapse text-[11px] font-medium text-fog-400">
+                {t.licenseCategoryLabel}
+              </label>
+              <input
+                id={`lic-cat-${member.id}`}
+                type="text"
+                title={t.licenseCategoryLabel}
+                name="licenseCategory"
+                disabled={!licensesAvailable || locked}
+                aria-readonly={locked ? "true" : undefined}
+                placeholder={t.licenseCategoryPlaceholder}
+                defaultValue={member.drivers_license_category ?? ""}
+                onBlur={() => licenseFormRef.current?.requestSubmit()}
+                className="w-16 rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
+              />
+            </div>
+            <div className="us-field">
+              <label htmlFor={`lic-exp-${member.id}`} className="us-collapse text-[11px] font-medium text-fog-400">
+                {t.licenseExpirationLabel}
+              </label>
+              <input
+                id={`lic-exp-${member.id}`}
+                type="date"
+                title={t.licenseExpirationLabel}
+                name="licenseExpiration"
+                disabled={!licensesAvailable || locked}
+                aria-readonly={locked ? "true" : undefined}
+                defaultValue={member.drivers_license_expiration ?? ""}
+                onChange={() => licenseFormRef.current?.requestSubmit()}
+                aria-describedby={`lic-src-${member.id}`}
+                className="rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
+              />
+            </div>
             <span
               id={`lic-src-${member.id}`}
               data-testid="license-source"
-              data-source={member.drivers_license_expiration_source ?? "none"}
-              className="inline-flex max-w-[14rem] items-center gap-1 rounded-sm border border-line-800 px-1.5 py-0.5 text-[11px] leading-tight text-fog-400"
+              data-source={source ?? "none"}
+              title={sourceLabel}
+              className="us-source text-xs text-fog-400"
             >
-              <span aria-hidden="true">{member.drivers_license_expiration_source === "ai" ? "✦" : member.drivers_license_expiration_source === "manual" ? "✎" : "?"}</span>
-              {member.drivers_license_expiration_source === "ai"
-                ? t.licenseSourceAi
-                : member.drivers_license_expiration_source === "manual"
-                  ? t.licenseSourceManual
-                  : t.licenseSourceUnknown}
+              <span aria-hidden="true">{source === "ai" ? "✦" : source === "manual" ? "✎" : "?"}</span>
+              <span className="us-collapse">{sourceLabel}</span>
             </span>
-          </div>
-        </form>
-        {locked ? (
-          <div className="mt-2 flex max-w-[17rem] flex-col gap-1.5" data-testid="license-locked">
-            <p className="flex items-start gap-1.5 text-[11px] leading-snug text-fog-400">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true">
-                <rect x="5" y="11" width="14" height="9" rx="2" />
-                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-              </svg>
-              <span>{t.licenseLockedHint}</span>
-            </p>
-            {isSelf ? (
-              <p className="text-[11px] leading-snug text-fog-400" data-testid="license-reset-self">
-                {t.resetLicenseSelfHint}
-              </p>
-            ) : (
-            <form action={resetAction} className="flex flex-col gap-1.5">
-              <input type="hidden" name="userId" value={member.id} />
-              <label htmlFor={`lic-reason-${member.id}`} className="text-[11px] font-medium text-fog-400">
-                {t.resetLicenseReasonLabel}
-              </label>
-              <input
-                id={`lic-reason-${member.id}`}
-                name="reason"
-                type="text"
-                required
-                minLength={5}
-                maxLength={200}
-                placeholder={t.resetLicenseReasonPlaceholder}
-                className="rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
-              />
-              <ConfirmSubmitButton
-                confirmMessage={t.resetLicenseConfirm.replace("{name}", member.full_name)}
-                pendingLabel={t.resetLicenseWorking}
-                disabled={resetPending}
-                className="min-h-[32px] rounded-sm border border-line-800 px-2 py-1 text-xs uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red disabled:opacity-50"
-              >
-                {t.resetLicense}
-              </ConfirmSubmitButton>
-            </form>
-            )}
-            {resetState.status === "error" ? (
-              <p role="alert" className="text-xs text-signal-red">
-                {errorLabel(dict, resetState.error)}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
+          </form>
+          {locked ? (
+            <details className="us-lock" data-testid="license-locked">
+              <summary title={t.licenseLockedHint} aria-label={t.licenseLockedHint}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="5" y="11" width="14" height="9" rx="2" />
+                  <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                </svg>
+              </summary>
+              <div className="us-lock-body">
+                <p className="text-[11px] leading-snug text-fog-400">{t.licenseLockedHint}</p>
+                {isSelf ? (
+                  <p className="text-[11px] leading-snug text-fog-400" data-testid="license-reset-self">
+                    {t.resetLicenseSelfHint}
+                  </p>
+                ) : (
+                  <form action={resetAction} className="flex flex-col gap-1.5">
+                    <input type="hidden" name="userId" value={member.id} />
+                    <label htmlFor={`lic-reason-${member.id}`} className="text-[11px] font-medium text-fog-400">
+                      {t.resetLicenseReasonLabel}
+                    </label>
+                    <input
+                      id={`lic-reason-${member.id}`}
+                      name="reason"
+                      type="text"
+                      required
+                      minLength={5}
+                      maxLength={200}
+                      placeholder={t.resetLicenseReasonPlaceholder}
+                      className="rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
+                    />
+                    <ConfirmSubmitButton
+                      confirmMessage={t.resetLicenseConfirm.replace("{name}", member.full_name)}
+                      pendingLabel={t.resetLicenseWorking}
+                      disabled={resetPending}
+                      className="min-h-[32px] rounded-sm border border-line-800 px-2 py-1 text-xs uppercase tracking-widest text-fog-400 hover:border-signal-red hover:text-signal-red disabled:opacity-50"
+                    >
+                      {t.resetLicense}
+                    </ConfirmSubmitButton>
+                  </form>
+                )}
+                {resetState.status === "error" ? (
+                  <p role="alert" className="text-xs text-signal-red">
+                    {errorLabel(dict, resetState.error)}
+                  </p>
+                ) : null}
+              </div>
+            </details>
+          ) : null}
+        </div>
         {licenseState.status === "error" ? (
           <p role="alert" className="mt-1 text-xs text-signal-red">
             {errorLabel(dict, licenseState.error)}
@@ -301,27 +322,46 @@ export function UserRow({
 
       <td className="px-4 py-3 text-right" data-label={dict.team.columns.action}>
         {!isSelf ? (
-          <form action={removeAction}>
-            <input type="hidden" name="userId" value={member.id} />
-            <input type="hidden" name="accessVersion" value={member.accessVersion ?? ""} />
-            <input type="hidden" name="requestId" value={member.accessRequestId ?? ""} />
-            <label className="block text-left text-xs text-fog-400">
-              {t.reasonLabel}
-              <input name="reason" required minLength={3} maxLength={1000} disabled={typeof member.enabled !== "boolean"} className="my-2 w-44 rounded-sm border border-line-800 bg-panel-800 px-2 py-1 text-paper-50" />
-            </label>
-            <ConfirmSubmitButton
-              confirmMessage={(member.enabled === false ? t.reactivateConfirm : t.removeConfirm).replace("{name}", member.full_name)}
-              disabled={removePending || typeof member.enabled !== "boolean"}
-              className="text-xs uppercase tracking-widest text-fog-400 hover:text-signal-red disabled:opacity-50"
+          <>
+            <button
+              type="button"
+              className="fm-btn fm-btn-ghost us-access"
+              data-icon={inactive ? undefined : "trash"}
+              title={accessLabel}
+              aria-label={accessLabel}
+              disabled={typeof member.enabled !== "boolean"}
+              onClick={() => accessDialogRef.current?.showModal()}
             >
-              {removePending ? t.savingShort : member.enabled === false ? t.reactivate : t.deactivate}
-            </ConfirmSubmitButton>
-          </form>
-        ) : null}
-        {removeState.status === "error" ? (
-          <p role="alert" className="mt-1 text-xs text-signal-red">
-            {accessErrorText(locale, removeState.error) ?? errorLabel(dict, removeState.error)}
-          </p>
+              {inactive ? t.reactivate : <FmTrashIcon />}
+            </button>
+            {/* The reason is required by fm_member_access_command, so it is asked here and not in the row. Deactivation keeps the account and its
+                history; the database refuses to delete a member (0176). */}
+            <dialog ref={accessDialogRef} className="us-dialog" aria-label={accessLabel} data-testid="member-access-dialog">
+              <form action={removeAction}>
+                <input type="hidden" name="userId" value={member.id} />
+                <input type="hidden" name="accessVersion" value={member.accessVersion ?? ""} />
+                <input type="hidden" name="requestId" value={member.accessRequestId ?? ""} />
+                <p>{(inactive ? t.reactivateConfirm : t.removeConfirm).replace("{name}", member.full_name)}</p>
+                <label>
+                  {t.reasonLabel}
+                  <input name="reason" required minLength={3} maxLength={1000} autoFocus />
+                </label>
+                {removeState.status === "error" ? (
+                  <p role="alert" className="text-xs text-signal-red">
+                    {accessErrorText(locale, removeState.error) ?? errorLabel(dict, removeState.error)}
+                  </p>
+                ) : null}
+                <div className="us-dialog-actions">
+                  <button type="button" className="fm-btn fm-btn-ghost" onClick={() => accessDialogRef.current?.close()}>
+                    {dict.common.cancel}
+                  </button>
+                  <SubmitButton className="fm-btn fm-btn-primary" disabled={removePending} pendingLabel={t.savingShort}>
+                    {accessLabel}
+                  </SubmitButton>
+                </div>
+              </form>
+            </dialog>
+          </>
         ) : null}
       </td>
     </tr>
