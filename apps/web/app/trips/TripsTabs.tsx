@@ -29,6 +29,7 @@ export function TripsTabs({
             className="tp-tab"
             aria-current={t.key === tab ? "page" : undefined}
             data-tab={t.key}
+            data-instant
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
               e.preventDefault();

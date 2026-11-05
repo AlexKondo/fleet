@@ -1,23 +1,25 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 /**
  * Instant click feedback for in-app navigation (the page itself is rendered on the server: login check + database reads, so the
  * new screen needs ~1s). Within one frame of a plain left-click on an internal link inside the themed shell the clicked link lights
- * up, a thin progress bar runs along the top and the content dims; everything is cleared as soon as the pathname changes. It never
- * intercepts or delays the navigation itself.
+ * up, a thin progress bar runs along the top and the content dims; everything is cleared as soon as the address changes (path or
+ * query: a filter only changes the query). It never intercepts or delays the navigation itself. A link that switches something in the
+ * browser, without going to the server, carries data-instant and gets no "loading" at all.
  */
 export function NavFeedback() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".fm-theme");
     if (!root) return;
     root.removeAttribute("data-nav-pending");
     root.querySelectorAll("[data-pending]").forEach((el) => el.removeAttribute("data-pending"));
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -25,7 +27,7 @@ export function NavFeedback() {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const anchor = (event.target as Element | null)?.closest?.("a");
       const root = document.querySelector<HTMLElement>(".fm-theme");
-      if (!anchor || !root || !root.contains(anchor)) return;
+      if (!anchor || !root || !root.contains(anchor) || anchor.hasAttribute("data-instant")) return;
       const href = anchor.getAttribute("href");
       if (!href || !href.startsWith("/") || href.startsWith("//") || anchor.target === "_blank" || anchor.hasAttribute("download")) return;
       const url = new URL(href, window.location.origin);

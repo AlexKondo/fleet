@@ -11,6 +11,7 @@ import { InactivityLogout } from "../InactivityLogout";
 import { SessionBackupSync } from "../SessionBackupSync";
 import { ChatWidget } from "../ChatWidget";
 import { MobileNav } from "../MobileNav";
+import { Suspense } from "react";
 import { NavFeedback } from "./NavFeedback";
 import { NotificationBell } from "../dashboard/NotificationBell";
 import { UserMenu } from "../UserMenu";
@@ -225,7 +226,10 @@ export async function FmShell({
       >
         {dict.navExtra.skipToContent}
       </a>
-      <NavFeedback />
+      {/* useSearchParams needs a Suspense boundary */}
+      <Suspense fallback={null}>
+        <NavFeedback />
+      </Suspense>
       <InactivityLogout />
       <SessionBackupSync />
       {licenseGateActive ? null : (

@@ -8,7 +8,6 @@ import { FmShell } from "../carpool/FmShell";
 import {
   FmAlertIcon,
   FmCalendarIcon,
-  FmCarIcon,
   FmChevronIcon,
   FmFuelIcon,
   FmGaugeIcon,
@@ -199,16 +198,6 @@ export async function EmployeeHome({
         <HomeSelectionProvider items={homeItems} labels={homeLabels} initialId={initialId}>
         <div className="hm-grid">
           <div className="hm-col-main">
-            <nav className="hm-actions" aria-label={h.quickActions} data-testid="home-quick-actions">
-              <Link href="/trips/new" className="hm-action" data-tone="blue">
-                <span className="hm-action-icon"><FmCarIcon /></span>
-                <span className="hm-action-text">
-                  <strong>{h.actionBook}</strong>
-                  <small>{h.actionBookHint}</small>
-                </span>
-              </Link>
-            </nav>
-
             {carpoolRequestsError ? (
               <section className="fm-card hm-card" role="alert" data-testid="home-carpools-error">
                 <h2 className="fm-h2">{h.carpoolTitle}</h2>
