@@ -1078,6 +1078,10 @@
  * (light value = the original colour, dark value = derived). The sidebar keeps its navy.
  */
 :root[data-theme="dark"] .fm-theme {
+  /* text that was picked for a white background: at least 4.5:1 on the dark surface */
+  --fm-dark-muted: #a3b4cb;
+  --fm-dark-link: #6ea8f7;
+  --fm-dark-danger: #f28b8b;
   --fm-navy-900: #e7edf7; /* used as the heading / strong-text colour */
   --fm-blue-600: #3d85ec;
   --fm-blue-500: #5b9cf2;

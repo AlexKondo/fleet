@@ -25,12 +25,12 @@
   margin-bottom: 18px;
 }
 .ow-heading p {
-  color: #5b7192;
+  color: var(--fm-dark-muted, #5b7192);
   font-size: 12px;
   margin-top: 5px;
 }
 .ow-link {
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
   font-size: 12px;
   text-decoration: underline;
   white-space: nowrap;
@@ -81,11 +81,11 @@
 }
 .ow-metric small {
   font-size: 10px;
-  color: #697f9b;
+  color: var(--fm-dark-muted, #697f9b);
 }
 .ow-metric-symbol {
   font-size: 36px;
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
   line-height: 1;
 }
 .ow-metric-symbol svg {
@@ -214,7 +214,7 @@
 }
 .ow-form p {
   font-size: 11px;
-  color: #607694;
+  color: var(--fm-dark-muted, #607694);
 }
 .ow-form label:has(textarea) {
   grid-column: 1/-1;
@@ -248,7 +248,7 @@
 }
 .ow-button-secondary {
   background: var(--fm-surface, #fff);
-  color: #0868f9 !important;
+  color: var(--fm-dark-link, #0868f9) !important;
   border-color: var(--lt-c7d9f2, #c7d9f2);
 }
 .ow-table-scroll {
@@ -265,7 +265,7 @@
   background: var(--lt-f0f5fc, #f0f5fc);
   padding: 11px 10px;
   font-weight: 600;
-  color: #577092;
+  color: var(--fm-dark-muted, #577092);
   font-size: 11px;
   border-bottom: 1px solid var(--lt-dfe9f5, #dfe9f5);
 }
@@ -278,12 +278,12 @@
   background: var(--lt-edf5ff, #edf5ff);
 }
 .ow-table td a {
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
   font-weight: 600;
 }
 .ow-table small {
   display: block;
-  color: #657b9a;
+  color: var(--fm-dark-muted, #657b9a);
   font-size: 10px;
   max-width: 230px;
   white-space: normal;
@@ -315,7 +315,7 @@
   background: var(--lt-e3f7ee, #e3f7ee);
 }
 .ow-tag.red {
-  color: #d93851;
+  color: var(--fm-dark-danger, #d93851);
   background: var(--lt-ffe9ed, #ffe9ed);
 }
 .ow-tag.amber {
@@ -324,7 +324,7 @@
 }
 .ow-empty {
   font-size: 13px;
-  color: #627997;
+  color: var(--fm-dark-muted, #627997);
   padding: 26px 12px;
   text-align: center;
   line-height: 1.6;
@@ -366,16 +366,16 @@
 .ow-muted {
   font-size: 11px;
   line-height: 1.5;
-  color: #627997;
+  color: var(--fm-dark-muted, #627997);
 }
 .ow-list li > a {
   flex: 1;
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
 }
 .ow-list small {
   display: block;
   font-size: 10px;
-  color: #627997;
+  color: var(--fm-dark-muted, #627997);
 }
 .ow-costs {
   display: grid;
@@ -392,12 +392,12 @@
 .ow-costs small {
   display: block;
   font-size: 10px;
-  color: #617998;
+  color: var(--fm-dark-muted, #617998);
 }
 .ow-costs strong {
   display: block;
   font-size: 20px;
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
   margin-top: 5px;
 }
 .ow-costs > div:last-child strong {
@@ -416,7 +416,7 @@
 }
 .ow-detail-head small {
   font-size: 11px;
-  color: #617998;
+  color: var(--fm-dark-muted, #617998);
 }
 .ow-detail-head p {
   font-size: 12px;
@@ -435,11 +435,11 @@
   padding: 9px 12px;
   font-size: 12px;
   border-radius: 5px;
-  color: #577092;
+  color: var(--fm-dark-muted, #577092);
 }
 .ow-tabs a[aria-current="page"] {
   background: var(--lt-e4f0ff, #e4f0ff);
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
   font-weight: 700;
 }
 .ow-bars {
@@ -486,7 +486,7 @@
   padding: 6px 9px;
   border-radius: 5px;
   background: var(--lt-edf2f9, #edf2f9);
-  color: #6b7e96;
+  color: var(--fm-dark-muted, #6b7e96);
   font-size: 10px;
 }
 .ow-timeline [data-active="true"] {
@@ -524,7 +524,7 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
 }
 .ow details[open] > summary {
   margin-bottom: 14px;
@@ -546,7 +546,7 @@
 .ow-calendar-row > a {
   font-size: 12px;
   font-weight: 600;
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
 }
 .ow-calendar-row > div {
   position: relative;
@@ -569,13 +569,13 @@
 .ow-note {
   margin-top: 12px;
   font-size: 11px;
-  color: #627997;
+  color: var(--fm-dark-muted, #627997);
 }
 .ow-amount {
   font-variant-numeric: tabular-nums;
 }
 .ow-critical {
-  color: #d93851;
+  color: var(--fm-dark-danger, #d93851);
 }
 .ow-data-grid {
   display: grid;
@@ -584,7 +584,7 @@
   font-size: 12px;
 }
 .ow-data-grid dt {
-  color: #6b7e96;
+  color: var(--fm-dark-muted, #6b7e96);
   font-size: 10px;
 }
 .ow-data-grid dd {
@@ -611,14 +611,14 @@
   padding: 18px;
   border: 1px solid var(--lt-dce7f5, #dce7f5);
   border-radius: 8px;
-  color: #0868f9;
+  color: var(--fm-dark-link, #0868f9);
   background: var(--fm-surface, #f8fbff);
   font-weight: 600;
 }
 .ow-links small {
   display: block;
   margin-top: 5px;
-  color: #627997;
+  color: var(--fm-dark-muted, #627997);
   font-weight: 400;
   font-size: 11px;
 }
