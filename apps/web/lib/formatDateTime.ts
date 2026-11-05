@@ -42,6 +42,17 @@ export function formatDateTimeShort(iso: string, locale: Locale): string {
   });
 }
 
+/** Day, month and time without the year ("06/11, 08:00"), for lists where every line must stay short. */
+export function formatDayMonthTime(iso: string, locale: Locale): string {
+  return new Date(iso).toLocaleString(locale, {
+    timeZone: TIME_ZONE,
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 /** Time of day only ("07:30"), same Brasília-time rule (carpool "Buscar Carona" cards). */
 export function formatTimeShort(iso: string, locale: Locale): string {
   return new Date(iso).toLocaleTimeString(locale, {

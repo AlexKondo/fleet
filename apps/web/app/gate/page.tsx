@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { automaticReleaseEnabled } from "@/lib/operations/autoReleasePolicy";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { formatDateTimeShort } from "@/lib/formatDateTime";
+import { formatDayMonthTime } from "@/lib/formatDateTime";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { FmShell } from "../carpool/FmShell";
 import { getStatusMeta } from "../dashboard/statusMeta";
@@ -117,9 +117,10 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
         // the gate (porteiro) does not need to know where the trip goes
         route: isSecurity ? "" : `${r.trip_request?.origin ?? "—"} → ${r.trip_request?.destination ?? "—"}`,
         eventKind,
-        eventAt: formatDateTimeShort(eventIso, locale),
+        eventAt: formatDayMonthTime(eventIso, locale),
         eventMs: new Date(eventIso).getTime(),
-        statusLabel: notPickedUp ? M.notPickedUp : (meta?.label ?? vehicleStatus),
+        statusLabel: notPickedUp ? M.notPickedUpShort : (meta?.label ?? vehicleStatus),
+        statusHint: notPickedUp ? M.notPickedUp : undefined,
         statusClass: meta?.text ?? "text-fog-400",
         status: notPickedUp ? "inspection" : vehicleStatus,
         action,
@@ -166,7 +167,7 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
         <p role="status" className="fm-banner" data-testid="gate-cap-note" style={{ marginTop: 0, marginBottom: 16 }}>{g.capNote}</p>
       ) : null}
 
-      <GateList rows={rows} dict={dict} capped={capped} T={M} />
+      <GateList rows={rows} dict={dict} T={M} />
     </FmShell>
   );
 }

@@ -597,62 +597,24 @@
   grid-template-columns: 1fr;
   gap: 10px;
 }
-.fm-theme .gt-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 14px;
-}
-.fm-theme .gt-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 16px;
-  font: inherit;
-  font-weight: 700;
-  color: var(--fm-text-muted);
-  background: var(--fm-surface);
-  border: 1px solid var(--fm-border-strong);
-  border-radius: var(--fm-radius-md);
-  cursor: pointer;
-}
-.fm-theme .gt-tab[aria-pressed="true"] {
-  color: #fff;
-  background: var(--fm-blue-600);
-  border-color: var(--fm-blue-600);
-}
-.fm-theme .gt-tab .gt-count {
-  min-width: 24px;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--fm-bg);
-  color: var(--fm-text);
-  font-size: 12px;
-  text-align: center;
-}
-.fm-theme .gt-tab[aria-pressed="true"] .gt-count {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-}
 .fm-theme .gt-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 .fm-theme .gt-row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
-  padding: 16px;
+  gap: 6px;
+  padding: 8px 12px;
 }
 .fm-theme .gt-main {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
 }
 .fm-theme .gt-icon {
@@ -660,9 +622,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   background: var(--fm-blue-100);
   color: var(--fm-blue-600);
 }
@@ -671,37 +633,52 @@
   color: var(--lt-5b2fa3, #5b2fa3);
 }
 .fm-theme .gt-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 17px;
+  height: 17px;
 }
 .fm-theme .gt-plate {
-  font-size: 22px;
+  flex-shrink: 0;
+  font-size: 15px;
   font-weight: 700;
   color: var(--fm-navy-900);
   letter-spacing: 0.02em;
 }
-.fm-theme .gt-vehicle {
+.fm-theme .gt-vehicle,
+.fm-theme .gt-person {
+  min-width: 0;
+  overflow: hidden;
   font-size: 13px;
   color: var(--fm-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .fm-theme .gt-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
   min-width: 0;
-  display: grid;
-  gap: 2px;
-  overflow-wrap: anywhere;
 }
-.fm-theme .gt-route {
-  font-weight: 600;
+.fm-theme .gt-person {
+  flex: 1 1 120px;
 }
-.fm-theme .gt-meta {
+.fm-theme .gt-event {
+  flex-shrink: 0;
   font-size: 13px;
-  color: var(--fm-text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fm-theme .gt-status {
+  flex-shrink: 0;
+  gap: 6px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 .fm-theme .gt-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .fm-theme .gt-actions .fm-btn {
   flex: 1 1 140px;
@@ -858,11 +835,33 @@
     align-items: end;
   }
   .fm-theme .gt-row {
-    grid-template-columns: minmax(0, 260px) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 270px) minmax(0, 1fr) auto;
     align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+  }
+  /* fixed columns: the date, the status and the buttons line up from one row to the next */
+  .fm-theme .gt-info {
+    flex-wrap: nowrap;
+  }
+  .fm-theme .gt-event {
+    width: 150px;
+  }
+  .fm-theme .gt-status-cell {
+    flex-shrink: 0;
+    width: 124px;
+  }
+  .fm-theme .gt-actions {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    width: 272px;
   }
   .fm-theme .gt-actions .fm-btn {
     flex: 0 0 auto;
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+    white-space: nowrap;
   }
   .fm-theme .rp-metrics.rp-metrics-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));

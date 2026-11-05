@@ -5,7 +5,7 @@ type K =
   | "listDeparture" | "listArrival"
   | "titleDeparture" | "titleArrival" | "noteDeparture" | "noteArrival"
   | "confirmDeparture" | "confirmArrival" | "optionDeparture" | "optionArrival" | "optionDenied" | "noteLabel"
-  | "resultDeparture" | "resultArrival" | "resultDenied" | "managerNotified" | "ok" | "errorTitle" | "notPickedUp" | "eventDeparture" | "eventReturn";
+  | "resultDeparture" | "resultArrival" | "resultDenied" | "managerNotified" | "ok" | "errorTitle" | "notPickedUp" | "eventDeparture" | "eventReturn" | "notPickedUpShort";
 export type GateMovementKey = K;
 
 export const gateMovementTexts: AreaTexts<K> = {
@@ -29,6 +29,7 @@ export const gateMovementTexts: AreaTexts<K> = {
     ok: "OK",
     errorTitle: "Não foi possível registrar",
     notPickedUp: "Veículo reservado e não retirado",
+    notPickedUpShort: "Não retirado",
     eventDeparture: "Saída",
     eventReturn: "Retorno",
   },
@@ -52,6 +53,7 @@ export const gateMovementTexts: AreaTexts<K> = {
     ok: "OK",
     errorTitle: "Could not record it",
     notPickedUp: "Vehicle reserved and not picked up",
+    notPickedUpShort: "Not picked up",
     eventDeparture: "Departure",
     eventReturn: "Return",
   },
@@ -75,6 +77,7 @@ export const gateMovementTexts: AreaTexts<K> = {
     ok: "OK",
     errorTitle: "No fue posible registrar",
     notPickedUp: "Vehículo reservado y no retirado",
+    notPickedUpShort: "No retirado",
     eventDeparture: "Salida",
     eventReturn: "Regreso",
   },
@@ -98,6 +101,7 @@ export const gateMovementTexts: AreaTexts<K> = {
     ok: "好的",
     errorTitle: "无法登记",
     notPickedUp: "车辆已预约但未取走",
+    notPickedUpShort: "未取车",
     eventDeparture: "出发",
     eventReturn: "返回",
   },

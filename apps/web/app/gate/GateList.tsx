@@ -1,9 +1,7 @@
-"use client";
-
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Dictionary } from "../../lib/i18n/dictionaries";
 import type { GateMovementKey } from "@/lib/i18n/areas/gateMovement";
+import { shortPersonName } from "@/lib/operations/gateOrder";
 import { FmArrowInIcon, FmArrowOutIcon } from "../fmIcons";
 
 export interface GateRow {
@@ -16,6 +14,8 @@ export interface GateRow {
   eventKind: "departure" | "return";
   eventAt: string;
   statusLabel: string;
+  /** the full text when the label is the short one */
+  statusHint?: string;
   statusClass: string;
   /** vehicles.status, drives the colour dot next to the label */
   status: string;
@@ -24,79 +24,40 @@ export interface GateRow {
   notPickedUp?: boolean;
 }
 
-type View = "all" | "pickup" | "return";
-
 /**
- * SCR-SEC-001: the rows the gate has to act on, grouped by what comes next (departures x returns) with the real counts; nothing here is invented.
- * (The plate search was removed: the list is a handful of reservations and the gate picks the vehicle from it.)
+ * SCR-SEC-001: the rows the gate has to act on, closest event first (page.tsx), one line each: the long texts are shortened and the
+ * full one is on the tooltip. (No plate search and no filters: the list is a handful of reservations and the gate picks from it.)
  */
-export function GateList({ rows, dict, capped = false, T }: { rows: GateRow[]; dict: Dictionary; capped?: boolean; T: Record<GateMovementKey, string> }) {
-  const [view, setView] = useState<View>("all");
+export function GateList({ rows, dict, T }: { rows: GateRow[]; dict: Dictionary; T: Record<GateMovementKey, string> }) {
   const g = dict.ops.gate;
-
-  const counts = useMemo(
-    () => ({
-      all: rows.length,
-      pickup: rows.filter((r) => r.action === "pickup").length,
-      return: rows.filter((r) => r.action === "return").length,
-    }),
-    [rows],
-  );
-
-  const filtered = useMemo(() => {
-    return rows.filter((r) => view === "all" || r.action === view);
-  }, [rows, view]);
-
-  const tab = (key: View, label: string) => (
-    <button
-      key={key}
-      type="button"
-      className="gt-tab"
-      aria-pressed={view === key}
-      onClick={() => setView(key)}
-      data-testid={`gate-tab-${key}`}
-    >
-      {label}
-      <span className="gt-count">{counts[key]}{capped ? "+" : ""}</span>
-    </button>
-  );
 
   return (
     <div>
-      <div className="gt-tabs" role="group" aria-label={g.viewLabel}>
-        {tab("all", g.tabAll)}
-        {tab("pickup", g.tabPickup)}
-        {tab("return", g.tabReturn)}
-      </div>
-
       {rows.length === 0 ? (
         <p className="fm-empty">{dict.gate.empty}</p>
-      ) : filtered.length === 0 ? (
-        <p className="fm-empty">{g.noneInView}</p>
       ) : (
         <ul className="gt-list">
-          {filtered.map((r) => (
+          {rows.map((r) => (
             <li key={r.id} className="fm-card gt-row" data-testid="gate-row">
               <div className="gt-main">
-                <span className="gt-icon" data-kind={r.action} aria-hidden="true">
-                  {r.action === "pickup" ? <FmArrowOutIcon /> : <FmArrowInIcon />}
+                <span className="gt-icon" data-kind={r.eventKind === "return" ? "return" : "pickup"} aria-hidden="true">
+                  {r.eventKind === "return" ? <FmArrowInIcon /> : <FmArrowOutIcon />}
                 </span>
-                <div>
-                  <p className="gt-plate fm-mono">{r.plate}</p>
-                  {r.vehicleName ? <p className="gt-vehicle">{r.vehicleName}</p> : null}
-                </div>
+                <span className="gt-plate fm-mono">{r.plate}</span>
+                {r.vehicleName ? <span className="gt-vehicle" title={r.vehicleName}>{r.vehicleName.split(" - ")[0]}</span> : null}
               </div>
               <div className="gt-info">
-                {r.route ? <p className="gt-route">{r.route}</p> : null}
-                <p className="gt-meta">
-                  {r.requesterName ?? "—"} · <span className="tabular-nums">{r.eventKind === "return" ? T.eventReturn : T.eventDeparture}: {r.eventAt}</span>
-                </p>
-                <p className="gt-meta">
-                  <span className="fm-pill" data-tone={r.notPickedUp ? "warn" : "neutral"} style={{ gap: 8 }} data-testid={r.notPickedUp ? "gate-not-picked-up" : undefined}>
+                <span className="gt-person" title={[r.requesterName, r.route].filter(Boolean).join(" · ")}>
+                  {shortPersonName(r.requesterName) ?? "—"}
+                  {r.route ? ` · ${r.route}` : ""}
+                </span>
+                <span className="gt-event tabular-nums">{r.eventKind === "return" ? T.eventReturn : T.eventDeparture}: {r.eventAt}</span>
+                <span className="gt-status-cell">
+                  <span className="fm-pill gt-status" title={r.statusHint} data-tone={r.notPickedUp ? "warn" : "neutral"} data-testid={r.notPickedUp ? "gate-not-picked-up" : undefined}>
                     <span className="fm-dot" data-s={r.status} aria-hidden="true" />
                     {r.statusLabel}
                   </span>
-                </p>
+                </span>
               </div>
               <div className="gt-actions">
                 <Link href={`/reservations/${r.id}`} className="fm-btn fm-btn-ghost">
