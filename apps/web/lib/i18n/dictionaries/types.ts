@@ -1032,6 +1032,7 @@ export type Dictionary = {
       title: string;
       backToTrips: string;
       backToGate: string;
+      backToHome: string;
       impactedTitle: string;
       impactedDefaultReason: string;
       impactedReassignPrefix: string;
@@ -1513,6 +1514,8 @@ export type Dictionary = {
       noPending: string;
       requestedSeats: string;
       detourLine: string;
+      detourOverLimit: string;
+      anonymousRider: string;
       pickupLabel: string;
       dropoffLabel: string;
       pickupAreaLabel: string;
@@ -1547,6 +1550,8 @@ export type Dictionary = {
       carpoolFirstEnabled: string;
       hostOptInRequired: string;
       hostApprovalRequired: string;
+      hostCanAcceptOverDetour: string;
+      hostSeesRiderBeforeAccept: string;
       departureWindowMinutes: string;
       returnWindowMinutes: string;
       maxAdditionalDistanceKm: string;

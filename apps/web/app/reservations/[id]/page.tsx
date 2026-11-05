@@ -19,6 +19,7 @@ import { getStatusMeta } from "../../dashboard/statusMeta";
 import { getDictionary, getLocale } from "../../../lib/i18n/getLocale";
 import { ReservationChat, type ReservationMessage } from "./ReservationChat";
 import { ChecklistReports } from "./ChecklistReports";
+import { reservationsHomeFor } from "@/lib/trips/reservationsHome";
 import { respondToCarpoolRequest } from "./actions";
 import { cancelMyReservation } from "../../trips/actions";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
@@ -309,8 +310,8 @@ export default async function ReservationDetailPage({
       <div className="rd" data-testid="reservation-detail-fm">
         {banners}
         {/* the porter comes from Portaria and has no trips of his own */}
-        <Link href={profile?.role === "security" ? "/gate" : "/trips"} className="fm-link">
-          {profile?.role === "security" ? dict.reservations.detail.backToGate : dict.reservations.detail.backToTrips}
+        <Link href={reservationsHomeFor(profile?.role)} className="fm-link">
+          {profile?.role === "security" ? dict.reservations.detail.backToGate : profile?.role === "employee" ? dict.reservations.detail.backToHome : dict.reservations.detail.backToTrips}
         </Link>
 
         {takeoverInfo ? (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { reservationsHomeFor } from "@/lib/trips/reservationsHome";
 import { FmShell } from "../../carpool/FmShell";
 import { FmCarIcon, FmPinIcon } from "../../fmIcons";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
@@ -46,8 +47,8 @@ export async function ChecklistFrame({
     >
       <div className="ck" data-testid="checklist-page">
         {/* the porter comes from Portaria and has no trips of his own */}
-        <Link href={shell.role === "security" ? "/gate" : "/trips"} className="fm-link">
-          {shell.role === "security" ? dict.reservations.detail.backToGate : dict.reservations.detail.backToTrips}
+        <Link href={reservationsHomeFor(shell.role)} className="fm-link">
+          {shell.role === "security" ? dict.reservations.detail.backToGate : shell.role === "employee" ? dict.reservations.detail.backToHome : dict.reservations.detail.backToTrips}
         </Link>
         <h1 className="fm-title">{title}</h1>
         <p className="fm-subtitle">{intro}</p>

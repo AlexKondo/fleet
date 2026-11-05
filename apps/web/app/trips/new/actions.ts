@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { reservationsHomeFor } from "@/lib/trips/reservationsHome";
 import { parseBrasiliaLocalDateTime } from "@/lib/trips/brasiliaLocalDateTime";
 import {
   planMobility,
@@ -195,7 +196,7 @@ async function buildPlanInputs(input: TripFormInput) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("organization_id")
+    .select("organization_id, role")
     .eq("id", user.id)
     .single();
   if (!profile) {
@@ -604,7 +605,7 @@ export async function confirmTrip(
       )?.existingTrip.id as string,
     });
     if (error) return { success: false, error: error.message };
-    redirect("/trips");
+    redirect(reservationsHomeFor(built.profile.role));
   }
 
   // BR-005: in ai_recommended mode (the default), only the engine's own top pick may be
@@ -721,7 +722,7 @@ export async function confirmTrip(
       redirect(`/reservations/${createdReservationId}?carpoolPublish=${encodeURIComponent(publishFailure)}`);
     }
 
-    redirect("/trips");
+    redirect(reservationsHomeFor(built.profile.role));
   }
 
   return { success: false, error: "target_mismatch" };

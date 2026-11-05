@@ -1,4 +1,5 @@
 import {loadEquipmentContract} from "@/lib/equipment/contract";
+import { reservationsHomeFor } from "@/lib/trips/reservationsHome";
 import { GateVisualForm } from "@/app/gate/GateVisualForm";
 import { loadChecklistState } from "@/lib/operations/checklistState";
 import { notFound, redirect } from "next/navigation";
@@ -90,7 +91,7 @@ export default async function PickupPage({ params }: { params: Promise<{ id: str
           currentOdometer={vehicle.odometer_km}
           locale={locale}
           equipmentItems={equipmentItems ?? []}
-          doneHref={state.inspection_role === "security" ? "/gate" : "/trips"}
+          doneHref={reservationsHomeFor(profile?.role)}
           dict={dict}
         /></>:<p role="alert" className="fm-banner fm-banner-danger ck-blocked">Não foi possível preparar a configuração de equipamentos. Solicite ao gestor a configuração deste veículo antes de uma nova retirada. O registro físico de chegada continua disponível na unidade.</p>
         )}

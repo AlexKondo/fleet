@@ -195,8 +195,14 @@ describe("/reservations/[id] renders the FleetMind shell for every role", () => 
     expect(html).not.toContain("md:w-60");
     expect(html).not.toContain("bg-panel-900/40");
     // back link + vehicle header + the shared blocks
-    // the porter goes back to Portaria: "Minhas Viagens" is not his screen
-    expect(html).toContain(role === "security" ? `<a class="fm-link" href="/gate">${dict.reservations.detail.backToGate}</a>` : `<a class="fm-link" href="/trips">${dict.reservations.detail.backToTrips}</a>`);
+    // each one goes back to where their reservations are: Portaria, Início (employee) or Viagens (manager)
+    expect(html).toContain(
+      role === "security"
+        ? `<a class="fm-link" href="/gate">${dict.reservations.detail.backToGate}</a>`
+        : role === "employee"
+          ? `<a class="fm-link" href="/dashboard">${dict.reservations.detail.backToHome}</a>`
+          : `<a class="fm-link" href="/trips">${dict.reservations.detail.backToTrips}</a>`,
+    );
     expect(html).toContain("Veículo de teste");
     // the gate (security) does not see the destination, its address or the map; every other role does
     if (role === "security") {
