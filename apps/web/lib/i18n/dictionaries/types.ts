@@ -1705,16 +1705,10 @@ export type Dictionary = {
     loadErrorHint: string;
     retry: string;
     viewDetails: string;
-    periodToday: string;
-    period7d: string;
-    period30d: string;
-    periodMonth: string;
-    periodAria: string;
     locationAria: string;
     allLocations: string;
     apply: string;
     degraded: string;
-    kpisAria: string;
     vehiclesTotal: string;
     inOperation: string;
     available: string;
@@ -1722,20 +1716,6 @@ export type Dictionary = {
     blocked: string;
     reserved: string;
     otherStatuses: string;
-    tripsPeriod: string;
-    confirmed: string;
-    completed: string;
-    cancelled: string;
-    byDeparture: string;
-    ridesAccepted: string;
-    sharedSeats: string;
-    ridesNote: string;
-    utilizationRate: string;
-    utilizationHint: string;
-    utilizationPending: string;
-    occupancyRate: string;
-    occupancyHint: string;
-    occupancyPending: string;
     dataUnavailable: string;
     upcomingMaintenance: string;
     noServiceByKm: string;
@@ -1743,7 +1723,6 @@ export type Dictionary = {
     untilReview: string;
     footnote: string;
     openControls: string;
-    searchNoResults: string;
   };
   opsShell: {
     success: string;

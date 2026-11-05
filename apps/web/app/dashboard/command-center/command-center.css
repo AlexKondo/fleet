@@ -138,11 +138,6 @@
 .fc-error a {
   text-decoration: underline;
 }
-.fc-kpis {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-}
 .fc-kpi {
   padding: 14px 12px;
   min-height: 153px;
@@ -166,11 +161,6 @@
   font-weight: 750;
   letter-spacing: -0.6px;
 }
-.fc-kpi-top span:not(.fc-gauge) {
-  display: block;
-  font-size: 11px;
-  margin-top: 2px;
-}
 .fc-kpi dl {
   font-size: 10px;
   margin: 0;
@@ -190,11 +180,6 @@
   color: #526b95;
   font-size: 10px;
   margin-top: 8px;
-}
-.fc-gauge {
-  font-size: 40px;
-  color: var(--lt-00a669, #00a669);
-  line-height: 1;
 }
 .fc-segments {
   height: 9px;
@@ -217,7 +202,7 @@
 }
 .fc-bottom {
   display: grid;
-  grid-template-columns: 1.15fr 0.9fr 1fr 1.05fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: 10px;
 }
 .fc-bottom .fc-card {
@@ -285,13 +270,12 @@
 }
 @media (min-width: 1450px) {
   .fc-heading {
-    padding-right: 294px;
     position: relative;
     min-height: 48px;
   }
   .fc-filters {
     position: absolute;
-    right: 294px;
+    right: 0;
     top: 8px;
   }
   .fc-heading > div:first-child {
@@ -304,9 +288,6 @@
   .fc-heading p {
     max-width: 690px;
     margin-top: 20px;
-  }
-  .fc-kpis {
-    gap: 10px;
   }
 }
 @media (max-width: 1400px) {
@@ -346,16 +327,10 @@
   .fc-kpi-top strong {
     font-size: 22px;
   }
-  .fc-kpis {
-    gap: 7px;
-  }
 }
 @media (max-width: 760px) {
   .fc h1 {
     font-size: 25px;
-  }
-  .fc-kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .fc-kpi:last-child {
     grid-column: 1/-1;

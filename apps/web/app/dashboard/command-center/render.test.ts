@@ -101,7 +101,7 @@ beforeEach(() => {
 
 async function render() {
   const element = await Page({
-    searchParams: Promise.resolve({ period: "7d" }),
+    searchParams: Promise.resolve({}),
   });
   const shell = await FmShell(
     (element as ReactElement<Parameters<typeof FmShell>[0]>).props,
@@ -133,7 +133,10 @@ describe("command center page access and rendering", () => {
     expect(html).not.toContain("Economia e Sustentabilidade");
     expect(html).toContain("TEST001");
     expect(html).not.toContain("R$ 3.450");
-    expect(html).toContain("period=30d");
+    // the cards of trips, carpools and rates were removed, and the period filter that only served them
+    for (const gone of ["Caronas aceitas", "Taxa de utilização", "Taxa de ocupação", "30 dias", 'class="fc-card fc-kpi" href=']) expect(html).not.toContain(gone);
+    expect(html).toContain("Veículos total");
+    expect(html).toContain("Próximas manutenções");
     if (process.env.FLEET_VISUAL_DIR) {
       const dir = process.env.FLEET_VISUAL_DIR;
       mkdirSync(dir, { recursive: true });

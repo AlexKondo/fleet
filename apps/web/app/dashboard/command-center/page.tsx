@@ -9,16 +9,12 @@ import { loadCommandCenter } from "@/lib/dashboard/loadCommandCenter";
 import { FmShell } from "../../carpool/FmShell";
 import {
   FmCarIcon,
-  FmCalendarIcon,
-  FmUsersIcon,
   FmWrenchIcon,
   FmAlertIcon,
 } from "../../fmIcons";
-import { getStatusMeta, VEHICLE_STATUSES } from "../statusMeta";
+import { VEHICLE_STATUSES } from "../statusMeta";
 import "./command-center.css";
 
-const fmt = (text: string, values: Record<string, string | number>) =>
-  text.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? ""));
 function Card({
   title,
   children,
@@ -49,7 +45,7 @@ function Empty({ children }: { children: ReactNode }) {
 export default async function FleetCommandCenterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string; location?: string }>;
+  searchParams: Promise<{ location?: string }>;
 }) {
   const params = await searchParams;
   const db = await createSupabaseServerClient();
@@ -72,24 +68,16 @@ export default async function FleetCommandCenterPage({
     loadCommandCenter(
       db,
       profile.organization_id,
-      params.period,
+      undefined,
       params.location,
     ),
     getDictionary(),
     getLocale(),
   ]);
   const t = dict.commandCenter;
-  const labels = {
-    today: t.periodToday,
-    "7d": t.period7d,
-    "30d": t.period30d,
-    month: t.periodMonth,
-  } as const;
   const number = (n: number | null) =>
     n === null ? "—" : n.toLocaleString(locale as Locale);
-  const dateLocale = locale as Locale;
-  const { vehicles, reservations, rides, tasks, range } = data;
-  const statuses = getStatusMeta(dict);
+  const { vehicles } = data;
   const counts = VEHICLE_STATUSES.map((status) => ({
     status,
     count: vehicles?.filter((v) => v.status === status).length ?? 0,
@@ -119,8 +107,6 @@ export default async function FleetCommandCenterPage({
         (b.next_service_odometer_km! - b.odometer_km),
     )
     .slice(0, 5);
-  const href = (period: string) =>
-    `/dashboard/command-center?period=${period}&location=${encodeURIComponent(data.selectedLocation)}`;
   return (
     <FmShell
       active="dashboard"
@@ -139,19 +125,7 @@ export default async function FleetCommandCenterPage({
             <p>{t.subtitle}</p>
           </div>
           <div className="fc-filters">
-            <nav aria-label={t.periodAria}>
-              {Object.entries(labels).map(([key, label]) => (
-                <Link
-                  key={key}
-                  href={href(key)}
-                  aria-current={range.period === key ? "page" : undefined}
-                >
-                  {label}
-                </Link>
-              ))}
-            </nav>
             <form method="get">
-              <input type="hidden" name="period" value={range.period} />
               <label className="sr-only" htmlFor="fc-location">
                 {t.locationAria}
               </label>
@@ -175,12 +149,12 @@ export default async function FleetCommandCenterPage({
         {data.degraded && (
           <p role="alert" className="fc-error">
             {t.degraded}{" "}
-            <Link href={href(range.period)}>{t.retry}</Link>
+            <Link href={`/dashboard/command-center?location=${encodeURIComponent(data.selectedLocation)}`}>{t.retry}</Link>
           </p>
         )}
         <div className="fc-layout">
           <div className="fc-main">
-            <section className="fc-kpis" aria-label={t.kpisAria}>
+            <div className="fc-bottom">
               <div className="fc-card fc-kpi">
                 <div className="fc-kpi-top">
                   <FmCarIcon />
@@ -216,90 +190,6 @@ export default async function FleetCommandCenterPage({
                   ))}
                 </dl>
               </div>
-              <Link className="fc-card fc-kpi" href="/trips">
-                <div className="fc-kpi-top">
-                  <FmCalendarIcon />
-                  <div>
-                    <strong>
-                      {number(
-                        reservations?.filter(
-                          (r) =>
-                            r.status === "confirmed" ||
-                            r.status === "completed",
-                        ).length ?? null,
-                      )}
-                    </strong>
-                    <span>{fmt(t.tripsPeriod, { period: labels[range.period] })}</span>
-                  </div>
-                </div>
-                <dl>
-                  {["confirmed", "completed", "cancelled"].map((s) => (
-                    <div key={s}>
-                      <dt>
-                        {s === "confirmed"
-                          ? t.confirmed
-                          : s === "completed"
-                            ? t.completed
-                            : t.cancelled}
-                      </dt>
-                      <dd>
-                        {number(
-                          reservations?.filter((r) => r.status === s).length ??
-                            null,
-                        )}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-                <small>{t.byDeparture}</small>
-              </Link>
-              <Link className="fc-card fc-kpi" href="/analytics/carpool">
-                <div className="fc-kpi-top">
-                  <FmUsersIcon />
-                  <div>
-                    <strong>{number(rides?.length ?? null)}</strong>
-                    <span>{t.ridesAccepted}</span>
-                  </div>
-                </div>
-                <dl>
-                  <div>
-                    <dt>{t.sharedSeats}</dt>
-                    <dd>
-                      {number(
-                        rides?.reduce((sum, r) => sum + r.requested_seats, 0) ??
-                          null,
-                      )}
-                    </dd>
-                  </div>
-                </dl>
-                <small>{t.ridesNote}</small>
-              </Link>
-              <div className="fc-card fc-kpi">
-                <div className="fc-kpi-top">
-                  <span className="fc-gauge" aria-hidden="true">
-                    ◔
-                  </span>
-                  <div>
-                    <strong>—</strong>
-                    <span>{t.utilizationRate}</span>
-                  </div>
-                </div>
-                <small>{t.utilizationHint}</small>
-                <p>{t.utilizationPending}</p>
-              </div>
-              <div className="fc-card fc-kpi">
-                <div className="fc-kpi-top">
-                  <FmUsersIcon />
-                  <div>
-                    <strong>—</strong>
-                    <span>{t.occupancyRate}</span>
-                  </div>
-                </div>
-                <small>{t.occupancyHint}</small>
-                <p>{t.occupancyPending}</p>
-              </div>
-            </section>
-            <div className="fc-bottom">
               <Card
                 title={t.upcomingMaintenance}
                 href="/dashboard#open-tasks"
