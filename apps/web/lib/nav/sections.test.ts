@@ -8,7 +8,7 @@ describe("one menu item per area", () => {
     for (const k of ["planning", "orders", "vehicleHistory"]) expect(menuKeyFor(k)).toBe("maintenance");
     expect(menuKeyFor("gateHistory")).toBe("gate");
     for (const k of ["energy", "incidents", "keyManagement", "carpool"]) expect(menuKeyFor(k)).toBe("fleet");
-    for (const k of ["book", "myCarpools", "find"]) expect(menuKeyFor(k)).toBe("trips");
+    for (const k of ["book", "find"]) expect(menuKeyFor(k)).toBe("trips");
     expect(menuKeyFor("analytics")).toBe("dashboard");
     expect(menuKeyFor("admin")).toBe("settings");
     expect(menuKeyFor("team")).toBe("team");

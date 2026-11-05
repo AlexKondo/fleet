@@ -42,7 +42,6 @@ export type NavKey =
   | "incidents"
   | "gateHistory"
   | "admin"
-  | "myCarpools"
   | "find"
   | "keys"
   | "keyManagement"

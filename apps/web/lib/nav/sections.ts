@@ -11,7 +11,7 @@ export const TAB_ONLY_KEYS = [
   "gateHistory", // Portaria tabs
   "energy", "incidents", "keyManagement", "drivers", "carpool", // Frota / Equipe / Viagens tabs
   "analytics", "admin", // Painel / Configurações tabs
-  "book", "myCarpools", "find", // Viagens tabs
+  "book", "find", // the booking button / reached from Viagens
 ] as const;
 
 /** Which menu item is "current" for a screen that reports `active` (a tab-only key belongs to its area's item). */
@@ -21,7 +21,7 @@ export function menuKeyFor(active: string): string {
     case "planning": case "orders": case "vehicleHistory": return "maintenance";
     case "gateHistory": return "gate";
     case "energy": case "incidents": case "keyManagement": case "carpool": return "fleet";
-    case "book": case "myCarpools": case "find": return "trips";
+    case "book": case "find": return "trips";
     case "analytics": return "dashboard";
     case "admin": return "settings";
     default: return active;
@@ -64,11 +64,8 @@ export function sectionTabs(section: SectionId, f: { isAdministrator: boolean })
         { id: "incidents", href: "/fleet/incidents", visible: true },
       ];
     case "trips":
-      return [
-        { id: "book", href: "/trips/new", visible: true },
-        { id: "mine", href: "/trips", visible: true },
-        { id: "myCarpools", href: "/carpool/mine", visible: true },
-      ];
+      // one tab means no tab bar: booking is the "+ Solicitar Viagem" button, carpools are on this screen
+      return [{ id: "mine", href: "/trips", visible: true }];
     case "gate":
       return [
         { id: "queue", href: "/gate", visible: true },

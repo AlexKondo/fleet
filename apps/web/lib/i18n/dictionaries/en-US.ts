@@ -560,7 +560,7 @@ const dict: Dictionary = {
       newTrip: "New trip",
       actionError:
         "We couldn't complete that action. The trip may have already changed status — refresh the page and try again.",
-      empty: "You don't have any trips yet. Request your first one under “+ New trip”.",
+      empty: "You don't have any trips yet. Request your first one under “+ Request Trip”.",
       messages: "Messages",
       startPickup: "Start Pickup",
       registerReturn: "Log Return",

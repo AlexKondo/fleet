@@ -38,7 +38,6 @@ const ICONS_BY_KEY: Record<
   carpool: FindRideIcon,
   book: TripsIcon,
   admin: SettingsIcon,
-  myCarpools: FindRideIcon,
   find: FindRideIcon,
   maintenance: FleetIcon,
   planning: DashboardIcon,
@@ -180,12 +179,13 @@ export function MobileNav({
             </button>
           ) : null}
 
-          <Link
+          {/* one way in: an employee has it on the bottom bar (compact shell); the gate does not book */}
+          {(compact && role === "employee") || role === "security" ? null : <Link
             href="/trips/new"
             className="mt-4 flex items-center justify-center gap-2 rounded-sm bg-gwm-accent px-3 py-2.5 text-xs font-semibold uppercase tracking-widest text-ink-950 hover:opacity-90"
           >
             {dict.chrome.requestTrip}
-          </Link>
+          </Link>}
 
           <div className="mt-4 flex items-center justify-between border-t border-line-800 pt-4">
             <Link

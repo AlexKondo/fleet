@@ -560,7 +560,7 @@ const dict: Dictionary = {
       newTrip: "Nuevo viaje",
       actionError:
         "No fue posible completar la acción. Es posible que el viaje ya haya cambiado de estado: actualiza la página e inténtalo de nuevo.",
-      empty: "Aún no tienes viajes. Solicita el primero en “+ Nuevo viaje”.",
+      empty: "Aún no tienes viajes. Solicita el primero en “+ Solicitar Viaje”.",
       messages: "Mensajes",
       startPickup: "Iniciar Retiro",
       registerReturn: "Registrar Devolución",

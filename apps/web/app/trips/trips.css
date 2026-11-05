@@ -7,9 +7,6 @@
   flex-direction: column;
   gap: 16px;
 }
-.fm-theme .tp-new {
-  align-self: flex-start;
-}
 .fm-theme .tp-banner {
   margin-top: 16px;
 }

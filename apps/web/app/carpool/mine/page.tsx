@@ -1,11 +1,6 @@
-import { TripsWorkspace } from "@/app/trips/TripsWorkspace";
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    tripActionError?: string;
-    carpoolActionError?: string;
-  }>;
-}) {
-  return TripsWorkspace({ searchParams, carpoolOnly: true });
+import { redirect } from "next/navigation";
+
+/** Carpools are on Viagens: this address only keeps old links working. */
+export default function Page() {
+  redirect("/trips");
 }

@@ -134,26 +134,20 @@ export async function FmShell({
     {
       key: "book" as NavKey,
       href: "/trips/new",
-      label: dict.trips.reservar.navBook,
+      // the same "+ Solicitar Viagem" of the sidebar: on a phone this is where it lives (bottom bar)
+      label: dict.chrome.requestTrip.replace(/^\+\s*/, ""),
       icon: TripsIcon,
       visible: true,
     },
   ];
-  extra.push({
-    key: "myCarpools",
-    href: "/carpool/mine",
-    label: dict.navExtra.myCarpools,
-    icon: FindRideIcon,
-    visible: true,
-  });
   // dashboard first, then the two rider destinations, then the shared items
   // the gate (porteiro) only works in Portaria: the traveler destinations (Viagens, Reservar, Caronas) are not offered to that role
-  const gateOnlyHidden: string[] = ["trips", "book", "myCarpools", "carpool"];
+  const gateOnlyHidden: string[] = ["trips", "book", "carpool"];
   const unordered = [base[0]!, ...extra, ...base.slice(1)].filter((i) => i.visible && !(role === "security" && gateOnlyHidden.includes(i.key)));
   // Fleet managers: the manager destinations come first (reference order: home, fleet, trips/carpools, maintenance,
   // energy, drivers, users, reports, settings), the personal "rider" items (book, my carpools, my trips) are
   // grouped at the end behind a divider. Same keys, same routes, same visibility: nothing is removed.
-  const personalKeys: NavKey[] = ["book", "myCarpools", "trips"];
+  const personalKeys: NavKey[] = ["book", "trips"];
   const managerOrder: NavKey[] = [
     "dashboard", "fleet", "carpool", "gate", "maintenance", "planning", "orders", "vehicleHistory", "energy",
     "drivers", "team", "incidents", "gateHistory", "keyManagement", "budgetApprovals", "reservationApprovals", "keys",

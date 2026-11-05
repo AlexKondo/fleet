@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { byNextReservation } from "@/lib/trips/ganttOrder";
 import { formatDateTime, formatDayMonth } from "@/lib/formatDateTime";
 import type { Locale } from "@/lib/i18n/locales";
 import { ganttTexts, type GanttKey } from "@/lib/i18n/areas/gantt";
@@ -112,7 +113,11 @@ export function ReservationGantt({
     bucket.bars.push(r);
     byRow.set(r.rowPlate, bucket);
   }
-  const rows = [...byRow.values()].sort((a, b) => a.vehicleName.localeCompare(b.vehicleName));
+  const rows = byNextReservation(
+    [...byRow.values()].sort((a, b) => a.vehicleName.localeCompare(b.vehicleName)),
+    (row) => row.bars.map((b) => ({ status: b.status, start: b.start_at, end: b.end_at })),
+    Date.now(),
+  );
 
   const nowLeft = ((Date.now() - windowStart) / 86_400_000) * pxPerDay;
   const zoomIndex = ZOOM_ORDER.indexOf(zoom);

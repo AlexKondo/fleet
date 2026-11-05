@@ -546,7 +546,7 @@ const dict: Dictionary = {
       title: "我的行程",
       newTrip: "新建行程",
       actionError: "操作未能完成。该行程的状态可能已发生变更——请刷新页面后重试。",
-      empty: "您还没有任何行程。点击“+ 新建行程”提交第一个申请。",
+      empty: "您还没有任何行程。点击“+ 申请行程”提交第一个申请。",
       messages: "消息",
       startPickup: "开始取车",
       registerReturn: "登记还车",

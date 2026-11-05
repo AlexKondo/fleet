@@ -18,6 +18,7 @@ import { loadMyChecklistStates } from "@/lib/operations/checklistState";
 import { ReservationActions } from "./ReservationActions";
 import { HomeGantt } from "./HomeGantt";
 import { openReservationsNearestFirst } from "@/lib/trips/homeReservations";
+import { byNextReservation } from "@/lib/trips/ganttOrder";
 import { timelineWindow, type TimelineBooking } from "../fleet/timelineLayout";
 import { fleetTexts } from "@/lib/i18n/areas/fleet";
 import "../fleet/vehicle-workspace.css";
@@ -110,7 +111,7 @@ export async function EmployeeHome({
     row.bookings.push({ id: r.id, start: r.start_at, end: r.end_at, status: r.status, label: r.trip_request?.destination ?? "" });
     chartByVehicle.set(r.vehicle.id, row);
   }
-  const chartVehicles = [...chartByVehicle.values()];
+  const chartVehicles = byNextReservation([...chartByVehicle.values()], (v) => v.bookings, nowMs);
   const energyShows = (e: string | undefined, kinds: string[]) => (e ? kinds.includes(e) : false);
   const stateOf = (id: string) => checklistStates?.get(id);
   const isOut = (r: { id: string; status: string }) => {
@@ -268,7 +269,6 @@ export async function EmployeeHome({
               ) : (
                 <div className="hm-empty">
                   <p className="hm-muted">{h.nextEmpty}</p>
-                  <Link href="/trips/new" className="fm-btn fm-btn-primary">{h.nextEmptyCta}</Link>
                 </div>
               )}
             </section>

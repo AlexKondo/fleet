@@ -17,19 +17,17 @@ import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { ClientGantt as ReservationGantt } from "./ClientGantt";
 import type { GanttZoomLevel } from "../ganttZoomActions";
-import { FmPlusIcon, FmUsersIcon } from "../fmIcons";
+import { FmUsersIcon } from "../fmIcons";
 import "./trips.css";
 
 export async function TripsWorkspace({
   searchParams,
-  carpoolOnly = false,
 }: {
   searchParams: Promise<{
     tripActionError?: string;
     carpoolActionError?: string;
     tab?: string;
   }>;
-  carpoolOnly?: boolean;
 }) {
   const {
     tripActionError,
@@ -90,7 +88,7 @@ export async function TripsWorkspace({
       .order("created_at", { ascending: false })
       .limit(20),
   ]);
-  // the gate has no trips of its own: its screen is Portaria (this workspace also answers /carpool/mine)
+  // the gate has no trips of its own: its screen is Portaria
   if (profile?.role === "security") redirect("/gate");
 
   const carpoolTripRequestIds = (participations ?? []).map(
@@ -157,7 +155,7 @@ export async function TripsWorkspace({
 
   return (
     <FmShell
-      active={carpoolOnly ? "myCarpools" : "trips"}
+      active="trips"
       orgName={profile?.organization?.name ?? "—"}
       userName={profile?.full_name ?? user.email ?? "—"}
       role={profile?.role ?? "employee"}
@@ -167,12 +165,9 @@ export async function TripsWorkspace({
       <div className="tp">
         <div className="tp-head">
           <div>
-            <h1 className="fm-title">{carpoolOnly ? dict.dashboard.home.carpoolTitle : m.title}</h1>
-            {carpoolOnly ? null : <p className="fm-subtitle">{m.subtitle}</p>}
+            <h1 className="fm-title">{m.title}</h1>
+            <p className="fm-subtitle">{m.subtitle}</p>
           </div>
-          <Link href="/trips/new" className="fm-btn fm-btn-primary tp-new">
-            <FmPlusIcon /> {m.newReservation}
-          </Link>
         </div>
 
         {tripActionError ? (
@@ -213,9 +208,6 @@ export async function TripsWorkspace({
         {total === 0 ? (
           <div className="fm-card tp-empty" data-testid="trips-empty">
             <p>{dict.trips.list.empty}</p>
-            <Link href="/trips/new" className="fm-btn fm-btn-primary">
-              {m.newReservation}
-            </Link>
           </div>
         ) : !hasCarpoolPanel ? (
           <p className="fm-card tp-empty" data-testid="trips-tab-empty">
@@ -381,7 +373,7 @@ export async function TripsWorkspace({
 
         </div>
 
-        {all.length > 0 && !carpoolOnly ? (
+        {all.length > 0 ? (
           <div>
           <section
             className="tp-section"
