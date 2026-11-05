@@ -209,13 +209,6 @@ export function ReturnForm({
       <section className="fm-card ck-card" aria-labelledby="ck-cond">
         <h2 id="ck-cond" className="fm-h2">{tc.sectionCondition}</h2>
         <div className="ck-checks">
-          <label className="ck-check" data-tone="warn">
-            <input type="checkbox" checked={hasNewDamage} onChange={(e) => setHasNewDamage(e.target.checked)} />
-            <span>{t.hasNewDamage}</span>
-          </label>
-          {hasNewDamage ? (
-            <textarea name="damageNotes" placeholder={tc.damageNotesPlaceholder} rows={3} className="fm-input ck-textarea" aria-label={tc.damageNotesPlaceholder} />
-          ) : null}
           <label className="ck-check">
             <input type="checkbox" name="isDirtyExterior" />
             <span>{tc.dirtyExterior}</span>
@@ -224,6 +217,14 @@ export function ReturnForm({
             <input type="checkbox" name="isDirtyInterior" />
             <span>{tc.dirtyInterior}</span>
           </label>
+          {/* last: marking it opens the description and the photos right below */}
+          <label className="ck-check" data-tone="warn">
+            <input type="checkbox" checked={hasNewDamage} onChange={(e) => setHasNewDamage(e.target.checked)} />
+            <span>{t.hasNewDamage}</span>
+          </label>
+          {hasNewDamage ? (
+            <textarea name="damageNotes" placeholder={tc.damageNotesPlaceholder} rows={3} className="fm-input ck-textarea" aria-label={tc.damageNotesPlaceholder} />
+          ) : null}
         </div>
 
         {/* Changed per explicit product decision: photos are only requested when "Nova
