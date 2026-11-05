@@ -57,8 +57,7 @@ vi.mock("@/app/shellData", async (importOriginal) => {
       licenseMissing: false,
       avatarUrl: null,
       licenseGateActive: false,
-      chatInitialState: { status: "idle", messages: [] },
-    }),
+          }),
   };
 });
 vi.mock("@/app/ChatWidget", () => ({

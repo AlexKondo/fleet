@@ -472,82 +472,60 @@ export async function MaintenanceWorkspace({
             )}
           </aside>
         </div>
-      ) : (
-        <>
-          <div className="ow-grid">
-            <div className="ow-stack">
-              {view === "planning" && (
-                <Panel title={t.calendarPanel}>
-                  <Planning data={data} dict={dict} />
-                </Panel>
-              )}
-              <Panel
-                title={
-                  view === "planning" ? t.upcomingConflicts : t.fleetAndOrders
-                }
-                action={
-                  <Link
-                    className="ow-link"
-                    href="/maintenance/work-orders#new-order"
-                  >
-                    {t.newOrderLink}
-                  </Link>
-                }
-              >
-                <Filters params={params} dict={dict} />
-                <OrderTable orders={filtered ?? null} data={data} dict={dict} />
-                {orders?.length === 0 && (
-                  <p className="ow-note">
-                    {t.firstOrderNote}
-                  </p>
-                )}
-              </Panel>
-              <Panel title={t.operationVehicles}>
-                <VehicleTable data={data} dict={dict} />
-              </Panel>
-            </div>
-            <aside className="ow-stack">
-              <MaintenanceDue data={data} dict={dict} />
-              <Panel title={t.alertsPanel}>
-                {vehicles === null ? (
-                  <Empty>{t.fleetUnavailable}</Empty>
-                ) : (
-                  <ul className="ow-list">
-                    {vehicles
-                      .filter((v) =>
-                        ["blocked", "maintenance"].includes(v.status),
-                      )
-                      .slice(0, 8)
-                      .map((v) => (
-                        <li key={v.id}>
-                          <Tag tone="red">!</Tag>
-                          <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
-                            <strong>{v.plate}</strong>
-                            <p>
-                              {v.status === "blocked"
-                                ? t.activeBlock
-                                : t.inProgressNote}
-                            </p>
-                          </Link>
-                        </li>
-                      ))}
-                    {!vehicles.some((v) =>
-                      ["blocked", "maintenance"].includes(v.status),
-                    ) && (
-                      <Empty>{t.noBlocks}</Empty>
-                    )}
-                  </ul>
-                )}
-              </Panel>
-              <Panel title={t.costsSidePanel}>
-                {lines ? (
-                  <CostSummary lines={lines} dict={dict} />
-                ) : (
-                  <Empty>{t.costsUnavailable}</Empty>
-                )}
-              </Panel>
-            </aside>
+      ) : view === "planning" ? (
+        <div className="ow-grid">
+          <div className="ow-stack">
+            <Panel title={t.calendarPanel}>
+              <Planning data={data} dict={dict} />
+            </Panel>
           </div>
+          <aside className="ow-stack">
+            <MaintenanceDue data={data} dict={dict} />
+            <Panel title={t.alertsPanel}>
+              {vehicles === null ? (
+                <Empty>{t.fleetUnavailable}</Empty>
+              ) : (
+                <ul className="ow-list">
+                  {vehicles
+                    .filter((v) =>
+                      ["blocked", "maintenance"].includes(v.status),
+                    )
+                    .slice(0, 8)
+                    .map((v) => (
+                      <li key={v.id}>
+                        <Tag tone="red">!</Tag>
+                        <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
+                          <strong>{v.plate}</strong>
+                          <p>
+                            {v.status === "blocked"
+                              ? t.activeBlock
+                              : t.inProgressNote}
+                          </p>
+                        </Link>
+                      </li>
+                    ))}
+                  {!vehicles.some((v) =>
+                    ["blocked", "maintenance"].includes(v.status),
+                  ) && (
+                    <Empty>{t.noBlocks}</Empty>
+                  )}
+                </ul>
+              )}
+            </Panel>
+            <Panel title={t.costsSidePanel}>
+              {lines ? (
+                <CostSummary lines={lines} dict={dict} />
+              ) : (
+                <Empty>{t.costsUnavailable}</Empty>
+              )}
+            </Panel>
+          </aside>
+        </div>
+      ) : (
+        <div className="ow-stack">
+          <Panel title={t.operationVehicles}>
+            <VehicleTable data={data} dict={dict} />
+          </Panel>
           <div className="ow-grid-equal">
             <Panel title={t.ordersByStatus}>
               {orders ? (
@@ -591,13 +569,7 @@ export async function MaintenanceWorkspace({
                       <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
                         <strong>{v.plate}</strong>
                         <small>
-                          {fmt(t.dateKm, {
-                            date: date(v.next_service_date),
-                            km:
-                              v.next_service_odometer_km?.toLocaleString(
-                                "pt-BR",
-                              ) ?? "—",
-                          })}
+                          {reviewLimits(t, v)}
                         </small>
                       </Link>
                     </li>
@@ -609,7 +581,7 @@ export async function MaintenanceWorkspace({
               )}
             </Panel>
           </div>
-        </>
+        </div>
       )}
     </Workspace>
   );
@@ -1056,6 +1028,14 @@ function OrderDetail({
     </>
   );
 }
+/** The review limits of a vehicle, with only what is registered: a date or a km that does not exist is left out. */
+function reviewLimits(t: Dictionary["maintenance"], v: { next_service_date: string | null; next_service_odometer_km?: number | null }) {
+  const km = v.next_service_odometer_km?.toLocaleString("pt-BR");
+  if (v.next_service_date && km) return fmt(t.dateKm, { date: date(v.next_service_date), km });
+  if (v.next_service_date) return fmt(t.dateOnly, { date: date(v.next_service_date) });
+  return km ? fmt(t.kmOnly, { km }) : "";
+}
+
 function VehicleTable({
   data,
   dict,
@@ -1082,8 +1062,8 @@ function VehicleTable({
           {data.vehicles.map((v) => (
             <tr key={v.id}>
               <td>
-                <strong>{v.plate}</strong>
-                <small>{v.name ?? v.category?.name}</small>
+                <strong>{v.name ?? v.category?.name ?? v.plate}</strong>
+                {v.name || v.category?.name ? <small>{v.plate}</small> : null}
               </td>
               <td>
                 <Tag
@@ -1099,11 +1079,8 @@ function VehicleTable({
               <td>{v.current_location?.name ?? "—"}</td>
               <td>{v.odometer_km.toLocaleString("pt-BR")} km</td>
               <td>
-                {date(v.next_service_date)}
-                <small>
-                  {v.next_service_odometer_km?.toLocaleString("pt-BR") ?? "—"}{" "}
-                  km
-                </small>
+                {v.next_service_date ? date(v.next_service_date) : null}
+                {v.next_service_odometer_km != null ? <small>{v.next_service_odometer_km.toLocaleString("pt-BR")} km</small> : null}
               </td>
               <td>
                 <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
@@ -1148,10 +1125,7 @@ function MaintenanceDue({
               <Link href={`/maintenance/vehicles?vehicle=${v.id}`}>
                 <strong>{v.plate}</strong>
                 <small>
-                  {fmt(t.dueLine, {
-                    date: date(v.next_service_date),
-                    km: v.next_service_odometer_km?.toLocaleString("pt-BR") ?? "—",
-                  })}
+                  {reviewLimits(t, v)}
                 </small>
               </Link>
             </li>

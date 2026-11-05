@@ -1909,9 +1909,6 @@ export type Dictionary = {
     versionNote: string;
     completedOn: string;
     calendarPanel: string;
-    upcomingConflicts: string;
-    fleetAndOrders: string;
-    firstOrderNote: string;
     operationVehicles: string;
     alertsPanel: string;
     activeBlock: string;
@@ -1923,6 +1920,8 @@ export type Dictionary = {
     dataUnavailable: string;
     plannedReviews: string;
     dateKm: string;
+    dateOnly: string;
+    kmOnly: string;
     noReviews: string;
     searchOrder: string;
     status: string;
@@ -2009,7 +2008,6 @@ export type Dictionary = {
     consultArrow: string;
     reviewsReached: string;
     reviewTag: string;
-    dueLine: string;
     noneDue: string;
     planningUnavailable: string;
     noWindows: string;

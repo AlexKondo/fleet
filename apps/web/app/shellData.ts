@@ -8,8 +8,6 @@ import {
 } from "../lib/auth/ownLicense";
 import { LICENSE_MISSING_HEADER } from "../lib/auth/headers";
 import { createSupabaseServerClient } from "../lib/supabase/server";
-import { loadLatestChatState } from "./chat/queries";
-import type { ChatState } from "./chat/actions";
 import { getRoleLabels } from "./settings/users/ROLE_LABELS";
 import type { Dictionary } from "../lib/i18n/dictionaries";
 import {
@@ -239,9 +237,6 @@ export async function loadShellContext(role: string) {
   // ever renders) — this only decides what the one page that survives that redirect looks like.
   const licenseGateActive = false; // Driving routes and RPCs enforce CNH; passenger/admin navigation remains accessible.
 
-  const chatInitialState: ChatState = currentUser
-    ? await loadLatestChatState(supabase, currentUser.id)
-    : { status: "idle", messages: [] };
 
   return {
     userId: currentUser?.id ?? null,
@@ -251,7 +246,6 @@ export async function loadShellContext(role: string) {
     licenseMissing,
     avatarUrl,
     licenseGateActive,
-    chatInitialState,
     canKeyCustody,
     canBudgetApproval,
     canReservationApproval,

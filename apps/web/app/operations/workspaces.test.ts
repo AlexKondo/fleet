@@ -33,8 +33,7 @@ vi.mock("@/app/shellData", async (original) => ({
     licenseMissing: false,
     avatarUrl: null,
     licenseGateActive: false,
-    chatInitialState: { status: "idle", messages: [] },
-  }),
+      }),
 }));
 vi.mock("@/app/ChatWidget", () => ({
   ChatWidget: () => null,
@@ -166,11 +165,21 @@ describe("operational workspace rendering", () => {
         await MaintenanceWorkspace({ view, params: {} }),
         "maintenance-" + view,
       );
-      expect(content).toContain("TEST001");
+      // the vehicles table is on Visão geral; Planejamento is the calendar
+      if (view !== "planning") expect(content).toContain("TEST001");
       expect(content).not.toContain("Operação registrada e auditada.");
       expect(content).toContain("fleetmind-main");
     },
   );
+  it.each(["overview", "planning"] as const)("%s does not repeat the Ordens de serviço tab", async (view) => {
+    const content = await html(await MaintenanceWorkspace({ view, params: {} }), "maintenance-" + view);
+    expect(content).not.toContain("+ Nova ordem");
+    expect(content).not.toContain("Serviço de teste");
+  });
+  it("the vehicles table shows the vehicle first and the plate below it", async () => {
+    const content = await html(await MaintenanceWorkspace({ view: "overview", params: {} }), "maintenance-overview");
+    expect(content).toMatch(/<strong>[^<]+<\/strong><small>TEST001<\/small>/);
+  });
   it("offers no approval control to an operator and preserves real financial line totals", async () => {
     const content = await html(
       await MaintenanceWorkspace({ view: "orders", params: {} }),

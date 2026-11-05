@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatPanel } from "./ChatPanel";
 import type { ChatState } from "./chat/actions";
 import type { Dictionary } from "../lib/i18n/dictionaries";
 import type { Locale } from "../lib/i18n/locales";
 
 const HINT_SHOW_DELAY_MS = 2500;
+const CLEAN_CHAT: ChatState = { status: "idle", messages: [] };
 
 /** Event other parts of the page (the sidebar "Falar com o FleetMind" panel) dispatch to open THIS chat. */
 export const OPEN_CHAT_EVENT = "fleetmind:open-chat";
@@ -29,7 +30,6 @@ export interface OpenChatRequest extends OpenChatDetail {
 export function ChatWidget({
   dict,
   locale,
-  initialState,
   embedded = false,
 }: {
   dict: Dictionary;
@@ -37,18 +37,21 @@ export function ChatWidget({
   /** FmShell (FleetMind v2.0 look): no floating button / robot / bubble. The sidebar panel "Falar com o FleetMind" and the
    * mobile menu entry open this same chat through OPEN_CHAT_EVENT; the legacy AppShell keeps the floating FAB + robot. */
   embedded?: boolean;
-  /** The caller's most recent conversation, fetched server-side (AppShell.tsx) — without
-   * this, reloading the page (a fresh React tree, unlike just closing/reopening the panel)
-   * always started a brand new conversation even if the previous one was mid-exchange. */
-  initialState: ChatState;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  // Once the panel has been opened at least once, it stays mounted (just hidden) instead
-  // of unmounting on close — ChatPanel's useActionState conversation lives in that
-  // component's own React state, so an unmount/remount (the previous behavior) silently
-  // threw away the whole conversation the moment someone closed the panel to do something
-  // else and came back.
-  const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
+  // Every open is a new session: the screen starts clean and the first message starts a new conversation. The previous ones stay stored for the
+  // user (chat_conversations). A closed panel stays mounted, hidden, so its mic and focus handling still run; the next session replaces it.
+  const [session, setSession] = useState(0);
+  const openRef = useRef(false);
+  const show = useCallback(() => {
+    if (!openRef.current) setSession((s) => s + 1);
+    openRef.current = true;
+    setIsOpen(true);
+  }, []);
+  const hide = useCallback(() => {
+    openRef.current = false;
+    setIsOpen(false);
+  }, []);
   const [showHint, setShowHint] = useState(false);
   const [openRequest, setOpenRequest] = useState<OpenChatRequest | null>(null);
 
@@ -57,14 +60,13 @@ export function ChatWidget({
     let seq = 0;
     function onOpen(event: Event) {
       const detail = ((event as CustomEvent<OpenChatDetail>).detail ?? {}) as OpenChatDetail;
-      setIsOpen(true);
-      setHasOpenedOnce(true);
+      show();
       setShowHint(false);
       setOpenRequest({ id: ++seq, voice: detail.voice, draft: detail.draft });
     }
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
-  }, []);
+  }, [show]);
 
   // Shows on every page load now (per explicit request) — no sessionStorage/dismissal
   // memory anymore, so it's not something a returning-within-the-same-tab user has to
@@ -82,8 +84,11 @@ export function ChatWidget({
   }
 
   function toggle() {
-    setIsOpen((v) => !v);
-    setHasOpenedOnce(true);
+    if (openRef.current) hide();
+    else {
+      setOpenRequest(null);
+      show();
+    }
     if (showHint) dismissHint();
   }
 
@@ -157,13 +162,14 @@ export function ChatWidget({
       </button>
       )}
 
-      {hasOpenedOnce ? (
+      {session > 0 ? (
         <ChatPanel
+          key={session}
           dict={dict}
           locale={locale}
           isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
-          initialState={initialState}
+          onClose={hide}
+          initialState={CLEAN_CHAT}
           openRequest={openRequest}
           embedded={embedded}
         />

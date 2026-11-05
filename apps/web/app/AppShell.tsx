@@ -49,7 +49,7 @@ export async function AppShell({
   headerActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, chatInitialState, canKeyCustody } =
+  const { locale, dict, roleLabels, licenseMissing, avatarUrl, licenseGateActive, canKeyCustody } =
     await loadShellContext(role);
 
   const items = buildBaseNavItems(dict, { role, isFleetManager, isAdministrator, canKeyCustody });
@@ -64,7 +64,7 @@ export async function AppShell({
       <InactivityLogout />
       <SessionBackupSync />
       {licenseGateActive ? null : (
-        <ChatWidget dict={dict} locale={locale} initialState={chatInitialState} />
+        <ChatWidget dict={dict} locale={locale} />
       )}
       {licenseGateActive ? null : (
         <MobileNav

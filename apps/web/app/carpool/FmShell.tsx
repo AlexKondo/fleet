@@ -81,7 +81,6 @@ export async function FmShell({
     licenseMissing,
     avatarUrl,
     licenseGateActive: driverLicenseGateActive,
-    chatInitialState,
     canKeyCustody,
     canBudgetApproval,
     canReservationApproval,
@@ -228,7 +227,7 @@ export async function FmShell({
       <SessionBackupSync />
       {licenseGateActive ? null : (
         <div className="fm-chat">
-          <ChatWidget dict={dict} locale={locale} initialState={chatInitialState} embedded />
+          <ChatWidget dict={dict} locale={locale} embedded />
         </div>
       )}
       {licenseGateActive ? null : (

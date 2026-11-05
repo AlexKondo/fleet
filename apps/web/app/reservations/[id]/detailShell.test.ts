@@ -118,8 +118,7 @@ vi.mock("@/app/shellData", async (importOriginal) => {
       licenseMissing: false,
       avatarUrl: null,
       licenseGateActive: false,
-      chatInitialState: { status: "idle", messages: [] },
-      canKeyCustody: false,
+            canKeyCustody: false,
       canBudgetApproval: false,
     }),
   };

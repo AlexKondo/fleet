@@ -53,8 +53,7 @@ vi.mock("@/app/shellData", async (importOriginal) => {
       licenseMissing: s.gate,
       avatarUrl: null,
       licenseGateActive: s.gate,
-      chatInitialState: { status: "idle", messages: [] },
-      canKeyCustody: s.custody,
+            canKeyCustody: s.custody,
       canBudgetApproval: false,
     }),
   };
