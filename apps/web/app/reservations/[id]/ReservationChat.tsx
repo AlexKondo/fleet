@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { chatTargets, type ChatSide, type MessageChannel, type MessageType } from "@/lib/domain/messages";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { errorLabel } from "@/lib/i18n/errorLabel";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
-import { postReservationMessage, type MessageActionState } from "./actions";
+import { markChatRead, postReservationMessage, type MessageActionState } from "./actions";
 
 export interface ReservationMessage {
   id: string;
@@ -18,6 +18,9 @@ export interface ReservationMessage {
   sender_name: string | null;
   mine: boolean;
   from_system: boolean;
+  /** the vehicle the message was about: the reservation's vehicle can be swapped afterwards */
+  vehicle_plate: string | null;
+  unread: boolean;
 }
 
 const initialState: MessageActionState = { status: "idle" };
@@ -33,11 +36,13 @@ const ChatIcon = () => (
 
 /**
  * The chat of a reservation: an icon that opens a small window, where the person picks who to talk to (the two other sides of the
- * reservation) and then talks to them. Each pair has its own private conversation (reservation_messages.channel, migration 0255).
+ * reservation) and then talks to them. Each pair has its own private conversation (reservation_messages.channel, migration 0255) and
+ * every conversation is about the vehicle of the reservation: it is named on the window, and a message about a vehicle since swapped says so.
  */
 export function ReservationChat({
   reservationId,
   side,
+  vehicle,
   requesterName,
   messages,
   dict,
@@ -45,6 +50,7 @@ export function ReservationChat({
 }: {
   reservationId: string;
   side: ChatSide;
+  vehicle: { name: string | null; plate: string | null };
   requesterName: string | null;
   messages: ReservationMessage[];
   dict: Dictionary;
@@ -55,6 +61,7 @@ export function ReservationChat({
   const [open, setOpen] = useState(false);
   const [channel, setChannel] = useState<MessageChannel | null>(null);
   const [reportingDelay, setReportingDelay] = useState(false);
+  const [, startMarking] = useTransition();
   const [state, formAction, pending] = useActionState(postReservationMessage, initialState);
   const listRef = useRef<HTMLUListElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -62,7 +69,12 @@ export function ReservationChat({
   const otherLabel: Record<ChatSide, string> = { manager: t.chatManager, requester: t.chatRequester, security: t.chatSecurity };
   const targets = chatTargets(side);
   const target = targets.find((c) => c.channel === channel) ?? null;
+  const vehicleLabel = [vehicle.name?.split(" - ")[0], vehicle.plate].filter(Boolean).join(" · ");
   const visible = channel ? messages.filter((m) => m.channel === channel) : [];
+  // the conversation on screen counts as read right away, without waiting for the server
+  const unreadIn = (c: MessageChannel) => (open && c === channel ? 0 : messages.filter((m) => m.channel === c && m.unread).length);
+  const unreadTotal = targets.reduce((sum, c) => sum + unreadIn(c.channel), 0);
+  const unreadOnScreen = visible.filter((m) => m.unread).length;
 
   useEffect(() => {
     if (!open) return;
@@ -90,6 +102,11 @@ export function ReservationChat({
     if (state.status === "success") setReportingDelay(false);
   }, [state]);
 
+  useEffect(() => {
+    if (!open || !channel || unreadOnScreen === 0) return;
+    startMarking(() => markChatRead(reservationId, channel));
+  }, [open, channel, unreadOnScreen, reservationId]);
+
   function pick(next: MessageChannel | null) {
     setChannel(next);
     setReportingDelay(false);
@@ -114,7 +131,7 @@ export function ReservationChat({
         onClick={() => setOpen((o) => !o)}
       >
         <ChatIcon />
-        {messages.length > 0 ? <span className="rd-chat-count">{messages.length}</span> : null}
+        {unreadTotal > 0 ? <span className="rd-chat-count">{unreadTotal}</span> : null}
       </button>
 
       {open ? (
@@ -127,6 +144,7 @@ export function ReservationChat({
             ) : null}
             <div className="rd-chat-title">
               <strong>{target ? otherLabel[target.other] : t.chatChoose}</strong>
+              {vehicleLabel ? <span data-testid="reservation-chat-vehicle">{vehicleLabel}</span> : null}
               {target?.other === "requester" && requesterName ? <span>{requesterName}</span> : null}
             </div>
             <button type="button" className="rd-chat-icon" aria-label={t.chatClose} title={t.chatClose} onClick={() => setOpen(false)}>
@@ -137,7 +155,7 @@ export function ReservationChat({
           {!target ? (
             <ul className="rd-chat-targets">
               {targets.map((c) => {
-                const count = messages.filter((m) => m.channel === c.channel).length;
+                const count = unreadIn(c.channel);
                 return (
                   <li key={c.channel}>
                     <button type="button" data-testid={`chat-target-${c.other}`} onClick={() => pick(c.channel)}>
@@ -164,7 +182,8 @@ export function ReservationChat({
                       </div>
                       <small>
                         {m.mine ? t.chatYou : m.from_system ? t.systemSender : m.sender_name ?? otherLabel[target.other]}
-                        {m.message_type === "text" ? "" : ` · ${t.types[m.message_type]}`} · {formatDateTime(m.created_at, locale)}
+                        {m.message_type === "text" ? "" : ` · ${t.types[m.message_type]}`}
+                        {m.vehicle_plate && m.vehicle_plate !== vehicle.plate ? ` · ${m.vehicle_plate}` : ""} · {formatDateTime(m.created_at, locale)}
                       </small>
                     </li>
                   ))

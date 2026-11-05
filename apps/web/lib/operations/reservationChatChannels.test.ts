@@ -14,7 +14,7 @@ async function post(id:string,body:string,channel?:string){
  else await db.query("select post_reservation_message($1,'text',$2)",[reservation,body]);
 }
 async function reads(id:string){await actor(id);return (await db.query<{body:string}>("select body from reservation_messages where reservation_id=$1",[reservation])).rows.map(r=>r.body);}
-async function notified(body:string){await db.exec("reset role");return (await db.query<{user_id:string}>("select user_id from notifications where body=$1 order by user_id",[body])).rows.map(r=>r.user_id).sort();}
+async function notified(body:string){await db.exec("reset role");return (await db.query<{user_id:string}>("select user_id from notifications where body=$1 order by user_id",[`CHT1A11: ${body}`])).rows.map(r=>r.user_id).sort();}
 async function channelOf(body:string){await db.exec("reset role");return (await db.query<{channel:string}>("select channel from reservation_messages where body=$1",[body])).rows[0]?.channel;}
 
 beforeAll(async()=>{
@@ -89,5 +89,44 @@ describe.sequential("reservation chat: private conversations (migration 0255)",(
   const out=await db.query<{r:{message_id:string;impacted_reservation_ids:string[]}}>("select post_reservation_message($1,'delay','atraso',now()+interval '5 hours') r",[reservation]);
   expect(out.rows[0]!.r.impacted_reservation_ids).toEqual([]);
   expect(await channelOf("atraso")).toBe("requester_manager");
+ });
+ it("opening a conversation records the reading of that person, and clears only that conversation's bell notices",async()=>{
+  await post(requester,"para a portaria ler","requester_security");
+  await post(manager,"gestor para a portaria ler","manager_security");
+  const unread=async(body:string)=>{await db.exec("reset role");return (await db.query<{n:number}>("select count(*)::int n from notifications where user_id=$1 and body=$2 and read_at is null",[porter,`CHT1A11: ${body}`])).rows[0]!.n;};
+  expect(await unread("para a portaria ler")).toBe(1);
+  await actor(porter);
+  await db.query("select fm_mark_chat_read($1,'requester_security')",[reservation]);
+  expect(await unread("para a portaria ler")).toBe(0);
+  expect(await unread("gestor para a portaria ler")).toBe(1);
+  await actor(porter);
+  const mine=await db.query<{channel:string}>("select channel from reservation_chat_reads where reservation_id=$1",[reservation]);
+  expect(mine.rows.map(r=>r.channel)).toEqual(["requester_security"]);
+  await db.query("select fm_mark_chat_read($1,'requester_security')",[reservation]);
+  expect((await db.query("select 1 from reservation_chat_reads where reservation_id=$1",[reservation])).rows).toHaveLength(1);
+ });
+ it("each person only sees their own reading, and nobody marks a conversation that is not theirs",async()=>{
+  await actor(requester);
+  expect((await db.query("select 1 from reservation_chat_reads where reservation_id=$1",[reservation])).rows).toHaveLength(0);
+  await expect(db.query("select fm_mark_chat_read($1,'manager_security')",[reservation])).rejects.toThrow(/CHANNEL_NOT_ALLOWED/);
+  await actor(stranger);
+  await expect(db.query("select fm_mark_chat_read($1,'requester_manager')",[reservation])).rejects.toThrow(/CHANNEL_NOT_ALLOWED/);
+  await actor(porter);
+  await expect(db.query("insert into reservation_chat_reads(organization_id,reservation_id,channel,user_id) values($1,$2,'requester_security',$3)",[org,reservation,porter])).rejects.toThrow(/permission denied/);
+ });
+ it("every message is tied to the vehicle of the reservation, and keeps it after a vehicle swap",async()=>{
+  await post(requester,"sobre este carro","requester_manager");
+  await db.exec("reset role");
+  const vehicleOf=async(body:string)=>(await db.query<{vehicle_id:string}>("select vehicle_id from reservation_messages where body=$1",[body])).rows[0]?.vehicle_id;
+  expect(await vehicleOf("sobre este carro")).toBe(vehicle);
+  const other=randomUUID();
+  await db.query("insert into vehicles(id,organization_id,plate,category_id,status,odometer_km) values($1,$2,'CHT2B22',$3,'reserved',100)",[other,org,category]);
+  await db.query("update reservations set vehicle_id=$2 where id=$1",[reservation,other]);
+  expect(await vehicleOf("sobre este carro")).toBe(vehicle);
+  await post(requester,"sobre o carro novo","requester_manager");
+  await db.exec("reset role");
+  expect(await vehicleOf("sobre o carro novo")).toBe(other);
+  expect((await db.query<{n:number}>("select count(*)::int n from notifications where body=$1",["CHT2B22: sobre o carro novo"])).rows[0]!.n).toBeGreaterThan(0);
+  await db.query("update reservations set vehicle_id=$2 where id=$1",[reservation,vehicle]);
  });
 });

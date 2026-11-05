@@ -342,10 +342,13 @@
 .fm-theme .rd-chat-open {
   position: relative;
   display: inline-flex;
+  flex: none;
+  align-self: center;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
+  padding: 0;
   border: 1px solid var(--fm-border-strong);
   border-radius: 50%;
   background: var(--fm-surface);

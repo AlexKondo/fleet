@@ -87,6 +87,18 @@ export async function postReservationMessage(
   return { status: "success" };
 }
 
+/** The person opened this conversation: its messages stop counting as unread (and the matching bell notices clear). Never fails the screen. */
+export async function markChatRead(reservationId: string, channel: string): Promise<void> {
+  if (!isMessageChannel(channel)) return;
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("fm_mark_chat_read", { p_reservation_id: reservationId, p_channel: channel });
+  if (error) {
+    console.error("markChatRead failed:", error.message);
+    return;
+  }
+  revalidatePath(`/reservations/${reservationId}`);
+}
+
 /**
  * ISSUE-016 remediation: the host driver accepts or rejects a pending carpool join
  * request on their own reservation (respond_to_carpool_request,

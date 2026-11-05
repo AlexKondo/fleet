@@ -27,7 +27,7 @@ import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
 import { RouteMapCard } from "../../carpool/RouteMapCard";
 import { CarpoolHostSection } from "./CarpoolHostSection";
 import { loadHostCarpool } from "./loadHostCarpool";
-import type { ChatSide, MessageChannel } from "@/lib/domain/messages";
+import { isUnread, type ChatSide, type MessageChannel } from "@/lib/domain/messages";
 import "./checklist.css";
 
 /**
@@ -60,7 +60,7 @@ export default async function ReservationDetailPage({
   // Profile, the reservation itself and its message thread are all keyed off the user id
   // and the route param, so they go out together — the thread in particular was the third
   // sequential round trip on a page whose whole job is to show it.
-  const [{ data: profile }, { data: reservation }, { data: messageRows }] = await Promise.all([
+  const [{ data: profile }, { data: reservation }, { data: messageRows }, { data: chatReads }] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, role, organization_id, organization:organizations(name)")
@@ -77,9 +77,10 @@ export default async function ReservationDetailPage({
       .single(),
     supabase
       .from("reservation_messages")
-      .select("id, channel, sender_id, message_type, body, created_at, sender:profiles(full_name)")
+      .select("id, channel, sender_id, message_type, body, created_at, sender:profiles(full_name), vehicle:vehicles(plate)")
       .eq("reservation_id", id)
       .order("created_at", { ascending: true }),
+    supabase.from("reservation_chat_reads").select("channel, last_read_at").eq("reservation_id", id).eq("user_id", user.id),
   ]);
 
   if (!reservation || !reservation.trip_request) redirect("/trips");
@@ -111,6 +112,7 @@ export default async function ReservationDetailPage({
       ? await loadHostCarpool(supabase, profile.organization_id, reservation.trip_request.id)
       : null;
 
+  const lastRead = new Map((chatReads ?? []).map((r) => [r.channel, r.last_read_at]));
   const messages: ReservationMessage[] = (messageRows ?? []).map((m) => ({
     id: m.id,
     channel: m.channel as MessageChannel,
@@ -120,6 +122,8 @@ export default async function ReservationDetailPage({
     sender_name: m.sender?.full_name ?? null,
     mine: m.sender_id === user.id,
     from_system: m.sender_id === null,
+    vehicle_plate: m.vehicle?.plate ?? null,
+    unread: isUnread({ mine: m.sender_id === user.id, created_at: m.created_at }, lastRead.get(m.channel)),
   }));
   const chatSide: ChatSide = isOwnReservation ? "requester" : profile?.role === "security" ? "security" : "manager";
 
@@ -346,6 +350,7 @@ export default async function ReservationDetailPage({
               <ReservationChat
                 reservationId={id}
                 side={chatSide}
+                vehicle={{ name: reservation.vehicle?.name ?? null, plate: reservation.vehicle?.plate ?? null }}
                 requesterName={reservation.trip_request.requester?.full_name ?? null}
                 messages={messages}
                 dict={dict}

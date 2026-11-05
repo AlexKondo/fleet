@@ -33,3 +33,9 @@ export function chatTargets(side: ChatSide): { channel: MessageChannel; other: C
       ];
   }
 }
+
+/** A message from someone else after the moment this person last opened the conversation (never opened: everything from others). */
+export function isUnread(message: { mine: boolean; created_at: string }, lastReadAt: string | null | undefined): boolean {
+  if (message.mine) return false;
+  return !lastReadAt || new Date(message.created_at).getTime() > new Date(lastReadAt).getTime();
+}

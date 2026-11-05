@@ -495,6 +495,30 @@ export type Database = {
           },
         ]
       }
+      reservation_chat_reads: {
+        Row: {
+          channel: string
+          last_read_at: string
+          organization_id: string
+          reservation_id: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          last_read_at?: string
+          organization_id: string
+          reservation_id: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          last_read_at?: string
+          organization_id?: string
+          reservation_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reservation_messages: {
         Row: {
           body: string
@@ -505,6 +529,7 @@ export type Database = {
           organization_id: string
           reservation_id: string
           sender_id: string | null
+          vehicle_id: string
         }
         Insert: {
           body: string
@@ -515,6 +540,7 @@ export type Database = {
           organization_id: string
           reservation_id: string
           sender_id?: string | null
+          vehicle_id?: string
         }
         Update: {
           body?: string
@@ -525,8 +551,16 @@ export type Database = {
           organization_id?: string
           reservation_id?: string
           sender_id?: string | null
+          vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reservation_messages_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservation_messages_organization_id_fkey"
             columns: ["organization_id"]
@@ -1903,6 +1937,13 @@ export type Database = {
           p_entity_id: string
           p_entity_type: string
           p_organization_id: string
+        }
+        Returns: undefined
+      }
+      fm_mark_chat_read: {
+        Args: {
+          p_channel: string
+          p_reservation_id: string
         }
         Returns: undefined
       }
