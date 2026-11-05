@@ -3,6 +3,7 @@ import type { ChatState } from "@/app/chat/actions";
 import type { ActingContext } from "@/lib/auth/actingUser";
 import type { TranscribeResult } from "./transcribe";
 import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
+import { dictionaries } from "@/lib/i18n/dictionaries";
 
 export { parseChoice };
 
@@ -97,6 +98,7 @@ export const TEXTS = {
   staleChoice: "Essa escolha já não está mais valendo. Me diga de novo o que você precisa, por exemplo: reservar um carro amanhã às 8h.",
   badOption: "Não entendi essa opção. Responda com o número de uma das opções acima.",
   chooseNumber: "Escolha uma opção respondendo com o número dela (por exemplo, *1*).",
+  otherVehicle: "Outro veículo",
   generic: "Não consegui processar agora. Tente de novo em instantes.",
   confirmHint: "Toque em um botão ou responda *SIM* para confirmar ou *NÃO* para cancelar.",
   pickIntro: "Este número está cadastrado em mais de um perfil. Com qual deles você quer falar? Responda com o número:",
@@ -117,13 +119,17 @@ const clip = (s: string) => (s.length > MAX_TEXT ? `${s.slice(0, MAX_TEXT - 1)}�
 const text = (t: string): Reply => ({ type: "text", text: clip(t) });
 
 /** Button ids this channel puts on its own messages (answered back by n8n). */
-export const CHAT_BUTTON = { confirm: "chat:confirm", cancel: "chat:cancel" } as const;
+export const CHAT_BUTTON = { confirm: "chat:confirm", cancel: "chat:cancel", otherVehicle: "chat:other" } as const;
 /** A tap on a vehicle button carries "chat:veh:<vehicleId>" (re-validated against the pending options before it is used). */
 export const VEHICLE_BUTTON_PREFIX = "chat:veh:";
 /** A tap on a place option ("EZ Tower" fits several buildings) carries "chat:opt:<optionId>". */
 export const OPTION_BUTTON_PREFIX = "chat:opt:";
 /** WhatsApp shows at most 3 reply buttons per message. */
 const MAX_VEHICLE_BUTTONS = 3;
+/** The web chat's "choose one of the options below": here the options are not below, they come from the "Outro veículo" button. */
+const CHOOSE_OPTION_LINES = Object.values(dictionaries).map((d) => d.chat.replies.card.chooseOption);
+/** The same as tapping "Outro veículo", for who types or speaks (compared with the normalized text). */
+const OTHER_VEHICLE = /^(?:(?:quero|ver|mostrar?|escolher)\s+)?(?:outro|outros|trocar\s+de|trocar\s+o|mudar\s+de|mudar\s+o)\s+(?:ve[ií]culos?|carros?)$/;
 
 function buttonToText(id: string | undefined): string | null {
   if (id === CHAT_BUTTON.confirm) return "sim";
@@ -161,20 +167,30 @@ export function renderState(state: ChatState, appUrl: string, lastOnly = false):
     }
     return [text(body)];
   }
-  const card: Reply = { type: "buttons", text: clip(`${body}\n\n${TEXTS.confirmHint}`), buttons: [{ id: CHAT_BUTTON.confirm, title: TEXTS.confirm }, { id: CHAT_BUTTON.cancel, title: TEXTS.cancel }] };
-  const others = vehicleAlternatives(pending.vehicleOptions, pending.slots.preferredVehicleId);
-  if (others.length === 0) return [card];
-  // the offered vehicle is never listed again: only the others, as tappable buttons (the first three) and, for the rest, by number
-  const lines = others.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n");
-  // WhatsApp allows 3 buttons at most: with more alternatives than that there are no buttons at all, the person answers with the number
-  if (others.length > MAX_VEHICLE_BUTTONS) return [card, text(`Se não quiser o veículo recomendado, escolha outro:\n${lines}\n\nResponda com o número da opção (por texto ou áudio).`)];
-  const tail = "";
-  const pick: Reply = {
+  // one message, one decision: the other vehicles only come when the person asks for them (the "Outro veículo" button, or saying so).
+  // A list sent right under the card reads as a second question, even more so once Confirmar has been tapped.
+  const hasOthers = vehicleAlternatives(pending.vehicleOptions, pending.slots.preferredVehicleId).length > 0;
+  for (const line of CHOOSE_OPTION_LINES) body = body.split(line).join("");
+  return [{
     type: "buttons",
-    text: clip(`Se não quiser o veículo recomendado, escolha outro:\n${lines}${tail}`),
-    buttons: others.slice(0, MAX_VEHICLE_BUTTONS).map((v, i) => ({ id: `${VEHICLE_BUTTON_PREFIX}${v.vehicleId}`, title: `${i + 1} · ${v.vehicleName}`.slice(0, 20) })),
+    text: clip(`${body}\n\n${TEXTS.confirmHint}`),
+    buttons: [
+      { id: CHAT_BUTTON.confirm, title: TEXTS.confirm },
+      ...(hasOthers ? [{ id: CHAT_BUTTON.otherVehicle, title: TEXTS.otherVehicle }] : []),
+      { id: CHAT_BUTTON.cancel, title: TEXTS.cancel },
+    ],
+  }];
+}
+
+/** The answer to "Outro veículo": the vehicle on offer is not listed again, only the others. WhatsApp allows 3 buttons at most: with more alternatives there are no buttons at all, the person answers with the number. */
+export function vehicleChoices(others: readonly { vehicleId: string; vehicleName: string; plate: string; locationName?: string | null }[]): Reply {
+  const lines = others.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n");
+  if (others.length > MAX_VEHICLE_BUTTONS) return text(`Escolha outro veículo:\n${lines}\n\nResponda com o número da opção (por texto ou áudio).`);
+  return {
+    type: "buttons",
+    text: clip(`Escolha outro veículo:\n${lines}`),
+    buttons: others.map((v, i) => ({ id: `${VEHICLE_BUTTON_PREFIX}${v.vehicleId}`, title: `${i + 1} · ${v.vehicleName}`.slice(0, 20) })),
   };
-  return [card, pick];
 }
 
 /**
@@ -353,7 +369,7 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
   if (msg.kind === "button") {
     const t = buttonToText(msg.buttonId);
     if (t) input = t;
-    else if (msg.buttonId?.startsWith(VEHICLE_BUTTON_PREFIX) || msg.buttonId?.startsWith(OPTION_BUTTON_PREFIX)) input = msg.buttonId; // handled below, against the pending options
+    else if (msg.buttonId === CHAT_BUTTON.otherVehicle || msg.buttonId?.startsWith(VEHICLE_BUTTON_PREFIX) || msg.buttonId?.startsWith(OPTION_BUTTON_PREFIX)) input = msg.buttonId; // handled below, against the pending options
     else handle = false;
   } else if (msg.kind === "text") {
     const m = TRIGGER.exec(input);
@@ -408,6 +424,10 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       const optionCount = pending?.options?.length ?? alternatives.length;
       const n = /^\d{1,2}$/.test(t) ? Number(t) : optionCount > 0 ? parseChoice(input, optionCount) : null;
 
+      if (input === CHAT_BUTTON.otherVehicle || (pending && !pending.options?.length && alternatives.length > 0 && OTHER_VEHICLE.test(t))) {
+        // nothing changes: the card stays open, so Confirmar and the numbers keep working
+        return [pending && alternatives.length > 0 ? vehicleChoices(alternatives) : text(TEXTS.staleChoice)];
+      }
       if (pending && input.startsWith(VEHICLE_BUTTON_PREFIX)) {
         const vehicleId = input.slice(VEHICLE_BUTTON_PREFIX.length);
         const veh = pending.vehicleOptions?.find((v) => v.vehicleId === vehicleId);

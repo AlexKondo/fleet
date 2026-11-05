@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import type { ChatState } from "@/app/chat/actions";
 import { runAsUser, getActingContext } from "@/lib/auth/actingUser";
-import { CHAT_BUTTON, handleInboundWhatsApp, parseChoice, renderState, TEXTS, type BridgeDeps, type InboundMessage } from "./chatBridge";
+import { dictionaries } from "@/lib/i18n/dictionaries";
+import { CHAT_BUTTON, handleInboundWhatsApp, parseChoice, renderState, TEXTS, vehicleChoices, type BridgeDeps, type InboundMessage } from "./chatBridge";
 
 const USER = { ok: true, user_id: "u1", organization_id: "o1", email: "ana@example.invalid", full_name: "Ana" };
 const CLIENT = { tag: "client" } as unknown as TypedSupabaseClient;
@@ -210,12 +211,13 @@ describe("rendering the assistant's answer for WhatsApp", () => {
     const opts = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Achei caronas:" }], pendingAction: { intent: "REQUEST_CARPOOL", slots: {}, summary: "x", options: [{ id: "a", label: "Maria, 08:00" }, { id: "vehicle", label: "Usar um veículo" }] } }, url);
     expect(opts).toEqual([{ type: "text", text: `Achei caronas:\n\n*1.* Maria, 08:00\n*2.* Usar um veículo\n\n${TEXTS.chooseNumber}` }]);
     const veh = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Haval H6" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { preferredVehicleId: "1" }, summary: "x", vehicleOptions: [{ vehicleId: "1", plate: "AAA1A11", vehicleName: "Haval" }, { vehicleId: "2", plate: "BBB2B22", vehicleName: "Ora" }] } }, url);
-    // first the card (Confirmar / Cancelar), then ONLY the other vehicles as buttons: the one on offer is not listed again
-    expect(veh).toHaveLength(2);
-    expect(veh[0]).toMatchObject({ type: "buttons", buttons: [{ id: CHAT_BUTTON.confirm }, { id: CHAT_BUTTON.cancel }] });
-    expect(veh[1]).toMatchObject({ type: "buttons", buttons: [{ id: "chat:veh:2" }] });
-    expect((veh[1] as { text: string }).text).toContain("*1.* Ora (BBB2B22)");
-    expect((veh[1] as { text: string }).text).not.toContain("Haval");
+    // ONE message: the card, with a button for the other vehicles; the list only comes when asked for
+    expect(veh).toHaveLength(1);
+    expect(veh[0]).toMatchObject({ type: "buttons", buttons: [{ id: CHAT_BUTTON.confirm }, { id: CHAT_BUTTON.otherVehicle, title: "Outro veículo" }, { id: CHAT_BUTTON.cancel }] });
+    expect((veh[0] as { text: string }).text).not.toContain("Ora");
+    const choices = vehicleChoices([{ vehicleId: "2", plate: "BBB2B22", vehicleName: "Ora" }]);
+    expect(choices).toMatchObject({ type: "buttons", buttons: [{ id: "chat:veh:2" }] });
+    expect((choices as { text: string }).text).toContain("*1.* Ora (BBB2B22)");
   });
   it("never exceeds the WhatsApp message size and never returns an empty reply", () => {
     const long = renderState({ status: "idle", messages: [{ role: "assistant", content: "x".repeat(9000) }] }, url);
@@ -300,21 +302,38 @@ describe("choosing an option inside a sentence (spoken or written)", () => {
     expect(texts(await run(msg({ kind: "button", buttonId: "chat:veh:v4", text: undefined, messageId: "b3" })))).toEqual([TEXTS.staleChoice]);
     expect(calls.send).toHaveLength(0);
   });
-  it("shows the offered vehicle once (in the card); with more than 3 alternatives there are no buttons, the person answers with the number", () => {
-    const r = renderState(seven("v3"), "https://x.invalid");
-    expect(r).toHaveLength(2);
-    const pick = r[1] as { type: string; text: string };
+  it("the card is the only message; the web chat's 'choose one of the options below' is gone (the list is not below)", () => {
+    const st = seven("v3");
+    st.messages = [{ role: "assistant", content: `Vou reservar o Carro 3.${dictionaries["pt-BR"].chat.replies.card.chooseOption}` }];
+    const r = renderState(st, "https://x.invalid");
+    expect(r).toHaveLength(1);
+    expect((r[0] as { text: string }).text).not.toContain("Escolha uma das opções");
+    expect((r[0] as { buttons: { title: string }[] }).buttons.every((b) => b.title.length <= 20)).toBe(true);
+  });
+  it("'Outro veículo' with more than 3 alternatives: the numbered list, without the vehicle on offer; nothing is sent to the assistant and the card stays open", async () => {
+    w.state = seven("v3");
+    const r = await run(msg({ kind: "button", buttonId: CHAT_BUTTON.otherVehicle, text: undefined, messageId: "o1" }));
+    expect(calls.send).toHaveLength(0);
+    expect(r.replies).toHaveLength(1);
+    const pick = r.replies[0] as { type: string; text: string };
     expect(pick.type).toBe("text");
     expect(pick.text).not.toContain("Carro 3");
     expect(pick.text).toContain("*6.* Carro 7");
     expect(pick.text).toContain("Responda com o número da opção");
   });
-  it("with 3 alternatives or fewer, they come as buttons", () => {
+  it("saying it works like the button, and with 3 alternatives or fewer they come as buttons", async () => {
     const st = seven("v3");
     st.pendingAction!.vehicleOptions = st.pendingAction!.vehicleOptions!.slice(0, 4);
-    const pick = renderState(st, "https://x.invalid")[1] as { buttons: { id: string; title: string }[] };
-    expect(pick.buttons.length).toBeLessThanOrEqual(3);
-    expect(pick.buttons.every((b) => b.title.length <= 20)).toBe(true);
+    w.state = st;
+    const r = await run(msg({ text: "outro veículo", messageId: "o2" }));
+    expect(calls.send).toHaveLength(0);
+    const pick = r.replies[0] as unknown as { buttons: { id: string; title: string }[] };
+    expect(pick.buttons).toHaveLength(3);
+    expect(pick.buttons.every((b) => b.title.length <= 20 && b.id.startsWith("chat:veh:"))).toBe(true);
+  });
+  it("'Outro veículo' with nothing pending: the choice no longer counts", async () => {
+    w.state = { status: "idle", messages: [] } as ChatState;
+    expect(texts(await run(msg({ kind: "button", buttonId: CHAT_BUTTON.otherVehicle, text: undefined, messageId: "o3" })))).toEqual([TEXTS.staleChoice]);
   });
 });
 
