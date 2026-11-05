@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { attemptAutomaticReassignment } from "@/lib/domain/autoReassignment";
 import { getDictionary } from "@/lib/i18n/getLocale";
+import { isMessageChannel } from "@/lib/domain/messages";
 
 export interface MessageActionState {
   status: "idle" | "success" | "error";
@@ -23,8 +24,9 @@ const MESSAGE_TYPES = [
 type MessageType = (typeof MESSAGE_TYPES)[number];
 
 /**
- * Communication Hub (COMMUNICATION_HUB.md / DV-004): posts a message to a reservation's
- * thread. A 'delay' message with a new estimated return time also triggers
+ * Communication Hub (COMMUNICATION_HUB.md / DV-004): posts a message to one of a reservation's
+ * conversations (`channel`, the person chose who to talk to; without one the RPC picks the
+ * default conversation of the caller, which is what the assistant relies on). A 'delay' message with a new estimated return time also triggers
  * post_reservation_message's own delay-impact side effect (mark the vehicle's next
  * reservation impacted + notify) — see 0018_automatic_reassignment.sql for why that
  * lives in the RPC rather than here (atomicity with the message write). The RPC returns
@@ -51,6 +53,7 @@ export async function postReservationMessage(
   const messageType = String(formData.get("messageType") ?? "text");
   const body = String(formData.get("body") ?? "").trim();
   const newExpectedReturnAtRaw = String(formData.get("newExpectedReturnAt") ?? "").trim();
+  const channel = formData.get("channel");
 
   const dict = await getDictionary();
   if (!reservationId) return { status: "error", error: dict.errors.reservations.reservationInvalid };
@@ -66,6 +69,7 @@ export async function postReservationMessage(
     p_new_expected_return_at: newExpectedReturnAtRaw
       ? new Date(newExpectedReturnAtRaw).toISOString()
       : undefined,
+    p_channel: isMessageChannel(channel) ? channel : undefined,
   });
   if (error) return { status: "error", error: error.message };
 

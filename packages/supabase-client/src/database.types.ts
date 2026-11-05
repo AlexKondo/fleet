@@ -498,6 +498,7 @@ export type Database = {
       reservation_messages: {
         Row: {
           body: string
+          channel: string
           created_at: string
           id: string
           message_type: Database["public"]["Enums"]["message_type"]
@@ -507,6 +508,7 @@ export type Database = {
         }
         Insert: {
           body: string
+          channel?: string
           created_at?: string
           id?: string
           message_type?: Database["public"]["Enums"]["message_type"]
@@ -516,6 +518,7 @@ export type Database = {
         }
         Update: {
           body?: string
+          channel?: string
           created_at?: string
           id?: string
           message_type?: Database["public"]["Enums"]["message_type"]
@@ -1906,6 +1909,7 @@ export type Database = {
       post_reservation_message: {
         Args: {
           p_body: string
+          p_channel?: string
           p_message_type: Database["public"]["Enums"]["message_type"]
           p_new_expected_return_at?: string
           p_reservation_id: string

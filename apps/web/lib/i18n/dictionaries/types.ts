@@ -1061,6 +1061,16 @@ export type Dictionary = {
       bodyPlaceholder: string;
       send: string;
       sending: string;
+      chatOpen: string;
+      chatChoose: string;
+      chatManager: string;
+      chatRequester: string;
+      chatSecurity: string;
+      chatBack: string;
+      chatClose: string;
+      chatYou: string;
+      chatEmptyWith: string;
+      chatDelay: string;
     };
     photos: {
       legend: string;

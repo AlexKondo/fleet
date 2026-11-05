@@ -97,8 +97,8 @@ vi.mock("./loadHostCarpool", () => ({ loadHostCarpool: async () => null }));
 vi.mock("@/lib/i18n/getLocale", () => ({ getDictionary: async () => dict, getLocale: async () => "pt-BR" }));
 vi.mock("./actions", () => ({ respondToCarpoolRequest: async () => {} }));
 vi.mock("../../trips/actions", () => ({ cancelMyReservation: async () => {} }));
-vi.mock("./MessageThread", () => ({
-  MessageThread: () => React.createElement("div", { "data-testid": "message-thread" }),
+vi.mock("./ReservationChat", () => ({
+  ReservationChat: () => React.createElement("div", { "data-testid": "reservation-chat" }),
 }));
 vi.mock("../../carpool/RouteMapCard", () => ({
   RouteMapCard: () => React.createElement("div", { "data-testid": "route-map" }),
@@ -204,8 +204,8 @@ describe("/reservations/[id] renders the FleetMind shell for every role", () => 
     } else {
       expect(html).toContain('data-testid="route-map"');
     }
-    expect(html).toContain('data-testid="message-thread"');
-    expect(html).toContain(dict.reservations.detail.communicationTitle);
+    expect(html).toContain('data-testid="reservation-chat"');
+    expect(html).not.toContain(dict.reservations.detail.communicationTitle);
     // own + confirmed + vehicle available -> cancel offered for every role (legacy rule: isOwnReservation)
     expect(html).toContain(cancelBtn);
   });
@@ -226,7 +226,7 @@ describe("/reservations/[id] renders the FleetMind shell for every role", () => 
     expect(html).not.toContain(dict.reservations.detail.carpoolRequestsTitle);
     expect(html).toContain(dict.reservations.detail.impactedTitle);
     expect(html).toMatch(new RegExp(reassignLink)); // privileged-only hint kept
-    expect(html).toContain('data-testid="message-thread"');
+    expect(html).toContain('data-testid="reservation-chat"');
   });
 
   it.each(ROLES)("%s own impacted reservation: reassign hint only for privileged roles", async (role) => {

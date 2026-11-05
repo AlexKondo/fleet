@@ -17,7 +17,7 @@ import { formatDateTimeShort } from "@/lib/formatDateTime";
 import { FmShell } from "../../carpool/FmShell";
 import { getStatusMeta } from "../../dashboard/statusMeta";
 import { getDictionary, getLocale } from "../../../lib/i18n/getLocale";
-import { MessageThread, type ReservationMessage } from "./MessageThread";
+import { ReservationChat, type ReservationMessage } from "./ReservationChat";
 import { respondToCarpoolRequest } from "./actions";
 import { cancelMyReservation } from "../../trips/actions";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
@@ -26,6 +26,7 @@ import { carpoolErrorText, fillTemplate } from "@/lib/carpool/errorText";
 import { RouteMapCard } from "../../carpool/RouteMapCard";
 import { CarpoolHostSection } from "./CarpoolHostSection";
 import { loadHostCarpool } from "./loadHostCarpool";
+import type { ChatSide, MessageChannel } from "@/lib/domain/messages";
 import "./checklist.css";
 
 /**
@@ -75,7 +76,7 @@ export default async function ReservationDetailPage({
       .single(),
     supabase
       .from("reservation_messages")
-      .select("id, message_type, body, created_at, sender:profiles(full_name)")
+      .select("id, channel, sender_id, message_type, body, created_at, sender:profiles(full_name)")
       .eq("reservation_id", id)
       .order("created_at", { ascending: true }),
   ]);
@@ -111,11 +112,15 @@ export default async function ReservationDetailPage({
 
   const messages: ReservationMessage[] = (messageRows ?? []).map((m) => ({
     id: m.id,
+    channel: m.channel as MessageChannel,
     message_type: m.message_type,
     body: m.body,
     created_at: m.created_at,
     sender_name: m.sender?.full_name ?? null,
+    mine: m.sender_id === user.id,
+    from_system: m.sender_id === null,
   }));
+  const chatSide: ChatSide = isOwnReservation ? "requester" : profile?.role === "security" ? "security" : "manager";
 
   const statusMeta = reservation.vehicle ? getStatusMeta(dict)[reservation.vehicle.status] : null;
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
@@ -277,12 +282,6 @@ export default async function ReservationDetailPage({
         </section>
       ) : null}
 
-      <section className="mt-4 rounded-md border border-line-800 bg-panel-900/60 p-6">
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-fog-400">
-          {dict.reservations.detail.communicationTitle}
-        </h2>
-        <MessageThread reservationId={id} messages={messages} dict={dict} locale={locale} />
-      </section>
     </>
   );
 
@@ -341,6 +340,14 @@ export default async function ReservationDetailPage({
               {/* the reservation status is the answer to "did this get cancelled?"; the vehicle status is the second badge */}
               <span className="fm-pill" data-tone={statusTone}>{statusText}</span>
               {statusMeta ? <span className="fm-pill" data-tone="info">{statusMeta.label}</span> : null}
+              <ReservationChat
+                reservationId={id}
+                side={chatSide}
+                requesterName={reservation.trip_request.requester?.full_name ?? null}
+                messages={messages}
+                dict={dict}
+                locale={locale}
+              />
             </div>
           </div>
 
