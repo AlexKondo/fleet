@@ -44,7 +44,6 @@ export async function FmShell({
   headerActions,
   legacy = false,
   wide = false,
-  commandCenter = false,
   workspace,
   nonDrivingWorkspace = false,
   children,
@@ -65,7 +64,6 @@ export async function FmShell({
   legacy?: boolean;
   /** Wider content column (dashboards, tables). */
   wide?: boolean;
-  commandCenter?: boolean;
   workspace?: "manager" | "operations";
   /** Only the authorized local-custody page: custody does not require a CNH. */
   nonDrivingWorkspace?: boolean;
@@ -203,11 +201,9 @@ export async function FmShell({
   return (
     <div
       className={
-        commandCenter
-          ? "fm-theme fm-command"
-          : workspace
-            ? `fm-theme fm-workspace fm-workspace-${workspace}`
-            : "fm-theme"
+        workspace
+          ? `fm-theme fm-workspace fm-workspace-${workspace}`
+          : "fm-theme"
       }
       data-testid="fm-theme"
     >

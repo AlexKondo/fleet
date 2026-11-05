@@ -74,7 +74,7 @@ export function buildBaseNavItems(
     // fleet_manager/administrator, who also carry security's own gate duties sometimes).
     {
       key: "dashboard",
-      href: isFleetManager ? "/dashboard/command-center" : "/dashboard",
+      href: "/dashboard",
       label: dict.nav.dashboard,
       icon: DashboardIcon,
       visible: isFleetManager,

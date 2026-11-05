@@ -70,7 +70,7 @@ export function sectionTabs(section: SectionId, f: { isAdministrator: boolean })
       ];
     case "dashboard":
       return [
-        { id: "overview", href: "/dashboard/command-center", visible: true },
+        { id: "overview", href: "/dashboard", visible: true },
         { id: "reports", href: "/analytics", visible: true },
         { id: "carpoolReports", href: "/analytics/carpool", visible: true },
       ];

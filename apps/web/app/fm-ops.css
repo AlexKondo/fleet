@@ -892,7 +892,11 @@
   }
   .fm-theme .cc-grid .cc-pending {
     grid-column: 1;
-    grid-row: 1 / span 2;
+    grid-row: 1;
+  }
+  .fm-theme .cc-grid .cc-services {
+    grid-column: 1;
+    grid-row: 2;
   }
   .fm-theme .cc-grid .cc-attention {
     grid-column: 2;
@@ -1266,6 +1270,130 @@
   .fm-theme .us-wrap input[name="licenseExpiration"] { max-width: 100%; min-height: 44px; }
   .fm-theme .us-wrap input[name="reason"] { width: 100%; }
   .fm-theme .us-wrap .us-who { flex-wrap: wrap; }
+}
+/* Painel de Veículos: up to five cards per row, in the order each person arranges them */
+.fm-theme .cc-fleet-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fm-theme .cc-fleet-grid [data-card] {
+  min-width: 0;
+  container-type: inline-size;
+  cursor: grab;
+}
+/* every card has the same lines, so a field never wraps and pushes the next one out of line */
+.fm-theme .cc-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fm-theme .cc-fleet-grid .cc-plate {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+.fm-theme .cc-fleet-grid .cc-fields {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+}
+.fm-theme .cc-fleet-grid .cc-fields [role="meter"] {
+  gap: 6px;
+  white-space: nowrap;
+}
+/* zoomed in, five cards are narrow: the status goes under the plate on all of them */
+@container (max-width: 260px) {
+  .fm-theme .cc-card-head {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+.fm-theme .cc-fleet-grid [data-card] :is(input, textarea, select, button, a) {
+  cursor: auto;
+}
+.fm-theme .cc-fleet-grid [data-card] :is(button, a) {
+  cursor: pointer;
+}
+.fm-theme .cc-fleet-grid [data-dragging] {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+.fm-theme .cc-fleet-grid [data-over] {
+  outline: 2px dashed var(--fm-blue-500);
+  outline-offset: 2px;
+}
+@media (min-width: 560px) {
+  .fm-theme .cc-fleet-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* a card needs about 235px for its fields to stay on one line, sidebar included */
+@media (min-width: 1040px) {
+  .fm-theme .cc-fleet-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1320px) {
+  .fm-theme .cc-fleet-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1640px) {
+  .fm-theme .cc-fleet-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+/* Painel: location filter and Próximas manutenções */
+.fm-theme .cc-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fm-theme .cc-services-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fm-theme .cc-services-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fm-theme .cc-services-list svg {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .cc-services-list a {
+  flex: 1;
+  min-width: 0;
+  color: var(--fm-text);
+  text-decoration: none;
+}
+.fm-theme .cc-services-list strong,
+.fm-theme .cc-services-list small {
+  display: block;
+}
+.fm-theme .cc-services-list strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.fm-theme .cc-services-list small {
+  font-size: 12px;
+  color: var(--fm-text-muted);
+}
+.fm-theme .cc-services-list li > span {
+  font-size: 14px;
+  text-align: right;
+  white-space: nowrap;
+}
+.fm-theme .cc-services-list li > span[data-reached] {
+  color: var(--fm-danger, #c64747);
 }
 /* Equipe: one member, one line (phones keep the cards above). Every label is the column header; the tooltip and the screen reader keep the full text. */
 .fm-theme .us-wrap .us-who { display: flex; min-width: 0; align-items: baseline; gap: 8px; }

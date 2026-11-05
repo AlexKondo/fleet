@@ -404,6 +404,7 @@ export type Dictionary = {
       fuel: string;
       battery: string;
       odometer: string;
+      notApplicable: string;
       currentLocation: string;
       /** Suffix appended after the percentage for battery-powered vehicles. */
       batterySuffix: string;
@@ -1600,6 +1601,14 @@ export type Dictionary = {
   /** FleetMind v2.0, group B (Command Center, Veículos, Portaria, Relatórios, Usuários, Políticas). */
   ops: {
     cc: {
+      upcomingMaintenance: string;
+      noServiceByKm: string;
+      reviewReached: string;
+      untilReview: string;
+      locationAria: string;
+      allLocations: string;
+      apply: string;
+      locationHint: string;
       title: string;
       subtitle: string;
       kpisLabel: string;
@@ -1697,32 +1706,6 @@ export type Dictionary = {
     skipToContent: string;
     openKeyCustody: string;
     openBudgetApprovals: string;
-  };
-  commandCenter: {
-    title: string;
-    subtitle: string;
-    loadError: string;
-    loadErrorHint: string;
-    retry: string;
-    viewDetails: string;
-    locationAria: string;
-    allLocations: string;
-    apply: string;
-    degraded: string;
-    vehiclesTotal: string;
-    inOperation: string;
-    available: string;
-    inMaintenance: string;
-    blocked: string;
-    reserved: string;
-    otherStatuses: string;
-    dataUnavailable: string;
-    upcomingMaintenance: string;
-    noServiceByKm: string;
-    reviewReached: string;
-    untilReview: string;
-    footnote: string;
-    openControls: string;
   };
   opsShell: {
     success: string;

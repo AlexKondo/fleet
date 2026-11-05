@@ -14,12 +14,15 @@ export function BlockVehicleForm({
   reasonLabel,
   reasonPlaceholder,
   blockLabel,
+  unavailable = false,
 }: {
   action: (formData: FormData) => void;
   confirmMessage: string;
   reasonLabel: string;
   reasonPlaceholder: string;
   blockLabel: string;
+  /** A vehicle on a trip cannot be blocked: the card keeps its fields, disabled. */
+  unavailable?: boolean;
 }) {
   const [reason, setReason] = useState("");
 
@@ -30,6 +33,7 @@ export function BlockVehicleForm({
         name="reason"
         required
         maxLength={200}
+        disabled={unavailable}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         aria-label={reasonLabel}
@@ -38,7 +42,7 @@ export function BlockVehicleForm({
       />
       <ConfirmSubmitButton
         confirmMessage={confirmMessage}
-        disabled={reason.trim().length === 0}
+        disabled={unavailable || reason.trim().length === 0}
         className="w-full rounded-sm border border-signal-red px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-signal-red hover:bg-signal-red/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
       >
         {blockLabel}

@@ -1,4 +1,6 @@
 import { knownFleetActionError } from "@/lib/dashboard/fleetActionError";
+import { DraggableCards } from "./DraggableCards";
+import { selectedLocation, upcomingServices } from "@/lib/dashboard/upcomingServices";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assessVehicleReadiness } from "@fleet/domain";
@@ -38,9 +40,9 @@ function truncate(text: string, max = 90): string {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ fleetActionError?: string; actionSuccess?: string; myTasks?: string }>;
+  searchParams: Promise<{ fleetActionError?: string; actionSuccess?: string; myTasks?: string; location?: string }>;
 }) {
-  const { fleetActionError, actionSuccess, myTasks } = await searchParams;
+  const { fleetActionError, actionSuccess, myTasks, location } = await searchParams;
   const actionErrorCode = knownFleetActionError(fleetActionError);
   const onlyMyTasks = myTasks === "1";
   const locale = await getLocale();
@@ -60,7 +62,7 @@ export default async function DashboardPage({
   // profile and vehicles don't depend on each other — fetching them sequentially was
   // paying for two full network round-trips back-to-back on every dashboard load for no
   // reason (this page routinely made 6 sequential Supabase calls in total).
-  const [{ data: profile }, { data: vehicleRows, error: vehiclesError }] = await Promise.all([
+  const [{ data: profile }, { data: vehicleRows, error: vehiclesError }, { data: locationRows }] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, role, organization_id, gantt_zoom_preference, organization:organizations(name)")
@@ -79,13 +81,18 @@ export default async function DashboardPage({
          current_location:vehicle_locations!vehicles_current_location_id_fkey(name)`,
       ).is("archived_at",null)
       .order("plate"),
+    supabase.from("vehicle_locations").select("id, name").eq("enabled", true).order("name"),
   ]);
 
   // the gate (porteiro) works in Portaria only: the fleet command center is not for that role
   if (profile?.role === "security") redirect("/gate");
 
-  const vehicles = vehicleRows ?? [];
   const isFleetManager = profile?.role === "fleet_manager" || profile?.role === "administrator";
+  const locations = isFleetManager ? (locationRows ?? []) : [];
+  const currentLocation = selectedLocation(location, locations);
+  // the location filter is about where the vehicles are; swapping the vehicle of a reservation still offers the whole fleet
+  const allVehicles = vehicleRows ?? [];
+  const vehicles = currentLocation === "all" ? allVehicles : allVehicles.filter((v) => v.current_location_id === currentLocation);
   const isAdministrator = profile?.role === "administrator";
   const canManageTasks = isFleetManager || profile?.role === "maintenance_operator";
 
@@ -129,6 +136,8 @@ export default async function DashboardPage({
 
   // These four are independent of each other (and of the two queries above) — same
   // parallelization reasoning.
+  const services = upcomingServices(vehicles);
+
   const [
     { data: pendingReservations },
     { data: openTasks },
@@ -234,6 +243,20 @@ export default async function DashboardPage({
       subtitle={cc.subtitle}
       legacy
       wide
+      headerActions={
+        isFleetManager && locations.length > 0 ? (
+          <form method="get" className="cc-location">
+            {onlyMyTasks ? <input type="hidden" name="myTasks" value="1" /> : null}
+            <select name="location" defaultValue={currentLocation} aria-label={cc.locationAria} title={cc.locationHint} data-testid="cc-location">
+              <option value="all">{cc.allLocations}</option>
+              {locations.map((l) => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </select>
+            <button type="submit" className="fm-btn fm-btn-ghost">{cc.apply}</button>
+          </form>
+        ) : undefined
+      }
     >
       {fleetActionError ? (
         <div
@@ -367,6 +390,33 @@ export default async function DashboardPage({
           </ul>
         )}
       </section>
+
+      {isFleetManager ? (
+        <section className="fm-panel cc-services" id="upcoming-maintenance">
+          <h2 className="fm-h2">{cc.upcomingMaintenance}</h2>
+          {vehiclesError ? (
+            <p role="status" className="text-sm text-signal-red">{t.vehicles.loadError}</p>
+          ) : services.length === 0 ? (
+            <p className="text-sm text-fog-400">{cc.noServiceByKm}</p>
+          ) : (
+            <ul className="cc-services-list" data-testid="cc-services">
+              {services.map((v) => (
+                <li key={v.id}>
+                  <FmCarIcon />
+                  <Link href={`/fleet/vehicles/${v.id}`}>
+                    <strong>{v.category?.name ?? v.plate}</strong>
+                    <small>{v.plate}</small>
+                  </Link>
+                  <span data-reached={v.reached ? "" : undefined}>
+                    {v.kmLeft.toLocaleString(locale)} km
+                    <small>{v.reached ? cc.reviewReached : cc.untilReview}</small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
 
       {isFleetManager ? (
         <section className="fm-panel cc-pending" id="pending-approvals">
@@ -666,7 +716,7 @@ export default async function DashboardPage({
                 </thead>
                 <tbody>
                   {activeReservations.map((r) => {
-                    const vehicleOptions = vehicles.filter(
+                    const vehicleOptions = allVehicles.filter(
                       (v) => v.status === "available" && v.id !== r.vehicle?.id,
                     );
                     const transferOptions = (orgProfiles ?? []).filter(
@@ -824,24 +874,26 @@ export default async function DashboardPage({
             )}
           </p>
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <DraggableCards storageKey={`fm-vehicle-cards:${user.id}`} className="cc-fleet-grid">
             {vehiclesWithAttention.map(({ row, attention }) => {
               const meta = statusMeta[row.status];
               return (
                 <li
                   key={row.id}
                   id={`vehicle-${row.id}`}
+                  data-card={row.id}
+                  draggable
                   className="flex scroll-mt-4 flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4 target:border-gwm-accent"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-mono text-lg text-paper-50">{row.plate}</p>
-                      <p className="text-xs text-fog-400">{row.category?.name ?? "—"}</p>
+                  <div>
+                    <div className="cc-card-head">
+                      <p className="cc-plate font-mono text-lg text-paper-50">{row.plate}</p>
+                      <StatusBadge meta={meta} />
                     </div>
-                    <StatusBadge meta={meta} />
+                    <p className="truncate text-xs text-fog-400" title={row.category?.name ?? undefined}>{row.category?.name ?? "—"}</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-line-800 pt-3 text-xs">
+                  <div className="cc-fields grid gap-x-3 gap-y-2 border-t border-line-800 pt-3 text-xs">
                     {(() => {
                       // A PHEV has both a fuel tank and a plug-in battery — mirrors
                       // VehicleForm.tsx's showFuel/showBattery so the panel doesn't
@@ -849,24 +901,29 @@ export default async function DashboardPage({
                       const energyType = row.category?.energy_type;
                       const showFuel = energyType === "ICE" || energyType === "HEV" || energyType === "PHEV";
                       const showBattery = energyType === "BEV" || energyType === "PHEV";
+                      // every card has the same fields in the same place: what does not apply says so
                       return (
                         <>
-                          {showFuel ? (
-                            <div>
-                              <p className="uppercase tracking-widest text-fog-600">{t.vehicles.fuel}</p>
+                          <div>
+                            <p className="uppercase tracking-widest text-fog-600">{t.vehicles.fuel}</p>
+                            {showFuel ? (
                               <EnergyGauge percent={row.fuel_level_percent} kind="fuel" dict={dict} locale={locale} />
-                            </div>
-                          ) : null}
-                          {showBattery ? (
-                            <div>
-                              <p className="uppercase tracking-widest text-fog-600">{t.vehicles.battery}</p>
+                            ) : (
+                              <p className="text-fog-400">{t.vehicles.notApplicable}</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="uppercase tracking-widest text-fog-600">{t.vehicles.battery}</p>
+                            {showBattery ? (
                               <EnergyGauge percent={row.battery_level_percent} kind="battery" dict={dict} locale={locale} />
-                            </div>
-                          ) : null}
+                            ) : (
+                              <p className="text-fog-400">{t.vehicles.notApplicable}</p>
+                            )}
+                          </div>
                         </>
                       );
                     })()}
-                    <div>
+                    <div className="col-span-2">
                       <p className="uppercase tracking-widest text-fog-600">{t.vehicles.odometer}</p>
                       <p className="mt-1 font-mono tabular-nums text-fog-400">
                         {row.odometer_km.toLocaleString(locale)} km
@@ -876,13 +933,13 @@ export default async function DashboardPage({
                       <p className="uppercase tracking-widest text-fog-600">
                         {t.vehicles.currentLocation}
                       </p>
-                      <p className="mt-1 text-fog-400">{row.current_location?.name ?? "—"}</p>
+                      <p className="mt-1 truncate text-fog-400" title={row.current_location?.name ?? undefined}>{row.current_location?.name ?? "—"}</p>
                     </div>
                   </div>
 
-                  {attention.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 border-t border-line-800 pt-3">
-                      {attention.map((reason) => (
+                  <div className="flex flex-wrap gap-1 border-t border-line-800 pt-3">
+                    {attention.length === 0 ? <span className="text-xs text-fog-400">{t.vehicles.notApplicable}</span> : null}
+                    {attention.map((reason) => (
                         <span
                           key={reason}
                           className="relative overflow-hidden rounded-sm border border-gwm-accent/40 border-t-transparent bg-gwm-accent/10 px-1.5 py-0.5 text-xs text-gwm-accent"
@@ -890,12 +947,11 @@ export default async function DashboardPage({
                           <span className="hazard-stripe absolute inset-x-0 top-0 h-[3px]" aria-hidden="true" />
                           {attentionLabels[reason] ?? reason}
                         </span>
-                      ))}
-                    </div>
-                  ) : null}
+                    ))}
+                  </div>
 
-                  {isFleetManager && row.status !== "in_use" && row.status !== "returning" ? (
-                    <div className="border-t border-line-800 pt-3">
+                  {isFleetManager ? (
+                    <div className="mt-auto border-t border-line-800 pt-3">
                       {row.status === "blocked" ? (
                         <form action={unblockVehicle.bind(null, row.id)}>
                           <ConfirmSubmitButton
@@ -913,8 +969,9 @@ export default async function DashboardPage({
                           action={blockVehicle.bind(null, row.id, t.vehicles.blockReasonDefault)}
                           confirmMessage={t.vehicles.confirmBlock.replace("{plate}", row.plate)}
                           reasonLabel={t.vehicles.blockReasonLabel}
-                          reasonPlaceholder={t.vehicles.blockReasonPlaceholder}
+                          reasonPlaceholder={row.status === "in_use" || row.status === "returning" ? t.vehicles.notApplicable : t.vehicles.blockReasonPlaceholder}
                           blockLabel={t.vehicles.block}
+                          unavailable={row.status === "in_use" || row.status === "returning"}
                         />
                       )}
                     </div>
@@ -922,7 +979,7 @@ export default async function DashboardPage({
                 </li>
               );
             })}
-          </ul>
+          </DraggableCards>
         )}
       </section>
     </FmShell>

@@ -31,7 +31,7 @@ describe("FleetMind dark theme", () => {
     expect(css.match(/--lt-[0-9a-f]{6}:/g)!.length).toBeGreaterThan(200);
   });
   it("every --lt-xxxxxx used by the stylesheets has both a light and a dark definition", () => {
-    const files = ["carpool/fm-theme.css", "carpool/fm-shared.css", "fm-ops.css", "fleet/vehicle-workspace.css", "operations/operations.css", "trips/new/reservar.css", "dashboard/home.css", "dashboard/command-center/command-center.css"];
+    const files = ["carpool/fm-theme.css", "carpool/fm-shared.css", "fm-ops.css", "fleet/vehicle-workspace.css", "operations/operations.css", "trips/new/reservar.css", "dashboard/home.css", ];
     const used = new Set<string>();
     for (const f of files) for (const m of read(f).matchAll(/var\(--lt-([0-9a-f]{6})/g)) used.add(m[1]!);
     const block = css.slice(css.indexOf("generated palette"));
