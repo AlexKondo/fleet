@@ -297,7 +297,7 @@ export default async function DashboardPage({
         </div>
       ) : null}
 
-      <section className="fm-kpis" aria-label={cc.kpisLabel} data-testid="cc-kpis">
+      <section className="fm-kpis cc-kpis" aria-label={cc.kpisLabel} data-testid="cc-kpis">
         <div className="fm-kpi fm-kpi-wide" data-testid="cc-kpi-vehicles">
           <span className="fm-kpi-icon"><FmCarIcon /></span>
           <div className="fm-kpi-body">

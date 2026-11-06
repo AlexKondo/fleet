@@ -1350,6 +1350,15 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
+/* Painel: the five indicators on one line once they fit */
+@media (min-width: 1360px) {
+  .fm-theme .fm-kpis.cc-kpis {
+    grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr));
+  }
+  .fm-theme .cc-kpis .fm-kpi-wide {
+    grid-column: auto;
+  }
+}
 /* Painel: location filter and Próximas manutenções */
 .fm-theme .cc-location {
   display: flex;
@@ -1374,7 +1383,9 @@
   height: 26px;
   color: var(--fm-text-muted);
 }
+/* !important: the generic .fm-legacy link rule lays its children side by side, which glued the plate to the name */
 .fm-theme .cc-services-list a {
+  display: block !important;
   flex: 1;
   min-width: 0;
   color: var(--fm-text);
