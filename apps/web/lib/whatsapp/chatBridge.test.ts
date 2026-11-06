@@ -202,11 +202,24 @@ describe("rendering the assistant's answer for WhatsApp", () => {
     const r = renderState({ status: "idle", messages: [{ role: "user", content: "a" }, { role: "assistant", content: "velho" }, { role: "user", content: "b" }, { role: "assistant", content: "Sem veículo livre.", link: { href: "/trips/new?x=1", label: "Abrir" } }] }, url);
     expect(r).toEqual([{ type: "text", text: "Sem veículo livre.\nAbrir: https://fleet.example.invalid/trips/new?x=1" }]);
   });
-  it("a confirmation card gets Confirmar / Cancelar buttons and the SIM / NÃO hint", () => {
+  it("a confirmation card has Sim / Não buttons, the same words its hint asks the person to write", () => {
     const r = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Reservar?" }], pendingAction: { intent: "CREATE_RESERVATION", slots: {}, summary: "Reservar?" } }, url);
     expect(r).toHaveLength(1);
-    expect(r[0]).toMatchObject({ type: "buttons", buttons: [{ id: "chat:confirm", title: "Confirmar" }, { id: "chat:cancel", title: "Cancelar" }] });
-    expect((r[0] as { text: string }).text).toContain("SIM");
+    expect(r[0]).toMatchObject({ type: "buttons", buttons: [{ id: "chat:confirm", title: "Sim" }, { id: "chat:cancel", title: "Não" }] });
+    const body = (r[0] as { text: string }).text;
+    expect(body).toContain("*SIM* para confirmar");
+    expect(body).toContain("*NÃO* para cancelar");
+    // never a button word that the hint does not use
+    expect(JSON.stringify((r[0] as { buttons: unknown }).buttons)).not.toMatch(/Confirmar|Cancelar/);
+  });
+  it("the card that asks to cancel something says what Sim and Não do: SIM cancels, NÃO keeps", () => {
+    for (const [intent, what] of [["CANCEL_RESERVATION", "a reserva"], ["CANCEL_CARPOOL_REQUEST", "a carona"]] as const) {
+      const r = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Vou cancelar." }], pendingAction: { intent, slots: {}, summary: "Vou cancelar." } }, url);
+      const body = (r[0] as { text: string }).text;
+      expect(body).toContain(`*SIM* para cancelar ${what}`);
+      expect(body).toContain("*NÃO* para mantê-la");
+      expect(r[0]).toMatchObject({ type: "buttons", buttons: [{ title: "Sim" }, { title: "Não" }] });
+    }
   });
   it("carpool options are a numbered list (no buttons); alternative vehicles are listed with their plates", () => {
     const opts = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Achei caronas:" }], pendingAction: { intent: "REQUEST_CARPOOL", slots: {}, summary: "x", options: [{ id: "a", label: "Maria, 08:00" }, { id: "vehicle", label: "Usar um veículo" }] } }, url);

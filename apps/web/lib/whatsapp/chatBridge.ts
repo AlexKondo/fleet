@@ -11,7 +11,7 @@ export { parseChoice };
 /**
  * Reserving a vehicle by WhatsApp: turns an inbound message (text, voice note or button tap) from a member identified by their registered
  * phone into one step of the SAME assistant the web chat uses (sendChatMessage), acting as that member, and renders the answer as WhatsApp
- * messages (text, numbered options, Confirmar / Cancelar buttons). The reservation still goes through the normal approval.
+ * messages (text, numbered options, Sim / Não buttons). The reservation still goes through the normal approval.
  *
  * Unknown numbers get NO answer (the line is a WhatsApp number); any message from a registered number is answered, so the first message can
  * be anything. When one number belongs to several profiles, the assistant asks which one the person is speaking as and remembers it.
@@ -104,12 +104,16 @@ export const TEXTS = {
   otherVehicle: "Outro veículo",
   generic: "Não consegui processar agora. Tente de novo em instantes.",
   confirmHint: "Toque em um botão ou responda *SIM* para confirmar ou *NÃO* para cancelar.",
+  /** the card that asks "cancel this?": the answer words must say what Sim / Não do ("NÃO para cancelar" would read as "no, don't cancel" or as "cancel") */
+  confirmHintCancelReservation: "Toque em um botão ou responda *SIM* para cancelar a reserva ou *NÃO* para mantê-la.",
+  confirmHintCancelCarpool: "Toque em um botão ou responda *SIM* para cancelar a carona ou *NÃO* para mantê-la.",
   pickIntro: "Este número está cadastrado em mais de um perfil. Com qual deles você quer falar? Responda com o número:",
   pickRetry: "Depois de escolher, me diga o que você precisa.",
   pickKeep: "Já guardei o seu pedido: assim que você escolher, eu continuo com ele.",
   pickBad: "Não entendi. Responda com o número do perfil.",
-  confirm: "Confirmar",
-  cancel: "Cancelar",
+  /** the buttons carry the words the hint asks the person to write: Sim / Não */
+  confirm: "Sim",
+  cancel: "Não",
 } as const;
 
 const CARPOOL_TAP = /^cp:(yes|no):([0-9a-f]{32,128})$/;
@@ -140,6 +144,13 @@ function buttonToText(id: string | undefined): string | null {
   if (id === CHAT_BUTTON.confirm) return "sim";
   if (id === CHAT_BUTTON.cancel) return "não";
   return null;
+}
+
+/** The sentence under a confirmation card: for a card that cancels something, Sim means "cancel" and Não means "keep". */
+function confirmHintFor(intent: string | undefined): string {
+  if (intent === "CANCEL_RESERVATION") return TEXTS.confirmHintCancelReservation;
+  if (intent === "CANCEL_CARPOOL_REQUEST") return TEXTS.confirmHintCancelCarpool;
+  return TEXTS.confirmHint;
 }
 
 /**
@@ -173,12 +184,12 @@ export function renderState(state: ChatState, appUrl: string, lastOnly = false):
     return [text(body)];
   }
   // one message, one decision: the other vehicles only come when the person asks for them (the "Outro veículo" button, or saying so).
-  // A list sent right under the card reads as a second question, even more so once Confirmar has been tapped.
+  // A list sent right under the card reads as a second question, even more so once Sim has been tapped.
   const hasOthers = vehicleAlternatives(pending.vehicleOptions, pending.slots.preferredVehicleId).length > 0;
   for (const line of CHOOSE_OPTION_LINES) body = body.split(line).join("");
   return [{
     type: "buttons",
-    text: clip(`${body}\n\n${TEXTS.confirmHint}`),
+    text: clip(`${body}\n\n${confirmHintFor(pending.intent)}`),
     buttons: [
       { id: CHAT_BUTTON.confirm, title: TEXTS.confirm },
       ...(hasOthers ? [{ id: CHAT_BUTTON.otherVehicle, title: TEXTS.otherVehicle }] : []),
