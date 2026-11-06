@@ -1003,9 +1003,6 @@ export type Dictionary = {
       licenseNumberLabel: string;
       licenseCategoryLabel: string;
       licenseExpirationLabel: string;
-      licenseSourceAi: string;
-      licenseSourceManual: string;
-      licenseSourceUnknown: string;
       licenseLockedHint: string;
       resetLicense: string;
       resetLicenseConfirm: string;

@@ -105,8 +105,6 @@ export function UserRow({
   const licenseSaved = useAutoSavedNotice(licenseState.status);
 
   const accountLabel = member.enabled === true ? t.accountActive : member.enabled === false ? t.accountInactive : t.accessUnavailable;
-  const source = member.drivers_license_expiration_source;
-  const sourceLabel = source === "ai" ? t.licenseSourceAi : source === "manual" ? t.licenseSourceManual : t.licenseSourceUnknown;
   const inactive = member.enabled === false;
   const accessLabel = inactive ? t.reactivate : t.deactivate;
 
@@ -256,20 +254,9 @@ export function UserRow({
                 aria-readonly={locked ? "true" : undefined}
                 defaultValue={member.drivers_license_expiration ?? ""}
                 onChange={() => licenseFormRef.current?.requestSubmit()}
-                aria-describedby={`lic-src-${member.id}`}
                 className="rounded-sm border border-line-800 bg-panel-800 px-1.5 py-1 font-mono text-xs text-paper-50 outline-none focus-visible:border-gwm-accent"
               />
             </div>
-            <span
-              id={`lic-src-${member.id}`}
-              data-testid="license-source"
-              data-source={source ?? "none"}
-              title={sourceLabel}
-              className="us-source text-xs text-fog-400"
-            >
-              <span aria-hidden="true">{source === "ai" ? "✦" : source === "manual" ? "✎" : "?"}</span>
-              <span className="us-collapse">{sourceLabel}</span>
-            </span>
           </form>
           {locked ? (
             <details className="us-lock" data-testid="license-locked">

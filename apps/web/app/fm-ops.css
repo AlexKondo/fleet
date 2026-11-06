@@ -1419,7 +1419,6 @@
 .fm-theme .us-wrap .us-cnh-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 .fm-theme .us-wrap .us-cnh { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .fm-theme .us-wrap .us-field { display: flex; flex-direction: column; gap: 4px; }
-.fm-theme .us-wrap .us-source { display: inline-flex; align-items: center; gap: 4px; color: var(--fm-text-muted); cursor: help; }
 .fm-theme .us-wrap .us-lock summary { display: grid; place-items: center; width: 28px; height: 28px; color: var(--fm-text-muted); cursor: pointer; list-style: none; }
 .fm-theme .us-wrap .us-lock summary::-webkit-details-marker { display: none; }
 .fm-theme .us-wrap .us-lock summary svg { width: 15px; height: 15px; }
