@@ -3,6 +3,7 @@ import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import type { ChatState } from "@/app/chat/actions";
 import { runAsUser, getActingContext } from "@/lib/auth/actingUser";
 import { dictionaries } from "@/lib/i18n/dictionaries";
+import { CANCEL_HINT, CANCEL_REQUEST } from "./cancelIntent";
 import { CHAT_BUTTON, handleInboundWhatsApp, parseChoice, renderState, TEXTS, vehicleChoices, type BridgeDeps, type InboundMessage } from "./chatBridge";
 
 const USER = { ok: true, user_id: "u1", organization_id: "o1", email: "ana@example.invalid", full_name: "Ana" };
@@ -670,5 +671,69 @@ describe("the rider answers the invitation to take over a cancelled carpool trip
     const r = await run(tap("yes"), withApply({ ok: true, outcome: "accepted", reservation_id: "res-1", candidate_id: "u9" }, false));
     expect(r.replies).toHaveLength(0);
     expect(seen.after).toHaveLength(0); // the manager is asked once, by the first delivery
+  });
+});
+
+describe("cancelling a reservation by WhatsApp", () => {
+  const askReason = dictionaries["pt-BR"].chat.replies.cancelAskReason;
+  const cardOf = (intent: string, slots: Record<string, string> = {}) => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Resumo" }], pendingAction: { intent, slots, summary: "Resumo" } }) as ChatState;
+  /** what the assistant really returns once the reservation was made: the conversation is dropped */
+  const created = (): ChatState => ({ status: "idle", messages: [{ role: "assistant", content: "Pronto! Pedi a reserva do veículo SSO6B20." }] });
+
+  it("a short request to cancel reaches the assistant as a clear 'cancel my reservation' (it then asks why)", async () => {
+    for (const text of ["Cancelar", "quero cancelar", "Cancele pra mim", "Não quero mais o carro", "cancela a reserva"]) {
+      calls.send.length = 0;
+      w.state = idle;
+      w.next = reply(askReason);
+      await run(msg({ text, messageId: text }));
+      expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: CANCEL_REQUEST });
+    }
+  });
+  it("a sentence that already says why goes as it was written, so the reason is not lost", async () => {
+    w.state = idle;
+    w.next = reply("Certo");
+    await run(msg({ text: "cancelar a reserva porque mudou a reunião" }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: "cancelar a reserva porque mudou a reunião" });
+  });
+  it("right after the assistant asked the reason, 'não quero mais o carro' IS the reason: it is not turned into another cancel request", async () => {
+    w.state = { status: "idle", conversationId: "c1", messages: [{ role: "user", content: "Cancelar" }, { role: "assistant", content: askReason }] };
+    w.next = reply("Confirma?");
+    await run(msg({ text: "não quero mais o carro" }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: "não quero mais o carro" });
+  });
+  it("Cancelar on the card 'cancel this reservation?' keeps the reservation and says so (it never says it was cancelled)", async () => {
+    w.state = cardOf("CANCEL_RESERVATION", { reservationId: "r1", cancelReason: "mudou a reunião" });
+    expect(texts(await run(msg({ text: "Cancelar" })))).toEqual([TEXTS.cancelKept]);
+    expect(TEXTS.cancelKept).toContain("continua valendo");
+    expect(calls.abandon).toEqual(["c1"]);
+    expect(calls.send).toHaveLength(0);
+  });
+  it("a short cancel request while another card is open is still the card's own Cancelar / is left to the assistant (never rewritten)", async () => {
+    w.state = cardOf("CREATE_RESERVATION", { destination: "Campinas" });
+    w.next = reply("ok");
+    await run(msg({ text: "quero cancelar" }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: "quero cancelar" });
+  });
+  it("the message that says the reservation was made tells how to cancel it, before the route map", async () => {
+    const routeMap = vi.fn(async () => ({ imageBase64: "AAAA", caption: "Rota: A → B" }));
+    w.state = cardOf("CREATE_RESERVATION", { origin: "A", destination: "B" });
+    w.next = created();
+    const r = await run(msg({ text: "sim" }), deps({ routeMap }));
+    expect(r.replies.map((x) => x.type)).toEqual(["text", "image"]);
+    expect(r.replies[0]!.text).toBe(`Pronto! Pedi a reserva do veículo SSO6B20.
+
+${CANCEL_HINT}`);
+    expect(r.replies[0]!.text).toContain("*Cancelar*");
+  });
+  it("no hint when nothing was reserved (no vehicle, error) or when the confirmed action was another one", async () => {
+    w.state = cardOf("CREATE_RESERVATION", { origin: "A", destination: "B" });
+    w.next = reply("Sem veículo livre nesse horário"); // idle, but the conversation goes on
+    expect(texts(await run(msg({ text: "sim", messageId: "n1" })))).toEqual(["Sem veículo livre nesse horário"]);
+    w.state = cardOf("CREATE_RESERVATION", { origin: "A", destination: "B" });
+    w.next = reply("Não consegui reservar", { status: "error" });
+    expect(texts(await run(msg({ text: "sim", messageId: "n2" })))).toEqual(["Não consegui reservar"]);
+    w.state = cardOf("CANCEL_RESERVATION", { reservationId: "r1", cancelReason: "x" });
+    w.next = created();
+    expect(texts(await run(msg({ text: "sim", messageId: "n3" })))[0]).not.toContain(CANCEL_HINT);
   });
 });

@@ -1,3 +1,4 @@
+import { CANCEL_HINT } from "@/lib/whatsapp/cancelIntent";
 import { describe, expect, it, vi } from "vitest";
 import { verifySignature } from "./whatsappApproval";
 import { buildRequesterMessage, noticeUrl, notifyRequesterOutcome, type NoticeDeps } from "./notifyRequester";
@@ -21,6 +22,12 @@ describe("message", () => {
     expect(text).toContain("Ora 05 BEV (CCD0710)");
     expect(text).toContain("Destino: EZ Tower");
     expect(text).toMatch(/Saída: .* às 09:00/);
+  });
+  it("approval: ends by telling how to cancel it by WhatsApp; a refusal does not", () => {
+    const approved = buildRequesterMessage("approve", NOTICE);
+    expect(approved.endsWith(CANCEL_HINT)).toBe(true);
+    expect(approved).toContain("*Cancelar*");
+    expect(buildRequesterMessage("reject", NOTICE)).not.toContain("Cancelar");
   });
   it("refusal: says it was refused and what to do next", () => {
     const text = buildRequesterMessage("reject", NOTICE);

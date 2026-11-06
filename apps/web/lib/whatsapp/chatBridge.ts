@@ -4,6 +4,7 @@ import type { ActingContext } from "@/lib/auth/actingUser";
 import type { TranscribeResult } from "./transcribe";
 import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { dictionaries } from "@/lib/i18n/dictionaries";
+import { CANCEL_HINT, CANCEL_REQUEST, isBareCancelRequest } from "./cancelIntent";
 
 export { parseChoice };
 
@@ -95,6 +96,8 @@ export const TEXTS = {
   audioFailed: "Não consegui entender o áudio. Pode gravar de novo, ou escrever o pedido?",
   audioTooLong: "O áudio ficou longo demais. Pode gravar um pedido mais curto, ou escrever?",
   cancelled: "Tudo bem, cancelei. Se precisar, é só mandar um novo pedido.",
+  /** the person tapped Cancelar on the card that asks "cancel this reservation?": the reservation stays */
+  cancelKept: "Tudo bem, não cancelei a reserva. Ela continua valendo.",
   staleChoice: "Essa escolha já não está mais valendo. Me diga de novo o que você precisa, por exemplo: reservar um carro amanhã às 8h.",
   badOption: "Não entendi essa opção. Responda com o número de uma das opções acima.",
   chooseNumber: "Escolha uma opção respondendo com o número dela (por exemplo, *1*).",
@@ -128,6 +131,8 @@ export const OPTION_BUTTON_PREFIX = "chat:opt:";
 const MAX_VEHICLE_BUTTONS = 3;
 /** The web chat's "choose one of the options below": here the options are not below, they come from the "Outro veículo" button. */
 const CHOOSE_OPTION_LINES = Object.values(dictionaries).map((d) => d.chat.replies.card.chooseOption);
+/** The assistant's question "why are you cancelling?": the next message is the reason, even when it sounds like a cancel request ("não quero mais o carro"). */
+const CANCEL_ASK_REASON_LINES = Object.values(dictionaries).map((d) => d.chat.replies.cancelAskReason);
 /** The same as tapping "Outro veículo", for who types or speaks (compared with the normalized text). */
 const OTHER_VEHICLE = /^(?:(?:quero|ver|mostrar?|escolher)\s+)?(?:outro|outros|trocar\s+de|trocar\s+o|mudar\s+de|mudar\s+o)\s+(?:ve[ií]culos?|carros?)$/;
 
@@ -461,13 +466,22 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
         form.set("phase", "confirm");
       } else if (pending && NO.test(t)) {
         if (prev.conversationId) await deps.abandon(client, prev.conversationId);
-        return [text(TEXTS.cancelled)];
+        return [text(pending.intent === "CANCEL_RESERVATION" ? TEXTS.cancelKept : TEXTS.cancelled)];
       } else {
         form.set("phase", "message");
-        form.set("message", input);
+        // "Cancelar", "quero cancelar", "cancele pra mim", "não quero mais o carro": a clear request to cancel the reservation (the assistant then asks why).
+        // Not when the assistant has just asked for the reason: that message IS the reason.
+        const lastBot = [...prev.messages].reverse().find((m) => m.role === "assistant")?.content ?? "";
+        const asksReason = CANCEL_ASK_REASON_LINES.includes(lastBot);
+        form.set("message", !pending && !asksReason && isBareCancelRequest(input) ? CANCEL_REQUEST : input);
       }
       const state = await deps.send(prev, form);
-      const rendered = renderState(state, deps.appUrl, form.get("phase") === "select_vehicle" || form.get("phase") === "select_option");
+      let rendered = renderState(state, deps.appUrl, form.get("phase") === "select_vehicle" || form.get("phase") === "select_option");
+      // the reservation was just made: tell how to cancel it (the success answer is the only one that drops the conversation)
+      if (form.get("phase") === "confirm" && pending?.intent === "CREATE_RESERVATION" && state.status === "idle" && !state.conversationId) {
+        const at = rendered.findIndex((r) => r.type === "text");
+        if (at >= 0) rendered = rendered.map((r, i) => (i === at ? { ...r, text: clip(`${r.text}\n\n${CANCEL_HINT}`) } : r));
+      }
       return await withRouteMap(pending, String(form.get("phase") ?? ""), state, rendered, deps);
     });
     return { replies: [...prefix, ...replies] };

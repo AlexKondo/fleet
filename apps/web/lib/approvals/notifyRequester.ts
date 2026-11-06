@@ -1,4 +1,5 @@
 import { cleanUserText, formatWhen, signBody, SIGNATURE_HEADER, TIMESTAMP_HEADER } from "./whatsappApproval";
+import { CANCEL_HINT } from "@/lib/whatsapp/cancelIntent";
 
 /**
  * Tells the requester, by WhatsApp (through n8n), what their direct manager decided. Best effort and silent: the decision is already
@@ -74,6 +75,8 @@ export function buildRequesterMessage(decision: "approve" | "reject", n: Notice,
   const why = cleanUserText(reason, 200);
   if (decision === "reject" && why) lines.push(`Motivo: ${why}`);
   if (decision === "reject") lines.push("Se precisar, faça um novo pedido ou fale com o seu gestor.");
+  // approved: the person can cancel it right here, by writing to the robot
+  if (decision === "approve") lines.push("", CANCEL_HINT);
   return lines.join("\n");
 }
 
