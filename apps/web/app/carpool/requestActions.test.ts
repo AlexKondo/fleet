@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = {
   rpc: vi.fn(),
+  /** the read of the request before it is cancelled: select("status, rider_id").eq("id", ...).maybeSingle() */
+  from: vi.fn(),
   adminRpc: vi.fn(),
   user: { id: "user-1" } as { id: string } | null,
   search: vi.fn(),
@@ -14,7 +16,7 @@ vi.mock("next/server", async (orig) => ({ ...(await orig<typeof import("next/ser
 const notifyHost = vi.fn(async () => ({ status: "sent" }));
 vi.mock("@/lib/carpool/notifyHost", () => ({ notifyHostOfCarpool: (...a: unknown[]) => (notifyHost as unknown as (...x: unknown[]) => unknown)(...a) }));
 vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: async () => ({ rpc: state.rpc }),
+  createSupabaseServerClient: async () => ({ rpc: state.rpc, from: state.from }),
 }));
 vi.mock("@/lib/supabase/admin", () => ({
   createSupabaseAdminClient: () => ({ rpc: state.adminRpc }),
@@ -44,9 +46,14 @@ const draft = {
   dropoff: { lat: -23.56, lng: -46.64 },
 };
 
+const requestRow = (row: { status: string; rider_id: string } | null) =>
+  state.from.mockReturnValue({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: row, error: null }) }) }) });
+
 beforeEach(() => {
   state.rpc.mockReset();
   state.rpc.mockResolvedValue({ data: null, error: null });
+  state.from.mockReset();
+  requestRow(null);
   state.adminRpc.mockReset();
   state.adminRpc.mockResolvedValue({ data: null, error: null });
   state.search.mockReset();
@@ -196,6 +203,61 @@ describe("the host is told when somebody takes a carpool", () => {
     later.length = 0;
     state.search.mockResolvedValue({ status: "ok", matches: [] });
     await requestCarpoolRide({ offerId: OFFER, clientRequestId: KEY, draft });
+    expect(later).toHaveLength(0);
+  });
+});
+
+describe("the host is told when the rider gives up a seat that was accepted", () => {
+  beforeEach(() => { later.length = 0; notifyHost.mockClear(); state.user = { id: "rider-1" }; });
+
+  it("the rider cancels an ACCEPTED seat: the host is told by WhatsApp, after the answer, with the rider's words", async () => {
+    requestRow({ status: "ACCEPTED", rider_id: "rider-1" });
+    expect(await cancelCarpoolRequest(REQ, undefined, "  não irei mais  ")).toEqual({ status: "success" });
+    expect(state.rpc).toHaveBeenCalledWith("cancel_carpool_ride_request", { p_request_id: REQ });
+    expect(notifyHost).not.toHaveBeenCalled();
+    expect(later).toHaveLength(1);
+    await later[0]!();
+    expect(notifyHost).toHaveBeenCalledWith(REQ, expect.anything(), { note: "não irei mais" });
+  });
+
+  it("without a text from the rider, the notice goes without one", async () => {
+    requestRow({ status: "ACCEPTED", rider_id: "rider-1" });
+    await cancelCarpoolRequest(REQ);
+    await later[0]!();
+    expect(notifyHost).toHaveBeenCalledWith(REQ, expect.anything(), { note: null });
+  });
+
+  it("the rider's text is capped at 300 characters", async () => {
+    requestRow({ status: "ACCEPTED", rider_id: "rider-1" });
+    await cancelCarpoolRequest(REQ, undefined, "x".repeat(900));
+    await later[0]!();
+    expect((notifyHost.mock.calls[0] as unknown as [string, unknown, { note: string }])[2].note).toHaveLength(300);
+  });
+
+  it("a request that was only waiting just disappears: the host is not told", async () => {
+    requestRow({ status: "PENDING", rider_id: "rider-1" });
+    expect((await cancelCarpoolRequest(REQ)).status).toBe("success");
+    expect(later).toHaveLength(0);
+  });
+
+  it("a manager cancelling somebody else's seat does not tell the host that 'the rider cancelled'", async () => {
+    state.user = { id: "manager-1" };
+    requestRow({ status: "ACCEPTED", rider_id: "rider-1" });
+    expect((await cancelCarpoolRequest(REQ)).status).toBe("success");
+    expect(later).toHaveLength(0);
+  });
+
+  it("when the cancellation fails nothing is sent", async () => {
+    requestRow({ status: "ACCEPTED", rider_id: "rider-1" });
+    state.rpc.mockResolvedValue({ data: null, error: { message: "CARPOOL_REQUEST_NOT_CANCELLABLE" } });
+    expect((await cancelCarpoolRequest(REQ)).status).toBe("error");
+    expect(later).toHaveLength(0);
+  });
+
+  it("when the request cannot be read first, the cancellation still happens (only the notice is skipped)", async () => {
+    state.from.mockImplementation(() => { throw new Error("read failed"); });
+    expect((await cancelCarpoolRequest(REQ)).status).toBe("success");
+    expect(state.rpc).toHaveBeenCalledWith("cancel_carpool_ride_request", { p_request_id: REQ });
     expect(later).toHaveLength(0);
   });
 });

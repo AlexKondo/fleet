@@ -645,9 +645,11 @@ export async function prepareCarpoolIntent(
         return reply(fillTemplate(t.chooseCancel, { list }));
       }
       const target = own[0]!;
+      // what the rider wrote besides "cancelar" ("não irei mais") is kept for the host, as data
+      const note = (slots.reason ?? "").replace(/\s+/g, " ").trim().slice(0, 300);
       return {
         kind: "confirm",
-        slots: { requestId: target.id },
+        slots: { requestId: target.id, ...(note ? { reason: note } : {}) },
         summary: fillTemplate(target.status === "ACCEPTED" ? t.cancelSummaryAccepted : t.cancelSummary, {
           when: formatDateTimeShort(target.departureAt, ctx.locale),
         }),
@@ -814,7 +816,7 @@ export async function executeCarpoolIntent(
       if (!isUuid(slots.requestId)) return fail(ctx, "CARPOOL_REQUEST_NOT_FOUND");
       const own = (await findOwnRiderRequests(ctx)).find((r) => r.id === slots.requestId);
       if (!own) return fail(ctx, "CARPOOL_REQUEST_NOT_FOUND");
-      const result = await cancelCarpoolRequest(own.id);
+      const result = await cancelCarpoolRequest(own.id, undefined, slots.reason);
       if (result.status === "error") return fail(ctx, result.error);
       return { success: true, message: t.cancelDone };
     }

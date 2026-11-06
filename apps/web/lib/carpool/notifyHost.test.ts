@@ -37,6 +37,23 @@ describe("message to the host", () => {
   it("a name typed by the user cannot add WhatsApp formatting", () => {
     expect(buildHostMessage({ ...NOTICE, rider_name: "*Hack* _x_" })).toContain("*Hack x vai de carona com você!*");
   });
+  it("cancelled by the rider: says who left, that the seat is free, what the rider wrote and the reservation", () => {
+    const t = buildHostMessage({ ...NOTICE, status: "CANCELLED", seats: 2 }, { note: "não irei mais" });
+    expect(t).toContain("❌ *Maria Silva cancelou a carona com você.* (2 lugares)");
+    expect(t).toContain("A vaga foi liberada.");
+    expect(t).toContain("Mensagem do carona: não irei mais");
+    expect(t).toContain("*Sua reserva:*");
+    expect(t).toContain("Destino: EZ Tower");
+    expect(t).toContain("Veículo: Ora 05 BEV (CCD0710)");
+    // no question, no pick-up place of somebody who is no longer coming
+    expect(t).not.toContain("Você aceita levar?");
+    expect(t).not.toContain("Embarque do passageiro");
+  });
+  it("cancelled without a text from the rider: no 'Mensagem do carona' line; the text cannot add formatting", () => {
+    expect(buildHostMessage({ ...NOTICE, status: "CANCELLED" })).not.toContain("Mensagem do carona");
+    expect(buildHostMessage({ ...NOTICE, status: "CANCELLED" }, { note: "   " })).not.toContain("Mensagem do carona");
+    expect(buildHostMessage({ ...NOTICE, status: "CANCELLED" }, { note: "*urgente* _ok_" })).toContain("Mensagem do carona: urgente ok");
+  });
 });
 
 describe("notifyHostOfCarpool", () => {
@@ -58,6 +75,15 @@ describe("notifyHostOfCarpool", () => {
     f.mockClear();
     await notifyHostOfCarpool("req-1", deps({ ...NOTICE, status: "ACCEPTED", token: null }, f as unknown as typeof fetch));
     expect(JSON.parse(String((f.mock.calls[0] as unknown as [string, RequestInit])[1].body)).buttons).toBeUndefined();
+  });
+  it("a cancelled seat goes as a plain text notice (no buttons) with the rider's words", async () => {
+    const f = vi.fn(async () => new Response("ok", { status: 200 }));
+    expect(await notifyHostOfCarpool("req-1", deps({ ...NOTICE, status: "CANCELLED", token: null }, f as unknown as typeof fetch), { note: "não irei mais" })).toEqual({ status: "sent" });
+    const sent = JSON.parse(String((f.mock.calls[0] as unknown as [string, RequestInit])[1].body));
+    expect(sent).toMatchObject({ type: "carpool_notice", to: "+5511982593096", request_id: "req-1", title: "Carona cancelada" });
+    expect(sent.buttons).toBeUndefined();
+    expect(sent.text).toContain("cancelou a carona com você");
+    expect(sent.text).toContain("Mensagem do carona: não irei mais");
   });
   it("sends nothing without a registered number, and never throws", async () => {
     const f = vi.fn();

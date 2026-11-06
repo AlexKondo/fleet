@@ -150,7 +150,7 @@ describe("dispatchIntent: carpool intents reach the same services as the web UI"
   it("CANCEL_CARPOOL_REQUEST (rider) -> cancelCarpoolRequest; as the host (not the rider) it is refused", async () => {
     configureDb(RIDER);
     expect((await dispatchIntent("CANCEL_CARPOOL_REQUEST", { requestId: REQ })).success).toBe(true);
-    expect(m.cancel).toHaveBeenCalledWith(REQ);
+    expect(m.cancel).toHaveBeenCalledWith(REQ, undefined, undefined);
     m.cancel.mockClear();
     configureDb(HOST);
     expect(await dispatchIntent("CANCEL_CARPOOL_REQUEST", { requestId: REQ })).toMatchObject({ success: false });

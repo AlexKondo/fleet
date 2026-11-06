@@ -37,10 +37,27 @@ function overLimitLine(n: CarpoolNotice): string | null {
   return `⚠️ Desvio de ${Math.round(km! * 10) / 10} km e ${Math.round(min!)} min, acima do limite da política (${limitKm} km e ${limitMin} min).`;
 }
 
-export function buildHostMessage(n: CarpoolNotice): string {
+/** What the rider wrote when giving the seat up ("cancelar, não irei mais"); shown to the host as the rider's own words. */
+export interface HostNoticeExtra {
+  note?: string | null;
+}
+
+export function buildHostMessage(n: CarpoolNotice, extra?: HostNoticeExtra): string {
   const rider = cleanUserText(n.rider_name, 80) || "Um colega";
   const seats = Number(n.seats ?? 1) > 1 ? ` (${Number(n.seats)} lugares)` : "";
   const accepted = n.status === "ACCEPTED";
+  // a rider that was going gave the seat up: the host hears it, with what the rider wrote
+  if (n.status === "CANCELLED") {
+    const lines = [`❌ *${rider} cancelou a carona com você.*${seats}`, "A vaga foi liberada."];
+    const note = cleanUserText(extra?.note, 300);
+    if (note) lines.push(`Mensagem do carona: ${note}`);
+    lines.push("", "*Sua reserva:*");
+    if (n.departure_at) lines.push(`Saída: ${formatWhen(n.departure_at)}`);
+    if (n.destination) lines.push(`Destino: ${cleanUserText(n.destination)}`);
+    const car = [cleanUserText(n.vehicle_name, 60), cleanUserText(n.plate, 12) ? `(${cleanUserText(n.plate, 12)})` : ""].filter(Boolean).join(" ");
+    if (car) lines.push(`Veículo: ${car}`);
+    return lines.join("\n");
+  }
   const lines = [accepted ? `🚗 *${rider} vai de carona com você!*${seats}` : `🚗 *${rider} quer ir de carona com você.*${seats}`];
   lines.push("", "*Sua reserva:*");
   if (n.departure_at) lines.push(`Saída: ${formatWhen(n.departure_at)}`);
@@ -54,7 +71,7 @@ export function buildHostMessage(n: CarpoolNotice): string {
   return lines.join("\n");
 }
 
-export async function notifyHostOfCarpool(requestId: string, deps: NoticeDeps): Promise<NoticeResult> {
+export async function notifyHostOfCarpool(requestId: string, deps: NoticeDeps, extra?: HostNoticeExtra): Promise<NoticeResult> {
   const env = deps.env ?? currentNoticeEnv();
   const url = noticeUrl(env);
   if (!url || !env.secret) return { status: "skipped", reason: "not_configured" };
@@ -66,7 +83,7 @@ export async function notifyHostOfCarpool(requestId: string, deps: NoticeDeps): 
     const buttons = n.status === "PENDING" && n.token
       ? [{ id: `${CARPOOL_YES}${n.token}`, title: "Aceitar" }, { id: `${CARPOOL_NO}${n.token}`, title: "Recusar" }]
       : undefined;
-    const body = JSON.stringify({ type: "carpool_notice", request_id: requestId, to: n.phone_e164, text: buildHostMessage(n), title: "Pedido de carona", ...(buttons ? { buttons } : {}) });
+    const body = JSON.stringify({ type: "carpool_notice", request_id: requestId, to: n.phone_e164, text: buildHostMessage(n, extra), title: n.status === "CANCELLED" ? "Carona cancelada" : "Pedido de carona", ...(buttons ? { buttons } : {}) });
     const timestamp = String(Math.floor((deps.now?.() ?? Date.now()) / 1000));
     const out = await (deps.fetch ?? fetch)(url, {
       method: "POST",

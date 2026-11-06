@@ -199,12 +199,27 @@ export async function rejectCarpoolRequest(
 export async function cancelCarpoolRequest(
   requestId: string,
   reservationId?: string,
+  /** what the rider wrote when giving the seat up ("não irei mais"): goes to the host as the rider's own words */
+  note?: string,
 ): Promise<CarpoolActionResult> {
   if (!isUuid(requestId)) return INVALID;
   const ctx = await authedClient();
   if (!ctx) return UNAUTHENTICATED;
+  // who is giving up a seat the host had accepted? (the host loses a passenger; a request that was only waiting just disappears)
+  let before: { status?: string; rider_id?: string } | null = null;
+  try {
+    const { data } = await ctx.supabase.from("carpool_ride_requests").select("status, rider_id").eq("id", requestId).maybeSingle();
+    before = data;
+  } catch {
+    before = null;
+  }
   const { error } = await ctx.supabase.rpc("cancel_carpool_ride_request", { p_request_id: requestId });
   if (error) return fail("cancel_carpool_ride_request", error.message);
+  // the host is told by WhatsApp too (not only in the app) when the rider himself leaves an accepted seat; after the answer, never able to fail the cancellation
+  if (before?.status === "ACCEPTED" && before.rider_id === ctx.user.id) {
+    const riderNote = note?.trim() ? note.trim().slice(0, 300) : null;
+    after(async () => { const admin = createSupabaseAdminClient(); await notifyHostOfCarpool(requestId, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }, { note: riderNote }); });
+  }
   refresh(reservationId);
   return { status: "success" };
 }

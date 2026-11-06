@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { CARPOOL_CANCEL_HINT } from "@/lib/whatsapp/cancelIntent";
 import { buildRiderMessage, notifyRiderOfDecision } from "./notifyRider";
 
 const ENV = { approvalUrl: "https://n8n.example.invalid/webhook/fleet-approval-request", secret: "s3cret" };
@@ -11,6 +12,15 @@ describe("message to the rider", () => {
     expect(t).toContain("*João Souza aceitou levar você de carona!*");
     expect(t).toContain("Destino: EZ Tower");
     expect(t).toContain("Veículo: Ora 05 BEV (CCD0710)");
+  });
+  it("accepted: ends telling the rider how to give the seat up, by writing 'Cancelar' or 'cancelar, não irei mais'", () => {
+    const t = buildRiderMessage({ ...BASE, status: "ACCEPTED" })!;
+    expect(t.endsWith(CARPOOL_CANCEL_HINT)).toBe(true);
+    expect(t).toContain("Para cancelar a sua carona, escreva *Cancelar*");
+    expect(t).toContain("_cancelar, não irei mais_");
+  });
+  it("refused: has no cancel hint (there is nothing to cancel)", () => {
+    expect(buildRiderMessage({ ...BASE, status: "REJECTED" }, "sem lugar")).not.toContain("Cancelar");
   });
   it("refused: says so and carries the host's justification", () => {
     const t = buildRiderMessage({ ...BASE, status: "REJECTED" }, "Vou sair mais cedo e o carro já estará cheio")!;

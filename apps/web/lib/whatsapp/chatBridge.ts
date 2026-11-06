@@ -4,7 +4,7 @@ import type { ActingContext } from "@/lib/auth/actingUser";
 import type { TranscribeResult } from "./transcribe";
 import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { dictionaries } from "@/lib/i18n/dictionaries";
-import { CANCEL_HINT, CANCEL_REQUEST, isBareCancelRequest } from "./cancelIntent";
+import { CANCEL_HINT, CANCEL_REQUEST, CARPOOL_CANCEL_REQUEST, cancelRequestOf, isBareCancelRequest } from "./cancelIntent";
 
 export { parseChoice };
 
@@ -62,6 +62,8 @@ export interface BridgeDeps {
   afterTakeoverAccepted?: (reservationId: string) => Promise<void> | void;
   /** the same route map the screen shows (runs as the member); null when it is not available - the card is then sent without it */
   routeMap?: (origin: string, destination: string) => Promise<{ imageBase64: string; caption: string } | null>;
+  /** what the member has that "Cancelar" could mean (runs as the member): an upcoming reservation of their own and/or a carpool seat they asked for */
+  cancelTargets?: (client: TypedSupabaseClient, userId: string) => Promise<{ reservation: boolean; carpool: boolean }>;
 }
 
 const SESSION_MINUTES = 30;
@@ -98,6 +100,10 @@ export const TEXTS = {
   cancelled: "Tudo bem, cancelei. Se precisar, é só mandar um novo pedido.",
   /** the person tapped Cancelar on the card that asks "cancel this reservation?": the reservation stays */
   cancelKept: "Tudo bem, não cancelei a reserva. Ela continua valendo.",
+  /** the same, on the card that asks "cancel your carpool seat?" */
+  carpoolKept: "Tudo bem, não cancelei a carona. Ela continua valendo.",
+  /** "Cancelar" alone from someone who has both an upcoming reservation and a carpool seat: the robot does not guess */
+  cancelWhich: "Você tem uma reserva e uma carona. Qual você quer cancelar? Escreva *Cancelar carona* ou *Cancelar reserva*.",
   staleChoice: "Essa escolha já não está mais valendo. Me diga de novo o que você precisa, por exemplo: reservar um carro amanhã às 8h.",
   badOption: "Não entendi essa opção. Responda com o número de uma das opções acima.",
   chooseNumber: "Escolha uma opção respondendo com o número dela (por exemplo, *1*).",
@@ -477,14 +483,28 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
         form.set("phase", "confirm");
       } else if (pending && NO.test(t)) {
         if (prev.conversationId) await deps.abandon(client, prev.conversationId);
-        return [text(pending.intent === "CANCEL_RESERVATION" ? TEXTS.cancelKept : TEXTS.cancelled)];
+        return [text(pending.intent === "CANCEL_RESERVATION" ? TEXTS.cancelKept : pending.intent === "CANCEL_CARPOOL_REQUEST" ? TEXTS.carpoolKept : TEXTS.cancelled)];
       } else {
         form.set("phase", "message");
-        // "Cancelar", "quero cancelar", "cancele pra mim", "não quero mais o carro": a clear request to cancel the reservation (the assistant then asks why).
+        // "Cancelar", "quero cancelar", "cancele pra mim", "não quero mais o carro": a clear request to cancel (the assistant then asks why, for a reservation).
         // Not when the assistant has just asked for the reason: that message IS the reason.
         const lastBot = [...prev.messages].reverse().find((m) => m.role === "assistant")?.content ?? "";
         const asksReason = CANCEL_ASK_REASON_LINES.includes(lastBot);
-        form.set("message", !pending && !asksReason && isBareCancelRequest(input) ? CANCEL_REQUEST : input);
+        let message = input;
+        const cancel = !pending && !asksReason ? cancelRequestOf(input) : null;
+        if (cancel) {
+          // "Cancelar" alone can mean the person's reservation or a carpool seat they were given: it is decided by what they have
+          let target = cancel.target;
+          if (target === "either") {
+            const has = await deps.cancelTargets?.(client, who.user_id!).catch(() => null);
+            if (has?.reservation && has.carpool) return [text(TEXTS.cancelWhich)];
+            target = has?.carpool && !has.reservation ? "carpool" : "reservation";
+          }
+          if (target === "carpool") message = cancel.reason ? `${CARPOOL_CANCEL_REQUEST}. Motivo: ${cancel.reason}` : CARPOOL_CANCEL_REQUEST;
+          // a reservation: a bare request is rewritten so the assistant asks why; one that already says why goes as written
+          else if (isBareCancelRequest(input)) message = CANCEL_REQUEST;
+        }
+        form.set("message", message);
       }
       const state = await deps.send(prev, form);
       let rendered = renderState(state, deps.appUrl, form.get("phase") === "select_vehicle" || form.get("phase") === "select_option");

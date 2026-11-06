@@ -275,6 +275,13 @@ describe("CANCEL_CARPOOL_REQUEST (prepare)", () => {
     expect(r.kind === "confirm" && r.slots).toEqual({ requestId: REQ_ANA });
   });
 
+  it("keeps what the rider said about why, tidied, so the confirmed cancellation can tell the host", async () => {
+    const r = await prepareCarpoolIntent(ctxFor(RIDER), "CANCEL_CARPOOL_REQUEST", { requestId: REQ_FOREIGN, reason: "  não   irei\nmais  " });
+    expect(r.kind === "confirm" && r.slots).toEqual({ requestId: REQ_ANA, reason: "não irei mais" });
+    const none = await prepareCarpoolIntent(ctxFor(RIDER), "CANCEL_CARPOOL_REQUEST", { requestId: REQ_FOREIGN, reason: "   " });
+    expect(none.kind === "confirm" && none.slots).toEqual({ requestId: REQ_ANA });
+  });
+
   it("an ACCEPTED request says the seat will be released", async () => {
     const r = await prepareCarpoolIntent(ctxFor(OTHER_RIDER), "CANCEL_CARPOOL_REQUEST", {});
     // OTHER_RIDER has one PENDING (foreign offer) and one ACCEPTED -> ambiguous
@@ -519,11 +526,18 @@ describe("executeCarpoolIntent", () => {
   it("CANCEL: only the caller's own live request", async () => {
     const ok = await executeCarpoolIntent(ctxFor(RIDER), "CANCEL_CARPOOL_REQUEST", { requestId: REQ_ANA });
     expect(ok.success).toBe(true);
-    expect(m.cancel).toHaveBeenCalledWith(REQ_ANA);
+    expect(m.cancel).toHaveBeenCalledWith(REQ_ANA, undefined, undefined);
     m.cancel.mockClear();
     const other = await executeCarpoolIntent(ctxFor(OTHER_RIDER), "CANCEL_CARPOOL_REQUEST", { requestId: REQ_ANA });
     expect(other).toMatchObject({ success: false, message: "CARPOOL_REQUEST_NOT_FOUND" });
     expect(m.cancel).not.toHaveBeenCalled();
+  });
+
+  it("CANCEL: what the rider wrote about why goes on to the cancellation (for the host)", async () => {
+    m.cancel.mockClear();
+    const ok = await executeCarpoolIntent(ctxFor(RIDER), "CANCEL_CARPOOL_REQUEST", { requestId: REQ_ANA, reason: "não irei mais" });
+    expect(ok.success).toBe(true);
+    expect(m.cancel).toHaveBeenCalledWith(REQ_ANA, undefined, "não irei mais");
   });
 
   describe("REQUEST", () => {

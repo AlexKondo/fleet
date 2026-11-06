@@ -3,7 +3,7 @@ import type { TypedSupabaseClient } from "@fleet/supabase-client";
 import type { ChatState } from "@/app/chat/actions";
 import { runAsUser, getActingContext } from "@/lib/auth/actingUser";
 import { dictionaries } from "@/lib/i18n/dictionaries";
-import { CANCEL_HINT, CANCEL_REQUEST } from "./cancelIntent";
+import { CANCEL_HINT, CANCEL_REQUEST, CARPOOL_CANCEL_REQUEST } from "./cancelIntent";
 import { CHAT_BUTTON, handleInboundWhatsApp, parseChoice, renderState, TEXTS, vehicleChoices, type BridgeDeps, type InboundMessage } from "./chatBridge";
 
 const USER = { ok: true, user_id: "u1", organization_id: "o1", email: "ana@example.invalid", full_name: "Ana" };
@@ -684,6 +684,101 @@ describe("the rider answers the invitation to take over a cancelled carpool trip
     const r = await run(tap("yes"), withApply({ ok: true, outcome: "accepted", reservation_id: "res-1", candidate_id: "u9" }, false));
     expect(r.replies).toHaveLength(0);
     expect(seen.after).toHaveLength(0); // the manager is asked once, by the first delivery
+  });
+});
+
+describe("cancelling a carpool seat by WhatsApp", () => {
+  const cardOf = (intent: string, slots: Record<string, string> = {}) => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Resumo" }], pendingAction: { intent, slots, summary: "Resumo" } }) as ChatState;
+  const has = (reservation: boolean, carpool: boolean) => vi.fn(async () => ({ reservation, carpool }));
+  const sentMessage = () => calls.send[0]!.form.message;
+
+  it("a rider who only has a carpool seat: 'Cancelar' reaches the assistant as 'cancel my carpool'", async () => {
+    for (const text of ["Cancelar", "cancelar", "quero cancelar", "não irei mais"]) {
+      calls.send.length = 0;
+      w.state = idle;
+      w.next = reply("Vou cancelar sua carona");
+      await run(msg({ text, messageId: text }), deps({ cancelTargets: has(false, true) }));
+      expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: CARPOOL_CANCEL_REQUEST });
+    }
+  });
+
+  it("'cancelar, não irei mais': the rider's own words go along, for the host", async () => {
+    w.state = idle;
+    w.next = reply("ok");
+    await run(msg({ text: "cancelar, não irei mais" }), deps({ cancelTargets: has(false, true) }));
+    expect(sentMessage()).toBe(`${CARPOOL_CANCEL_REQUEST}. Motivo: não irei mais`);
+  });
+
+  it("someone who only has a reservation is unchanged: bare -> 'cancel my reservation'; with a reason, as written", async () => {
+    w.state = idle;
+    w.next = reply("ok");
+    await run(msg({ text: "Cancelar" }), deps({ cancelTargets: has(true, false) }));
+    expect(sentMessage()).toBe(CANCEL_REQUEST);
+    calls.send.length = 0;
+    await run(msg({ text: "cancelar, não irei mais", messageId: "m2" }), deps({ cancelTargets: has(true, false) }));
+    expect(sentMessage()).toBe("cancelar, não irei mais");
+  });
+
+  it("someone with a reservation AND a carpool seat who writes only 'Cancelar' is asked which one, and nothing is sent to the assistant", async () => {
+    w.state = idle;
+    const r = await run(msg({ text: "Cancelar" }), deps({ cancelTargets: has(true, true) }));
+    expect(texts(r)).toEqual([TEXTS.cancelWhich]);
+    expect(TEXTS.cancelWhich).toContain("*Cancelar carona*");
+    expect(TEXTS.cancelWhich).toContain("*Cancelar reserva*");
+    expect(calls.send).toHaveLength(0);
+  });
+
+  it("…and the answer 'Cancelar carona' / 'Cancelar reserva' names it, so nobody is asked twice", async () => {
+    const both = deps({ cancelTargets: has(true, true) });
+    w.state = idle;
+    w.next = reply("ok");
+    await run(msg({ text: "Cancelar carona", messageId: "a" }), both);
+    expect(sentMessage()).toBe(CARPOOL_CANCEL_REQUEST);
+    calls.send.length = 0;
+    await run(msg({ text: "Cancelar reserva", messageId: "b" }), both);
+    expect(sentMessage()).toBe(CANCEL_REQUEST);
+  });
+
+  it("when the sentence names what it cancels, what the person has is not even looked up", async () => {
+    const lookup = has(true, true);
+    w.state = idle;
+    w.next = reply("ok");
+    await run(msg({ text: "cancela minha carona" }), deps({ cancelTargets: lookup }));
+    expect(lookup).not.toHaveBeenCalled();
+    expect(sentMessage()).toBe(CARPOOL_CANCEL_REQUEST);
+  });
+
+  it("nothing to cancel, a failed look-up, or no look-up at all: it goes the way it always did (the reservation)", async () => {
+    for (const d of [deps({ cancelTargets: has(false, false) }), deps({ cancelTargets: vi.fn(async () => { throw new Error("down"); }) }), deps()]) {
+      calls.send.length = 0;
+      w.state = idle;
+      w.next = reply("ok");
+      await run(msg({ text: "Cancelar", messageId: `m${Math.random()}` }), d);
+      expect(sentMessage()).toBe(CANCEL_REQUEST);
+    }
+  });
+
+  it("never rewritten while a card is open or right after the assistant asked for the reason", async () => {
+    const lookup = has(false, true);
+    w.state = cardOf("CREATE_RESERVATION", { destination: "Campinas" });
+    w.next = reply("ok");
+    await run(msg({ text: "quero cancelar" }), deps({ cancelTargets: lookup }));
+    expect(sentMessage()).toBe("quero cancelar");
+    expect(lookup).not.toHaveBeenCalled();
+  });
+
+  it("the card 'cancel your carpool seat?': Não keeps it and says so (it never says it was cancelled)", async () => {
+    w.state = cardOf("CANCEL_CARPOOL_REQUEST", { requestId: "r1" });
+    expect(texts(await run(msg({ text: "Não" })))).toEqual([TEXTS.carpoolKept]);
+    expect(TEXTS.carpoolKept).toContain("continua valendo");
+    expect(TEXTS.carpoolKept).toContain("carona");
+    expect(calls.abandon).toEqual(["c1"]);
+    expect(calls.send).toHaveLength(0);
+  });
+
+  it("tapping the Não button on that card does the same", async () => {
+    w.state = cardOf("CANCEL_CARPOOL_REQUEST", { requestId: "r1" });
+    expect(texts(await run(msg({ kind: "button", buttonId: CHAT_BUTTON.cancel, text: undefined })))).toEqual([TEXTS.carpoolKept]);
   });
 });
 

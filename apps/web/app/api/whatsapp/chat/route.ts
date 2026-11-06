@@ -8,7 +8,7 @@ import { mintUserClient } from "@/lib/auth/mintUserClient";
 import { getAppUrl } from "@/lib/getAppUrl";
 import { notifyRiderOfDecision } from "@/lib/carpool/notifyRider";
 import { afterTakeoverAccepted } from "@/lib/carpool/afterTakeoverAccepted";
-import { loadLatestChatState } from "@/app/chat/queries";
+import { findActiveReservations, loadLatestChatState } from "@/app/chat/queries";
 import { sendChatMessage } from "@/app/chat/actions";
 import { getTripRouteMap } from "@/app/carpool/routeMapActions";
 
@@ -86,6 +86,18 @@ export async function POST(request: NextRequest) {
       return { imageBase64: r.imageDataUrl.replace(/^data:image\/png;base64,/, ""), caption: lines.join("\n") };
     },
     notifyRider: async (requestId, justification) => { await notifyRiderOfDecision(requestId, justification, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); },
+    // "Cancelar" alone: what the member has that it could mean - an upcoming reservation of their own and/or a carpool seat they asked for (both read as the member)
+    cancelTargets: async (client, userId) => {
+      const nowMs = Date.now();
+      const [mine, { data: rides }] = await Promise.all([
+        findActiveReservations(client, userId),
+        client.from("carpool_ride_requests").select("id").eq("rider_id", userId).in("status", ["PENDING", "ACCEPTED"]).gte("requested_departure_at", new Date(nowMs).toISOString()).limit(1),
+      ]);
+      return {
+        reservation: mine.some((r) => { const end = Date.parse(r.expectedReturnAt ?? ""); return !Number.isFinite(end) || end > nowMs; }),
+        carpool: (rides ?? []).length > 0,
+      };
+    },
   };
 
   try {

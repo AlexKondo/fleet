@@ -1,5 +1,6 @@
 import { cleanUserText, formatWhen, signBody, SIGNATURE_HEADER, TIMESTAMP_HEADER } from "@/lib/approvals/whatsappApproval";
 import { currentNoticeEnv, noticeUrl, type NoticeDeps, type NoticeResult } from "@/lib/approvals/notifyRequester";
+import { CARPOOL_CANCEL_HINT } from "@/lib/whatsapp/cancelIntent";
 
 /**
  * Tells the rider, by WhatsApp through n8n, what the host answered to the carpool request: accepted (with the trip details) or refused (with the
@@ -27,6 +28,8 @@ export function buildRiderMessage(n: DecisionNotice, justification?: string | nu
     if (n.departure_at) lines.push(`Saída: ${formatWhen(n.departure_at)}`);
     if (n.destination) lines.push(`Destino: ${cleanUserText(n.destination)}`);
     if (vehicle) lines.push(`Veículo: ${vehicle}`);
+    // the rider can give the seat up right here, by writing to the robot
+    lines.push("", CARPOOL_CANCEL_HINT);
     return lines.join("\n");
   }
   if (n.status === "REJECTED") {
