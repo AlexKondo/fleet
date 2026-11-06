@@ -145,7 +145,7 @@ export async function FmShell({
   const personalKeys: NavKey[] = ["book", "trips"];
   const managerOrder: NavKey[] = [
     "dashboard", "fleet", "carpool", "gate", "maintenance", "planning", "orders", "vehicleHistory", "energy",
-    "drivers", "team", "gateHistory", "keyManagement", "budgetApprovals", "reservationApprovals", "keys",
+    "drivers", "team", "keyManagement", "budgetApprovals", "reservationApprovals", "keys",
     "analytics", "admin", "settings",
   ];
   const rank = (k: NavKey, list: NavKey[]) => {
@@ -174,7 +174,7 @@ export async function FmShell({
   const section = sectionFor(activeForGate, isFleetManager);
   const sectionT = section ? await getAreaText(sectionTabsTexts) : null;
   const tabs = section && sectionT
-    ? sectionTabs(section, { isAdministrator }).filter((t) => !(role === "security" && t.id === "history")).map((t) => ({ href: t.href, label: (sectionT as Record<string, string>)[t.id] ?? t.id, detail: (sectionT as Record<string, string>)[`${t.id}Detail`] }))
+    ? sectionTabs(section, { isAdministrator }).map((t) => ({ href: t.href, label: (sectionT as Record<string, string>)[t.id] ?? t.id, detail: (sectionT as Record<string, string>)[`${t.id}Detail`] }))
     : [];
   // the bottom bar only fits the main destinations; the hamburger menu (MobileNav) lists everything
   // (employees: home + rider destinations; operations roles: their own working screens)

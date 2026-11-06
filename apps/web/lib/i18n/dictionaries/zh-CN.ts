@@ -1724,7 +1724,6 @@ const dict: Dictionary = {
     energy: "加油 / 充电",
     drivers: "驾驶员",
     gateExceptions: "门岗事件",
-    gateHistory: "门岗记录",
     keyCustody: "钥匙保管",
     budgetApprovals: "审批报价",
     reservationApprovals: "审批预订",

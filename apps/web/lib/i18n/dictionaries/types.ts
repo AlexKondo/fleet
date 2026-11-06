@@ -1700,7 +1700,6 @@ export type Dictionary = {
     energy: string;
     drivers: string;
     gateExceptions: string;
-    gateHistory: string;
     keyCustody: string;
     budgetApprovals: string;
     reservationApprovals: string;

@@ -31,7 +31,6 @@ export async function Workspace({
   error,
   success,
   managerView = false,
-  hideTitle = false,
 }: {
   data: OperationalData;
   title: string;
@@ -41,8 +40,6 @@ export async function Workspace({
   error?: string;
   success?: string;
   managerView?: boolean;
-  /** The menu and the tab already name the screen: the title is only kept for screen readers. */
-  hideTitle?: boolean;
 }) {
   const p = data.profile;
   const t = (await getDictionary()).opsShell;
@@ -60,7 +57,7 @@ export async function Workspace({
       <div className="ow">
         <header className="ow-heading">
           <div>
-            <h1 className={hideTitle ? "sr-only" : undefined}>{title}</h1>
+            <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>
         </header>

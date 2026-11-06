@@ -6,7 +6,6 @@ describe("one menu item per area", () => {
   it("a screen that used to be a menu item is a tab of its area: the area's item is the current one", () => {
     expect(menuKeyFor("drivers")).toBe("team");
     for (const k of ["planning", "orders", "vehicleHistory"]) expect(menuKeyFor(k)).toBe("maintenance");
-    expect(menuKeyFor("gateHistory")).toBe("gate");
     for (const k of ["energy", "keyManagement", "carpool"]) expect(menuKeyFor(k)).toBe("fleet");
     for (const k of ["book", "find"]) expect(menuKeyFor(k)).toBe("trips");
     expect(menuKeyFor("analytics")).toBe("dashboard");
@@ -25,7 +24,7 @@ describe("one menu item per area", () => {
     expect(sectionFor("analytics", true)).toBe("dashboard");
     expect(sectionFor("admin", true)).toBe("settings");
     for (const k of ["maintenance", "planning", "orders", "vehicleHistory"]) expect(sectionFor(k, true), k).toBeNull();
-    for (const k of ["gate", "gateHistory"]) expect(sectionFor(k, true), k).toBe("gate");
+    expect(sectionFor("gate", true)).toBe("gate");
     expect(sectionFor("find", true)).toBe("trips"); // the rider's Buscar carona, also for a manager
     for (const k of ["team", "fleet", "dashboard", "settings", "analytics"]) expect(sectionFor(k, false), k).toBeNull();
     expect(sectionFor("trips", false)).toBe("trips");

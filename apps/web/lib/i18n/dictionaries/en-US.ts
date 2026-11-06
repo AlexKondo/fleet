@@ -1760,7 +1760,6 @@ const dict: Dictionary = {
     energy: "Refueling / Charging",
     drivers: "Drivers",
     gateExceptions: "Gatehouse Incidents",
-    gateHistory: "Gatehouse History",
     keyCustody: "Key custody",
     budgetApprovals: "Approve quotes",
     reservationApprovals: "Approve bookings",

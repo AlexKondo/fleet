@@ -37,7 +37,6 @@ export type NavKey =
   | "vehicleHistory"
   | "energy"
   | "drivers"
-  | "gateHistory"
   | "admin"
   | "find"
   | "keys"
@@ -148,13 +147,6 @@ export function buildBaseNavItems(
       label: dict.navExtra.energy,
       icon: AnalyticsIcon,
       visible: isFleetManager,
-    },
-    {
-      key: "gateHistory",
-      href: "/gate/history",
-      label: dict.navExtra.gateHistory,
-      icon: TripsIcon,
-      visible: isSecurity || isFleetManager,
     },
     {
       key: "keys",href:"/account/keys",label:dict.navExtra.keyCustody,icon:GateIcon,visible:canKeyCustody,

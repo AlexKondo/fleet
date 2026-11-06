@@ -126,7 +126,6 @@ const paths = new Set([
   "/fleet/maintenance",
   "/fleet/energy",
   "/gate",
-  "/gate/history",
 ]);
 export function operationReturn(value: unknown) {
   if (typeof value !== "string") return "/maintenance";

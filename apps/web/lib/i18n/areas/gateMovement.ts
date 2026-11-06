@@ -2,7 +2,7 @@ import type { AreaTexts } from "../areaText";
 
 /** What the porter reads when he lets a vehicle out / receives it back (Portaria list + the confirmation screen). */
 type K =
-  | "listDeparture" | "listArrival"
+  | "listDeparture" | "listArrival" | "reservationTrip" | "movement" | "reservationsFail"
   | "titleDeparture" | "titleArrival" | "noteDeparture" | "noteArrival"
   | "confirmDeparture" | "confirmArrival" | "optionDeparture" | "optionArrival" | "optionDenied" | "noteLabel"
   | "resultDeparture" | "resultArrival" | "resultDenied" | "managerNotified" | "ok" | "errorTitle" | "notPickedUp" | "eventDeparture" | "eventReturn" | "notPickedUpShort";
@@ -10,6 +10,9 @@ export type GateMovementKey = K;
 
 export const gateMovementTexts: AreaTexts<K> = {
   "pt-BR": {
+    reservationTrip: "Reserva / viagem",
+    movement: "Movimento",
+    reservationsFail: "Não foi possível consultar as reservas.",
     listDeparture: "Liberar saída do veículo",
     listArrival: "Registrar chegada do veículo",
     titleDeparture: "Liberar a saída do veículo",
@@ -34,6 +37,9 @@ export const gateMovementTexts: AreaTexts<K> = {
     eventReturn: "Retorno",
   },
   "en-US": {
+    reservationTrip: "Reservation / trip",
+    movement: "Movement",
+    reservationsFail: "Could not load the reservations.",
     listDeparture: "Release the vehicle",
     listArrival: "Record the vehicle's arrival",
     titleDeparture: "Release the vehicle",
@@ -58,6 +64,9 @@ export const gateMovementTexts: AreaTexts<K> = {
     eventReturn: "Return",
   },
   es: {
+    reservationTrip: "Reserva / viaje",
+    movement: "Movimiento",
+    reservationsFail: "No se pudieron consultar las reservas.",
     listDeparture: "Liberar la salida del vehículo",
     listArrival: "Registrar la llegada del vehículo",
     titleDeparture: "Liberar la salida del vehículo",
@@ -82,6 +91,9 @@ export const gateMovementTexts: AreaTexts<K> = {
     eventReturn: "Regreso",
   },
   "zh-CN": {
+    reservationTrip: "预订 / 行程",
+    movement: "出入类型",
+    reservationsFail: "无法查询预订。",
     listDeparture: "放行车辆",
     listArrival: "登记车辆到达",
     titleDeparture: "放行车辆",

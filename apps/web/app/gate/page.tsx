@@ -167,7 +167,7 @@ export default async function GatePage({ searchParams }: { searchParams?: Promis
         <p role="status" className="fm-banner" data-testid="gate-cap-note" style={{ marginTop: 0, marginBottom: 16 }}>{g.capNote}</p>
       ) : null}
 
-      <GateList rows={rows} dict={dict} T={M} />
+      <GateList rows={rows} dict={dict} T={M} canRecordMovement={isSecurity} />
     </FmShell>
   );
 }

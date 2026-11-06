@@ -28,7 +28,7 @@ export interface GateRow {
  * SCR-SEC-001: the rows the gate has to act on, closest event first (page.tsx), one line each: the long texts are shortened and the
  * full one is on the tooltip. (No plate search and no filters: the list is a handful of reservations and the gate picks from it.)
  */
-export function GateList({ rows, dict, T }: { rows: GateRow[]; dict: Dictionary; T: Record<GateMovementKey, string> }) {
+export function GateList({ rows, dict, T, canRecordMovement }: { rows: GateRow[]; dict: Dictionary; T: Record<GateMovementKey, string>; canRecordMovement: boolean }) {
   const g = dict.ops.gate;
 
   return (
@@ -72,7 +72,8 @@ export function GateList({ rows, dict, T }: { rows: GateRow[]; dict: Dictionary;
                     {dict.gate.returnAction}
                   </Link>
                 ) : r.action === "movement" || r.action === "arrival" ? (
-                  <Link href={`/gate/history?reservation=${r.id}&kind=${r.action === "arrival" ? "arrival" : "departure"}`} className="fm-btn fm-btn-primary">{r.action === "arrival" ? T.listArrival : T.listDeparture}</Link>
+                  // only the gate records a movement: a manager follows it here
+                  !canRecordMovement ? null : <Link href={`/gate/movement?reservation=${r.id}&kind=${r.action === "arrival" ? "arrival" : "departure"}`} className="fm-btn fm-btn-primary">{r.action === "arrival" ? T.listArrival : T.listDeparture}</Link>
                 ) : r.notPickedUp ? null : <span className="fm-muted">{g.waitingChecklist}</span>}
               </div>
             </li>

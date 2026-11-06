@@ -45,7 +45,6 @@ const ICONS_BY_KEY: Record<
   vehicleHistory: FleetIcon,
   energy: AnalyticsIcon,
   drivers: TeamIcon,
-  gateHistory: TripsIcon,
   keys: GateIcon,
   keyManagement: GateIcon,
   budgetApprovals: FleetIcon,
