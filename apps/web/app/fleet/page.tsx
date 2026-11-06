@@ -21,6 +21,7 @@ import { CategoryRow } from "./CategoryRow";
 import { VehicleRow } from "./VehicleRow";
 import { VehicleFilterGrid } from "./VehicleFilterGrid";
 import { timelineWindow, type TimelineBooking } from "./timelineLayout";
+import { loadTripRiders } from "@/lib/carpool/tripRiders";
 import { EmptyState } from "./EmptyState";
 
 /**
@@ -130,19 +131,12 @@ export default async function FleetPage() {
     .gte("end_at", windowStartIso)
     .order("start_at", { ascending: true });
   const tripIds = Array.from(new Set((bookingRows ?? []).map((r) => r.trip_request_id).filter((x): x is string => Boolean(x))));
-  const [{ data: offerRows }, { data: seatRows }] = tripIds.length
-    ? await Promise.all([
-        supabase.from("carpool_offers").select("trip_request_id, seats_offered").eq("status", "active").in("trip_request_id", tripIds),
-        supabase.from("trip_participants").select("trip_request_id, passenger_count").eq("status", "accepted").in("trip_request_id", tripIds),
-      ])
-    : [{ data: [] as { trip_request_id: string; seats_offered: number }[] }, { data: [] as { trip_request_id: string; passenger_count: number }[] }];
-  const offerByTrip = new Map((offerRows ?? []).map((o) => [o.trip_request_id, o.seats_offered]));
-  const takenByTrip = new Map<string, number>();
-  for (const p of seatRows ?? []) takenByTrip.set(p.trip_request_id, (takenByTrip.get(p.trip_request_id) ?? 0) + p.passenger_count);
+  const ridersByTrip = await loadTripRiders(supabase, tripIds);
   const bookingsByVehicle = new Map<string, TimelineBooking[]>();
   for (const r of bookingRows ?? []) {
     if (!r.vehicle_id || !r.id) continue;
-    const seats = r.trip_request_id ? offerByTrip.get(r.trip_request_id) : undefined;
+    const riders = r.trip_request_id ? ridersByTrip.get(r.trip_request_id) : undefined;
+    const seats = riders?.seats;
     const tr = r.trip_request as { destination?: string; requester?: { full_name?: string } | null } | null;
     const list = bookingsByVehicle.get(r.vehicle_id) ?? [];
     list.push({
@@ -152,7 +146,9 @@ export default async function FleetPage() {
       status: r.status as string,
       label: [tr?.requester?.full_name, tr?.destination].filter(Boolean).join(" · ") || "—",
       // the carpool bar is for a carpool that is happening: an offer nobody joined yet is not shown
-      carpool: seats && (takenByTrip.get(r.trip_request_id as string) ?? 0) > 0 ? { seats, taken: takenByTrip.get(r.trip_request_id as string) ?? 0 } : undefined,
+      carpool: seats && riders && riders.taken > 0 ? { seats, taken: riders.taken } : undefined,
+      // the little person blinks while a request waits for the host's answer
+      carpoolWaiting: riders?.waiting ?? 0,
     });
     bookingsByVehicle.set(r.vehicle_id, list);
   }

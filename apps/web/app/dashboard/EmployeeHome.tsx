@@ -20,6 +20,7 @@ import { HomeGantt } from "./HomeGantt";
 import { openReservationsNearestFirst } from "@/lib/trips/homeReservations";
 import { byNextReservation } from "@/lib/trips/ganttOrder";
 import { timelineWindow, type TimelineBooking } from "../fleet/timelineLayout";
+import { loadTripRiders } from "@/lib/carpool/tripRiders";
 import { fleetTexts } from "@/lib/i18n/areas/fleet";
 import "../fleet/vehicle-workspace.css";
 import type { StatusMeta } from "./statusMeta";
@@ -90,7 +91,7 @@ export async function EmployeeHome({
       .limit(3),
     supabase
       .from("reservations")
-      .select("id, status, start_at, end_at, impacted_at, impacted_reason, trip_request:trip_requests!inner(origin, destination, requester_id), vehicle:vehicles(id, plate, name, status)")
+      .select("id, status, start_at, end_at, impacted_at, impacted_reason, trip_request_id, trip_request:trip_requests!inner(origin, destination, requester_id), vehicle:vehicles(id, plate, name, status)")
       .eq("trip_request.requester_id", userId)
       .in("status", ["pending_approval", "confirmed", "completed"])
       .gte("end_at", new Date(timelineWindow(Date.now()).start).toISOString())
@@ -104,11 +105,18 @@ export async function EmployeeHome({
   const checklistStates = confirmedIds.length > 0 ? await loadMyChecklistStates(supabase, confirmedIds) : new Map();
   const nowMs = Date.now();
   const T = fleetTexts[locale];
+  // the carpool of these trips: the little person on the bar blinks while a request waits for this person's answer, and stays still once somebody is going along
+  const ridersByTrip = await loadTripRiders(supabase, Array.from(new Set((chartRows ?? []).map((r) => r.trip_request_id).filter((x): x is string => Boolean(x)))));
   const chartByVehicle = new Map<string, { id: string; plate: string; name: string | null; bookings: TimelineBooking[] }>();
   for (const r of chartRows ?? []) {
     if (!r.vehicle) continue;
     const row = chartByVehicle.get(r.vehicle.id) ?? { id: r.vehicle.id, plate: r.vehicle.plate, name: r.vehicle.name, bookings: [] };
-    row.bookings.push({ id: r.id, start: r.start_at, end: r.end_at, status: r.status, label: r.trip_request?.destination ?? "" });
+    const riders = r.trip_request_id ? ridersByTrip.get(r.trip_request_id) : undefined;
+    row.bookings.push({
+      id: r.id, start: r.start_at, end: r.end_at, status: r.status, label: r.trip_request?.destination ?? "",
+      carpool: riders?.seats && riders.taken > 0 ? { seats: riders.seats, taken: riders.taken } : undefined,
+      carpoolWaiting: riders?.waiting ?? 0,
+    });
     chartByVehicle.set(r.vehicle.id, row);
   }
   const chartVehicles = byNextReservation([...chartByVehicle.values()], (v) => v.bookings, nowMs);

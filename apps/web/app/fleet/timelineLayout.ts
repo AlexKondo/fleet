@@ -10,9 +10,26 @@ export type TimelineBooking = {
   label: string;
   /** Present only when the trip has an active carpool offer. */
   carpool?: { seats: number; taken: number };
+  /** Carpool requests of this trip that nobody has answered yet (the host's "Aceitar / Recusar" is still open). */
+  carpoolWaiting?: number;
 };
 
-export type TimelineBar = { id: string; kind: "pending" | "reserved" | "inUse" | "completed" | "carpool"; leftPct: number; widthPct: number; label: string; start: string; end: string };
+/**
+ * The little person on a bar: "waiting" blinks while at least one carpool request still waits for the host's answer (with how many);
+ * "confirmed" stays still when every request was answered and somebody is going along. Nothing when nobody asked.
+ */
+export type TimelineRider = { state: "waiting" | "confirmed"; waiting: number };
+
+export type TimelineBar = { id: string; kind: "pending" | "reserved" | "inUse" | "completed" | "carpool"; leftPct: number; widthPct: number; label: string; start: string; end: string; rider?: TimelineRider };
+
+/** What the person on the bar says; a finished reservation shows none (the same rule as the carpool bar). */
+export function riderOf(b: Pick<TimelineBooking, "status" | "carpool" | "carpoolWaiting">): TimelineRider | undefined {
+  if (b.status === "completed") return undefined;
+  const waiting = Math.max(0, Math.floor(b.carpoolWaiting ?? 0));
+  if (waiting > 0) return { state: "waiting", waiting };
+  if (b.carpool && b.carpool.taken > 0) return { state: "confirmed", waiting: 0 };
+  return undefined;
+}
 
 /** 00:00 Brasília of the day that holds `ms`, as a UTC instant. */
 export function brasiliaDayStart(ms: number): number {
@@ -43,7 +60,8 @@ export function layoutTimeline(bookings: TimelineBooking[], now: number, days = 
     if (!Number.isFinite(s) || !Number.isFinite(e) || e <= win.start || s >= win.end) continue;
     const left = ((Math.max(s, win.start) - win.start) / span) * 100;
     const width = Math.max(((Math.min(e, win.end) - Math.max(s, win.start)) / span) * 100, 0.6);
-    booking.push({ id: b.id, kind: bookingKind(b.status, s, e, now), leftPct: left, widthPct: width, label: b.label, start: b.start, end: b.end });
+    const rider = riderOf(b);
+    booking.push({ id: b.id, kind: bookingKind(b.status, s, e, now), leftPct: left, widthPct: width, label: b.label, start: b.start, end: b.end, ...(rider ? { rider } : {}) });
     if (b.carpool && b.carpool.taken > 0 && b.status !== "completed") {
       carpool.push({ id: `${b.id}:carpool`, kind: "carpool", leftPct: left, widthPct: width, label: `${b.carpool.taken}/${b.carpool.seats}`, start: b.start, end: b.end });
     }

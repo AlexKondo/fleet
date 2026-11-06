@@ -9,7 +9,7 @@ export type FleetKey =
   | "listHeadVehicle" | "listHeadPropulsion" | "paginationSummary" | "previous" | "next"
   | "vehicleDetails" | "noPhoto" | "plateLabel" | "categoryLine" | "vinLine" | "notRegistered"
   | "propulsionLine" | "baseUnitLine" | "notLinked" | "unavailable" | "physicalLocationLine"
-  | "timelineTitle" | "timelineLegend" | "timelineNoBookings" | "legendPending" | "legendReserved" | "legendInUse" | "legendCompleted" | "legendCarpool" | "carpoolSeats" | "editToSeeData" | "vehicleDataTitle" | "timelineRowBooking" | "timelineRowCarpool"
+  | "timelineTitle" | "timelineLegend" | "timelineNoBookings" | "legendPending" | "legendReserved" | "legendInUse" | "legendCompleted" | "legendCarpool" | "carpoolSeats" | "legendRiderWaiting" | "legendRiderConfirmed" | "riderWaitingTitle" | "riderConfirmedTitle" | "editToSeeData" | "vehicleDataTitle" | "timelineRowBooking" | "timelineRowCarpool"
   | "tabEditData" | "tabMaintenanceCosts" | "tabTripsUtilization" | "tabDocsEquipment" | "dialogTabs"
   | "quickActions" | "viewBookings" | "recordAndMaintenance" | "documents" | "exportRecord"
   | "tabOverview" | "tabLocation" | "tabUtilization" | "tabMaintenance" | "tabTrips" | "tabCosts" | "tabDocuments" | "tabIntelligence"
@@ -79,6 +79,10 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     legendCompleted: "Concluído",
     legendCarpool: "Carona ativa",
     carpoolSeats: "Carona · {taken}/{total} vagas",
+    legendRiderWaiting: "Carona aguardando confirmação",
+    legendRiderConfirmed: "Carona confirmada",
+    riderWaitingTitle: "Pedidos de carona aguardando confirmação: {n}",
+    riderConfirmedTitle: "Carona confirmada",
     editToSeeData: "Para ver ou alterar os dados do veículo, clique em editar. Para gravar uma alteração, clique em salvar.",
     vehicleChecklistLabel: "Itens do checklist do veículo (marque pelo menos um)",
     vehicleChecklistHint: "Marcado = o veículo tem o item e ele é conferido na retirada e na devolução. Desmarcado = o item não é conferido. Marque pelo menos um; sem isso o veículo não é salvo.",
@@ -193,6 +197,10 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     legendCompleted: "Completed",
     legendCarpool: "Active carpool",
     carpoolSeats: "Carpool · {taken}/{total} seats",
+    legendRiderWaiting: "Carpool awaiting confirmation",
+    legendRiderConfirmed: "Carpool confirmed",
+    riderWaitingTitle: "Carpool requests awaiting confirmation: {n}",
+    riderConfirmedTitle: "Carpool confirmed",
     editToSeeData: "To see or change the vehicle data, click edit. To keep a change, click save.",
     vehicleChecklistLabel: "Vehicle checklist items (tick at least one)",
     vehicleChecklistHint: "Ticked = the vehicle has the item and it is checked at pickup and return. Unticked = the item is not checked. Tick at least one; without it the vehicle is not saved.",
@@ -307,6 +315,10 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     legendCompleted: "Completado",
     legendCarpool: "Viaje compartido activo",
     carpoolSeats: "Compartido · {taken}/{total} plazas",
+    legendRiderWaiting: "Viaje compartido pendiente de confirmación",
+    legendRiderConfirmed: "Viaje compartido confirmado",
+    riderWaitingTitle: "Solicitudes de viaje compartido pendientes de confirmación: {n}",
+    riderConfirmedTitle: "Viaje compartido confirmado",
     editToSeeData: "Para ver o cambiar los datos del vehículo, haz clic en editar. Para guardar un cambio, haz clic en guardar.",
     vehicleChecklistLabel: "Ítems del checklist del vehículo (marque al menos uno)",
     vehicleChecklistHint: "Marcado = el vehículo tiene el ítem y se verifica en el retiro y la devolución. Sin marcar = el ítem no se verifica. Marque al menos uno; sin eso el vehículo no se guarda.",
@@ -421,6 +433,10 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     legendCompleted: "已完成",
     legendCarpool: "进行中的拼车",
     carpoolSeats: "拼车 · {taken}/{total} 个座位",
+    legendRiderWaiting: "拼车等待确认",
+    legendRiderConfirmed: "拼车已确认",
+    riderWaitingTitle: "等待确认的拼车请求：{n}",
+    riderConfirmedTitle: "拼车已确认",
     editToSeeData: "要查看或修改车辆数据，请点击编辑。要保存修改，请点击保存。",
     vehicleChecklistLabel: "车辆检查清单项目（至少勾选一项）",
     vehicleChecklistHint: "勾选 = 车辆有该项目，取车和还车时会检查。未勾选 = 不检查该项目。至少勾选一项，否则车辆不会被保存。",
