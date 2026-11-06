@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
+import { custodyChanges } from "@/lib/operations/unitChoices";
+import { keyErrorCode, keyErrorText, parseUnitAdminState } from "@/lib/operations/keyCustody";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -355,6 +358,31 @@ export async function removeUser(previous: UserActionState, form: FormData): Pro
 export async function reactivateUser(previous: UserActionState, form: FormData): Promise<UserActionState> {
   return changeMemberAccess(previous, form, true);
 }
+/** The units where this person hands over and receives the keys. One command per unit that changed, the same one (and the same audit) as always. */
+export async function saveMemberCustody(_previous: UserActionState, form: FormData): Promise<UserActionState> {
+  const { organizationId } = await requireAdministrator();
+  if (!organizationId) return { status: "error", error: "not_authorized" };
+  const db = await createSupabaseServerClient();
+  const userId = String(form.get("userId") ?? "");
+  const reason = String(form.get("reason") ?? "").trim();
+  if (reason.length < 3 || reason.length > 1000) return { status: "error", error: keyErrorText("REASON_REQUIRED") };
+  const { data, error } = await db.rpc("fm_unit_admin_snapshot");
+  const state = error ? null : parseUnitAdminState(data);
+  if (!state) return { status: "error", error: keyErrorText("UNAVAILABLE") };
+  const changes = custodyChanges(state.assignments, userId, form.getAll("offered").map(String), new Set(form.getAll("unitIds").map(String)));
+  for (const change of changes) {
+    const result = await db.rpc("fm_unit_admin_command", {
+      p_command: "unit.custodian",
+      p_payload: { ...change, user_id: userId, reason },
+      p_request_id: randomUUID(),
+    });
+    if (result.error) return { status: "error", error: keyErrorText(keyErrorCode(result.error.message)) };
+  }
+  revalidatePath("/settings/users");
+  revalidatePath("/account/keys");
+  return { status: "success" };
+}
+
 async function changeMemberAccess(
   _previous: UserActionState, form: FormData, enabled: boolean,
 ): Promise<UserActionState> {

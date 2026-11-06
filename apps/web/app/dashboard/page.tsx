@@ -33,6 +33,9 @@ import {
 } from "./actions";
 
 /** Long free-text (justification, task notes) shown inline — full text stays in `title`. */
+/** Shown by Próximas manutenções and on the vehicle card, so "Precisa de Atenção" does not repeat it. */
+const REVIEW_NEAR = "maintenance_due_soon";
+
 function truncate(text: string, max = 90): string {
   return text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
 }
@@ -127,7 +130,7 @@ export default async function DashboardPage({
   const vehiclesByAttentionReason = vehiclesWithAttention.reduce<Record<string, { id: string; plate: string }[]>>(
     (acc, { row, attention }) => {
       for (const reason of attention) {
-        (acc[reason] ??= []).push({ id: row.id, plate: row.plate });
+        if (reason !== REVIEW_NEAR) (acc[reason] ??= []).push({ id: row.id, plate: row.plate });
       }
       return acc;
     },
@@ -227,7 +230,7 @@ export default async function DashboardPage({
   // Command Center 360 (SCR-FM-001) numbers: only counts of rows this page already loaded.
   const statusCounts = new Map<string, number>();
   for (const { row } of vehiclesWithAttention) statusCounts.set(row.status, (statusCounts.get(row.status) ?? 0) + 1);
-  const attentionVehicleCount = vehiclesWithAttention.filter((v) => v.attention.length > 0).length;
+  const attentionVehicleCount = vehiclesWithAttention.filter((v) => v.attention.some((reason) => reason !== REVIEW_NEAR)).length;
   const LIST_CAP = 50; // the queries above are .limit(50): show "50+" instead of a wrong exact count
   const capped = (n: number) => (n >= LIST_CAP ? `${LIST_CAP}+` : String(n));
 

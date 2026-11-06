@@ -1,4 +1,4 @@
-export type Unit = {id:string;name:string;enabled:boolean;workflow:"gate_visual"|"key_custody";version:number};
+export type Unit = {id:string;name:string;enabled:boolean;workflow:"gate_visual"|"key_custody";version:number;mobility_point_id?:string|null};
 export type Custodian = {unit_id:string;user_id:string;enabled:boolean;version:number};
 export type UnitVehicle = {id:string;plate:string;unit_id:string|null;version:number};
 export type UnitPerson = {id:string;name:string;role:string;enabled:boolean};

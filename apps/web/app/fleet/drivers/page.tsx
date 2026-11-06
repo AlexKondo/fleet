@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FmAlertIcon, FmBanIcon, FmCalendarIcon, FmCheckIcon, FmUsersIcon } from "@/app/fmIcons";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
 import { pageAll } from "@/lib/carpool/kpi/loadKpis";
 import { getAreaText } from "@/lib/i18n/areaText";
@@ -86,13 +87,14 @@ export default async function Drivers({
       )}
       <Metrics
         items={[
-          { label: T.metricMembers, value: rows?.length ?? null },
+          { label: T.metricMembers, value: rows?.length ?? null, icon: <FmUsersIcon /> },
           {
             label: T.metricReady,
             value: licenseAvailable
               ? (rows?.filter((r) => r.state === "ready").length ?? null)
               : null,
             tone: "green",
+            icon: <FmCheckIcon />,
           },
           {
             label: T.stateExpired,
@@ -100,6 +102,7 @@ export default async function Drivers({
               ? (rows?.filter((r) => r.state === "expired").length ?? null)
               : null,
             tone: "red",
+            icon: <FmCalendarIcon />,
           },
           {
             label: T.stateMissing,
@@ -107,9 +110,11 @@ export default async function Drivers({
               ? (rows?.filter((r) => r.state === "missing").length ?? null)
               : null,
             tone: "amber",
+            icon: <FmAlertIcon />,
           },
           {
             label: T.stateUnauthorized,
+            icon: <FmBanIcon />,
             value: licenseAvailable
               ? (rows?.filter((r) => r.state === "unauthorized").length ?? null)
               : null,

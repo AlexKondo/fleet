@@ -26,7 +26,7 @@ export type FleetKey =
   | "costsTitle" | "maintenanceTitle" | "recordNote" | "openRecordOf"
   | "tripsAndBookings" | "openScheduleHistoryOf"
   | "documentsAndEquipment" | "privateFilesNote" | "openDocuments" | "configureEquipment"
-  | "intelligenceReached" | "intelligenceNoAlert" | "checkDraft" | "askFleetMind"
+  | "intelligenceReached" | "intelligenceNoAlert" 
   | "selectVehicle" | "vehicleChecklistLabel" | "vehicleChecklistHint" | "vehicleChecklistEmpty" | "vehicleChecklistRequired";
 
 export const fleetTexts: AreaTexts<FleetKey> = {
@@ -142,8 +142,6 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     configureEquipment: "Configurar equipamentos",
     intelligenceReached: "O odômetro atingiu o limite de revisão cadastrado.",
     intelligenceNoAlert: "Sem alerta de revisão por km atingida nos dados exibidos; isso não constitui liberação automática.",
-    checkDraft: "Verificar manutenção e disponibilidade do veículo {plate}.",
-    askFleetMind: "Consultar FleetMind sobre {plate}",
     selectVehicle: "Selecione um veículo nos resultados.",
   },
   "en-US": {
@@ -258,8 +256,6 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     configureEquipment: "Configure equipment",
     intelligenceReached: "The odometer has reached the registered service limit.",
     intelligenceNoAlert: "No km-based service alert in the data shown; this is not an automatic release.",
-    checkDraft: "Check maintenance and availability of vehicle {plate}.",
-    askFleetMind: "Ask FleetMind about {plate}",
     selectVehicle: "Select a vehicle from the results.",
   },
   es: {
@@ -374,8 +370,6 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     configureEquipment: "Configurar equipamiento",
     intelligenceReached: "El odómetro alcanzó el límite de revisión registrado.",
     intelligenceNoAlert: "Sin alerta de revisión por km alcanzada en los datos mostrados; esto no constituye una liberación automática.",
-    checkDraft: "Verificar mantenimiento y disponibilidad del vehículo {plate}.",
-    askFleetMind: "Consultar a FleetMind sobre {plate}",
     selectVehicle: "Seleccione un vehículo en los resultados.",
   },
   "zh-CN": {
@@ -490,8 +484,6 @@ export const fleetTexts: AreaTexts<FleetKey> = {
     configureEquipment: "配置装备",
     intelligenceReached: "里程表已达到已登记的保养上限。",
     intelligenceNoAlert: "所示数据中没有按里程的保养提醒；这并不代表自动放行。",
-    checkDraft: "检查车辆 {plate} 的维保和可用性。",
-    askFleetMind: "向 FleetMind 咨询 {plate}",
     selectVehicle: "请从结果中选择一辆车。",
   },
 };

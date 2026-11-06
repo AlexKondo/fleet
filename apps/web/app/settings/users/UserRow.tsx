@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import {
   removeUser,
   resetMemberLicense,
+  saveMemberCustody,
   reactivateUser,
   updateDriverAuthorization,
   updateUserRole,
@@ -12,7 +13,7 @@ import {
 } from "./actions";
 import { getRoleOptions } from "./ROLE_LABELS";
 import { ConfirmSubmitButton } from "../../ConfirmSubmitButton";
-import { FmTrashIcon } from "../../fmIcons";
+import { FmKeyIcon, FmTrashIcon } from "../../fmIcons";
 import { SubmitButton } from "../../ui/SubmitButton";
 import type { Dictionary } from "../../../lib/i18n/dictionaries";
 import { errorLabel } from "@/lib/i18n/errorLabel";
@@ -42,6 +43,7 @@ export function UserRow({
   locale,
   licensesAvailable = true,
   workLocations = [],
+  custody,
 }: {
   dict: Dictionary;
   locale: Locale;
@@ -49,6 +51,8 @@ export function UserRow({
   licensesAvailable?: boolean;
   /** active corporate mobility points a member can be assigned to as their workplace */
   workLocations?: { id: string; name: string }[];
+  /** the units this person can hold the keys of, and the ones they hold now */
+  custody?: { units: { id: string; name: string; keyProcess: boolean }[]; unitIds: string[] };
   member: {
     id: string;
     full_name: string;
@@ -90,6 +94,11 @@ export function UserRow({
   useEffect(() => {
     if (removeState.status === "success") accessDialogRef.current?.close();
   }, [removeState]);
+  const [custodyState, custodyAction, custodyPending] = useActionState(saveMemberCustody, initialState);
+  const custodyDialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (custodyState.status === "success") custodyDialogRef.current?.close();
+  }, [custodyState]);
 
   const roleSaved = useAutoSavedNotice(roleState.status);
   const driverSaved = useAutoSavedNotice(driverState.status);
@@ -321,6 +330,55 @@ export function UserRow({
       </td>
 
       <td className="px-4 py-3 text-right" data-label={dict.team.columns.action}>
+        <div className="us-actions">
+        {custody && custody.units.length > 0 ? (
+          <>
+            <button
+              type="button"
+              className="fm-btn fm-btn-ghost us-access"
+              data-icon="key"
+              data-on={custody.unitIds.length > 0 ? "" : undefined}
+              title={t.custodyButton}
+              aria-label={t.custodyButton}
+              disabled={inactive}
+              onClick={() => custodyDialogRef.current?.showModal()}
+            >
+              <FmKeyIcon />
+            </button>
+            <dialog ref={custodyDialogRef} className="us-dialog" aria-label={t.custodyButton} data-testid="member-custody-dialog">
+              <form action={custodyAction}>
+                <input type="hidden" name="userId" value={member.id} />
+                <p>{t.custodyTitle.replace("{name}", member.full_name)}</p>
+                <p className="text-xs text-fog-400">{t.custodyHint}</p>
+                <div className="us-unit-list">
+                  {custody.units.map((u) => (
+                    <label key={u.id} className="us-unit">
+                      <input type="hidden" name="offered" value={u.id} />
+                      <input type="checkbox" name="unitIds" value={u.id} defaultChecked={custody.unitIds.includes(u.id)} />
+                      <span>{u.name}</span>
+                      {u.keyProcess ? null : <small>{t.custodyGate}</small>}
+                    </label>
+                  ))}
+                </div>
+                <label>
+                  {t.reasonLabel}
+                  <input name="reason" required minLength={3} maxLength={1000} />
+                </label>
+                {custodyState.status === "error" ? (
+                  <p role="alert" className="text-xs text-signal-red">{custodyState.error}</p>
+                ) : null}
+                <div className="us-dialog-actions">
+                  <button type="button" className="fm-btn fm-btn-ghost" onClick={() => custodyDialogRef.current?.close()}>
+                    {dict.common.cancel}
+                  </button>
+                  <SubmitButton className="fm-btn fm-btn-primary" disabled={custodyPending} pendingLabel={t.savingShort}>
+                    {t.custodySave}
+                  </SubmitButton>
+                </div>
+              </form>
+            </dialog>
+          </>
+        ) : null}
         {!isSelf ? (
           <>
             <button
@@ -363,6 +421,7 @@ export function UserRow({
             </dialog>
           </>
         ) : null}
+        </div>
       </td>
     </tr>
   );

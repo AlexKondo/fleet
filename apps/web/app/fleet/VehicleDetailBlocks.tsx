@@ -2,7 +2,6 @@
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n/locales";
 import type { FleetKey } from "@/lib/i18n/areas/fleet";
-import { AssistantTrigger } from "../carpool/AssistantTrigger";
 import { fmt } from "./fmt";
 
 export interface DialogVehicle {
@@ -46,7 +45,6 @@ export function VehicleDetailBlocks({ v, T, locale, dimensionsAvailable }: { v: 
         <article>
           <h3>FleetMind Intelligence</h3>
           <p>{due !== null && due <= 0 ? T.intelligenceReached : T.intelligenceNoAlert}</p>
-          <AssistantTrigger draft={fmt(T.checkDraft, { plate: v.plate })}>{fmt(T.askFleetMind, { plate: v.plate })}</AssistantTrigger>
         </article>
       </div>
     </section>

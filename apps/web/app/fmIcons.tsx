@@ -117,3 +117,21 @@ export const FmTrashIcon = () => (
     <path d="M10 11v5.5M14 11v5.5" />
   </Svg>
 );
+export const FmKeyIcon = () => (
+  <Svg>
+    <circle cx="8" cy="15" r="4" />
+    <path d="m11 12 8-8M16 7l3 3M13.5 9.5l2 2" />
+  </Svg>
+);
+export const FmBanIcon = () => (
+  <Svg>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="m6 6 12 12" />
+  </Svg>
+);
+export const FmCoinIcon = () => (
+  <Svg>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M14.8 9.3c-.5-1-1.5-1.5-2.8-1.5-1.5 0-2.7.8-2.7 2.1 0 2.9 5.6 1.3 5.6 4.2 0 1.3-1.2 2.1-2.9 2.1-1.4 0-2.5-.6-3-1.6M12 6.4v1.4M12 16.2v1.4" />
+  </Svg>
+);

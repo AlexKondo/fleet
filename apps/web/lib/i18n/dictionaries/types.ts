@@ -1021,6 +1021,11 @@ export type Dictionary = {
       reactivateConfirm: string;
       accountActive: string;
       workLocationLabel: string;
+      custodyButton: string;
+      custodyTitle: string;
+      custodyHint: string;
+      custodyGate: string;
+      custodySave: string;
       workLocationNone: string;
       accountInactive: string;
       accessUnavailable: string;

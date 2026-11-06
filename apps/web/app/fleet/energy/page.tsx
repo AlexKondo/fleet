@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FmBatteryIcon, FmCalendarIcon, FmCarIcon, FmCoinIcon, FmFuelIcon } from "@/app/fmIcons";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
 import { getAreaText } from "@/lib/i18n/areaText";
 import { getLocale } from "@/lib/i18n/getLocale";
@@ -75,22 +76,25 @@ export default async function EnergyPage({
     >
       <Metrics
         items={[
-          { label: T.metricValidEntries, value: valid?.length ?? null },
+          { label: T.metricValidEntries, value: valid?.length ?? null, icon: <FmCalendarIcon /> },
           {
             label: T.metricFuel,
             value: fuel === null ? null : fuel.toLocaleString(locale) + " L",
             tone: "amber",
+            icon: <FmFuelIcon />,
           },
           {
             label: T.metricEnergy,
             value:
               charge === null ? null : charge.toLocaleString(locale) + " kWh",
             tone: "green",
+            icon: <FmBatteryIcon />,
           },
-          { label: T.metricCostFilter, value: money(total) },
+          { label: T.metricCostFilter, value: money(total), icon: <FmCoinIcon /> },
           {
             label: T.metricVehicles,
             value: valid ? new Set(valid.map((e) => e.vehicle_id)).size : null,
+            icon: <FmCarIcon />,
           },
         ]}
       />

@@ -1,4 +1,5 @@
 import "../gate.css";
+import { FmArrowInIcon, FmArrowOutIcon, FmBanIcon, FmRouteIcon } from "@/app/fmIcons";
 import Link from "next/link";
 import { loadOperationalWorkspace } from "@/lib/operations/load";
 import {
@@ -157,20 +158,24 @@ export default async function GateHistory({
           {
             label: T.mMovements,
             value: rows?.filter((e) => e.kind !== "denied").length ?? null,
+            icon: <FmRouteIcon />,
           },
           {
             label: T.mDepartures,
             value: rows?.filter((e) => e.kind === "departure").length ?? null,
             tone: "green",
+            icon: <FmArrowOutIcon />,
           },
           {
             label: T.mArrivals,
             value: rows?.filter((e) => e.kind === "arrival").length ?? null,
+            icon: <FmArrowInIcon />,
           },
           {
             label: T.mDenied,
             value: rows?.filter((e) => e.kind === "denied").length ?? null,
             tone: "red",
+            icon: <FmBanIcon />,
           },
         ]}
       />

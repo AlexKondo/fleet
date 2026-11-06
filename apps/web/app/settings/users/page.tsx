@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { selectableUnits } from "@/lib/operations/unitChoices";
+import { parseUnitAdminState } from "@/lib/operations/keyCustody";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
@@ -92,6 +94,11 @@ export default async function UsersPage() {
 
   const { data: pointRows } = await supabase.from("corporate_mobility_points").select("id, name").eq("organization_id", profile.organization_id).eq("is_active", true).order("name");
   const workLocations = (pointRows ?? []).map((p) => ({ id: p.id, name: p.name }));
+  const { data: unitSnapshot, error: unitError } = await supabase.rpc("fm_unit_admin_snapshot");
+  const unitState = unitError ? null : parseUnitAdminState(unitSnapshot);
+  const custodyUnits = unitState
+    ? selectableUnits(unitState.units, new Set((pointRows ?? []).map((p) => p.id))).map((u) => ({ id: u.id, name: u.name, keyProcess: u.workflow === "key_custody" }))
+    : [];
 
   const o = dict.ops.users;
   const roleLabels = getRoleLabels(dict);
@@ -207,6 +214,7 @@ export default async function UsersPage() {
                 isSelf={m.id === user.id}
                 licensesAvailable={licensesAvailable}
                 workLocations={workLocations}
+                custody={{ units: custodyUnits, unitIds: (unitState?.assignments ?? []).filter((a) => a.user_id === m.id && a.enabled).map((a) => a.unit_id) }}
                 dict={dict}
               />
             ),

@@ -8,11 +8,9 @@ export async function saveUnitConfiguration(form:FormData){
  const command=String(form.get("command"));const reason=String(form.get("reason")??"").trim();
  const version=Number(form.get("version"));
  const common={version,reason};
- const payload=command==="unit.save"?{...common,id:String(form.get("id")??""),name:String(form.get("name")??""),enabled:form.get("enabled")==="on",workflow:String(form.get("workflow"))}
- :command==="unit.vehicle"?{...common,vehicle_id:String(form.get("vehicle_id")),unit_id:String(form.get("unit_id"))}
- :{...common,user_id:String(form.get("user_id")),unit_id:String(form.get("unit_id")),enabled:form.get("enabled")==="true"};
+ const payload={...common,id:String(form.get("id")??""),name:String(form.get("name")??""),enabled:form.get("enabled")==="on",workflow:String(form.get("workflow"))};
  try{
-  if(!["unit.save","unit.vehicle","unit.custodian"].includes(command)||!Number.isSafeInteger(version)||version<0)throw new Error("INVALID_INPUT");
+  if(command!=="unit.save"||!Number.isSafeInteger(version)||version<0)throw new Error("INVALID_INPUT");
   const {error}=await db.rpc("fm_unit_admin_command",{p_command:command,p_payload:payload,p_request_id:String(form.get("request_id"))});
   if(error)failure=keyErrorCode(error.message);
  }catch(e){failure=e instanceof Error?keyErrorCode(e.message):"UNAVAILABLE";}
