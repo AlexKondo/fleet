@@ -12,6 +12,7 @@ import { getDictionary, getLocale } from "@/lib/i18n/getLocale";
 import { FmShell } from "../carpool/FmShell";
 import { FmAlertIcon, FmCalendarIcon, FmCarIcon, FmCheckIcon, FmUsersIcon } from "../fmIcons";
 import { getAttentionLabels, getStatusMeta } from "./statusMeta";
+import { needsAttention, REVIEW_NEAR } from "./attention";
 import { EnergyGauge } from "./EnergyGauge";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { BlockVehicleForm } from "../BlockVehicleForm";
@@ -33,8 +34,6 @@ import {
 } from "./actions";
 
 /** Long free-text (justification, task notes) shown inline — full text stays in `title`. */
-/** Shown by Próximas manutenções and on the vehicle card, so "Precisa de Atenção" does not repeat it. */
-const REVIEW_NEAR = "maintenance_due_soon";
 
 function truncate(text: string, max = 90): string {
   return text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
@@ -230,7 +229,7 @@ export default async function DashboardPage({
   // Command Center 360 (SCR-FM-001) numbers: only counts of rows this page already loaded.
   const statusCounts = new Map<string, number>();
   for (const { row } of vehiclesWithAttention) statusCounts.set(row.status, (statusCounts.get(row.status) ?? 0) + 1);
-  const attentionVehicleCount = vehiclesWithAttention.filter((v) => v.attention.some((reason) => reason !== REVIEW_NEAR)).length;
+  const attentionVehicleCount = vehiclesWithAttention.filter((v) => needsAttention(v.attention)).length;
   const LIST_CAP = 50; // the queries above are .limit(50): show "50+" instead of a wrong exact count
   const capped = (n: number) => (n >= LIST_CAP ? `${LIST_CAP}+` : String(n));
 
@@ -356,7 +355,8 @@ export default async function DashboardPage({
             </div>
           </a>
         ) : null}
-        <a href="#attention" className="fm-kpi" data-testid="cc-kpi-attention">
+        {/* takes the person to the vehicle cards, where the ones that need attention glow orange */}
+        <a href="#fleet-vehicles" className="fm-kpi" data-testid="cc-kpi-attention">
           <span className="fm-kpi-icon" data-tone={attentionVehicleCount > 0 ? "bad" : "ok"}><FmAlertIcon /></span>
           <div className="fm-kpi-body">
             <p className="fm-kpi-value" data-testid="cc-attention-value">{vehiclesError ? "—" : attentionVehicleCount}</p>
@@ -858,7 +858,7 @@ export default async function DashboardPage({
         </section>
       ) : null}
 
-      <section className="fm-panel cc-fleet" id="fleet-vehicles">
+      <section className="fm-panel cc-fleet scroll-mt-4" id="fleet-vehicles">
         <h2 className="fm-h2">
           {t.vehicles.heading}
         </h2>
@@ -885,6 +885,7 @@ export default async function DashboardPage({
                   key={row.id}
                   id={`vehicle-${row.id}`}
                   data-card={row.id}
+                  data-attention={needsAttention(attention) ? "true" : undefined}
                   draggable
                   className="flex scroll-mt-4 flex-col gap-3 rounded-md border border-line-800 bg-panel-900/60 p-4 target:border-gwm-accent"
                 >

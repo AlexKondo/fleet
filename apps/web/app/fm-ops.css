@@ -1334,6 +1334,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* a vehicle that needs attention glows orange behind its card: the same vehicles as the "Veículos que precisam de atenção" number (app/dashboard/attention.ts) */
+/* the first selector outweighs the theme's own "list card" rule (.fm-legacy ul[class*="grid"] > li, which sets the shadow); without it the glow would not show */
+.fm-theme .fm-legacy ul[class*="grid"] > li[class*="border-line-800"][class*="rounded"][data-card][data-attention="true"],
+.fm-theme .cc-fleet-grid [data-card][data-attention="true"] {
+  border-color: #ff8c1a;
+  box-shadow: 0 0 0 1px rgba(255, 140, 26, 0.55), 0 0 14px 2px rgba(255, 140, 26, 0.5), 0 0 28px 6px rgba(255, 140, 26, 0.26);
+}
 /* a card needs about 235px for its fields to stay on one line, sidebar included */
 @media (min-width: 1040px) {
   .fm-theme .cc-fleet-grid {
