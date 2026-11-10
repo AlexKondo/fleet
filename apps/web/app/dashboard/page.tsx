@@ -1,5 +1,6 @@
 import { knownFleetActionError } from "@/lib/dashboard/fleetActionError";
 import { DraggableCards } from "./DraggableCards";
+import { AttentionLink } from "./AttentionLink";
 import { selectedLocation, upcomingServices } from "@/lib/dashboard/upcomingServices";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -355,14 +356,14 @@ export default async function DashboardPage({
             </div>
           </a>
         ) : null}
-        {/* takes the person to the vehicle cards, where the ones that need attention glow orange */}
-        <a href="#fleet-vehicles" className="fm-kpi" data-testid="cc-kpi-attention">
+        {/* the page travels to the vehicle cards; the ones that need attention flare their orange glow and shake when it stops */}
+        <AttentionLink targetId="fleet-vehicles" className="fm-kpi" data-testid="cc-kpi-attention">
           <span className="fm-kpi-icon" data-tone={attentionVehicleCount > 0 ? "bad" : "ok"}><FmAlertIcon /></span>
           <div className="fm-kpi-body">
             <p className="fm-kpi-value" data-testid="cc-attention-value">{vehiclesError ? "—" : attentionVehicleCount}</p>
             <p className="fm-kpi-label">{cc.kpiAttention}</p>
           </div>
-        </a>
+        </AttentionLink>
       </section>
 
       <div className={isFleetManager ? "cc-grid" : "cc-grid cc-grid-solo"}>

@@ -190,12 +190,13 @@ body {
      .animate-chat-agent-float  - the chat robot's float (ChatWidget.tsx)
      .animate-magnifier-scan    - the magnifying glass over the CNH while the vision model reads it
      .animate-confetti-piece    - the confetti burst when a freshly-read CNH is valid
+     [data-arrived]             - the glow flare and shake of a vehicle card reached from "Veículos que precisam de atenção"
    The CNH pair were being collapsed to 0.01ms/1 iteration by the global override below (the confetti then
    ended at opacity 0 via fill-mode forwards, the magnifier snapped back to its resting spot), so users with the
-   OS "reduce motion" setting never saw them. Exactly these three classes are exempt; every other animation in this
+   OS "reduce motion" setting never saw them. Exactly these are exempt; every other animation in this
    file (bell-shake, mic-pulse, hint-in, spinner, transitions...) still honours the preference. */
 @media (prefers-reduced-motion: reduce) {
-  *:not(.animate-chat-agent-float):not(.animate-magnifier-scan):not(.animate-confetti-piece) {
+  *:not(.animate-chat-agent-float):not(.animate-magnifier-scan):not(.animate-confetti-piece):not([data-arrived]) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

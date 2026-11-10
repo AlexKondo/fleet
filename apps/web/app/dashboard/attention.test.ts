@@ -5,6 +5,7 @@ import { needsAttention, REVIEW_NEAR } from "./attention";
 
 const page = readFileSync(path.resolve("app/dashboard/page.tsx"), "utf8");
 const css = readFileSync(path.resolve("app/fm-ops.css"), "utf8");
+const globals = readFileSync(path.resolve("app/globals.css"), "utf8");
 
 describe("which vehicles need attention", () => {
   it("a vehicle with any reason other than 'maintenance due soon' needs attention", () => {
@@ -20,8 +21,8 @@ describe("which vehicles need attention", () => {
 
 describe("the 'Veículos que precisam de atenção' card of the Painel", () => {
   it("takes the person to the vehicle cards, not to the list that is already on the screen", () => {
-    const kpi = /<a href="([^"]+)" className="fm-kpi" data-testid="cc-kpi-attention">/.exec(page);
-    expect(kpi?.[1]).toBe("#fleet-vehicles");
+    const kpi = /<AttentionLink targetId="([^"]+)" className="fm-kpi" data-testid="cc-kpi-attention">/.exec(page);
+    expect(kpi?.[1]).toBe("fleet-vehicles");
     expect(page).toMatch(/<section className="[^"]*" id="fleet-vehicles">/);
   });
   it("the number, the list and the glow use the same rule", () => {
@@ -40,5 +41,16 @@ describe("the 'Veículos que precisam de atenção' card of the Painel", () => {
     expect(css).toContain(`.fm-theme .fm-legacy ${theme}[data-card][data-attention="true"]`);
     // the stronger rule comes after the theme's, so it also wins a tie
     expect(css.indexOf(`${theme}[data-card][data-attention="true"]`)).toBeGreaterThan(css.indexOf(`.fm-theme .fm-legacy ${theme} {`));
+  });
+  it("when the page stops there, the glow flares and the card shakes, even with the system's 'reduce motion' on", () => {
+    const arrived = /\.cc-fleet-grid \[data-card\]\[data-attention="true"\]\[data-arrived\] \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(arrived).toContain("cc-attn-flare");
+    expect(arrived).toContain("cc-attn-shake");
+    expect(css).toContain("@keyframes cc-attn-flare");
+    expect(css).toContain("@keyframes cc-attn-shake");
+    // the flare's name is what lib/dashboard/attentionJump.ts waits for before clearing data-arrived
+    expect(readFileSync(path.resolve("lib/dashboard/attentionJump.ts"), "utf8")).toContain('event.animationName === "cc-attn-flare"');
+    // the reduced-motion rule (which shortens every other animation to nothing) leaves these out
+    expect(globals).toContain(":not(.animate-confetti-piece):not([data-arrived]) {");
   });
 });

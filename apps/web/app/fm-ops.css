@@ -1341,6 +1341,43 @@
   border-color: #ff8c1a;
   box-shadow: 0 0 0 1px rgba(255, 140, 26, 0.55), 0 0 14px 2px rgba(255, 140, 26, 0.5), 0 0 28px 6px rgba(255, 140, 26, 0.26);
 }
+/* reached from that number (lib/dashboard/attentionJump.ts): when the page stops, the glow flares and settles back, and the card gives a small shake */
+.fm-theme .cc-fleet-grid [data-card][data-attention="true"][data-arrived] {
+  animation: cc-attn-flare 1.6s ease-out, cc-attn-shake 0.55s ease-in-out;
+}
+@keyframes cc-attn-flare {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(255, 140, 26, 0.55), 0 0 14px 2px rgba(255, 140, 26, 0.5), 0 0 28px 6px rgba(255, 140, 26, 0.26);
+  }
+  25% {
+    box-shadow: 0 0 0 2px rgba(255, 140, 26, 0.95), 0 0 30px 10px rgba(255, 140, 26, 0.72), 0 0 64px 22px rgba(255, 140, 26, 0.4);
+  }
+}
+@keyframes cc-attn-shake {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+  15% {
+    transform: translateX(-6px) rotate(-0.8deg);
+  }
+  30% {
+    transform: translateX(5px) rotate(0.8deg);
+  }
+  45% {
+    transform: translateX(-4px) rotate(-0.5deg);
+  }
+  60% {
+    transform: translateX(3px) rotate(0.4deg);
+  }
+  75% {
+    transform: translateX(-2px) rotate(-0.2deg);
+  }
+  90% {
+    transform: translateX(1px) rotate(0);
+  }
+}
 /* a card needs about 235px for its fields to stay on one line, sidebar included */
 @media (min-width: 1040px) {
   .fm-theme .cc-fleet-grid {
