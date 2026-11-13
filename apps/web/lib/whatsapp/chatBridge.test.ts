@@ -160,14 +160,23 @@ describe("confirmation and choices", () => {
     expect(calls.send).toHaveLength(0);
   });
   it("a bare number picks a vehicle option (select_vehicle) or a carpool option (select_option)", async () => {
-    // the numbers count the OTHER vehicles: v1 is the one on offer, so "1" is v2 and "2" is v3
+    // the card answers 1 Sim, 2 Não, 3 Outro veículo; the vehicles come after, from 4: v1 is the one on offer, so "4" is v2 and "5" is v3
     w.state = summary({ slots: { preferredVehicleId: "v1" }, vehicleOptions: [{ vehicleId: "v1", plate: "AAA1A11", vehicleName: "Haval" }, { vehicleId: "v2", plate: "BBB2B22", vehicleName: "Ora" }, { vehicleId: "v3", plate: "CCC3C33", vehicleName: "Pick-up" }] });
-    await run(msg({ text: "2" }));
+    await run(msg({ text: "5" }));
     expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v3" });
     calls.send.length = 0;
     w.state = summary({ options: [{ id: "o1", label: "Carona com Maria" }, { id: "vehicle", label: "Usar um veículo" }] });
     await run(msg({ text: "1", messageId: "n2" }));
     expect(calls.send[0]!.form).toMatchObject({ phase: "select_option", optionId: "o1" });
+    // on the card: 1 is Sim, 2 is Não (cancels the pending card)
+    calls.send.length = 0;
+    w.state = summary();
+    await run(msg({ text: "1", messageId: "c1" }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "confirm" });
+    calls.send.length = 0;
+    w.state = summary();
+    expect(texts(await run(msg({ text: "2", messageId: "c2" })))).toEqual([TEXTS.cancelled]);
+    expect(calls.send).toHaveLength(0);
   });
   it("an out-of-range number, or SIM when a choice is still needed, asks again without calling the assistant", async () => {
     w.state = summary({ options: [{ id: "o1", label: "Carona com Maria" }] });
@@ -202,36 +211,37 @@ describe("rendering the assistant's answer for WhatsApp", () => {
     const r = renderState({ status: "idle", messages: [{ role: "user", content: "a" }, { role: "assistant", content: "velho" }, { role: "user", content: "b" }, { role: "assistant", content: "Sem veículo livre.", link: { href: "/trips/new?x=1", label: "Abrir" } }] }, url);
     expect(r).toEqual([{ type: "text", text: "Sem veículo livre.\nAbrir: https://fleet.example.invalid/trips/new?x=1" }]);
   });
-  it("a confirmation card has Sim / Não buttons, the same words its hint asks the person to write", () => {
+  it("a confirmation card is text with the answers numbered: 1 Sim, 2 Não (no buttons)", () => {
     const r = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Reservar?" }], pendingAction: { intent: "CREATE_RESERVATION", slots: {}, summary: "Reservar?" } }, url);
     expect(r).toHaveLength(1);
-    expect(r[0]).toMatchObject({ type: "buttons", buttons: [{ id: "chat:confirm", title: "Sim" }, { id: "chat:cancel", title: "Não" }] });
+    expect(r[0]).toMatchObject({ type: "text" });
     const body = (r[0] as { text: string }).text;
-    expect(body).toContain("*SIM* para confirmar");
-    expect(body).toContain("*NÃO* para cancelar");
-    // never a button word that the hint does not use
-    expect(JSON.stringify((r[0] as { buttons: unknown }).buttons)).not.toMatch(/Confirmar|Cancelar/);
+    expect(body).toContain("*1.* Sim, confirmar");
+    expect(body).toContain("*2.* Não, cancelar");
+    expect(body).not.toContain("Outro veículo");
+    expect(body).toContain("Responda com o número da opção.");
   });
-  it("the card that asks to cancel something says what Sim and Não do: SIM cancels, NÃO keeps", () => {
-    for (const [intent, what] of [["CANCEL_RESERVATION", "a reserva"], ["CANCEL_CARPOOL_REQUEST", "a carona"]] as const) {
+  it("the card that asks to cancel something numbers its answers in words that say what each does", () => {
+    for (const [intent, yes, no] of [["CANCEL_RESERVATION", "*1.* Sim, cancelar a reserva", "*2.* Não, manter a reserva"], ["CANCEL_CARPOOL_REQUEST", "*1.* Sim, cancelar a carona", "*2.* Não, manter a carona"]] as const) {
       const r = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Vou cancelar." }], pendingAction: { intent, slots: {}, summary: "Vou cancelar." } }, url);
+      expect(r[0]).toMatchObject({ type: "text" });
       const body = (r[0] as { text: string }).text;
-      expect(body).toContain(`*SIM* para cancelar ${what}`);
-      expect(body).toContain("*NÃO* para mantê-la");
-      expect(r[0]).toMatchObject({ type: "buttons", buttons: [{ title: "Sim" }, { title: "Não" }] });
+      expect(body).toContain(yes);
+      expect(body).toContain(no);
     }
   });
-  it("carpool options are a numbered list (no buttons); alternative vehicles are listed with their plates", () => {
+  it("carpool options are a numbered list; the vehicles of a card: 3 Outro veículo, and the list after it starts at 4", () => {
     const opts = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Achei caronas:" }], pendingAction: { intent: "REQUEST_CARPOOL", slots: {}, summary: "x", options: [{ id: "a", label: "Maria, 08:00" }, { id: "vehicle", label: "Usar um veículo" }] } }, url);
     expect(opts).toEqual([{ type: "text", text: `Achei caronas:\n\n*1.* Maria, 08:00\n*2.* Usar um veículo\n\n${TEXTS.chooseNumber}` }]);
     const veh = renderState({ status: "needs_confirmation", messages: [{ role: "assistant", content: "Haval H6" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { preferredVehicleId: "1" }, summary: "x", vehicleOptions: [{ vehicleId: "1", plate: "AAA1A11", vehicleName: "Haval" }, { vehicleId: "2", plate: "BBB2B22", vehicleName: "Ora" }] } }, url);
-    // ONE message: the card, with a button for the other vehicles; the list only comes when asked for
+    // ONE message: the card; the other vehicles only come after "3 · Outro veículo"
     expect(veh).toHaveLength(1);
-    expect(veh[0]).toMatchObject({ type: "buttons", buttons: [{ id: CHAT_BUTTON.confirm }, { id: CHAT_BUTTON.otherVehicle, title: "Outro veículo" }, { id: CHAT_BUTTON.cancel }] });
+    expect(veh[0]).toMatchObject({ type: "text" });
+    expect((veh[0] as { text: string }).text).toContain("*3.* Outro veículo");
     expect((veh[0] as { text: string }).text).not.toContain("Ora");
     const choices = vehicleChoices([{ vehicleId: "2", plate: "BBB2B22", vehicleName: "Ora" }]);
-    expect(choices).toMatchObject({ type: "buttons", buttons: [{ id: "chat:veh:2" }] });
-    expect((choices as { text: string }).text).toContain("*1.* Ora (BBB2B22)");
+    expect(choices).toMatchObject({ type: "text" });
+    expect((choices as { text: string }).text).toContain("*4.* Ora (BBB2B22)");
   });
   it("never exceeds the WhatsApp message size and never returns an empty reply", () => {
     const long = renderState({ status: "idle", messages: [{ role: "assistant", content: "x".repeat(9000) }] }, url);
@@ -300,11 +310,11 @@ describe("choosing an option inside a sentence (spoken or written)", () => {
     for (const text of ["quero sair às 9h", "volto dia 5/12", "preciso de 4 vagas", "opção 9", "bom dia", "quero um carro amanhã"]) expect(parseChoice(text, 7), text).toBeNull();
   });
   const seven = (preferred = "v1") => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { preferredVehicleId: preferred }, summary: "Vou reservar", vehicleOptions: [1, 2, 3, 4, 5, 6, 7].map((i) => ({ vehicleId: `v${i}`, plate: `P${i}`, vehicleName: `Carro ${i}`, locationName: i % 2 ? "Portaria P1" : "Carregador" })) } }) as ChatState;
-  it("a vehicle chosen by voice (\"reserve a opção 6\") selects the 6th of the OTHER vehicles", async () => {
+  it("a vehicle chosen by voice (\"reserve a opção 6\") is the number shown in the list: 6 is the 3rd of the OTHER vehicles", async () => {
     w.state = seven();
     w.updatedAt = "2026-10-28T19:59:00Z";
     await run(msg({ text: "Reserve a opção 6 pra mim." }));
-    expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v7" });
+    expect(calls.send[0]!.form).toMatchObject({ phase: "select_vehicle", vehicleId: "v4" });
   });
   it("tapping a vehicle button selects that vehicle; a tap with nothing pending is answered, never sent to the assistant as a message", async () => {
     w.state = seven();
@@ -316,15 +326,15 @@ describe("choosing an option inside a sentence (spoken or written)", () => {
     expect(texts(await run(msg({ kind: "button", buttonId: "chat:veh:v4", text: undefined, messageId: "b3" })))).toEqual([TEXTS.staleChoice]);
     expect(calls.send).toHaveLength(0);
   });
-  it("the card is the only message; the web chat's 'choose one of the options below' is gone (the list is not below)", () => {
+  it("the card is the only message, and it has no 'choose one of the options below' line", () => {
     const st = seven("v3");
     st.messages = [{ role: "assistant", content: `Vou reservar o Carro 3.${dictionaries["pt-BR"].chat.replies.card.chooseOption}` }];
     const r = renderState(st, "https://x.invalid");
     expect(r).toHaveLength(1);
     expect((r[0] as { text: string }).text).not.toContain("Escolha uma das opções");
-    expect((r[0] as { buttons: { title: string }[] }).buttons.every((b) => b.title.length <= 20)).toBe(true);
+    expect((r[0] as { text: string }).text).toContain("*1.* Sim, confirmar");
   });
-  it("'Outro veículo' with more than 3 alternatives: the numbered list, without the vehicle on offer; nothing is sent to the assistant and the card stays open", async () => {
+  it("'Outro veículo' with more than 3 alternatives: the numbered list from 4, without the vehicle on offer; nothing is sent to the assistant and the card stays open", async () => {
     w.state = seven("v3");
     const r = await run(msg({ kind: "button", buttonId: CHAT_BUTTON.otherVehicle, text: undefined, messageId: "o1" }));
     expect(calls.send).toHaveLength(0);
@@ -332,18 +342,19 @@ describe("choosing an option inside a sentence (spoken or written)", () => {
     const pick = r.replies[0] as { type: string; text: string };
     expect(pick.type).toBe("text");
     expect(pick.text).not.toContain("Carro 3");
-    expect(pick.text).toContain("*6.* Carro 7");
-    expect(pick.text).toContain("Responda com o número da opção");
+    expect(pick.text).toContain("*4.* Carro 1");
+    expect(pick.text).toContain("*9.* Carro 7");
+    expect(pick.text).toContain("Responda com o número do veículo.");
   });
-  it("saying it works like the button, and with 3 alternatives or fewer they come as buttons", async () => {
+  it("typing 'outro veículo' works like the button, with the same numbers", async () => {
     const st = seven("v3");
     st.pendingAction!.vehicleOptions = st.pendingAction!.vehicleOptions!.slice(0, 4);
     w.state = st;
     const r = await run(msg({ text: "outro veículo", messageId: "o2" }));
     expect(calls.send).toHaveLength(0);
-    const pick = r.replies[0] as unknown as { buttons: { id: string; title: string }[] };
-    expect(pick.buttons).toHaveLength(3);
-    expect(pick.buttons.every((b) => b.title.length <= 20 && b.id.startsWith("chat:veh:"))).toBe(true);
+    const pick = r.replies[0] as { type: string; text: string };
+    expect(pick.type).toBe("text");
+    expect(pick.text).toContain("*4.* Carro 1");
   });
   it("'Outro veículo' with nothing pending: the choice no longer counts", async () => {
     w.state = { status: "idle", messages: [] } as ChatState;
@@ -538,11 +549,10 @@ describe("choosing the place of a name that fits several buildings (WhatsApp)", 
   const OPT = [{ id: "11111111-1111-4111-8111-111111111111", label: "EZ TOWERS - Torre A - Av. Dr. Chucri Zaidan, 1649" }, { id: "22222222-2222-4222-8222-222222222222", label: "Edifício EZ Towers - Bloco B - Rua Arquiteto Olavo Redig de Campos, 105" }];
   const pendingPlaces = (): ChatState => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Encontrei mais de um local" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { placeChoices: JSON.stringify(OPT) }, summary: "Encontrei mais de um local", options: OPT } });
 
-  it("the options come as buttons with the full addresses listed in the text", () => {
+  it("the options come as text, numbered, with the full addresses", () => {
     const [r] = renderState(pendingPlaces(), "https://x.invalid");
-    expect(r).toMatchObject({ type: "buttons", buttons: [{ id: `chat:opt:${OPT[0]!.id}` }, { id: `chat:opt:${OPT[1]!.id}` }] });
+    expect(r).toMatchObject({ type: "text" });
     expect((r as { text: string }).text).toContain("*2.* Edifício EZ Towers - Bloco B");
-    expect((r as { buttons: { title: string }[] }).buttons.every((b) => b.title.length <= 20)).toBe(true);
   });
   it("a tap selects that option; a tap on an option that is not offered is refused; with nothing pending it is answered as stale", async () => {
     w.state = pendingPlaces();
@@ -569,10 +579,11 @@ describe("you already have a reservation in that period (WhatsApp)", () => {
   ];
   const offer = (options: { id: string; label: string }[]): ChatState => ({ status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Você já tem uma reserva nesse período" }], pendingAction: { intent: "CREATE_RESERVATION", slots: { overlapChoices: "[]" }, summary: "x", options } });
 
-  it("cancel / show / keep come as three buttons (20 characters at most each)", () => {
+  it("cancel / show / keep come as a numbered text list, not buttons", () => {
     const [r] = renderState(offer(OPT), "https://x.invalid");
-    expect(r).toMatchObject({ type: "buttons", buttons: [{ id: `chat:opt:${OPT[0]!.id}` }, { id: `chat:opt:${OPT[1]!.id}` }, { id: `chat:opt:${OPT[2]!.id}` }] });
-    expect((r as { buttons: { title: string }[] }).buttons.map((b) => b.title)).toEqual(["1 · Cancelar a atual", "2 · Mostrar reservas", "3 · Manter a atual"]);
+    expect(r).toMatchObject({ type: "text" });
+    expect((r as { text: string }).text).toContain("*1.* Cancelar a atual");
+    expect((r as { text: string }).text).toContain("*3.* Manter a atual");
   });
   it("the reservations listed to pick one come numbered in the text (long names do not fit a button)", () => {
     const long = [{ id: OPT[0]!.id, label: "CCD0710, São Paulo Office, 04/11 08:00 – 20:00" }, { id: OPT[2]!.id, label: "Manter a atual" }];
@@ -590,7 +601,7 @@ describe("route map picture", () => {
   it("the proposal goes without the map; the map follows the confirmed reservation", async () => {
     const routeMap = vi.fn(async () => map);
     w.next = proposal({ origin: "Av. Paulista 1000", destination: "Aeroporto de Guarulhos" });
-    expect((await run(msg(), deps({ routeMap }))).replies.map((x) => x.type)).toEqual(["buttons"]);
+    expect((await run(msg(), deps({ routeMap }))).replies.map((x) => x.type)).toEqual(["text"]);
     expect(routeMap).not.toHaveBeenCalled();
     w.state = proposal({ origin: "Av. Paulista 1000", destination: "Aeroporto de Guarulhos" });
     w.next = done();
@@ -633,7 +644,7 @@ describe("choosing a vehicle shows only the new proposal", () => {
     w.state = { ...stacked(), messages: [{ role: "user", content: "quero um carro" }, { role: "assistant", content: "Vou reservar o veículo Ora 03" }] } as ChatState;
     w.next = stacked();
     const r = await run(msg({ kind: "button", text: undefined, buttonId: "chat:veh:v3" }));
-    const card = r.replies.find((x) => x.type === "buttons")!;
+    const card = r.replies.find((x) => x.type === "text")!;
     expect(card.text).toContain("PHEV35");
     expect(card.text).not.toContain("Ora 03");
   });

@@ -109,18 +109,23 @@ export const TEXTS = {
   chooseNumber: "Escolha uma opção respondendo com o número dela (por exemplo, *1*).",
   otherVehicle: "Outro veículo",
   generic: "Não consegui processar agora. Tente de novo em instantes.",
-  confirmHint: "Toque em um botão ou responda *SIM* para confirmar ou *NÃO* para cancelar.",
-  /** the card that asks "cancel this?": the answer words must say what Sim / Não do ("NÃO para cancelar" would read as "no, don't cancel" or as "cancel") */
-  confirmHintCancelReservation: "Toque em um botão ou responda *SIM* para cancelar a reserva ou *NÃO* para mantê-la.",
-  confirmHintCancelCarpool: "Toque em um botão ou responda *SIM* para cancelar a carona ou *NÃO* para mantê-la.",
   pickIntro: "Este número está cadastrado em mais de um perfil. Com qual deles você quer falar? Responda com o número:",
   pickRetry: "Depois de escolher, me diga o que você precisa.",
   pickKeep: "Já guardei o seu pedido: assim que você escolher, eu continuo com ele.",
   pickBad: "Não entendi. Responda com o número do perfil.",
   /** the buttons carry the words the hint asks the person to write: Sim / Não */
-  confirm: "Sim",
-  cancel: "Não",
+  confirm: "Sim, confirmar",
+  cancel: "Não, cancelar",
+  cancelReservationYes: "Sim, cancelar a reserva",
+  cancelReservationNo: "Não, manter a reserva",
+  cancelCarpoolYes: "Sim, cancelar a carona",
+  cancelCarpoolNo: "Não, manter a carona",
+  /** under a confirmation card: the numbers are the answer */
+  cardHint: "Responda com o número da opção.",
 } as const;
+
+/** The vehicles offered after "3 · Outro veículo" start at this number. */
+export const VEHICLE_FIRST_NUMBER = 4;
 
 const CARPOOL_TAP = /^cp:(yes|no):([0-9a-f]{32,128})$/;
 /** The rider answered "assume the vehicle of the cancelled carpool trip": tk:yes:<token> / tk:no:<token>. */
@@ -137,8 +142,6 @@ export const CHAT_BUTTON = { confirm: "chat:confirm", cancel: "chat:cancel", oth
 export const VEHICLE_BUTTON_PREFIX = "chat:veh:";
 /** A tap on a place option ("EZ Tower" fits several buildings) carries "chat:opt:<optionId>". */
 export const OPTION_BUTTON_PREFIX = "chat:opt:";
-/** WhatsApp shows at most 3 reply buttons per message. */
-const MAX_VEHICLE_BUTTONS = 3;
 /** The web chat's "choose one of the options below": here the options are not below, they come from the "Outro veículo" button. */
 const CHOOSE_OPTION_LINES = Object.values(dictionaries).map((d) => d.chat.replies.card.chooseOption);
 /** The assistant's question "why are you cancelling?": the next message is the reason, even when it sounds like a cancel request ("não quero mais o carro"). */
@@ -150,13 +153,6 @@ function buttonToText(id: string | undefined): string | null {
   if (id === CHAT_BUTTON.confirm) return "sim";
   if (id === CHAT_BUTTON.cancel) return "não";
   return null;
-}
-
-/** The sentence under a confirmation card: for a card that cancels something, Sim means "cancel" and Não means "keep". */
-function confirmHintFor(intent: string | undefined): string {
-  if (intent === "CANCEL_RESERVATION") return TEXTS.confirmHintCancelReservation;
-  if (intent === "CANCEL_CARPOOL_REQUEST") return TEXTS.confirmHintCancelCarpool;
-  return TEXTS.confirmHint;
 }
 
 /**
@@ -179,40 +175,28 @@ export function renderState(state: ChatState, appUrl: string, lastOnly = false):
 
   if (pending.options?.length) {
     body += `\n\n${pending.options.map((o, i) => `*${i + 1}.* ${o.label}`).join("\n")}\n\n${TEXTS.chooseNumber}`;
-    // the places that fit a name are offered as buttons (at most 3 fit in a WhatsApp message); carpool options stay a numbered list
-    if (pending.slots.placeChoices && pending.options.length <= MAX_VEHICLE_BUTTONS) {
-      return [{ type: "buttons", text: clip(body), buttons: pending.options.map((o, i) => ({ id: `${OPTION_BUTTON_PREFIX}${o.id}`, title: `${i + 1} · ${o.label.split(" - ")[0]}`.slice(0, 20) })) }];
-    }
-    // the answers to "cancel the reservation you already have?" (cancel / show / keep, or the reason) are buttons when their names fit (20 characters with the number)
-    if (pending.slots.overlapChoices && pending.options.length <= MAX_VEHICLE_BUTTONS && pending.options.every((o) => o.label.length <= 16)) {
-      return [{ type: "buttons", text: clip(body), buttons: pending.options.map((o, i) => ({ id: `${OPTION_BUTTON_PREFIX}${o.id}`, title: `${i + 1} · ${o.label}` })) }];
-    }
+    // every numbered list is text now (the numbers are the answer): WhatsApp does not deliver the buttons to every phone
     return [text(body)];
   }
-  // one message, one decision: the other vehicles only come when the person asks for them (the "Outro veículo" button, or saying so).
-  // A list sent right under the card reads as a second question, even more so once Sim has been tapped.
+  // one message, one decision: the other vehicles only come when the person asks for them (number 3, or saying so).
+  // A list sent right under the card reads as a second question, even more so once Sim has been answered.
   const hasOthers = vehicleAlternatives(pending.vehicleOptions, pending.slots.preferredVehicleId).length > 0;
   for (const line of CHOOSE_OPTION_LINES) body = body.split(line).join("");
-  return [{
-    type: "buttons",
-    text: clip(`${body}\n\n${confirmHintFor(pending.intent)}`),
-    buttons: [
-      { id: CHAT_BUTTON.confirm, title: TEXTS.confirm },
-      ...(hasOthers ? [{ id: CHAT_BUTTON.otherVehicle, title: TEXTS.otherVehicle }] : []),
-      { id: CHAT_BUTTON.cancel, title: TEXTS.cancel },
-    ],
-  }];
+  return [text(`${body}\n\n${cardOptionLines(pending.intent, hasOthers).map((l, i) => `*${i + 1}.* ${l}`).join("\n")}\n\n${TEXTS.cardHint}`)];
 }
 
-/** The answer to "Outro veículo": the vehicle on offer is not listed again, only the others. WhatsApp allows 3 buttons at most: with more alternatives there are no buttons at all, the person answers with the number. */
+/** The numbered answers of a confirmation card (text only: WhatsApp does not deliver the buttons to every phone). 1 = Sim, 2 = Não, 3 = Outro veículo. */
+export function cardOptionLines(intent: string | undefined, hasOthers: boolean): string[] {
+  const [yes, no] = intent === "CANCEL_RESERVATION" ? [TEXTS.cancelReservationYes, TEXTS.cancelReservationNo]
+    : intent === "CANCEL_CARPOOL_REQUEST" ? [TEXTS.cancelCarpoolYes, TEXTS.cancelCarpoolNo]
+    : [TEXTS.confirm, TEXTS.cancel];
+  return hasOthers ? [yes, no, TEXTS.otherVehicle] : [yes, no];
+}
+
+/** The answer to "3 · Outro veículo": the vehicle on offer is not listed again, only the others, numbered from 4 (1 to 3 are the card's answers). */
 export function vehicleChoices(others: readonly { vehicleId: string; vehicleName: string; plate: string; locationName?: string | null }[]): Reply {
-  const lines = others.map((v, i) => `*${i + 1}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n");
-  if (others.length > MAX_VEHICLE_BUTTONS) return text(`Escolha outro veículo:\n${lines}\n\nResponda com o número da opção (por texto ou áudio).`);
-  return {
-    type: "buttons",
-    text: clip(`Escolha outro veículo:\n${lines}`),
-    buttons: others.map((v, i) => ({ id: `${VEHICLE_BUTTON_PREFIX}${v.vehicleId}`, title: `${i + 1} · ${v.vehicleName}`.slice(0, 20) })),
-  };
+  const lines = others.map((v, i) => `*${i + VEHICLE_FIRST_NUMBER}.* ${v.vehicleName} (${v.plate})${v.locationName ? ` — ${v.locationName}` : ""}`).join("\n");
+  return text(clip(`Escolha outro veículo:\n${lines}\n\nResponda com o número do veículo.`));
 }
 
 /**
@@ -447,9 +431,12 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       const alternatives = vehicleAlternatives(pending?.vehicleOptions, pending?.slots.preferredVehicleId);
       const optionCount = pending?.options?.length ?? alternatives.length;
       const n = /^\d{1,2}$/.test(t) ? Number(t) : optionCount > 0 ? parseChoice(input, optionCount) : null;
+      // a confirmation card (no numbered options): 1 Sim, 2 Não, 3 Outro veículo, 4 and up = the vehicles listed after 3
+      const cardOnly = !!pending && !pending.options?.length;
+      const cardNumber = cardOnly ? (/^\d{1,2}$/.test(t) ? Number(t) : parseChoice(input, 3 + alternatives.length)) : null;
 
-      if (input === CHAT_BUTTON.otherVehicle || (pending && !pending.options?.length && alternatives.length > 0 && OTHER_VEHICLE.test(t))) {
-        // nothing changes: the card stays open, so Confirmar and the numbers keep working
+      if (input === CHAT_BUTTON.otherVehicle || (pending && cardOnly && alternatives.length > 0 && (cardNumber === 3 || OTHER_VEHICLE.test(t)))) {
+        // nothing changes: the card stays open, so Sim and the numbers keep working
         return [pending && alternatives.length > 0 ? vehicleChoices(alternatives) : text(TEXTS.staleChoice)];
       }
       if (pending && input.startsWith(VEHICLE_BUTTON_PREFIX)) {
@@ -466,22 +453,20 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
         form.set("optionId", opt.id);
       } else if (!pending && (input.startsWith(VEHICLE_BUTTON_PREFIX) || input.startsWith(OPTION_BUTTON_PREFIX))) {
         return [text(TEXTS.staleChoice)];
-      } else if (pending && n !== null && (pending.options?.length || alternatives.length)) {
-        if (pending.options?.length) {
-          const opt = pending.options[n - 1];
-          if (!opt) return [text(TEXTS.badOption)];
-          form.set("phase", "select_option");
-          form.set("optionId", opt.id);
-        } else {
-          const veh = alternatives[n - 1];
-          if (!veh) return [text(TEXTS.badOption)];
-          form.set("phase", "select_vehicle");
-          form.set("vehicleId", veh.vehicleId);
-        }
-      } else if (pending && YES.test(t)) {
+      } else if (pending && n !== null && pending.options?.length) {
+        const opt = pending.options[n - 1];
+        if (!opt) return [text(TEXTS.badOption)];
+        form.set("phase", "select_option");
+        form.set("optionId", opt.id);
+      } else if (cardNumber !== null && cardNumber >= VEHICLE_FIRST_NUMBER && alternatives.length > 0) {
+        const veh = alternatives[cardNumber - VEHICLE_FIRST_NUMBER];
+        if (!veh) return [text(TEXTS.badOption)];
+        form.set("phase", "select_vehicle");
+        form.set("vehicleId", veh.vehicleId);
+      } else if (pending && (cardNumber === 1 || YES.test(t))) {
         if (pending.options?.length) return [text(TEXTS.chooseNumber)];
         form.set("phase", "confirm");
-      } else if (pending && NO.test(t)) {
+      } else if (pending && (cardNumber === 2 || NO.test(t))) {
         if (prev.conversationId) await deps.abandon(client, prev.conversationId);
         return [text(pending.intent === "CANCEL_RESERVATION" ? TEXTS.cancelKept : pending.intent === "CANCEL_CARPOOL_REQUEST" ? TEXTS.carpoolKept : TEXTS.cancelled)];
       } else {
