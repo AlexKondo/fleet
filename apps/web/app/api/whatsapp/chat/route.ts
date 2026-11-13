@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SIGNATURE_HEADER, TIMESTAMP_HEADER, verifySignature } from "@/lib/approvals/whatsappApproval";
 import { handleInboundWhatsApp, type BridgeDeps, type InboundMessage } from "@/lib/whatsapp/chatBridge";
@@ -7,6 +7,7 @@ import { runAsUser } from "@/lib/auth/actingUser";
 import { mintUserClient } from "@/lib/auth/mintUserClient";
 import { getAppUrl } from "@/lib/getAppUrl";
 import { notifyRiderOfDecision } from "@/lib/carpool/notifyRider";
+import { directManagerName, notifyRequesterOutcome } from "@/lib/approvals/notifyRequester";
 import { afterTakeoverAccepted } from "@/lib/carpool/afterTakeoverAccepted";
 import { findActiveReservations, loadLatestChatState } from "@/app/chat/queries";
 import { sendChatMessage } from "@/app/chat/actions";
@@ -86,6 +87,19 @@ export async function POST(request: NextRequest) {
       return { imageBase64: r.imageDataUrl.replace(/^data:image\/png;base64,/, ""), caption: lines.join("\n") };
     },
     notifyRider: async (requestId, justification) => { await notifyRiderOfDecision(requestId, justification, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); },
+    // a manager's "1" / "2" on WhatsApp decides his latest pending vehicle approval (migration 0259), with the same checks as the buttons
+    decideApproval: async (fromPhone, decision, messageId) => {
+      const { data, error } = await admin.rpc("fm_approval_decide_by_phone" as never, { p_from_phone: fromPhone, p_decision: decision, p_message_id: messageId } as never);
+      if (error || !data || typeof data !== "object") return { status: "none" };
+      const result = data as { status?: string; reservation_id?: string };
+      const status = typeof result.status === "string" ? result.status : "none";
+      if ((status === "approved" || status === "rejected") && result.reservation_id) {
+        const reservationId = result.reservation_id;
+        // the requester is told by WhatsApp too, after the answer to the manager
+        after(async () => { await notifyRequesterOutcome(reservationId, status === "approved" ? "approve" : "reject", { rpc: (n, a) => admin.rpc(n as never, a as never) as never }, { by: await directManagerName(admin, reservationId) }); });
+      }
+      return { status, reservationId: result.reservation_id };
+    },
     // "Cancelar" alone: what the member has that it could mean - an upcoming reservation of their own and/or a carpool seat they asked for (both read as the member)
     cancelTargets: async (client, userId) => {
       const nowMs = Date.now();

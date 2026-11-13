@@ -27,10 +27,11 @@ describe("approval message", () => {
     expect(m.body).toContain("vale até qui, 29/10/2026 às 08:00");
     expect(m.body.length).toBeLessThan(1024);
   });
-  it("two buttons whose ids carry the single-use token", () => {
+  it("text only, no buttons: the manager answers with the number (1 approve, 2 reject)", () => {
     const m = buildApprovalMessage(payload, TOKEN, "2026-10-29T11:00:00Z");
-    expect(m.buttons).toEqual([{ id: `approve:${TOKEN}`, title: "Aprovar" }, { id: `reject:${TOKEN}`, title: "Recusar" }]);
-    expect(m.buttons.every((b) => b.title.length <= 20)).toBe(true);
+    expect(m.buttons).toEqual([]);
+    expect(m.body).toContain("*1* - aprovar");
+    expect(m.body).toContain("*2* - reprovar");
     expect(m.body).not.toContain(TOKEN);
   });
   it("text typed by the requester cannot add formatting, new lines or exceed the limit", () => {
@@ -152,13 +153,13 @@ describe("dispatching the approval request", () => {
     const r = await dispatchApprovalRequest("res-1", deps);
     expect(r).toEqual({ status: "done", results: [{ channel: "whatsapp", status: "sent", requestId: "req-wa" }, { channel: "email", status: "sent", requestId: "req-mail" }] });
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe(env.n8nUrl);
+    expect(url).toBe(env.n8nUrl.replace(/\/[^/]*\/?$/, "/fleet-notify"));
     const headers = init.headers as Record<string, string>;
     expect(headers["x-fleet-timestamp"]).toBe("1790000000");
     expect(verifySignature({ rawBody: String(init.body), secret: env.n8nSecret, timestamp: headers["x-fleet-timestamp"]!, signature: headers["x-fleet-signature"]!, nowSeconds: 1790000000 })).toBe(true);
     const sent = JSON.parse(String(init.body));
     expect(sent).toMatchObject({ type: "approval_request", request_id: "req-wa", reservation_id: "res-1", to: "+5511987654321" });
-    expect(sent.message.buttons).toHaveLength(2);
+    expect(sent.text).toContain("*1* - aprovar");
     expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: "gestor@example.invalid", subject: expect.stringContaining("Maria Solicitante") }));
     expect(String((sendEmail.mock.calls[0] as unknown[])[0] && (sendEmail.mock.calls[0] as { html: string }[])[0]!.html)).toContain(`/aprovar/${mail.token}`);
     expect(rpc).toHaveBeenCalledWith("fm_approval_mark_delivery", { p_request_id: "req-wa", p_ok: true, p_error: null });

@@ -4,6 +4,7 @@ import type { ChatState } from "@/app/chat/actions";
 import { runAsUser, getActingContext } from "@/lib/auth/actingUser";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { CANCEL_HINT, CANCEL_REQUEST, CARPOOL_CANCEL_REQUEST } from "./cancelIntent";
+import { replyForStatus } from "@/lib/approvals/whatsappApproval";
 import { CHAT_BUTTON, handleInboundWhatsApp, parseChoice, renderState, TEXTS, vehicleChoices, type BridgeDeps, type InboundMessage } from "./chatBridge";
 
 const USER = { ok: true, user_id: "u1", organization_id: "o1", email: "ana@example.invalid", full_name: "Ana" };
@@ -695,6 +696,32 @@ describe("the rider answers the invitation to take over a cancelled carpool trip
     const r = await run(tap("yes"), withApply({ ok: true, outcome: "accepted", reservation_id: "res-1", candidate_id: "u9" }, false));
     expect(r.replies).toHaveLength(0);
     expect(seen.after).toHaveLength(0); // the manager is asked once, by the first delivery
+  });
+});
+
+describe("a manager answers a vehicle approval with a number", () => {
+  const decided = (status: string, reservationId?: string) => vi.fn(async () => ({ status, reservationId }));
+  it("1 approves and 2 rejects the pending request; the answer says so", async () => {
+    w.state = idle;
+    const approve = decided("approved", "res-1");
+    const r1 = await run(msg({ text: "1", messageId: "a1" }), deps({ decideApproval: approve }));
+    expect(approve).toHaveBeenCalledWith("5511987654321", "approve", "a1");
+    expect(texts(r1)).toEqual([replyForStatus("approved")]);
+    const reject = decided("rejected", "res-2");
+    await run(msg({ text: "2", messageId: "a2" }), deps({ decideApproval: reject }));
+    expect(reject).toHaveBeenCalledWith("5511987654321", "reject", "a2");
+  });
+  it("with no pending approval the number goes to the assistant as before", async () => {
+    w.state = idle;
+    w.next = reply("ok");
+    await run(msg({ text: "2", messageId: "a3" }), deps({ decideApproval: decided("none") }));
+    expect(calls.send[0]!.form).toMatchObject({ phase: "message", message: "2" });
+  });
+  it("a number while the assistant waits for a card answer is the card's answer, never an approval", async () => {
+    w.state = { status: "needs_confirmation", conversationId: "c1", messages: [{ role: "assistant", content: "Vou reservar" }], pendingAction: { intent: "CREATE_RESERVATION", slots: {}, summary: "Vou reservar" } } as ChatState;
+    const approve = decided("approved", "res-1");
+    await run(msg({ text: "1", messageId: "a4" }), deps({ decideApproval: approve }));
+    expect(approve).not.toHaveBeenCalled();
   });
 });
 

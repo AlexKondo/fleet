@@ -82,18 +82,20 @@ export async function dispatchApprovalRequest(reservationId: string, deps: Dispa
       let error: string | null = null;
       if (req.channel === "whatsapp" && req.phone_e164 && env.n8nUrl && env.n8nSecret) {
         const message = buildApprovalMessage(r.payload, req.token, req.expires_at);
+        // sent as TEXT through the notice webhook (fleet-notify: a message without buttons goes as plain text)
         const body = JSON.stringify({
           type: "approval_request",
           request_id: req.request_id,
           reservation_id: reservationId,
           to: req.phone_e164,
+          title: "Pedido de uso de veículo",
+          text: message.body,
           expires_at: req.expires_at,
-          message,
-          data: r.payload,
         });
         const timestamp = String(Math.floor((deps.now?.() ?? Date.now()) / 1000));
+        const notifyUrl = env.n8nUrl.replace(/\/[^/]*\/?$/, "/fleet-notify");
         try {
-          const res = await doFetch(env.n8nUrl, {
+          const res = await doFetch(notifyUrl, {
             method: "POST",
             headers: { "content-type": "application/json", [TIMESTAMP_HEADER]: timestamp, [SIGNATURE_HEADER]: signBody(body, env.n8nSecret, timestamp) },
             body,

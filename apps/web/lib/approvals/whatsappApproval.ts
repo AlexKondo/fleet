@@ -70,15 +70,15 @@ export function buildApprovalMessage(payload: ApprovalPayload, token: string, ex
     `Objetivo: ${cleanUserText(payload.purpose, 240)}`,
     `Passageiros: ${Number.isFinite(payload.passengers) ? payload.passengers : "—"}`,
     "",
-    "Toque em *Aprovar* para liberar o veículo ou em *Recusar* para negar o pedido.",
+    "Responda com o número:",
+    "*1* - aprovar",
+    "*2* - reprovar",
     `Este pedido vale até ${formatWhen(expiresAt)}.`,
   ];
+  // text only, no buttons: WhatsApp does not show the buttons on every phone. The answer is the number (see migration 0259).
   return {
     body: lines.join("\n"),
-    buttons: [
-      { id: `approve:${token}`, title: "Aprovar" },
-      { id: `reject:${token}`, title: "Recusar" },
-    ],
+    buttons: [],
   };
 }
 

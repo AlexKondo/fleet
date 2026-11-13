@@ -5,6 +5,7 @@ import type { TranscribeResult } from "./transcribe";
 import { parseChoice, vehicleAlternatives } from "@/lib/chat/vehicleChoice";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { CANCEL_HINT, CANCEL_REQUEST, CARPOOL_CANCEL_REQUEST, cancelRequestOf, isBareCancelRequest } from "./cancelIntent";
+import { replyForStatus } from "@/lib/approvals/whatsappApproval";
 
 export { parseChoice };
 
@@ -60,6 +61,8 @@ export interface BridgeDeps {
   notifyRider?: (requestId: string, justification?: string) => Promise<void>;
   /** the rider accepted the vehicle of a cancelled carpool trip: his manager (or the fleet managers) are asked to approve; best effort */
   afterTakeoverAccepted?: (reservationId: string) => Promise<void> | void;
+  /** a manager's "1" / "2" on WhatsApp: decides his latest pending vehicle approval ("none" when he has none); after an approve / reject the requester is told */
+  decideApproval?: (fromPhone: string, decision: "approve" | "reject", messageId: string | null) => Promise<{ status: string; reservationId?: string }>;
   /** the same route map the screen shows (runs as the member); null when it is not available - the card is then sent without it */
   routeMap?: (origin: string, destination: string) => Promise<{ imageBase64: string; caption: string } | null>;
   /** what the member has that "Cancelar" could mean (runs as the member): an upcoming reservation of their own and/or a carpool seat they asked for */
@@ -427,6 +430,13 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       form.set("conversationId", prev.conversationId ?? "");
       const t = norm(input);
       const pending = prev.status === "needs_confirmation" ? prev.pendingAction : undefined;
+      // a manager answering a vehicle approval by number: "1" approves, "2" rejects (only when the assistant has no card waiting for a number)
+      const approvalAnswer = !pending && deps.decideApproval ? /^\s*(1|2)\s*[.)!]?\s*$/.exec(input) : null;
+      if (approvalAnswer) {
+        const decision = approvalAnswer[1] === "1" ? "approve" : "reject";
+        const r = await deps.decideApproval!(msg.from, decision, msg.messageId);
+        if (r.status !== "none") return [text(replyForStatus(r.status))];
+      }
       // the numbers the person sees: carpool options as listed, vehicles = the alternatives to the offered one
       const alternatives = vehicleAlternatives(pending?.vehicleOptions, pending?.slots.preferredVehicleId);
       const optionCount = pending?.options?.length ?? alternatives.length;

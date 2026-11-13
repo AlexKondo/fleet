@@ -153,6 +153,20 @@ describe.sequential("the manager's answer", () => {
     expect((await q<{ status: string }>("select status from vehicles where id=$1", [vehicle]))[0]!.status).toBe("available");
     expect((await q("select 1 from notifications where user_id=$1 and entity_id=$2 and title='Reserva recusada'", [requester, res])).length).toBe(1);
   });
+  it("a number answer (1 approve, 2 reject) decides the manager's latest pending request with the same checks; no pending request says none (migration 0259)", async () => {
+    const { res } = await reservation();
+    await prepare(res);
+    const byNumber = async (from: string, decision: string) => {
+      await as(null);
+      return (await q<{ r: { status: string; reservation_id?: string } }>("select fm_approval_decide_by_phone($1,$2,$3) r", [from, decision, null]))[0]!.r;
+    };
+    expect(await byNumber("+5511900000000", "approve")).toEqual({ status: "none" }); // not his number
+    expect(await byNumber(PHONE, "maybe")).toEqual({ status: "none" }); // not 1 or 2
+    expect(await byNumber(PHONE, "approve")).toEqual({ status: "approved", reservation_id: res });
+    expect(await status(res)).toEqual({ status: "confirmed", approved_by: manager });
+    // this reservation is no longer pending: another "1" can only decide another, still pending, request
+    expect((await byNumber(PHONE, "approve")).reservation_id).not.toBe(res);
+  });
   it("a wrong token, a wrong phone or an unknown decision change nothing", async () => {
     const { res } = await reservation();
     const r = await prepare(res);
