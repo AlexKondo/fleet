@@ -34,6 +34,8 @@ export interface InboundMessage {
   buttonId?: string;
   audioBase64?: string;
   mimeType?: string;
+  /** the text of the message this one replies to (WhatsApp "responder"): an approval request carries its code in it */
+  quotedText?: string;
 }
 
 export type Reply =
@@ -439,10 +441,13 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       const pending = prev.status === "needs_confirmation" ? prev.pendingAction : undefined;
       // a manager answering a vehicle approval by number: "1" approves, "2" rejects (only when the assistant has no card waiting for a number)
       // "1" / "2", or "1 3F9A1C" / "2 3F9A1C" (the code of one request): see migration 0260
-      const approvalAnswer = !pending && deps.decideApproval ? /^\s*(1|2)\s*([0-9a-fA-F]{6})?\s*[.)!]?\s*$/.exec(input) : null;
+      // a reply to the approval request ("responder") needs no code: the code is in the message replied to
+      const approvalAnswer = !pending && deps.decideApproval ? /^\s*(1|2|aprovar|reprovar)\s*([0-9a-fA-F]{6})?\s*[.)!]?\s*$/i.exec(input) : null;
       if (approvalAnswer) {
-        const decision = approvalAnswer[1] === "1" ? "approve" : "reject";
-        const r = await deps.decideApproval!(msg.from, decision, msg.messageId, approvalAnswer[2]?.toUpperCase() ?? null);
+        const word = approvalAnswer[1]!.toLowerCase();
+        const decision = word === "1" || word === "aprovar" ? "approve" : "reject";
+        const quotedCode = msg.quotedText ? /\*[12] ([0-9A-Z]{6})\*/.exec(msg.quotedText)?.[1] : undefined;
+        const r = await deps.decideApproval!(msg.from, decision, msg.messageId, approvalAnswer[2]?.toUpperCase() ?? quotedCode ?? null);
         if (r.status === "ambiguous") return [text(approvalChoiceText(r.pending ?? []))];
         if (r.status !== "none") return [text(replyForStatus(r.status))];
       }

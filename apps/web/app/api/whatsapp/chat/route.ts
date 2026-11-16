@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     buttonId: typeof body.button_id === "string" ? body.button_id.slice(0, 200) : undefined,
     audioBase64: typeof body.audio_base64 === "string" ? body.audio_base64 : undefined,
     mimeType: typeof body.mime_type === "string" ? body.mime_type.slice(0, 100) : undefined,
+    quotedText: typeof body.quoted_text === "string" ? body.quoted_text.slice(0, 2000) : undefined,
   };
 
   const admin = createSupabaseAdminClient();
