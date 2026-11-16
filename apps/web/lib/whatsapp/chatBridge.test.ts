@@ -699,6 +699,23 @@ describe("the rider answers the invitation to take over a cancelled carpool trip
   });
 });
 
+describe("a manager asks what is waiting for his approval", () => {
+  it("'o que tenho pra aprovar?' answers with the pending requests and their codes, not the assistant", async () => {
+    w.state = idle;
+    const list = vi.fn(async () => [{ code: "3F9A1C", plate: "SSO5A16", start: "14/11 08:00" }, { code: "B20D4E", plate: "UIC2B66", start: "15/11 08:00" }]);
+    const r = await run(msg({ text: "O que tenho pra aprovar?", messageId: "l1" }), deps({ listApprovals: list }));
+    expect(list).toHaveBeenCalledWith("5511987654321");
+    expect(texts(r)[0]).toContain("*1 3F9A1C* aprova");
+    expect(calls.send).toHaveLength(0);
+  });
+  it("with nothing pending it says so", async () => {
+    w.state = idle;
+    const r = await run(msg({ text: "quais reservas estão pendentes?", messageId: "l2" }), deps({ listApprovals: vi.fn(async () => []) }));
+    expect(texts(r)).toEqual(["Não há pedidos de aprovação pendentes."]);
+    expect(calls.send).toHaveLength(0);
+  });
+});
+
 describe("a manager answers a vehicle approval with a number", () => {
   const decided = (status: string, reservationId?: string) => vi.fn(async () => ({ status, reservationId }));
   it("1 approves and 2 rejects the pending request; the answer says so", async () => {

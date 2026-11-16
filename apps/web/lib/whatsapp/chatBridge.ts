@@ -64,6 +64,8 @@ export interface BridgeDeps {
   /** the rider accepted the vehicle of a cancelled carpool trip: his manager (or the fleet managers) are asked to approve; best effort */
   afterTakeoverAccepted?: (reservationId: string) => Promise<void> | void;
   /** a manager's "1" / "2" on WhatsApp: decides his latest pending vehicle approval ("none" when he has none); after an approve / reject the requester is told */
+  /** the manager's pending vehicle approvals, with their codes ("o que tenho pra aprovar?") */
+  listApprovals?: (fromPhone: string) => Promise<{ code: string; plate: string; start: string }[]>;
   decideApproval?: (fromPhone: string, decision: "approve" | "reject", messageId: string | null, code: string | null) => Promise<{ status: string; reservationId?: string; pending?: { code: string; plate: string; start: string }[] }>;
   /** the same route map the screen shows (runs as the member); null when it is not available - the card is then sent without it */
   routeMap?: (origin: string, destination: string) => Promise<{ imageBase64: string; caption: string } | null>;
@@ -189,6 +191,9 @@ export function renderState(state: ChatState, appUrl: string, lastOnly = false):
   for (const line of CHOOSE_OPTION_LINES) body = body.split(line).join("");
   return [text(`${body}\n\n${cardOptionLines(pending.intent, hasOthers).map((l, i) => `*${i + 1}.* ${l}`).join("\n")}\n\n${TEXTS.cardHint}`)];
 }
+
+/** Asks what is waiting for his approval: "pra aprovar", "pendentes", "aguardando aprovação", "aprovações". */
+const APPROVAL_QUERY = /(pra aprovar|para aprovar|pendente|aguardando aprova|aprova[cç][oõa]es?\b)/i;
 
 /** What the manager gets when he has more than one approval pending: each one with its code, so he answers one at a time. */
 export function approvalChoiceText(pending: { code: string; plate: string; start: string }[]): string {
@@ -440,6 +445,10 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       const t = norm(input);
       const pending = prev.status === "needs_confirmation" ? prev.pendingAction : undefined;
       // a manager answering a vehicle approval by number: "1" approves, "2" rejects (only when the assistant has no card waiting for a number)
+      // "o que tenho pra aprovar?" / "quais reservas estao pendentes": the list of this manager's pending approvals
+      if (!pending && deps.listApprovals && APPROVAL_QUERY.test(input) && input.length <= 120) {
+        return [text(approvalChoiceText(await deps.listApprovals(msg.from)))];
+      }
       // "1" / "2", or "1 3F9A1C" / "2 3F9A1C" (the code of one request): see migration 0260
       // a reply to the approval request ("responder") needs no code: the code is in the message replied to
       const approvalAnswer = !pending && deps.decideApproval ? /^\s*(1|2|aprovar|reprovar)\s*([0-9a-fA-F]{6})?\s*[.)!]?\s*$/i.exec(input) : null;

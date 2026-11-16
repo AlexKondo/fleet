@@ -89,6 +89,11 @@ export async function POST(request: NextRequest) {
     },
     notifyRider: async (requestId, justification) => { await notifyRiderOfDecision(requestId, justification, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); },
     // a manager's "1" / "2" on WhatsApp decides his latest pending vehicle approval (migration 0259), with the same checks as the buttons
+    listApprovals: async (fromPhone) => {
+      const { data, error } = await admin.rpc("fm_approval_list_pending" as never, { p_from_phone: fromPhone } as never);
+      if (error || !Array.isArray(data)) return [];
+      return (data as { code: string; plate: string; start: string }[]).slice(0, 20);
+    },
     decideApproval: async (fromPhone, decision, messageId, code) => {
       const { data, error } = code
         ? await admin.rpc("fm_approval_decide_by_code" as never, { p_from_phone: fromPhone, p_decision: decision, p_code: code, p_message_id: messageId } as never)
