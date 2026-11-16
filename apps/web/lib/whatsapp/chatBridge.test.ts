@@ -705,11 +705,23 @@ describe("a manager answers a vehicle approval with a number", () => {
     w.state = idle;
     const approve = decided("approved", "res-1");
     const r1 = await run(msg({ text: "1", messageId: "a1" }), deps({ decideApproval: approve }));
-    expect(approve).toHaveBeenCalledWith("5511987654321", "approve", "a1");
+    expect(approve).toHaveBeenCalledWith("5511987654321", "approve", "a1", null);
     expect(texts(r1)).toEqual([replyForStatus("approved")]);
     const reject = decided("rejected", "res-2");
     await run(msg({ text: "2", messageId: "a2" }), deps({ decideApproval: reject }));
-    expect(reject).toHaveBeenCalledWith("5511987654321", "reject", "a2");
+    expect(reject).toHaveBeenCalledWith("5511987654321", "reject", "a2", null);
+    // "1 3F9A1C" passes the code of one request
+    const coded = decided("approved", "res-3");
+    await run(msg({ text: "1 3f9a1c", messageId: "a5" }), deps({ decideApproval: coded }));
+    expect(coded).toHaveBeenCalledWith("5511987654321", "approve", "a5", "3F9A1C");
+  });
+  it("several pending requests: a plain 1 lists them with their codes and decides nothing", async () => {
+    w.state = idle;
+    const amb = vi.fn(async () => ({ status: "ambiguous", pending: [{ code: "3F9A1C", plate: "SSO5A16", start: "14/11 08:00" }, { code: "B20D4E", plate: "UIC2B66", start: "15/11 08:00" }] }));
+    const r = await run(msg({ text: "1", messageId: "a6" }), deps({ decideApproval: amb }));
+    expect(texts(r)[0]).toContain("*1 3F9A1C* aprova");
+    expect(texts(r)[0]).toContain("*2 B20D4E* reprova");
+    expect(texts(r)[0]).toContain("SSO5A16");
   });
   it("with no pending approval the number goes to the assistant as before", async () => {
     w.state = idle;

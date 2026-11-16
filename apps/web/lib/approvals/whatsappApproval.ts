@@ -53,7 +53,12 @@ export function formatWhen(iso: string): string {
 }
 
 /** The text and the two buttons sent to the manager. The token travels only inside the button ids (answered back by n8n). */
-export function buildApprovalMessage(payload: ApprovalPayload, token: string, expiresAt: string): ApprovalMessage {
+/** The short code of one approval request (the first 6 hex digits of its id, as 0260 computes it): the manager answers "1 CODE" or "2 CODE". */
+export function approvalCode(requestId: string): string {
+  return requestId.replace(/-/g, "").slice(0, 6).toUpperCase();
+}
+
+export function buildApprovalMessage(payload: ApprovalPayload, token: string, expiresAt: string, code?: string): ApprovalMessage {
   const vehicleName = cleanUserText(payload.vehicle_name, 60);
   const plate = cleanUserText(payload.plate, 12);
   // the plate is shown once: some vehicle names already contain it
@@ -70,9 +75,9 @@ export function buildApprovalMessage(payload: ApprovalPayload, token: string, ex
     `Objetivo: ${cleanUserText(payload.purpose, 240)}`,
     `Passageiros: ${Number.isFinite(payload.passengers) ? payload.passengers : "—"}`,
     "",
-    "Responda com o número:",
-    "*1* - aprovar",
-    "*2* - reprovar",
+    ...(code
+      ? [`Responda com o número e o código do pedido (*${code}*):`, `*1 ${code}* - aprovar`, `*2 ${code}* - reprovar`]
+      : ["Responda com o número:", "*1* - aprovar", "*2* - reprovar"]),
     `Este pedido vale até ${formatWhen(expiresAt)}.`,
   ];
   // text only, no buttons: WhatsApp does not show the buttons on every phone. The answer is the number (see migration 0259).

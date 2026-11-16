@@ -1,4 +1,4 @@
-import { buildApprovalMessage, signBody, SIGNATURE_HEADER, TIMESTAMP_HEADER, type ApprovalPayload } from "./whatsappApproval";
+import { approvalCode, buildApprovalMessage, signBody, SIGNATURE_HEADER, TIMESTAMP_HEADER, type ApprovalPayload } from "./whatsappApproval";
 import { buildApprovalEmail } from "./approvalEmail";
 
 /**
@@ -81,7 +81,7 @@ export async function dispatchApprovalRequest(reservationId: string, deps: Dispa
     for (const req of r.requests) {
       let error: string | null = null;
       if (req.channel === "whatsapp" && req.phone_e164 && env.n8nUrl && env.n8nSecret) {
-        const message = buildApprovalMessage(r.payload, req.token, req.expires_at);
+        const message = buildApprovalMessage(r.payload, req.token, req.expires_at, approvalCode(req.request_id));
         // sent as TEXT through the notice webhook (fleet-notify: a message without buttons goes as plain text)
         const body = JSON.stringify({
           type: "approval_request",

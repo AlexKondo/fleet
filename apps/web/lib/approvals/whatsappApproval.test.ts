@@ -159,7 +159,9 @@ describe("dispatching the approval request", () => {
     expect(verifySignature({ rawBody: String(init.body), secret: env.n8nSecret, timestamp: headers["x-fleet-timestamp"]!, signature: headers["x-fleet-signature"]!, nowSeconds: 1790000000 })).toBe(true);
     const sent = JSON.parse(String(init.body));
     expect(sent).toMatchObject({ type: "approval_request", request_id: "req-wa", reservation_id: "res-1", to: "+5511987654321" });
-    expect(sent.text).toContain("*1* - aprovar");
+    // the request code is in the message: "1 CODE" approves that one (6 characters of the request id)
+    expect(sent.text).toMatch(/\*1 [0-9A-Z]+\* - aprovar/);
+    expect(sent.text).toMatch(/\*2 [0-9A-Z]+\* - reprovar/);
     expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: "gestor@example.invalid", subject: expect.stringContaining("Maria Solicitante") }));
     expect(String((sendEmail.mock.calls[0] as unknown[])[0] && (sendEmail.mock.calls[0] as { html: string }[])[0]!.html)).toContain(`/aprovar/${mail.token}`);
     expect(rpc).toHaveBeenCalledWith("fm_approval_mark_delivery", { p_request_id: "req-wa", p_ok: true, p_error: null });

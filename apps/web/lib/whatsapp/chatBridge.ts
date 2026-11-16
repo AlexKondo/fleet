@@ -62,7 +62,7 @@ export interface BridgeDeps {
   /** the rider accepted the vehicle of a cancelled carpool trip: his manager (or the fleet managers) are asked to approve; best effort */
   afterTakeoverAccepted?: (reservationId: string) => Promise<void> | void;
   /** a manager's "1" / "2" on WhatsApp: decides his latest pending vehicle approval ("none" when he has none); after an approve / reject the requester is told */
-  decideApproval?: (fromPhone: string, decision: "approve" | "reject", messageId: string | null) => Promise<{ status: string; reservationId?: string }>;
+  decideApproval?: (fromPhone: string, decision: "approve" | "reject", messageId: string | null, code: string | null) => Promise<{ status: string; reservationId?: string; pending?: { code: string; plate: string; start: string }[] }>;
   /** the same route map the screen shows (runs as the member); null when it is not available - the card is then sent without it */
   routeMap?: (origin: string, destination: string) => Promise<{ imageBase64: string; caption: string } | null>;
   /** what the member has that "Cancelar" could mean (runs as the member): an upcoming reservation of their own and/or a carpool seat they asked for */
@@ -186,6 +186,13 @@ export function renderState(state: ChatState, appUrl: string, lastOnly = false):
   const hasOthers = vehicleAlternatives(pending.vehicleOptions, pending.slots.preferredVehicleId).length > 0;
   for (const line of CHOOSE_OPTION_LINES) body = body.split(line).join("");
   return [text(`${body}\n\n${cardOptionLines(pending.intent, hasOthers).map((l, i) => `*${i + 1}.* ${l}`).join("\n")}\n\n${TEXTS.cardHint}`)];
+}
+
+/** What the manager gets when he has more than one approval pending: each one with its code, so he answers one at a time. */
+export function approvalChoiceText(pending: { code: string; plate: string; start: string }[]): string {
+  if (pending.length === 0) return "Não há pedidos de aprovação pendentes.";
+  const lines = pending.map((p) => `*1 ${p.code}* aprova · *2 ${p.code}* reprova — ${p.plate}, ${p.start}`);
+  return `Você tem ${pending.length} pedidos de aprovação pendentes. Responda com o número e o código de um deles:\n${lines.join("\n")}`;
 }
 
 /** The numbered answers of a confirmation card (text only: WhatsApp does not deliver the buttons to every phone). 1 = Sim, 2 = Não, 3 = Outro veículo. */
@@ -431,10 +438,12 @@ export async function handleInboundWhatsApp(msg: InboundMessage, deps: BridgeDep
       const t = norm(input);
       const pending = prev.status === "needs_confirmation" ? prev.pendingAction : undefined;
       // a manager answering a vehicle approval by number: "1" approves, "2" rejects (only when the assistant has no card waiting for a number)
-      const approvalAnswer = !pending && deps.decideApproval ? /^\s*(1|2)\s*[.)!]?\s*$/.exec(input) : null;
+      // "1" / "2", or "1 3F9A1C" / "2 3F9A1C" (the code of one request): see migration 0260
+      const approvalAnswer = !pending && deps.decideApproval ? /^\s*(1|2)\s*([0-9a-fA-F]{6})?\s*[.)!]?\s*$/.exec(input) : null;
       if (approvalAnswer) {
         const decision = approvalAnswer[1] === "1" ? "approve" : "reject";
-        const r = await deps.decideApproval!(msg.from, decision, msg.messageId);
+        const r = await deps.decideApproval!(msg.from, decision, msg.messageId, approvalAnswer[2]?.toUpperCase() ?? null);
+        if (r.status === "ambiguous") return [text(approvalChoiceText(r.pending ?? []))];
         if (r.status !== "none") return [text(replyForStatus(r.status))];
       }
       // the numbers the person sees: carpool options as listed, vehicles = the alternatives to the offered one

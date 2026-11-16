@@ -155,17 +155,26 @@ describe.sequential("the manager's answer", () => {
   });
   it("a number answer (1 approve, 2 reject) decides the manager's latest pending request with the same checks; no pending request says none (migration 0259)", async () => {
     const { res } = await reservation();
-    await prepare(res);
+    const r = await prepare(res);
+    await as(null);
+    const code = (await q<{ c: string }>("select fm_approval_request_code($1::uuid) as c", [r.request_id]))[0]!.c;
     const byNumber = async (from: string, decision: string) => {
       await as(null);
       return (await q<{ r: { status: string; reservation_id?: string } }>("select fm_approval_decide_by_phone($1,$2,$3) r", [from, decision, null]))[0]!.r;
     };
+    const byCode = async (from: string, decision: string, c: string) => {
+      await as(null);
+      return (await q<{ r: { status: string; reservation_id?: string } }>("select fm_approval_decide_by_code($1,$2,$3,$4) r", [from, decision, c, null]))[0]!.r;
+    };
     expect(await byNumber("+5511900000000", "approve")).toEqual({ status: "none" }); // not his number
-    expect(await byNumber(PHONE, "maybe")).toEqual({ status: "none" }); // not 1 or 2
-    expect(await byNumber(PHONE, "approve")).toEqual({ status: "approved", reservation_id: res });
+    expect(await byCode(PHONE, "maybe", code)).toEqual({ status: "none" }); // not 1 or 2
+    expect(await byCode("+5511900000000", "approve", code)).toEqual({ status: "none" }); // not his number
+    expect(await byCode(PHONE, "approve", "000000")).toEqual({ status: "none" }); // a code that is not his
+    // "1 CODE" decides exactly that request
+    expect(await byCode(PHONE, "approve", code)).toEqual({ status: "approved", reservation_id: res });
     expect(await status(res)).toEqual({ status: "confirmed", approved_by: manager });
-    // this reservation is no longer pending: another "1" can only decide another, still pending, request
-    expect((await byNumber(PHONE, "approve")).reservation_id).not.toBe(res);
+    // the same code again: nothing pending with it any more
+    expect(await byCode(PHONE, "approve", code)).toEqual({ status: "none" });
   });
   it("a wrong token, a wrong phone or an unknown decision change nothing", async () => {
     const { res } = await reservation();

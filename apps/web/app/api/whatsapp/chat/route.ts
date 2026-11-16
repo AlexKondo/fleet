@@ -88,11 +88,14 @@ export async function POST(request: NextRequest) {
     },
     notifyRider: async (requestId, justification) => { await notifyRiderOfDecision(requestId, justification, { rpc: (n, a) => admin.rpc(n as never, a as never) as never }); },
     // a manager's "1" / "2" on WhatsApp decides his latest pending vehicle approval (migration 0259), with the same checks as the buttons
-    decideApproval: async (fromPhone, decision, messageId) => {
-      const { data, error } = await admin.rpc("fm_approval_decide_by_phone" as never, { p_from_phone: fromPhone, p_decision: decision, p_message_id: messageId } as never);
+    decideApproval: async (fromPhone, decision, messageId, code) => {
+      const { data, error } = code
+        ? await admin.rpc("fm_approval_decide_by_code" as never, { p_from_phone: fromPhone, p_decision: decision, p_code: code, p_message_id: messageId } as never)
+        : await admin.rpc("fm_approval_decide_by_phone" as never, { p_from_phone: fromPhone, p_decision: decision, p_message_id: messageId } as never);
       if (error || !data || typeof data !== "object") return { status: "none" };
-      const result = data as { status?: string; reservation_id?: string };
+      const result = data as { status?: string; reservation_id?: string; pending?: { code: string; plate: string; start: string }[] };
       const status = typeof result.status === "string" ? result.status : "none";
+      if (status === "ambiguous") return { status, pending: result.pending ?? [] };
       if ((status === "approved" || status === "rejected") && result.reservation_id) {
         const reservationId = result.reservation_id;
         // the requester is told by WhatsApp too, after the answer to the manager
